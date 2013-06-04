@@ -1,0 +1,10 @@
+{
+    "name": "shade.js",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "esprima": "*",
+        "eswalker": "*",
+        "estraverse": "~0.0.4"
+    }
+}
