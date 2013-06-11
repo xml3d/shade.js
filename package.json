@@ -7,5 +7,9 @@
         "eswalker": "*",
         "estraverse": "~0.0.4",
         "optimist": "*"
+    },
+    "devDependencies": {
+        "mocha": "*",
+        "should": "*"
     }
 }
