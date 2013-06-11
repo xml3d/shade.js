@@ -1,0 +1,371 @@
+{
+ "type": "Program",
+ "body": [
+  {
+   "type": "FunctionDeclaration",
+   "id": {
+    "type": "Identifier",
+    "name": "shade"
+   },
+   "params": [
+    {
+     "type": "Identifier",
+     "name": "env"
+    }
+   ],
+   "defaults": [],
+   "body": {
+    "type": "BlockStatement",
+    "body": [
+     {
+      "type": "VariableDeclaration",
+      "declarations": [
+       {
+        "type": "VariableDeclarator",
+        "id": {
+         "type": "Identifier",
+         "name": "smod"
+        },
+        "init": {
+         "type": "BinaryExpression",
+         "operator": "%",
+         "left": {
+          "type": "BinaryExpression",
+          "operator": "*",
+          "left": {
+           "type": "MemberExpression",
+           "computed": false,
+           "object": {
+            "type": "MemberExpression",
+            "computed": false,
+            "object": {
+             "type": "Identifier",
+             "name": "env"
+            },
+            "property": {
+             "type": "Identifier",
+             "name": "texCoord"
+            }
+           },
+           "property": {
+            "type": "Identifier",
+            "name": "x"
+           }
+          },
+          "right": {
+           "type": "MemberExpression",
+           "computed": false,
+           "object": {
+            "type": "Identifier",
+            "name": "env"
+           },
+           "property": {
+            "type": "Identifier",
+            "name": "frequency"
+           }
+          }
+         },
+         "right": {
+          "type": "Literal",
+          "value": 1
+         }
+        }
+       },
+       {
+        "type": "VariableDeclarator",
+        "id": {
+         "type": "Identifier",
+         "name": "tmod"
+        },
+        "init": {
+         "type": "BinaryExpression",
+         "operator": "%",
+         "left": {
+          "type": "BinaryExpression",
+          "operator": "*",
+          "left": {
+           "type": "MemberExpression",
+           "computed": false,
+           "object": {
+            "type": "MemberExpression",
+            "computed": false,
+            "object": {
+             "type": "Identifier",
+             "name": "env"
+            },
+            "property": {
+             "type": "Identifier",
+             "name": "texCoord"
+            }
+           },
+           "property": {
+            "type": "Identifier",
+            "name": "y"
+           }
+          },
+          "right": {
+           "type": "MemberExpression",
+           "computed": false,
+           "object": {
+            "type": "Identifier",
+            "name": "env"
+           },
+           "property": {
+            "type": "Identifier",
+            "name": "frequency"
+           }
+          }
+         },
+         "right": {
+          "type": "Literal",
+          "value": 1
+         }
+        }
+       },
+       {
+        "type": "VariableDeclarator",
+        "id": {
+         "type": "Identifier",
+         "name": "color"
+        },
+        "init": null
+       }
+      ],
+      "kind": "var"
+     },
+     {
+      "type": "ExpressionStatement",
+      "expression": {
+       "type": "AssignmentExpression",
+       "operator": "=",
+       "left": {
+        "type": "Identifier",
+        "name": "color"
+       },
+       "right": {
+        "type": "ConditionalExpression",
+        "test": {
+         "type": "LogicalExpression",
+         "operator": "||",
+         "left": {
+          "type": "LogicalExpression",
+          "operator": "&&",
+          "left": {
+           "type": "BinaryExpression",
+           "operator": "<",
+           "left": {
+            "type": "Identifier",
+            "name": "smod"
+           },
+           "right": {
+            "type": "Literal",
+            "value": 0.5
+           }
+          },
+          "right": {
+           "type": "BinaryExpression",
+           "operator": "<",
+           "left": {
+            "type": "Identifier",
+            "name": "tmod"
+           },
+           "right": {
+            "type": "Literal",
+            "value": 0.5
+           }
+          }
+         },
+         "right": {
+          "type": "LogicalExpression",
+          "operator": "&&",
+          "left": {
+           "type": "BinaryExpression",
+           "operator": ">=",
+           "left": {
+            "type": "Identifier",
+            "name": "smod"
+           },
+           "right": {
+            "type": "Literal",
+            "value": 0.5
+           }
+          },
+          "right": {
+           "type": "BinaryExpression",
+           "operator": ">=",
+           "left": {
+            "type": "Identifier",
+            "name": "tmod"
+           },
+           "right": {
+            "type": "Literal",
+            "value": 0.5
+           }
+          }
+         }
+        },
+        "consequent": {
+         "type": "MemberExpression",
+         "computed": false,
+         "object": {
+          "type": "Identifier",
+          "name": "env"
+         },
+         "property": {
+          "type": "Identifier",
+          "name": "whiteColor"
+         }
+        },
+        "alternate": {
+         "type": "MemberExpression",
+         "computed": false,
+         "object": {
+          "type": "Identifier",
+          "name": "env"
+         },
+         "property": {
+          "type": "Identifier",
+          "name": "blackColor"
+         }
+        }
+       }
+      }
+     },
+     {
+      "type": "VariableDeclaration",
+      "declarations": [
+       {
+        "type": "VariableDeclarator",
+        "id": {
+         "type": "Identifier",
+         "name": "normal"
+        },
+        "init": {
+         "type": "CallExpression",
+         "callee": {
+          "type": "MemberExpression",
+          "computed": false,
+          "object": {
+           "type": "Identifier",
+           "name": "Shade"
+          },
+          "property": {
+           "type": "Identifier",
+           "name": "normalize"
+          }
+         },
+         "arguments": [
+          {
+           "type": "CallExpression",
+           "callee": {
+            "type": "MemberExpression",
+            "computed": false,
+            "object": {
+             "type": "Identifier",
+             "name": "Shade"
+            },
+            "property": {
+             "type": "Identifier",
+             "name": "transform"
+            }
+           },
+           "arguments": [
+            {
+             "type": "Literal",
+             "value": "world"
+            },
+            {
+             "type": "MemberExpression",
+             "computed": false,
+             "object": {
+              "type": "Identifier",
+              "name": "env"
+             },
+             "property": {
+              "type": "Identifier",
+              "name": "normal"
+             }
+            }
+           ]
+          }
+         ]
+        }
+       }
+      ],
+      "kind": "var"
+     },
+     {
+      "type": "ReturnStatement",
+      "argument": {
+       "type": "BinaryExpression",
+       "operator": "+",
+       "left": {
+        "type": "BinaryExpression",
+        "operator": "*",
+        "left": {
+         "type": "Identifier",
+         "name": "color"
+        },
+        "right": {
+         "type": "CallExpression",
+         "callee": {
+          "type": "MemberExpression",
+          "computed": false,
+          "object": {
+           "type": "ThisExpression"
+          },
+          "property": {
+           "type": "Identifier",
+           "name": "diffuse"
+          }
+         },
+         "arguments": [
+          {
+           "type": "Identifier",
+           "name": "normal"
+          }
+         ]
+        }
+       },
+       "right": {
+        "type": "CallExpression",
+        "callee": {
+         "type": "MemberExpression",
+         "computed": false,
+         "object": {
+          "type": "ThisExpression"
+         },
+         "property": {
+          "type": "Identifier",
+          "name": "phong"
+         }
+        },
+        "arguments": [
+         {
+          "type": "Identifier",
+          "name": "normal"
+         },
+         {
+          "type": "MemberExpression",
+          "computed": false,
+          "object": {
+           "type": "Identifier",
+           "name": "env"
+          },
+          "property": {
+           "type": "Identifier",
+           "name": "shininess"
+          }
+         }
+        ]
+       }
+      }
+     }
+    ]
+   },
+   "rest": null,
+   "generator": false,
+   "expression": false
+  }
+ ]
+}
