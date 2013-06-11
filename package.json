@@ -5,6 +5,7 @@
     "dependencies": {
         "esprima": "*",
         "eswalker": "*",
+        "escodegen": "*",
         "estraverse": "~0.0.4",
         "optimist": "*"
     },
