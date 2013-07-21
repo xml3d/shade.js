@@ -1,0 +1,49 @@
+{"type": "Program", "body": [
+    {
+        "type": "ExpressionStatement",
+        "expression": {
+            "type": "BinaryExpression",
+            "operator": "*",
+            "left": {
+                "type": "BinaryExpression",
+                "operator": "*",
+                "left": {
+                    "type": "MemberExpression",
+                    "computed": false,
+                    "object": {
+                        "type": "Identifier",
+                        "name": "Math"
+                    },
+                    "property": {
+                        "type": "Identifier",
+                        "name": "PI"
+                    }
+                },
+                "right": {
+                    "type": "MemberExpression",
+                    "computed": false,
+                    "object": {
+                        "type": "Identifier",
+                        "name": "Math"
+                    },
+                    "property": {
+                        "type": "Identifier",
+                        "name": "SQRT2"
+                    }
+                }
+            },
+            "right": {
+                "type": "MemberExpression",
+                "computed": false,
+                "object": {
+                    "type": "Identifier",
+                    "name": "Math"
+                },
+                "property": {
+                    "type": "Identifier",
+                    "name": "E"
+                }
+            }
+        }
+    }
+]}
