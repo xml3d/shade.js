@@ -65,7 +65,8 @@
                                 },
                                 "right": {
                                     "type": "Literal",
-                                    "value": 1
+                                    "value": 1,
+                                    "raw": "1.0"
                                 }
                             }
                         },
@@ -116,7 +117,8 @@
                                 },
                                 "right": {
                                     "type": "Literal",
-                                    "value": 1
+                                    "value": 1,
+                                    "raw": "1.0"
                                 }
                             }
                         },
@@ -157,7 +159,8 @@
                                         },
                                         "right": {
                                             "type": "Literal",
-                                            "value": 0.5
+                                            "value": 0.5,
+                                            "raw": "0.5"
                                         }
                                     },
                                     "right": {
@@ -169,7 +172,8 @@
                                         },
                                         "right": {
                                             "type": "Literal",
-                                            "value": 0.5
+                                            "value": 0.5,
+                                            "raw": "0.5"
                                         }
                                     }
                                 },
@@ -185,7 +189,8 @@
                                         },
                                         "right": {
                                             "type": "Literal",
-                                            "value": 0.5
+                                            "value": 0.5,
+                                            "raw": "0.5"
                                         }
                                     },
                                     "right": {
@@ -197,7 +202,8 @@
                                         },
                                         "right": {
                                             "type": "Literal",
-                                            "value": 0.5
+                                            "value": 0.5,
+                                            "raw": "0.5"
                                         }
                                     }
                                 }
@@ -245,7 +251,7 @@
                                     "computed": false,
                                     "object": {
                                         "type": "Identifier",
-                                        "name": "Shade"
+                                        "name": "Normal"
                                     },
                                     "property": {
                                         "type": "Identifier",
@@ -285,7 +291,7 @@
                                     "computed": false,
                                     "object": {
                                         "type": "Identifier",
-                                        "name": "BRDF"
+                                        "name": "Shade"
                                     },
                                     "property": {
                                         "type": "Identifier",
@@ -316,7 +322,7 @@
                                     "computed": false,
                                     "object": {
                                         "type": "Identifier",
-                                        "name": "BRDF"
+                                        "name": "Shade"
                                     },
                                     "property": {
                                         "type": "Identifier",
