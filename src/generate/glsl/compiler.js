@@ -2,7 +2,7 @@
 
     var Base = require("../../base/index.js").Base;
     var Transformer = require("./transform.js").GLASTTransformer;
-    var Generator = require("./generate.js").GLSLGenerator;
+    var generate = require("./generate.js").generate;
 
     var GLSLCompiler = function () {
 
@@ -15,8 +15,7 @@
             var transformer = new Transformer();
             var transformed = transformer.transformAAST(aast);
 
-            var generator = new Generator();
-            var code = generator.generateFragmentShader(transformed);
+            var code = generate(transformed);
 
             return code;
         }
