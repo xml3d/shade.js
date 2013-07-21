@@ -19,7 +19,7 @@ var argv = require('optimist').argv,
 
     var ast = (function () {
         var data = fs.readFileSync(filename, "utf-8");
-        return parser.parse(data);
+        return parser.parse(data, { raw: true });
     }());
 
     if (args.p) {
