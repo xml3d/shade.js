@@ -19,6 +19,6 @@ function shade(env) {
         env.whiteColor :
         env.blackColor;
 
-    var normal = Shade.normalize(Shade.transform("world", env.normal));
-    return color * this.diffuse(normal) + this.phong(normal, env.shininess);
+    var normal = Shade.normalize(env.normal);
+    return BRDF.diffuse(normal, color).add(BRDF.phong(normal, env.shininess));
 }
