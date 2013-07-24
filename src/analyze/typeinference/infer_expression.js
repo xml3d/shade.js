@@ -1,7 +1,7 @@
 (function (ns) {
 
     var Syntax = require('estraverse').Syntax;
-    var Shade = require("../../shade.js");
+    var Shade = require("../../interfaces.js").Shade;
 
     var TYPES = Shade.TYPES;
 
@@ -42,6 +42,9 @@
         isNumber: function () {
             return this.isOfType(TYPES.NUMBER);
         },
+        isNullOrUndefined: function () {
+            return this.isNull() || this.isUndefined();
+        },
         isNull: function () {
             return this.isOfType(TYPES.NULL);
         },
@@ -58,6 +61,51 @@
     }
 
     var handlers = {
+            Literal : function (literal) {
+                //console.log(literal);
+                var value = literal.raw !== undefined ? literal.raw : literal.value;
+
+                var number = parseFloat(value);
+
+                if (!isNaN(number)) {
+                    if (value.indexOf(".") == -1) {
+                        literal.result = {
+                            type: TYPES.INT,
+                            value: number
+                        }
+                    }
+                    else {
+                        literal.result = {
+                            type: TYPES.NUMBER,
+                            value: number
+                        }
+                    }
+                    ;
+                } else if (value === 'true') {
+                    literal.result = {
+                        type: TYPES.BOOLEAN,
+                        value: true
+                    }
+                } else if (value === 'false') {
+                    literal.result = {
+                        type: TYPES.BOOLEAN,
+                        value: false
+                    }
+                } else if (value === 'null') {
+                    literal.result = {
+                        type: TYPES.NULL,
+                        value: null
+                    }
+                } else {
+                    literal.result = {
+                        type: TYPES.STRING,
+                        value: value
+                    }
+                }
+
+
+            },
+
         Identifier: function(node) {
             var result = new Node(node),
                 name = node.name;
@@ -84,7 +132,7 @@
             if (left.getType() == right.getType() && !left.isObject()) {
                 result.setType(left.getType());
             }
-            else if (left.isNull() || left.isUndefined()) {
+            else if (left.isNullOrUndefined()) {
                 if (operator == "||") {
                     result.setType(right.getType())
                 } else { // &&
@@ -104,9 +152,10 @@
             //console.log(node.left, node.right);
             var left = new Node(node.left),
                 right = new Node(node.right),
-                result = new Node(node);
+                result = new Node(node),
+                operator = node.operator;
 
-            switch (node.operator) {
+            switch (operator) {
                 case "+":
                 case "-":
                 case "*":
@@ -115,7 +164,7 @@
                     // int 'op' int => int
                     // int / int => number
                     if (left.isInt() && right.isInt()) {
-                        if (node.operator == "/")
+                        if (operator == "/")
                             result.setType(TYPES.NUMBER);
                         else
                             result.setType(TYPES.INT);
@@ -126,8 +175,18 @@
                     // number 'op' number => number
                     else if (left.isNumber() && right.isNumber())
                         result.setType(TYPES.NUMBER);
-                    else
+                    // int 'op' null => int
+                    else if (left.isInt() && right.isNullOrUndefined() || right.isInt() && left.isNullOrUndefined()) {
+                        result.setType(TYPES.INT);
+                    }
+                    // number 'op' null => number
+                    else if ((left.isNumber() && right.isNullOrUndefined()) || (right.isNumber() && left.isNullOrUndefined())) {
+                        result.setType(TYPES.NUMBER);
+                    }
+                    else {
+                        console.error(node, left.getType(), operator, right.getType());
                         throw new Error("Unhandled case for arithmetic BinaryExpression.");
+                    }
                     break;
                 case "==": // comparison
                 case "!=":
@@ -140,57 +199,12 @@
                     result.setType(TYPES.BOOLEAN);
                     break;
                 default:
-                    throw new Error("Operator not supported: " + node.operator);
+                    throw new Error("Operator not supported: " + operator);
             }
         }
     };
 
 
-    var handleLiteral = function (literal) {
-            //console.log(literal);
-            var value = literal.raw !== undefined ? literal.raw : literal.value;
-
-            var number = parseFloat(value);
-
-            if (!isNaN(number)) {
-                if (value.indexOf(".") == -1) {
-                    literal.result = {
-                        type: TYPES.INT,
-                        value: number
-                    }
-                }
-                else {
-                    literal.result = {
-                        type: TYPES.NUMBER,
-                        value: number
-                    }
-                }
-                ;
-            } else if (value === 'true') {
-                literal.result = {
-                    type: TYPES.BOOLEAN,
-                    value: true
-                }
-            } else if (value === 'false') {
-                literal.result = {
-                    type: TYPES.BOOLEAN,
-                    value: false
-                }
-            } else if (value === 'null') {
-                literal.result = {
-                    type: TYPES.NULL,
-                    value: null
-                }
-            } else {
-                literal.result = {
-                    type: TYPES.STRING,
-                    value: value
-                }
-            }
-
-
-        }
-        ;
 
 
     var enterExpression = function (node) {
@@ -219,7 +233,7 @@
             case Syntax.Identifier:
                 break;
             case Syntax.Literal:
-                handleLiteral(node);
+                handlers.Literal(node);
                 break;
             case Syntax.LogicalExpression:
                 break;

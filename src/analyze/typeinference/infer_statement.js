@@ -1,7 +1,7 @@
 (function (ns) {
 
     var Syntax = require('estraverse').Syntax;
-    var Shade = require("../../shade.js");
+    var Shade = require("../../interfaces.js").Shade;
 
     var TYPES = Shade.TYPES;
 
@@ -44,7 +44,7 @@
             case Syntax.VariableDeclarator:
             case Syntax.WhileStatement:
             case Syntax.WithStatement:
-                console.log(node.type + " is not handle yet.");
+                //console.log(node.type + " is not handle yet.");
                 break;
             default:
                 throw new Error('Unknown node type: ' + node.type);

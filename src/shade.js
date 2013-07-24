@@ -1,24 +1,40 @@
-var parser = require('esprima'),
-    parameters = require("./analyze/parameters.js"),
-    interfaces = require("./interfaces.js").Shade;
+(function (ns) {
+    var parser = require('esprima'),
+        parameters = require("./analyze/parameters.js"),
+        interfaces = require("./interfaces.js").Shade,
+        inference = require("./analyze/typeinference/typeinference.js"),
+        Base = require("./base/index.js").Base;
 
-/**
- * Analyzes a javascript program and returns a list of parameters
- * @param {function()|string) func
- * @returns {object!}
- */
-exports.extractParameters = function (func) {
-    if (typeof func == 'function') {
-        func = func.toString();
-    }
-    var ast = parser.parse(func);
 
-    return parameters.extractParameters(ast);
-};
 
-exports.TYPES = interfaces.TYPES;
+    Base.extend(ns, {
 
-/**
- * Library version:
- */
-exports.version = '0.0.1';
+        /**
+         * Analyzes a javascript program and returns a list of parameters
+         * @param {function()|string) func
+         * @returns {object!}
+         */
+        extractParameters: function (func) {
+            if (typeof func == 'function') {
+                func = func.toString();
+            }
+            var ast = parser.parse(func);
+
+            return parameters.extractParameters(ast);
+        },
+
+        parseAndInferenceExpression: function (str) {
+            var ast = parser.parse(str, {raw: true});
+            var aast = inference.infer(ast);
+            return aast;
+        },
+
+        TYPES : interfaces.TYPES
+
+});
+    /**
+     * Library version:
+     */
+    ns.version = '0.0.1';
+
+}(exports));

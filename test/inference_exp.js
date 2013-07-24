@@ -1,13 +1,10 @@
 var Shade = require(".."),
     expect = require('should'),
-    parser = require('esprima'),
-    inference = require("../src/analyze/typeinference/typeinference.js"),
     TYPES = Shade.TYPES;
 
 
 var parseAndInferenceExpression = function (str) {
-    var ast = parser.parse(str, {raw: true});
-    var aast = inference.infer(ast);
+    var aast = Shade.parseAndInferenceExpression(str);
     return aast.body[0];
 }
 
