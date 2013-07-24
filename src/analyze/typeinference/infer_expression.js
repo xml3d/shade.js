@@ -12,61 +12,132 @@
         }
     }
 
-    var Node = function(node) {
+    var Node = function (node) {
         this.node = node;
     }
 
     Node.prototype = {
-        checkExtra: function() {
+        checkExtra: function () {
             if (this.node.result == undefined)
                 throw new Error("No annotation for node: " + this.node);
         },
 
-        getType: function() {
+        getType: function () {
             this.checkExtra();
             return this.node.result.type || TYPES.ANY;
         },
 
-        setType: function(type) {
+        setType: function (type) {
             this.node.result = this.node.result || {};
             this.node.result.type = type;
         },
 
-        isOfType: function(type) {
+        isOfType: function (type) {
             return this.getType() == type;
         },
 
-        isInt: function() {
+        isInt: function () {
             return this.isOfType(TYPES.INT);
         },
-        isNumber: function() {
+        isNumber: function () {
             return this.isOfType(TYPES.NUMBER);
         },
-        isBool: function() {
+        isNull: function () {
+            return this.isOfType(TYPES.NULL);
+        },
+        isUndefined: function () {
+            return this.isOfType(TYPES.UNDEFINED);
+        },
+        isBool: function () {
             return this.isOfType(TYPES.BOOLEAN);
+        },
+        isObject: function () {
+            return this.isOfType(TYPES.OBJECT) || this.isOfType(TYPES.COLOR) || this.isOfType(TYPES.NORMAL);
         }
+
     }
 
     var handlers = {
+        Identifier: function(node) {
+            var result = new Node(node),
+                name = node.name;
+
+            if(name === "undefined") {
+                result.setType(TYPES.UNDEFINED);
+                return;
+            }
+
+            console.error("Identifier not handled: ", name, node);
+
+        },
+
+
+        LogicalExpression: function (node) {
+            var left = new Node(node.left),
+                right = new Node(node.right),
+                result = new Node(node),
+                operator = node.operator;
+
+            if (!(operator == "&&" || operator == "||"))
+                throw new Error("Operator not supported: " + node.operator);
+
+            if (left.getType() == right.getType() && !left.isObject()) {
+                result.setType(left.getType());
+            }
+            else if (left.isNull() || left.isUndefined()) {
+                if (operator == "||") {
+                    result.setType(right.getType())
+                } else { // &&
+                    result.setType(left.getType())
+                }
+            } else {
+                // We don't allow dynamic types (the type of the result depends on the value of it's operands).
+                // At this point, the expression needs to evaluate to a result, otherwise it's an error
+                throw new Error("Static evaulation not implemented yet");
+            }
+        },
+
+
+
+
         BinaryExpression: function (node) {
-            console.log(node.left, node.right);
+            //console.log(node.left, node.right);
             var left = new Node(node.left),
                 right = new Node(node.right),
                 result = new Node(node);
 
             switch (node.operator) {
                 case "+":
-                    // int + int => int
-                    if (left.isInt() && right.isInt())
-                        result.setType(TYPES.INT);
-                    // int + number => number
+                case "-":
+                case "*":
+                case "/":
+                case "%":
+                    // int 'op' int => int
+                    // int / int => number
+                    if (left.isInt() && right.isInt()) {
+                        if (node.operator == "/")
+                            result.setType(TYPES.NUMBER);
+                        else
+                            result.setType(TYPES.INT);
+                    }
+                    // int 'op' number => number
                     else if (left.isInt() && right.isNumber() || right.isInt() && left.isNumber())
                         result.setType(TYPES.NUMBER);
-                    // number + number => number
+                    // number 'op' number => number
                     else if (left.isNumber() && right.isNumber())
                         result.setType(TYPES.NUMBER);
-
-
+                    else
+                        throw new Error("Unhandled case for arithmetic BinaryExpression.");
+                    break;
+                case "==": // comparison
+                case "!=":
+                case "===":
+                case "!==":
+                case ">":
+                case "<":
+                case ">=":
+                case "<=":
+                    result.setType(TYPES.BOOLEAN);
                     break;
                 default:
                     throw new Error("Operator not supported: " + node.operator);
@@ -76,7 +147,7 @@
 
 
     var handleLiteral = function (literal) {
-            console.log(literal);
+            //console.log(literal);
             var value = literal.raw !== undefined ? literal.raw : literal.value;
 
             var number = parseFloat(value);
@@ -135,7 +206,6 @@
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.BinaryExpression:
-                console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.CallExpression:
                 console.log(node.type + " is not handle yet.");
@@ -147,13 +217,11 @@
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.Identifier:
-                console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.Literal:
                 handleLiteral(node);
                 break;
             case Syntax.LogicalExpression:
-                console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.MemberExpression:
                 console.log(node.type + " is not handle yet.");
@@ -218,12 +286,12 @@
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.Identifier:
-                console.log(node.type + " is not handle yet.");
+                handlers.Identifier(node);
                 break;
             case Syntax.Literal:
                 break;
             case Syntax.LogicalExpression:
-                console.log(node.type + " is not handle yet.");
+                handlers.LogicalExpression(node);
                 break;
             case Syntax.MemberExpression:
                 console.log(node.type + " is not handle yet.");

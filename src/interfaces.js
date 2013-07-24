@@ -12,6 +12,7 @@
         BOOLEAN: "boolean",
         OBJECT: "object",
         NULL: "null",
+        UNDEFINED: "undefined",
         STRING: "string",
         COLOR: "color", // virtual types
         NORMAL: "normal",
