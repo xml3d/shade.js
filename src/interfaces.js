@@ -11,6 +11,7 @@
         BOOLEAN: "boolean",
         OBJECT: "object",
         NULL: "null",
+        STRING: "string",
         COLOR: "color", // virtual types
         NORMAL: "normal",
         MATRIX4: "matrix4",

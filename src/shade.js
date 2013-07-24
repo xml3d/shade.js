@@ -1,5 +1,6 @@
 var parser = require('esprima'),
-    parameters = require("./analyze/parameters.js");
+    parameters = require("./analyze/parameters.js"),
+    interfaces = require("./interfaces.js").Shade;
 
 /**
  * Analyzes a javascript program and returns a list of parameters
@@ -14,6 +15,8 @@ exports.extractParameters = function (func) {
 
     return parameters.extractParameters(ast);
 };
+
+exports.TYPES = interfaces.TYPES;
 
 /**
  * Library version:
