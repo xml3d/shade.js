@@ -23,9 +23,9 @@
             return parameters.extractParameters(ast);
         },
 
-        parseAndInferenceExpression: function (str) {
+        parseAndInferenceExpression: function (str, ctx) {
             var ast = parser.parse(str, {raw: true});
-            var aast = inference.infer(ast);
+            var aast = inference.infer(ast, ctx);
             return aast;
         },
 

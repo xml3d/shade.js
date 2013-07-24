@@ -54,9 +54,16 @@
         isBool: function () {
             return this.isOfType(TYPES.BOOLEAN);
         },
+        isString: function () {
+            return this.isOfType(TYPES.STRING);
+        },
         isObject: function () {
             return this.isOfType(TYPES.OBJECT) || this.isOfType(TYPES.COLOR) || this.isOfType(TYPES.NORMAL);
+        },
+        canNumber: function () {
+            return this.isNumber() || this.isInt() || this.isBool();
         }
+
 
     }
 
@@ -106,7 +113,7 @@
 
             },
 
-        Identifier: function(node) {
+        Identifier: function(node, ctx) {
             var result = new Node(node),
                 name = node.name;
 
@@ -115,10 +122,38 @@
                 return;
             }
 
+            if (ctx.hasOwnProperty(name)) {
+                result.setType(ctx[name].type);
+                return;
+            }
+
+
             console.error("Identifier not handled: ", name, node);
 
         },
 
+        ConditionalExpression: function(node) {
+            var result = new Node(node),
+                test = new Node(node.test),
+                consequent = new Node(node.consequent),
+                alternate = new Node(node.alternate);
+
+            //console.log(node.test, node.consequent, node.alternate);
+
+            if (consequent.getType() == alternate.getType() && !consequent.isObject()) {
+                result.setType(consequent.getType());
+            } else if (consequent.canNumber() && alternate.canNumber()) {
+                result.setType(TYPES.NUMBER);
+            }
+            else if (test.isNullOrUndefined()) {
+                result.setType(alternate.getType())
+            } else {
+                // We don't allow dynamic types (the type of the result depends on the value of it's operands).
+                // At this point, the expression needs to evaluate to a result, otherwise it's an error
+                throw new Error("Static evaluation not implemented yet");
+            }
+
+        },
 
         LogicalExpression: function (node) {
             var left = new Node(node.left),
@@ -208,7 +243,6 @@
 
 
     var enterExpression = function (node) {
-
         switch (node.type) {
             case Syntax.AssignmentExpression:
                 console.log(node.type + " is not handle yet.");
@@ -225,7 +259,6 @@
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.ConditionalExpression:
-                console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.FunctionExpression:
                 console.log(node.type + " is not handle yet.");
@@ -275,7 +308,7 @@
 
     };
 
-    var exitExpression = function (node) {
+    var exitExpression = function (node, ctx) {
 
         switch (node.type) {
             case Syntax.AssignmentExpression:
@@ -294,13 +327,13 @@
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.ConditionalExpression:
-                console.log(node.type + " is not handle yet.");
+                handlers.ConditionalExpression(node);
                 break;
             case Syntax.FunctionExpression:
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.Identifier:
-                handlers.Identifier(node);
+                handlers.Identifier(node, ctx);
                 break;
             case Syntax.Literal:
                 break;

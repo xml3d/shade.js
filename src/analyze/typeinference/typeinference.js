@@ -13,15 +13,15 @@
     var Syntax = walk.Syntax;
 
 
-    var enterNode = function(node) {
-        switchKind(node, enterStatement, enterExpression);
+    var enterNode = function(ctx, node) {
+        switchKind(node, ctx, enterStatement, enterExpression);
     }
 
-    var exitNode = function(node) {
-        switchKind(node, exitStatement, exitExpression);
+    var exitNode = function(ctx, node) {
+        switchKind(node, ctx, exitStatement, exitExpression);
     }
 
-    var switchKind = function(node, statement, expression) {
+    var switchKind = function(node, ctx, statement, expression) {
         switch (node.type) {
             case Syntax.BlockStatement:
             case Syntax.BreakStatement:
@@ -47,7 +47,7 @@
             case Syntax.VariableDeclarator:
             case Syntax.WhileStatement:
             case Syntax.WithStatement:
-                statement(node);
+                statement(node, ctx);
                 break;
 
             case Syntax.AssignmentExpression:
@@ -70,7 +70,7 @@
             case Syntax.UnaryExpression:
             case Syntax.UpdateExpression:
             case Syntax.YieldExpression:
-                expression(node);
+                expression(node, ctx);
                 break;
 
             default:
@@ -79,10 +79,10 @@
     }
 
 
-    var infer = function(ast) {
+    var infer = function(ast, ctx) {
         walk.traverse(ast, {
-            enter: enterNode,
-            leave: exitNode
+            enter: enterNode.bind(this, ctx),
+            leave: exitNode.bind(this, ctx)
         });
         return ast;
     };

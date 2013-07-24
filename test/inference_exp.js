@@ -3,8 +3,8 @@ var Shade = require(".."),
     TYPES = Shade.TYPES;
 
 
-var parseAndInferenceExpression = function (str) {
-    var aast = Shade.parseAndInferenceExpression(str);
+var parseAndInferenceExpression = function (str, ctx) {
+    var aast = Shade.parseAndInferenceExpression(str, ctx || {});
     return aast.body[0];
 }
 
@@ -113,7 +113,29 @@ describe('Inference', function () {
             exp.should.have.property("result");
             exp.result.should.have.property("type", TYPES.NULL);
         });
-    })
+    });
 
+    describe('ConditionalExpressions', function () {
+        it("should annotate T(a) == T(b) && T(b) != O: c ? a : b ⇒ T(a)", function () {
+            var exp = parseAndInferenceExpression("5 < 8 ? 4.5 : 3.5");
+            exp.should.have.property("result");
+            exp.result.should.have.property("type", TYPES.NUMBER);
+        });
+        it("should allow simple cast: T(a) == number, T(b) == int: c ? a : b ⇒ number", function () {
+            var exp = parseAndInferenceExpression("5 < 8 ? 4.5 : 3");
+            exp.should.have.property("result");
+            exp.result.should.have.property("type", TYPES.NUMBER);
+        });
+        it("should annotate T(c) == undefined: c ? a : b ⇒ T(b)", function () {
+            var exp = parseAndInferenceExpression("undefined ? null : 8");
+            exp.should.have.property("result");
+            exp.result.should.have.property("type", TYPES.INT);
+        });
+    });
 
-});
+    describe('with Parameters form outside', function () {
+        var exp = parseAndInferenceExpression("a + 5", { a: { type: TYPES.INT }});
+        exp.should.have.property("result");
+        exp.result.should.have.property("type", TYPES.INT);
+    });
+})
