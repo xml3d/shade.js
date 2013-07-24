@@ -46,7 +46,7 @@
         switch (node.type) {
             case Syntax.ExpressionStatement:
                 console.log("exp:", node);
-                node.extra = node.expression.extra;
+                node.result = node.expression.result;
 
                 break;
             case Syntax.BlockStatement:

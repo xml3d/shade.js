@@ -6,6 +6,7 @@
      * @enum
      */
     ns.Shade.TYPES = {
+        ANY: "any",
         INT: "int",
         NUMBER: "number",
         BOOLEAN: "boolean",

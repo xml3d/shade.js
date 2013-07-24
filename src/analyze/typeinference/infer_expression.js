@@ -5,6 +5,75 @@
 
     var TYPES = Shade.TYPES;
 
+    var checkExtra = function () {
+        for (var i = 0; i < arguments.length; i++) {
+            if (arguments[i].result == undefined)
+                throw new Error("Missing annotations, " + arguments[i]);
+        }
+    }
+
+    var Node = function(node) {
+        this.node = node;
+    }
+
+    Node.prototype = {
+        checkExtra: function() {
+            if (this.node.result == undefined)
+                throw new Error("No annotation for node: " + this.node);
+        },
+
+        getType: function() {
+            this.checkExtra();
+            return this.node.result.type || TYPES.ANY;
+        },
+
+        setType: function(type) {
+            this.node.result = this.node.result || {};
+            this.node.result.type = type;
+        },
+
+        isOfType: function(type) {
+            return this.getType() == type;
+        },
+
+        isInt: function() {
+            return this.isOfType(TYPES.INT);
+        },
+        isNumber: function() {
+            return this.isOfType(TYPES.NUMBER);
+        },
+        isBool: function() {
+            return this.isOfType(TYPES.BOOLEAN);
+        }
+    }
+
+    var handlers = {
+        BinaryExpression: function (node) {
+            console.log(node.left, node.right);
+            var left = new Node(node.left),
+                right = new Node(node.right),
+                result = new Node(node);
+
+            switch (node.operator) {
+                case "+":
+                    // int + int => int
+                    if (left.isInt() && right.isInt())
+                        result.setType(TYPES.INT);
+                    // int + number => number
+                    else if (left.isInt() && right.isNumber() || right.isInt() && left.isNumber())
+                        result.setType(TYPES.NUMBER);
+                    // number + number => number
+                    else if (left.isNumber() && right.isNumber())
+                        result.setType(TYPES.NUMBER);
+
+
+                    break;
+                default:
+                    throw new Error("Operator not supported: " + node.operator);
+            }
+        }
+    };
+
 
     var handleLiteral = function (literal) {
             console.log(literal);
@@ -14,35 +83,35 @@
 
             if (!isNaN(number)) {
                 if (value.indexOf(".") == -1) {
-                    literal.extra = {
+                    literal.result = {
                         type: TYPES.INT,
                         value: number
                     }
                 }
                 else {
-                    literal.extra = {
+                    literal.result = {
                         type: TYPES.NUMBER,
                         value: number
                     }
                 }
                 ;
             } else if (value === 'true') {
-                literal.extra = {
+                literal.result = {
                     type: TYPES.BOOLEAN,
                     value: true
                 }
             } else if (value === 'false') {
-                literal.extra = {
+                literal.result = {
                     type: TYPES.BOOLEAN,
                     value: false
                 }
             } else if (value === 'null') {
-                literal.extra = {
+                literal.result = {
                     type: TYPES.NULL,
                     value: null
                 }
             } else {
-                literal.extra = {
+                literal.result = {
                     type: TYPES.STRING,
                     value: value
                 }
@@ -137,7 +206,7 @@
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.BinaryExpression:
-                console.log(node.type + " is not handle yet.");
+                handlers.BinaryExpression(node);
                 break;
             case Syntax.CallExpression:
                 console.log(node.type + " is not handle yet.");
