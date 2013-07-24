@@ -8,7 +8,8 @@
         enterExpression = require('./infer_expression.js').enterExpression,
         exitExpression = require('./infer_expression.js').exitExpression,
         enterStatement = require('./infer_statement.js').enterStatement,
-        exitStatement = require('./infer_statement.js').exitStatement;
+        exitStatement = require('./infer_statement.js').exitStatement,
+        Context = require("./context.js").Context;
 
     var Syntax = walk.Syntax;
 
@@ -79,7 +80,8 @@
     }
 
 
-    var infer = function(ast, ctx) {
+    var infer = function(ast, variables) {
+        var ctx = new Context(null, { variables: variables });
         walk.traverse(ast, {
             enter: enterNode.bind(this, ctx),
             leave: exitNode.bind(this, ctx)

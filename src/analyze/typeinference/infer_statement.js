@@ -1,9 +1,24 @@
 (function (ns) {
 
     var Syntax = require('estraverse').Syntax;
-    var Shade = require("../../interfaces.js").Shade;
+    var Shade = require("../../interfaces.js").Shade,
+        Node = require("./node.js").Node;
 
     var TYPES = Shade.TYPES;
+
+    var exitHandler = {
+        VariableDeclarator: function(node, ctx) {
+            var result = new Node(node);
+
+            ctx.declare(node.id);
+
+            if (node.init) {
+                var init = new Node(node.init);
+                ctx.updateType(node.id, init.getType());
+            }
+            // TODO: result.setType(init.getType());
+        }
+    }
 
 
     var enterStatement = function (node) {
@@ -13,7 +28,7 @@
 
     };
 
-    var exitStatement = function (node) {
+    var exitStatement = function (node, ctx) {
 
         switch (node.type) {
             case Syntax.ExpressionStatement:
@@ -81,7 +96,7 @@
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.VariableDeclarator:
-                console.log(node.type + " is not handle yet.");
+                exitHandler.VariableDeclarator(node, ctx);
                 break;
             case Syntax.WhileStatement:
                 console.log(node.type + " is not handle yet.");

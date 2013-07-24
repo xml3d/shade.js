@@ -133,9 +133,9 @@ describe('Inference', function () {
         });
     });
 
-    describe('with Parameters form outside', function () {
+    /*describe('with Parameters form outside', function () {
         var exp = parseAndInferenceExpression("a + 5", { a: { type: TYPES.INT }});
         exp.should.have.property("result");
         exp.result.should.have.property("type", TYPES.INT);
-    });
+    });*/
 })
