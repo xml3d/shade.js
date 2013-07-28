@@ -73,25 +73,33 @@
             },
 
 
-        UnaryExpression: function(node, ctx) {
+        UnaryExpression: function (node, ctx) {
             var result = new Node(node),
                 argument = new Node(node.argument),
                 operator = node.operator,
                 func = UnaryFunctions[operator];
 
-            switch(operator) {
+            switch (operator) {
                 case "!":
 
                     result.setType(TYPES.BOOLEAN);
                     break;
-                case "-":
                 case "+":
+                case "-":
+                    if (argument.canInt()) {
+                        result.setType(TYPES.INT);
+                    } else if (argument.canNumber()) {
+                        result.setType(TYPES.NUMBER);
+                    } else {
+                        throw new Error("Can't evaluate '" + operator + '" for ' + argument);
+                    }
+                    break;
                 case "~":
                 case "typeof":
                 case "void":
                 case "delete":
                 default:
-                    throw new Error("Operator not supported: " + operator);
+                    throw new Error("Operator not yet supported: " + operator);
             }
             if (argument.hasStaticValue()) {
                 result.setStaticValue(func(argument.getStaticValue()));
@@ -100,7 +108,6 @@
             }
 
         },
-
 
 
         Identifier: function(node, ctx) {

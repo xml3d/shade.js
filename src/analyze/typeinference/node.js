@@ -56,6 +56,9 @@
         canNumber: function () {
             return this.isNumber() || this.isInt() || this.isBool();
         },
+        canInt: function () {
+            return this.isInt() || this.isBool();
+        },
         hasStaticValue : function() {
             this.node.result = this.node.result || {};
             return this.node.result.dynamic !== true;

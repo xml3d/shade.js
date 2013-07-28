@@ -56,6 +56,30 @@ describe('Inference', function () {
             exp.result.should.have.property("type", TYPES.BOOLEAN);
             exp.result.should.have.property("staticValue", false);
         });
+        it("should annotate +int => int", function () {
+            var exp = parseAndInferenceExpression("+8");
+            exp.should.have.property("result");
+            exp.result.should.have.property("type", TYPES.INT);
+            exp.result.should.have.property("staticValue", 8);
+        });
+        it("should annotate -int => int", function () {
+            var exp = parseAndInferenceExpression("-8");
+            exp.should.have.property("result");
+            exp.result.should.have.property("type", TYPES.INT);
+            exp.result.should.have.property("staticValue", -8);
+        });
+        it("should annotate -number => number", function () {
+            var exp = parseAndInferenceExpression("-8.0");
+            exp.should.have.property("result");
+            exp.result.should.have.property("type", TYPES.NUMBER);
+            exp.result.should.have.property("staticValue", -8.0);
+        });
+        it("should annotate -boolean => int", function () {
+            var exp = parseAndInferenceExpression("-true");
+            exp.should.have.property("result");
+            exp.result.should.have.property("type", TYPES.INT   );
+            exp.result.should.have.property("staticValue", -1);
+        });
     });
 
     describe('of BinaryExpressions', function () {
