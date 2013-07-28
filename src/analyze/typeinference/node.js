@@ -55,9 +55,27 @@
         },
         canNumber: function () {
             return this.isNumber() || this.isInt() || this.isBool();
+        },
+        hasStaticValue : function() {
+            this.node.result = this.node.result || {};
+            return this.node.result.dynamic !== true;
+        },
+        setStaticValue : function(v) {
+            this.node.result = this.node.result || {};
+            this.node.result.staticValue = v;
+            this.node.result.dynamic = false;
+        },
+        getStaticValue : function() {
+            if (!this.hasStaticValue()) {
+                throw new Error("Node has no static value: " + this.node);
+            }
+            return this.node.result.staticValue;
+        },
+        setDynamicValue : function() {
+            this.node.result = this.node.result || {};
+            delete this.node.result.staticValue;
+            this.node.result.dynamic = true;
         }
-
-
     }
 
     ns.Node = Node;

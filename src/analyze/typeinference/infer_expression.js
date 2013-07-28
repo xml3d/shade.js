@@ -11,54 +11,97 @@
             if (arguments[i].result == undefined)
                 throw new Error("Missing annotations, " + arguments[i]);
         }
-    }
+    };
+
+    var BinaryFunctions = {
+        "+" : function(a,b) { return a + b; },
+        "-" : function(a,b) { return a - b; },
+        "/" : function(a,b) { return a / b; },
+        "*" : function(a,b) { return a * b; },
+        "%" : function(a,b) { return a % b; },
+
+        "==" : function(a,b) { return a == b; },
+        "!=" : function(a,b) { return a != b; },
+        "===" : function(a,b) { return a === b; },
+        "!==" : function(a,b) { return a !== b; },
+        "<" : function(a,b) { return a < b; },
+        "<=" : function(a,b) { return a <= b; },
+        ">" : function(a,b) { return a > b; },
+        ">=" : function(a,b) { return a >= b; }
+        };
+
+    var UnaryFunctions = {
+                "!": function(a) { return !a; },
+                "-": function(a) { return -a; },
+                "+": function(a) { return +a; },
+                "typeof": function(a) { return typeof a; },
+                "void": function(a) { return void a; },
+                "delete": function(a) { return delete a; }
+
+    };
 
 
     var handlers = {
             Literal : function (literal) {
                 //console.log(literal);
-                var value = literal.raw !== undefined ? literal.raw : literal.value;
+                var value = literal.raw !== undefined ? literal.raw : literal.value,
+                    result = new Node(literal);
 
                 var number = parseFloat(value);
 
                 if (!isNaN(number)) {
                     if (value.indexOf(".") == -1) {
-                        literal.result = {
-                            type: TYPES.INT,
-                            value: number
-                        }
+                        result.setType(TYPES.INT);
                     }
                     else {
-                        literal.result = {
-                            type: TYPES.NUMBER,
-                            value: number
-                        }
+                        result.setType(TYPES.NUMBER);
                     }
-                    ;
+                    result.setStaticValue(number);
                 } else if (value === 'true') {
-                    literal.result = {
-                        type: TYPES.BOOLEAN,
-                        value: true
-                    }
+                    result.setType(TYPES.BOOLEAN);
+                    result.setStaticValue(true);
                 } else if (value === 'false') {
-                    literal.result = {
-                        type: TYPES.BOOLEAN,
-                        value: false
-                    }
+                    result.setType(TYPES.BOOLEAN);
+                    result.setStaticValue(false);
                 } else if (value === 'null') {
-                    literal.result = {
-                        type: TYPES.NULL,
-                        value: null
-                    }
+                    result.setType(TYPES.NULL);
+                    result.setStaticValue(null);
                 } else {
-                    literal.result = {
-                        type: TYPES.STRING,
-                        value: value
-                    }
+                    result.setType(TYPES.STRING);
+                    result.setStaticValue(value);
                 }
-
-
             },
+
+
+        UnaryExpression: function(node, ctx) {
+            var result = new Node(node),
+                argument = new Node(node.argument),
+                operator = node.operator,
+                func = UnaryFunctions[operator];
+
+            switch(operator) {
+                case "!":
+
+                    result.setType(TYPES.BOOLEAN);
+                    break;
+                case "-":
+                case "+":
+                case "~":
+                case "typeof":
+                case "void":
+                case "delete":
+                default:
+                    throw new Error("Operator not supported: " + operator);
+            }
+            if (argument.hasStaticValue()) {
+                result.setStaticValue(func(argument.getStaticValue()));
+            } else {
+                result.setDynamicValue();
+            }
+
+        },
+
+
 
         Identifier: function(node, ctx) {
             var result = new Node(node),
@@ -136,7 +179,8 @@
             var left = new Node(node.left),
                 right = new Node(node.right),
                 result = new Node(node),
-                operator = node.operator;
+                operator = node.operator,
+                func = BinaryFunctions[operator];
 
             switch (operator) {
                 case "+":
@@ -184,6 +228,13 @@
                 default:
                     throw new Error("Operator not supported: " + operator);
             }
+            if (left.hasStaticValue() && right.hasStaticValue()) {
+                //console.log(left.getStaticValue(), operator, right.getStaticValue());
+                result.setStaticValue(func(left.getStaticValue(), right.getStaticValue()));
+            } else {
+                result.setDynamicValue();
+            }
+
         }
     };
 
@@ -240,7 +291,6 @@
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.UnaryExpression:
-                console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.UpdateExpression:
                 console.log(node.type + " is not handle yet.");
@@ -310,7 +360,7 @@
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.UnaryExpression:
-                console.log(node.type + " is not handle yet.");
+                handlers.UnaryExpression(node);
                 break;
             case Syntax.UpdateExpression:
                 console.log(node.type + " is not handle yet.");
