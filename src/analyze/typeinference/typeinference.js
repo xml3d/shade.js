@@ -9,20 +9,21 @@
         exitExpression = require('./infer_expression.js').exitExpression,
         enterStatement = require('./infer_statement.js').enterStatement,
         exitStatement = require('./infer_statement.js').exitStatement,
-        Context = require("./context.js").Context;
+        Context = require("./context.js").Context,
+        MathObject = require("./registry/math.js")
 
     var Syntax = walk.Syntax;
 
 
-    var enterNode = function(ctx, node) {
-        switchKind(node, ctx, enterStatement, enterExpression);
+    var enterNode = function(ctx, node, parent) {
+        switchKind(node, parent, ctx, enterStatement, enterExpression);
     }
 
-    var exitNode = function(ctx, node) {
-        switchKind(node, ctx, exitStatement, exitExpression);
+    var exitNode = function(ctx, node, parent) {
+        switchKind(node, parent, ctx, exitStatement, exitExpression);
     }
 
-    var switchKind = function(node, ctx, statement, expression) {
+    var switchKind = function(node, parent, ctx, statement, expression) {
         switch (node.type) {
             case Syntax.BlockStatement:
             case Syntax.BreakStatement:
@@ -48,7 +49,7 @@
             case Syntax.VariableDeclarator:
             case Syntax.WhileStatement:
             case Syntax.WithStatement:
-                statement(node, ctx);
+                statement(node, parent, ctx);
                 break;
 
             case Syntax.AssignmentExpression:
@@ -71,7 +72,7 @@
             case Syntax.UnaryExpression:
             case Syntax.UpdateExpression:
             case Syntax.YieldExpression:
-                expression(node, ctx);
+                expression(node, parent, ctx);
                 break;
 
             default:
@@ -82,6 +83,8 @@
 
     var infer = function(ast, variables) {
         var ctx = new Context(null, { variables: variables });
+        ctx.registerObject(MathObject);
+
         walk.traverse(ast, {
             enter: enterNode.bind(this, ctx),
             leave: exitNode.bind(this, ctx)

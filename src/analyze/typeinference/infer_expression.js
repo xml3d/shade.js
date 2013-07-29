@@ -126,7 +126,7 @@
             }
 
 
-            console.error("Identifier not handled: ", name, node);
+            //console.error("Identifier not handled: ", name, node);
 
         },
 
@@ -242,13 +242,60 @@
                 result.setDynamicValue();
             }
 
+        },
+
+
+        MemberExpression: function(node, parent, ctx) {
+            var result = new Node(node),
+                objectName = node.object.name,
+                propertyName =   node.property.name,
+                isCall = parent.type == Syntax.CallExpression;
+
+            if (!(objectName && propertyName)) {
+                throw new Error ("Can't handle dynamic objects/properties yet.")
+            }
+            var obj = ctx.findObject(objectName);
+            if (!obj) {
+                throw new Error ("Can't find '" + objectName + "' in this context" +  ctx);
+            }
+            if(!obj.hasOwnProperty(propertyName)) {
+                if (isCall)
+                    throw new Error ("Object '" + objectName + "' has no method '"+ propertyName+"'");
+                else
+                    throw new Error ("Object '" + objectName + "' has no property '"+ propertyName+"'");
+            }
+            var prop = obj[propertyName];
+            result.setType(prop.type);
+            if (prop.staticValue) {
+                result.setStaticValue(prop.staticValue);
+            }
+            if (isCall) {
+                result.setCall(prop);
+            }
+            //if (prop.check)
+
+        },
+
+        CallExpression: function(node, ctx) {
+            var result = new Node(node),
+                callee = new Node(node.callee);
+
+            var callInfo = callee.getCall();
+            if(callInfo) {
+                callInfo.evaluate(result, node.arguments);
+                result.setType(callInfo.type);
+                callee.clearCall();
+            } else {
+                throw new Error("Could not evaluate call: " + node);
+            }
+
         }
     };
 
 
 
 
-    var enterExpression = function (node) {
+    var enterExpression = function (node, parent, ctx) {
         switch (node.type) {
             case Syntax.AssignmentExpression:
                 console.log(node.type + " is not handle yet.");
@@ -262,7 +309,6 @@
             case Syntax.BinaryExpression:
                 break;
             case Syntax.CallExpression:
-                console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.ConditionalExpression:
                 break;
@@ -277,7 +323,6 @@
             case Syntax.LogicalExpression:
                 break;
             case Syntax.MemberExpression:
-                console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.NewExpression:
                 console.log(node.type + " is not handle yet.");
@@ -313,7 +358,7 @@
 
     };
 
-    var exitExpression = function (node, ctx) {
+    var exitExpression = function (node, parent, ctx) {
 
         switch (node.type) {
             case Syntax.AssignmentExpression:
@@ -329,7 +374,7 @@
                 handlers.BinaryExpression(node);
                 break;
             case Syntax.CallExpression:
-                console.log(node.type + " is not handle yet.");
+                handlers.CallExpression(node, ctx);
                 break;
             case Syntax.ConditionalExpression:
                 handlers.ConditionalExpression(node);
@@ -346,7 +391,7 @@
                 handlers.LogicalExpression(node);
                 break;
             case Syntax.MemberExpression:
-                console.log(node.type + " is not handle yet.");
+                handlers.MemberExpression(node, parent, ctx);
                 break;
             case Syntax.NewExpression:
                 console.log(node.type + " is not handle yet.");

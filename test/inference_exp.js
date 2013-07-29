@@ -56,6 +56,18 @@ describe('Inference', function () {
             exp.result.should.have.property("type", TYPES.BOOLEAN);
             exp.result.should.have.property("staticValue", false);
         });
+        it("should annotate !number => boolean", function () {
+            var exp = parseAndInferenceExpression("!8.5");
+            exp.should.have.property("result");
+            exp.result.should.have.property("type", TYPES.BOOLEAN);
+            exp.result.should.have.property("staticValue", false);
+        });
+        it("should annotate !int => boolean", function () {
+            var exp = parseAndInferenceExpression("!0");
+            exp.should.have.property("result");
+            exp.result.should.have.property("type", TYPES.BOOLEAN);
+            exp.result.should.have.property("staticValue", true);
+        });
         it("should annotate +int => int", function () {
             var exp = parseAndInferenceExpression("+8");
             exp.should.have.property("result");
@@ -77,7 +89,7 @@ describe('Inference', function () {
         it("should annotate -boolean => int", function () {
             var exp = parseAndInferenceExpression("-true");
             exp.should.have.property("result");
-            exp.result.should.have.property("type", TYPES.INT   );
+            exp.result.should.have.property("type", TYPES.INT);
             exp.result.should.have.property("staticValue", -1);
         });
     });
@@ -184,6 +196,59 @@ describe('Inference', function () {
             exp.result.should.have.property("type", TYPES.INT);
         });
     });
+
+    describe('Object Registry', function () {
+        describe('for Math object', function () {
+            it("constant Math.PI ⇒ number", function () {
+                var exp = parseAndInferenceExpression("Math.PI");
+                exp.should.have.property("result");
+                exp.result.should.have.property("type", TYPES.NUMBER);
+                exp.result.should.have.property("staticValue", Math.PI);
+
+            });
+            it("throws for unknown property", function () {
+                var evaluation = parseAndInferenceExpression.bind(undefined, "Math.XPI");
+                evaluation.should.throw(/has no property/);
+            });
+            it("call Math.cos(number) ⇒ number", function () {
+                var exp = parseAndInferenceExpression("Math.cos(0.0)");
+                exp.should.have.property("result");
+                exp.result.should.have.property("type", TYPES.NUMBER);
+                exp.result.should.have.property("staticValue", 1);
+            });
+            it("call Math.atan2(number,number) ⇒ number", function () {
+                var exp = parseAndInferenceExpression("Math.atan2(Math.PI, 0)");
+                exp.should.have.property("result");
+                exp.result.should.have.property("type", TYPES.NUMBER);
+                exp.result.should.have.property("staticValue", Math.PI / 2);
+            });
+            it("call Math.min(number,number,...) ⇒ number", function () {
+                var exp = parseAndInferenceExpression("Math.min(Math.PI, 4, -1)");
+                exp.should.have.property("result");
+                exp.result.should.have.property("type", TYPES.NUMBER);
+                exp.result.should.have.property("staticValue", -1);
+            });
+            it("call Math.floor(number) ⇒ int", function () {
+                var exp = parseAndInferenceExpression("Math.floor(5.5)");
+                exp.should.have.property("result");
+                exp.result.should.have.property("type", TYPES.INT);
+                exp.result.should.have.property("staticValue", 5);
+            });
+            it("Math.cos(number, number) ⇒ throw invalid number of parameters", function () {
+                var evaluation = parseAndInferenceExpression.bind(undefined, "Math.cos(0.0, 2.0)");
+                evaluation.should.throw(/Invalid number of parameters/);
+            });
+            it("Math.cos(string) ⇒ throw invalid parameters type", function () {
+                var evaluation = parseAndInferenceExpression.bind(undefined, "Math.cos('hallo')");
+                evaluation.should.throw(/Parameter 0 has invalid type/);
+            });
+            it("throws for unknown method", function () {
+                var evaluation = parseAndInferenceExpression.bind(undefined, "Math.foo(5.0)");
+                evaluation.should.throw(/has no method/);
+            });
+        });
+    });
+
 
     /*describe('with Parameters form outside', function () {
      var exp = parseAndInferenceExpression("a + 5", { a: { type: TYPES.INT }});

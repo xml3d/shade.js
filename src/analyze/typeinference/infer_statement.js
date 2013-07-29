@@ -10,7 +10,7 @@
         VariableDeclarator: function(node, ctx) {
             var result = new Node(node);
 
-            ctx.declare(node.id);
+            ctx.declareVariable(node.id);
 
             if (node.init) {
                 var init = new Node(node.init);

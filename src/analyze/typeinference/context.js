@@ -20,7 +20,7 @@
             return undefined;
         },
 
-        declare: function(name) {
+        declareVariable: function(name) {
             this.variables[name] = { type: TYPES.UNDEFINED, initialized : false };
         },
 
@@ -37,6 +37,14 @@
                 v.initialized = true;
             }
 
+        },
+
+        registerObject: function(obj) {
+            obj.register(this.variables);
+        },
+
+        findObject : function(name) {
+            return this.findVariable(name);
         }
 
 
