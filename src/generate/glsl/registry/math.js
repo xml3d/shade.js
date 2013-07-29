@@ -44,11 +44,6 @@
         }
     });
 
-    var register = function(to) {
-        to["Math"] = MathEntry;
-    };
-
     ns.MathEntry = MathEntry;
-    ns.register = register;
 
 }(exports));

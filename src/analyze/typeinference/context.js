@@ -39,8 +39,8 @@
 
         },
 
-        registerObject: function(obj) {
-            obj.register(this.variables);
+        registerObject: function(name, obj) {
+            this.variables[name] = obj;
         },
 
         findObject : function(name) {

@@ -174,7 +174,7 @@
             } else {
                 // We don't allow dynamic types (the type of the result depends on the value of it's operands).
                 // At this point, the expression needs to evaluate to a result, otherwise it's an error
-                throw new Error("Static evaulation not implemented yet");
+                throw new Error("Static evaluation not implemented yet");
             }
         },
 

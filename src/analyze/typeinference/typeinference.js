@@ -10,7 +10,8 @@
         enterStatement = require('./infer_statement.js').enterStatement,
         exitStatement = require('./infer_statement.js').exitStatement,
         Context = require("./context.js").Context,
-        MathObject = require("./registry/math.js")
+        MathObject = require("./registry/math.js"),
+        ColorObject = require("./registry/color.js")
 
     var Syntax = walk.Syntax;
 
@@ -83,7 +84,8 @@
 
     var infer = function(ast, variables) {
         var ctx = new Context(null, { variables: variables });
-        ctx.registerObject(MathObject);
+        ctx.registerObject("Math", MathObject.MathEntry);
+        ctx.registerObject("Color", ColorObject.ColorEntry);
 
         walk.traverse(ast, {
             enter: enterNode.bind(this, ctx),
