@@ -1,8 +1,9 @@
 (function(ns){
 
-    Shade = require("../../interfaces.js").Shade;
-    var TYPES = Shade.TYPES;
-    var KINDS = Shade.OBJECT_KINDS;
+    var Shade = require("../interfaces.js").Shade,
+        Syntax = require('estraverse').Syntax,
+        TYPES = Shade.TYPES,
+        KINDS = Shade.OBJECT_KINDS;
 
 
     var Node = function (node) {
@@ -10,24 +11,39 @@
         this.node.extra = this.node.extra || {};
     }
 
+    Node.createForContext = function(node, ctx) {
+        var result = new Node(node);
+        if (result.getType() !== TYPES.ANY)
+            return result;
+
+        if (node.type == Syntax.Identifier) {
+            var name = node.name;
+            var variable = ctx.findVariable(name);
+            return variable.expression;
+        }
+        return null;
+    }
+
     Node.prototype = {
-        _getExtra: function () {
+        getExtra: function () {
             return this.node.extra;
         },
         getType: function () {
-            var extra = this._getExtra();
-            return extra.type || TYPES.ANY;
+            var extra = this.getExtra();
+            if (extra.type != undefined)
+                return extra.type;
+            return TYPES.ANY;
         },
 
         setKind: function (kind) {
-           var extra = this._getExtra();
+           var extra = this.getExtra();
             extra.kind = kind;
         },
 
         getKind: function () {
             if (!this.isObject())
                 return null;
-            return this._getExtra().kind || KINDS.ANY;
+            return this.getExtra().kind || KINDS.ANY;
         },
 
         isOfKind: function(kind) {
@@ -38,7 +54,7 @@
         },
 
         setType: function (type) {
-            var extra = this._getExtra();
+            var extra = this.getExtra();
             extra.type = type;
         },
 
@@ -81,38 +97,46 @@
             return this.isInt() || this.isBool();
         },
         hasStaticValue : function() {
-            var extra = this._getExtra();
+            var extra = this.getExtra();
+            if (this.isNullOrUndefined())
+                return true;
             return extra.hasOwnProperty("staticValue");
         },
         setStaticValue : function(v) {
-            var extra = this._getExtra();
+            var extra = this.getExtra();
+            if (this.isNullOrUndefined())
+                throw("Null and undefined have predefined values.");
             extra.staticValue = v;
         },
         getStaticValue : function() {
             if (!this.hasStaticValue()) {
                 throw new Error("Node has no static value: " + this.node);
             }
-            return this._getExtra().staticValue;
+            if (this.isNull())
+                return null;
+            if (this.isUndefined())
+                return undefined;
+            return this.getExtra().staticValue;
         },
         setDynamicValue : function() {
-            delete this._getExtra().staticValue;
+            delete this.getExtra().staticValue;
         },
         setCall : function(call) {
-            var extra = this._getExtra();
+            var extra = this.getExtra();
             extra.evaluate = call;
         },
         getCall : function() {
-            return this._getExtra().evaluate;
+            return this.getExtra().evaluate;
         },
         clearCall: function() {
-            var extra = this._getExtra();
+            var extra = this.getExtra();
             delete extra.evaluate;
         },
         copy: function(other) {
             this.setType(other.getType());
             if (other.getKind())
                 this.setKind(other.getKind());
-            if (other.hasStaticValue()) {
+            if (other.hasStaticValue() && !other.isNullOrUndefined()) {
                 this.setStaticValue(other.getStaticValue());
             } else {
                 this.setDynamicValue();
@@ -121,9 +145,25 @@
                 this.setCall(other.getCall());
         },
         str: function() {
-            var extra = this._getExtra();
+            var extra = this.getExtra();
             return JSON.stringify(extra, null, 1);
+        },
+        canNormal: function() {
+            return this.isObject() && (this.isOfKind(KINDS.NORMAL) || this.isOfKind(KINDS.FLOAT3));
+        },
+        canColor: function() {
+            return this.isObject() && (this.isOfKind(KINDS.COLOR) || this.isOfKind(KINDS.FLOAT3));
+        },
+        eliminate : function() {
+            var extra = this.getExtra();
+            extra.eliminate = true;
+        },
+        canEliminate : function() {
+            var extra = this.getExtra();
+            return extra.eliminate == true;
         }
+
+
     }
 
     ns.Node = Node;

@@ -2,7 +2,7 @@
 
     var Syntax = require('estraverse').Syntax,
         Shade = require("../../interfaces.js").Shade,
-        Node = require("./node.js").Node;
+        Node = require("./../../base/node.js").Node;
 
     var TYPES = Shade.TYPES;
 
@@ -58,7 +58,6 @@
                     result.setStaticValue(false);
                 } else if (value === 'null') {
                     result.setType(TYPES.NULL);
-                    result.setStaticValue(null);
                 } else {
                     result.setType(TYPES.STRING);
                     result.setStaticValue(value);
@@ -111,14 +110,6 @@
                 result.setType(TYPES.UNDEFINED);
                 return;
             }
-
-            var v = ctx.findVariable(name);
-            if (v) {
-                result.setType(v.type);
-                return;
-            }
-
-
             //console.error("Identifier not handled: ", name, node);
 
         },
@@ -154,8 +145,6 @@
 
             if (!(operator == "&&" || operator == "||"))
                 throw new Error("Operator not supported: " + node.operator);
-
-            console.log("logical", left.str(), right.str());
 
             if (left.isNullOrUndefined()) {  // evaluates to false
                 if (operator == "||") {      // false || x = x
@@ -249,8 +238,7 @@
         MemberExpression: function(node, parent, ctx) {
             var result = new Node(node),
                 objectName = node.object.name,
-                propertyName =   node.property.name,
-                isCall = parent.type == Syntax.CallExpression;
+                propertyName =   node.property.name;
 
             if (!(objectName && propertyName)) {
                 throw new Error ("Can't handle dynamic objects/properties yet.")
@@ -259,11 +247,9 @@
             if (!obj) {
                 throw new Error ("Can't find '" + objectName + "' in this context" +  ctx);
             }
-            if(!obj.hasOwnProperty(propertyName)) {
-                if (isCall)
-                    throw new Error ("Object '" + objectName + "' has no method '"+ propertyName+"'");
-                else
-                    throw new Error ("Object '" + objectName + "' has no property '"+ propertyName+"'");
+            if (!obj.hasOwnProperty(propertyName)) {
+                result.setType(TYPES.UNDEFINED);
+                return;
             }
             var prop = obj[propertyName];
             var propNode = new Node({ extra: prop });
@@ -277,13 +263,12 @@
             var call = callee.getCall();
             if(typeof call == "function") {
                 result.copy(callee);
-                call(result, node.arguments);
+                call(result, node.arguments, ctx);
                 callee.clearCall();
                 result.clearCall();
             } else {
-                throw new Error("Could not evaluate call: " + node);
+                throw new Error ("Object '" + node.callee.object.name + "' has no method '"+ node.callee.property.name+"'");
             }
-
         }
     };
 

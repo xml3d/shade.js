@@ -1,7 +1,8 @@
 (function (ns) {
 
     var Base = require("../../base/index.js").Base,
-        Shade = require("../../interfaces.js").Shade;
+        Shade = require("../../interfaces.js").Shade,
+        Node = require("../../base/node.js").Node;
 
     var ObjectRegistry = {};
 
@@ -35,6 +36,8 @@
                             return handleMemberExpression(node, parent, cb);
                         case Syntax.BinaryExpression:
                             return handleBinaryExpression(node, parent, cb);
+                        case Syntax.IfStatement:
+                            return handleIfStatement(node, parent, cb);
 
                     }
                 }
@@ -85,6 +88,21 @@
         }
     }
 
+
+    var handleIfStatement = function(node, parent, cb) {
+        var consequent = new Node(node.consequent);
+        var alternate = node.alternate ? new Node(node.alternate) : null;
+        if(consequent.canEliminate()) {
+             if(alternate) {
+                return node.alternate;
+             }
+             return {
+                 type: Syntax.EmptyStatement
+             }
+        } else if (alternate.canEliminate()) {
+            return node.consequent;
+        }
+    }
 
 
     // Exports

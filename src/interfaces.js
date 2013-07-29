@@ -19,9 +19,11 @@
     ns.Shade.OBJECT_KINDS = {
         ANY: "any",
         COLOR: "color", // virtual kinds
+        FLOAT3: "float3", // virtual kinds
         NORMAL: "normal",
         MATRIX4: "matrix4",
-        MATRIX3: "matrix3"
+        MATRIX3: "matrix3",
+        COLOR_CLOSURE: "color_closure"
     }
 
     /**

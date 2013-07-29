@@ -29,7 +29,8 @@
             return aast;
         },
 
-        TYPES : interfaces.TYPES
+        TYPES : interfaces.TYPES,
+        OBJECT_KINDS : interfaces.OBJECT_KINDS
 
 });
     /**

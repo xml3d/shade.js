@@ -1,34 +1,79 @@
 (function (ns) {
 
-    var Syntax = require('estraverse').Syntax;
-    var Shade = require("../../interfaces.js").Shade,
-        Node = require("./node.js").Node;
+    var walk = require('estraverse'),
+        enterExpression = require('./infer_expression.js').enterExpression,
+        exitExpression = require('./infer_expression.js').exitExpression,
+        Syntax = require('estraverse').Syntax,
+        Shade = require("../../interfaces.js").Shade,
+        Node = require("./../../base/node.js").Node;
 
     var TYPES = Shade.TYPES;
+
+    var enterHandler = {
+        IfStatement: (function() {
+
+            var c_evaluate = function(exp) {
+                return !!exp;
+            }
+
+            return function(node, ctx) {
+                walk.traverse(node.test, {
+                    enter: function(node, parent) { enterExpression(node, parent, ctx); },
+                    leave: function(node, parent) { exitExpression(node, parent, ctx); }
+                });
+                var test = new Node(node.test);
+                if (test.hasStaticValue()) { // Great! We can evaluate it!
+                    //console.log("Static value in if test!");
+                    var testResult = c_evaluate(test.getStaticValue());
+                    if(!testResult) {
+                        var consequent = new Node(node.consequent);
+                        consequent.eliminate();
+                    } else if(node.alternate) {
+                        var alternate = new Node(node.alternate);
+                        alternate.eliminate();
+                    }
+                    return walk.VisitorOption.Skip;
+
+                }
+            }
+        }())
+    }
 
     var exitHandler = {
         VariableDeclarator: function(node, ctx) {
             var result = new Node(node);
 
-            ctx.declareVariable(node.id);
+            if (node.id.type != Syntax.Identifier) {
+                throw new Error("Dynamic variable names are not yet supported");
+            }
+            var variableName = node.id.name;
+            ctx.declareVariable(variableName);
 
             if (node.init) {
                 var init = new Node(node.init);
-                ctx.updateType(node.id, init.getType());
+                result.copy(init);
+                ctx.updateExpression(variableName, init);
             }
             // TODO: result.setType(init.getType());
         }
     }
 
 
-    var enterStatement = function (node) {
 
+
+    var enterStatement = function (node, parent, ctx) {
+
+        switch (node.type) {
+            case Syntax.IfStatement:
+                return enterHandler.IfStatement(node, ctx);
+
+        }
         return;
 
 
     };
 
-    var exitStatement = function (node, ctx) {
+    var exitStatement = function (node, parent, ctx) {
 
         switch (node.type) {
             case Syntax.ExpressionStatement:
@@ -72,7 +117,6 @@
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.IfStatement:
-                console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.LabeledStatement:
                 console.log(node.type + " is not handle yet.");

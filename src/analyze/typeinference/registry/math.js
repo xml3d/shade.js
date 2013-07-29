@@ -1,7 +1,7 @@
 (function (ns) {
 
     var TYPES = require("../../../interfaces.js").Shade.TYPES,
-        Node = require("../node.js").Node;
+        Node = require("../../../base/node.js").Node;
 
 
     var evaluateMethod = function (name, paramCount) {

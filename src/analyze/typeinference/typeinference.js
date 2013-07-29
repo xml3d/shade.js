@@ -11,17 +11,19 @@
         exitStatement = require('./infer_statement.js').exitStatement,
         Context = require("./context.js").Context,
         MathObject = require("./registry/math.js"),
-        ColorObject = require("./registry/color.js")
+        ColorObject = require("./registry/color.js"),
+        ShadeObject = require("./registry/shade.js")
+
 
     var Syntax = walk.Syntax;
 
 
     var enterNode = function(ctx, node, parent) {
-        switchKind(node, parent, ctx, enterStatement, enterExpression);
+        return switchKind(node, parent, ctx, enterStatement, enterExpression);
     }
 
     var exitNode = function(ctx, node, parent) {
-        switchKind(node, parent, ctx, exitStatement, exitExpression);
+        return switchKind(node, parent, ctx, exitStatement, exitExpression);
     }
 
     var switchKind = function(node, parent, ctx, statement, expression) {
@@ -50,8 +52,7 @@
             case Syntax.VariableDeclarator:
             case Syntax.WhileStatement:
             case Syntax.WithStatement:
-                statement(node, parent, ctx);
-                break;
+                return statement(node, parent, ctx);
 
             case Syntax.AssignmentExpression:
             case Syntax.ArrayExpression:
@@ -73,8 +74,7 @@
             case Syntax.UnaryExpression:
             case Syntax.UpdateExpression:
             case Syntax.YieldExpression:
-                expression(node, parent, ctx);
-                break;
+                return expression(node, parent, ctx);
 
             default:
                 throw new Error('Unknown node type: ' + node.type);
@@ -86,6 +86,7 @@
         var ctx = new Context(null, { variables: variables });
         ctx.registerObject("Math", MathObject.MathEntry);
         ctx.registerObject("Color", ColorObject.ColorEntry);
+        ctx.registerObject("Shade", ShadeObject.ShadeEntry);
 
         walk.traverse(ast, {
             enter: enterNode.bind(this, ctx),
