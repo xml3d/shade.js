@@ -148,12 +148,15 @@
 
             if (left.isNullOrUndefined()) {  // evaluates to false
                 if (operator == "||") {      // false || x = x
-                    result.copy(right)
+                    result.copy(right);
+                    left.eliminate();
                 } else {                     // false && x = false
-                    result.copy(left)
+                    result.copy(left);
+                    right.eliminate();
                 }
             } else if (left.isObject() && operator == "||") { // An object that is not null evaluates to true
                 result.copy(left);
+                right.eliminate();
             }
             else if (left.getType() == right.getType()) {
                 if (left.isObject() && left.getKind() != right.getKind()) {
