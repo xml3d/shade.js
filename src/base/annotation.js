@@ -6,13 +6,13 @@
         KINDS = Shade.OBJECT_KINDS;
 
 
-    var Node = function (node) {
+    var Annotation = function (node) {
         this.node = node;
         this.node.extra = this.node.extra || {};
     }
 
-    Node.createForContext = function(node, ctx) {
-        var result = new Node(node);
+    Annotation.createForContext = function(node, ctx) {
+        var result = new Annotation(node);
         if (result.getType() !== TYPES.ANY)
             return result;
 
@@ -24,7 +24,7 @@
         return null;
     }
 
-    Node.prototype = {
+    Annotation.prototype = {
         getExtra: function () {
             return this.node.extra;
         },
@@ -141,6 +141,7 @@
             } else {
                 this.setDynamicValue();
             }
+            this.setGlobal(other.isGlobal());
             if(other.getCall())
                 this.setCall(other.getCall());
         },
@@ -161,11 +162,20 @@
         canEliminate : function() {
             var extra = this.getExtra();
             return extra.eliminate == true;
+        },
+        isGlobal: function() {
+            var extra = this.getExtra();
+            return extra.global == true;
+        },
+        setGlobal: function(val) {
+            var extra = this.getExtra();
+            return extra.global = val;
         }
+
 
 
     }
 
-    ns.Node = Node;
+    ns.Annotation = Annotation;
 
 }(exports));

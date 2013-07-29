@@ -3,7 +3,7 @@
     var Shade = require("../../../interfaces.js").Shade,
         TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS,
-        Node = require("../../../base/node.js").Node;
+        Annotation = require("../../../base/annotation.js").Annotation;
 
     var ShadeObject = {
         diffuse: {

@@ -83,6 +83,7 @@
 
 
     var infer = function(ast, variables) {
+        variables && variables.env && (variables.env.global = true);
         var ctx = new Context(null, { variables: variables });
         ctx.registerObject("Math", MathObject.MathEntry);
         ctx.registerObject("Color", ColorObject.ColorEntry);

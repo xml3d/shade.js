@@ -2,7 +2,7 @@
 
     var Base = require("../../base/index.js").Base,
         Shade = require("../../interfaces.js").Shade,
-        Node = require("../../base/node.js").Node;
+        Annotation = require("../../base/annotation.js").Annotation;
 
     var ObjectRegistry = {};
 
@@ -23,36 +23,33 @@
 
     Base.extend(GLASTTransformer.prototype, {
         transformAAST: function (aast) {
-
+            this.root = aast;
             walk.replace(aast, {
 
-                enter: function (node, parent, cb) {
+                enter: function (node, parent) {
                     //console.log("Enter:", node.type);
                     switch (node.type) {
                         case Syntax.MemberExpression:
-                            return handleMemberExpression(node, parent, cb);
+                            return handleMemberExpression(node, parent, aast);
                         case Syntax.BinaryExpression:
-                            return handleBinaryExpression(node, parent, cb);
+                            return handleBinaryExpression(node, parent);
                         case Syntax.IfStatement:
-                            return handleIfStatement(node, parent, cb);
+                            return handleIfStatement(node);
                         case Syntax.LogicalExpression:
-                            return handleLogicalExpression(node, parent, cb);
+                            return handleLogicalExpression(node, parent);
 
                     }
                 }
-
-
             });
             return aast;
         }
     });
 
 
-    var handleMemberExpression = function (memberExpression, parent, cb) {
+    var handleMemberExpression = function (memberExpression, parent, root) {
         // console.log("Member:", memberExpression.object);
         var object = memberExpression.object,
             property = memberExpression.property;
-
 
         if (object.name in ObjectRegistry) {
             var objectEntry = ObjectRegistry[object.name];
@@ -63,6 +60,23 @@
                 }
             }
         }
+        var node = new Annotation(memberExpression);
+        if(node.isGlobal()) {
+            root.body.unshift({
+                type: Syntax.VariableDeclaration,
+                declarations: [
+                    {
+                        type: Syntax.VariableDeclarator,
+                        id: property.name,
+                        init: null
+                    }
+                ],
+                kind: "var"
+            });
+            console.log(root);
+
+        }
+
     };
 
     var handleBinaryExpression = function (binaryExpression, parent, cb) {
@@ -87,8 +101,8 @@
 
 
     var handleIfStatement = function (node) {
-        var consequent = new Node(node.consequent);
-        var alternate = node.alternate ? new Node(node.alternate) : null;
+        var consequent = new Annotation(node.consequent);
+        var alternate = node.alternate ? new Annotation(node.alternate) : null;
         if (consequent.canEliminate()) {
             if (alternate) {
                 return node.alternate;
@@ -102,8 +116,8 @@
     };
 
     var handleLogicalExpression = function (node) {
-        var left = new Node(node.left);
-        var right = new Node(node.right);
+        var left = new Annotation(node.left);
+        var right = new Annotation(node.right);
         if (left.canEliminate())
             return node.right;
         if (right.canEliminate())

@@ -3,7 +3,7 @@
     var Shade = require("../../../interfaces.js").Shade,
         TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS,
-        Node = require("../../../base/node.js").Node;
+        Annotation = require("../../../base/annotation.js").Annotation;
 
     var Color = function(r,g,b) {
         if (Array.isArray(r)) {
@@ -28,7 +28,7 @@
                 var argArray = [];
                 var isStatic = true;
                 args.forEach(function (arg, index) {
-                    var param = new Node(arg);
+                    var param = new Annotation(arg);
                     if (!param.canInt())
                         throw new Error("Parameter " + index + " has invalid type for Color.rgb, expected 'int', but got " + param.getType());
                     isStatic = isStatic && param.hasStaticValue();

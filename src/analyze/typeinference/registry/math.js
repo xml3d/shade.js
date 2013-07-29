@@ -1,7 +1,7 @@
 (function (ns) {
 
     var TYPES = require("../../../interfaces.js").Shade.TYPES,
-        Node = require("../../../base/node.js").Node;
+        Annotation = require("../../../base/annotation.js").Annotation;
 
 
     var evaluateMethod = function (name, paramCount) {
@@ -15,7 +15,7 @@
             var argArray = [];
             var isStatic = true;
             args.forEach(function (arg, index) {
-                var param = new Node(arg);
+                var param = new Annotation(arg);
                 if (!param.canNumber())
                     throw new Error("Parameter " + index + " has invalid type for Math." + name + ", expected 'number', but got " + param.getType());
                 isStatic = isStatic && param.hasStaticValue();

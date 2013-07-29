@@ -5,7 +5,7 @@
         exitExpression = require('./infer_expression.js').exitExpression,
         Syntax = require('estraverse').Syntax,
         Shade = require("../../interfaces.js").Shade,
-        Node = require("./../../base/node.js").Node;
+        Annotation = require("./../../base/annotation.js").Annotation;
 
     var TYPES = Shade.TYPES;
 
@@ -21,15 +21,15 @@
                     enter: function(node, parent) { enterExpression(node, parent, ctx); },
                     leave: function(node, parent) { exitExpression(node, parent, ctx); }
                 });
-                var test = new Node(node.test);
+                var test = new Annotation(node.test);
                 if (test.hasStaticValue()) { // Great! We can evaluate it!
                     //console.log("Static value in if test!");
                     var testResult = c_evaluate(test.getStaticValue());
                     if(!testResult) {
-                        var consequent = new Node(node.consequent);
+                        var consequent = new Annotation(node.consequent);
                         consequent.eliminate();
                     } else if(node.alternate) {
-                        var alternate = new Node(node.alternate);
+                        var alternate = new Annotation(node.alternate);
                         alternate.eliminate();
                     }
                     return walk.VisitorOption.Skip;
@@ -41,7 +41,7 @@
 
     var exitHandler = {
         VariableDeclarator: function(node, ctx) {
-            var result = new Node(node);
+            var result = new Annotation(node);
 
             if (node.id.type != Syntax.Identifier) {
                 throw new Error("Dynamic variable names are not yet supported");
@@ -50,7 +50,7 @@
             ctx.declareVariable(variableName);
 
             if (node.init) {
-                var init = new Node(node.init);
+                var init = new Annotation(node.init);
                 result.copy(init);
                 ctx.updateExpression(variableName, init);
             }
@@ -77,8 +77,8 @@
 
         switch (node.type) {
             case Syntax.ExpressionStatement:
-                var result = new Node(node),
-                    expression = new Node(node.expression);
+                var result = new Annotation(node),
+                    expression = new Annotation(node.expression);
 
                 result.copy(expression);
 

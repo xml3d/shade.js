@@ -2,7 +2,7 @@
 
     var Syntax = require('estraverse').Syntax,
         Shade = require("../../interfaces.js").Shade,
-        Node = require("./../../base/node.js").Node;
+        Annotation = require("./../../base/annotation.js").Annotation;
 
     var TYPES = Shade.TYPES;
 
@@ -38,7 +38,7 @@
             Literal : function (literal) {
                 //console.log(literal);
                 var value = literal.raw !== undefined ? literal.raw : literal.value,
-                    result = new Node(literal);
+                    result = new Annotation(literal);
 
                 var number = parseFloat(value);
 
@@ -66,8 +66,8 @@
 
 
         UnaryExpression: function (node, ctx) {
-            var result = new Node(node),
-                argument = new Node(node.argument),
+            var result = new Annotation(node),
+                argument = new Annotation(node.argument),
                 operator = node.operator,
                 func = UnaryFunctions[operator];
 
@@ -103,7 +103,7 @@
 
 
         Identifier: function(node, ctx) {
-            var result = new Node(node),
+            var result = new Annotation(node),
                 name = node.name;
 
             if(name === "undefined") {
@@ -115,10 +115,10 @@
         },
 
         ConditionalExpression: function(node) {
-            var result = new Node(node),
-                test = new Node(node.test),
-                consequent = new Node(node.consequent),
-                alternate = new Node(node.alternate);
+            var result = new Annotation(node),
+                test = new Annotation(node.test),
+                consequent = new Annotation(node.consequent),
+                alternate = new Annotation(node.alternate);
 
             //console.log(node.test, node.consequent, node.alternate);
 
@@ -138,9 +138,9 @@
         },
 
         LogicalExpression: function (node) {
-            var left = new Node(node.left),
-                right = new Node(node.right),
-                result = new Node(node),
+            var left = new Annotation(node.left),
+                right = new Annotation(node.right),
+                result = new Annotation(node),
                 operator = node.operator;
 
             if (!(operator == "&&" || operator == "||"))
@@ -176,9 +176,9 @@
 
         BinaryExpression: function (node) {
             //console.log(node.left, node.right);
-            var left = new Node(node.left),
-                right = new Node(node.right),
-                result = new Node(node),
+            var left = new Annotation(node.left),
+                right = new Annotation(node.right),
+                result = new Annotation(node),
                 operator = node.operator,
                 func = BinaryFunctions[operator];
 
@@ -239,7 +239,7 @@
 
 
         MemberExpression: function(node, parent, ctx) {
-            var result = new Node(node),
+            var result = new Annotation(node),
                 objectName = node.object.name,
                 propertyName =   node.property.name;
 
@@ -255,13 +255,14 @@
                 return;
             }
             var prop = obj[propertyName];
-            var propNode = new Node({ extra: prop });
+            var propNode = new Annotation({ extra: prop});
             result.copy(propNode);
+            result.setGlobal(obj.global);
         },
 
         CallExpression: function(node, ctx) {
-            var result = new Node(node),
-                callee = new Node(node.callee);
+            var result = new Annotation(node),
+                callee = new Annotation(node.callee);
 
             var call = callee.getCall();
             if(typeof call == "function") {

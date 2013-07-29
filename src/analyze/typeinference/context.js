@@ -2,7 +2,7 @@
 
     var Base = require("../../base/index.js").Base,
         TYPES = require("../../interfaces.js").Shade.TYPES,
-        Node = require("./../../base/node.js").Node;
+        Annotation = require("./../../base/annotation.js").Annotation;
 
     var Context = function(parent, opt) {
         opt = opt || {};
@@ -22,7 +22,7 @@
         },
 
         declareVariable: function(name) {
-            this.variables[name] = { expression: new Node({}), initialized : false };
+            this.variables[name] = { expression: new Annotation({}), initialized : false };
         },
 
         updateExpression: function(name, exp) {
