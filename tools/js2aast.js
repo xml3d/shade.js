@@ -26,8 +26,6 @@ var argv = require('optimist').argv,
             console.log("Found context file: " + ctx);
             var contextData = JSON.parse(fs.readFileSync(ctx, "utf-8"));
         }
-        console.log(contextData);
-
         var data = fs.readFileSync(filename, "utf-8");
         return Shade.parseAndInferenceExpression(data, contextData);
     }());

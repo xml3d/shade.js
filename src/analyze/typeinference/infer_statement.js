@@ -32,8 +32,10 @@
 
         switch (node.type) {
             case Syntax.ExpressionStatement:
-                // console.log("exp:", node);
-                node.result = node.expression.result;
+                var result = new Node(node),
+                    expression = new Node(node.expression);
+
+                result.copy(expression);
 
                 break;
             case Syntax.BlockStatement:

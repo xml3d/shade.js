@@ -13,8 +13,12 @@
         OBJECT: "object",
         NULL: "null",
         UNDEFINED: "undefined",
-        STRING: "string",
-        COLOR: "color", // virtual types
+        STRING: "string"
+    }
+
+    ns.Shade.OBJECT_KINDS = {
+        ANY: "any",
+        COLOR: "color", // virtual kinds
         NORMAL: "normal",
         MATRIX4: "matrix4",
         MATRIX3: "matrix3"

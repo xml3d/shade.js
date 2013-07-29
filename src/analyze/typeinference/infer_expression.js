@@ -6,13 +6,6 @@
 
     var TYPES = Shade.TYPES;
 
-    var checkExtra = function () {
-        for (var i = 0; i < arguments.length; i++) {
-            if (arguments[i].result == undefined)
-                throw new Error("Missing annotations, " + arguments[i]);
-        }
-    };
-
     var BinaryFunctions = {
         "+" : function(a,b) { return a + b; },
         "-" : function(a,b) { return a - b; },
@@ -162,16 +155,24 @@
             if (!(operator == "&&" || operator == "||"))
                 throw new Error("Operator not supported: " + node.operator);
 
-            if (left.getType() == right.getType() && !left.isObject()) {
-                result.setType(left.getType());
-            }
-            else if (left.isNullOrUndefined()) {
-                if (operator == "||") {
-                    result.setType(right.getType())
-                } else { // &&
-                    result.setType(left.getType())
+            console.log("logical", left.str(), right.str());
+
+            if (left.isNullOrUndefined()) {  // evaluates to false
+                if (operator == "||") {      // false || x = x
+                    result.copy(right)
+                } else {                     // false && x = false
+                    result.copy(left)
                 }
-            } else {
+            } else if (left.isObject() && operator == "||") { // An object that is not null evaluates to true
+                result.copy(left);
+            }
+            else if (left.getType() == right.getType()) {
+                if (left.isObject() && left.getKind() != right.getKind()) {
+                    throw new Error("Can't evaluate logical expression with two different kind of objects");
+                }
+                result.copy(left); // TODO: Static value?
+            }
+            else {
                 // We don't allow dynamic types (the type of the result depends on the value of it's operands).
                 // At this point, the expression needs to evaluate to a result, otherwise it's an error
                 throw new Error("Static evaluation not implemented yet");
@@ -265,26 +266,20 @@
                     throw new Error ("Object '" + objectName + "' has no property '"+ propertyName+"'");
             }
             var prop = obj[propertyName];
-            result.setType(prop.type);
-            if (prop.staticValue) {
-                result.setStaticValue(prop.staticValue);
-            }
-            if (isCall) {
-                result.setCall(prop);
-            }
-            //if (prop.check)
-
+            var propNode = new Node({ extra: prop });
+            result.copy(propNode);
         },
 
         CallExpression: function(node, ctx) {
             var result = new Node(node),
                 callee = new Node(node.callee);
 
-            var callInfo = callee.getCall();
-            if(callInfo) {
-                callInfo.evaluate(result, node.arguments);
-                result.setType(callInfo.type);
+            var call = callee.getCall();
+            if(typeof call == "function") {
+                result.copy(callee);
+                call(result, node.arguments);
                 callee.clearCall();
+                result.clearCall();
             } else {
                 throw new Error("Could not evaluate call: " + node);
             }
