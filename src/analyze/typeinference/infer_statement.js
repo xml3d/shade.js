@@ -41,7 +41,7 @@
 
     var exitHandler = {
         VariableDeclarator: function(node, ctx) {
-            var result = new Annotation(node);
+            var result = node.annotation;
 
             if (node.id.type != Syntax.Identifier) {
                 throw new Error("Dynamic variable names are not yet supported");
@@ -50,7 +50,7 @@
             ctx.declareVariable(variableName);
 
             if (node.init) {
-                var init = new Annotation(node.init);
+                var init = node.init.annotation;
                 result.copy(init);
                 ctx.updateExpression(variableName, init);
             }

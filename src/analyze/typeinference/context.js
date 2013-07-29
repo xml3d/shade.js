@@ -25,16 +25,21 @@
             this.variables[name] = { expression: new Annotation({}), initialized : false };
         },
 
-        updateExpression: function(name, exp) {
+        /**
+         *
+         * @param {string} name
+         * @param {Annotation} annotation
+         */
+        updateExpression: function(name, annotation) {
             var v = this.findVariable(name);
             if(!v) {
                 throw new Error("Variable was not declared in this scope: " + name);
             }
             if(v.initialized) {
-                if (v.expression.getType() !== exp.getType())
+                if (v.annotation.getType() !== annotation.getType())
                     throw new Error("Variable may not change it's type: " + name);
             } else {
-                v.expression = exp;
+                v.annotation = annotation;
                 v.initialized = true;
             }
 

@@ -6,6 +6,14 @@
         KINDS = Shade.OBJECT_KINDS;
 
 
+    Object.defineProperty(Object.prototype, 'annotation', {
+        set: function(){},
+        get: function(){
+            return new Annotation(this);
+        },
+        configurable: true
+    });
+
     var Annotation = function (node) {
         this.node = node;
         this.node.extra = this.node.extra || {};

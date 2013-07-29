@@ -60,20 +60,22 @@
                 }
             }
         }
-        var node = new Annotation(memberExpression);
-        if(node.isGlobal()) {
-            root.body.unshift({
+        var exp = memberExpression.annotation;
+        if(exp.isGlobal()) {
+            var decl = {
                 type: Syntax.VariableDeclaration,
                 declarations: [
                     {
                         type: Syntax.VariableDeclarator,
-                        id: property.name,
+                        id: { type: Syntax.Literal, name: property.name},
                         init: null
                     }
                 ],
                 kind: "var"
-            });
-            console.log(root);
+            };
+            decl.annotation.copy(exp);
+            root.body.unshift(decl);
+            console.log(root.body[0]);
 
         }
 

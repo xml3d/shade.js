@@ -38,7 +38,7 @@
             Literal : function (literal) {
                 //console.log(literal);
                 var value = literal.raw !== undefined ? literal.raw : literal.value,
-                    result = new Annotation(literal);
+                    result = literal.annotation;
 
                 var number = parseFloat(value);
 
@@ -66,8 +66,8 @@
 
 
         UnaryExpression: function (node, ctx) {
-            var result = new Annotation(node),
-                argument = new Annotation(node.argument),
+            var result = node.annotation,
+                argument = node.argument.annotation,
                 operator = node.operator,
                 func = UnaryFunctions[operator];
 
@@ -103,7 +103,7 @@
 
 
         Identifier: function(node, ctx) {
-            var result = new Annotation(node),
+            var result = node.annotation,
                 name = node.name;
 
             if(name === "undefined") {
@@ -115,10 +115,10 @@
         },
 
         ConditionalExpression: function(node) {
-            var result = new Annotation(node),
-                test = new Annotation(node.test),
-                consequent = new Annotation(node.consequent),
-                alternate = new Annotation(node.alternate);
+            var result = node.annotation,
+                test = node.test.annotation,
+                consequent = node.consequent.annotation,
+                alternate = node.alternate.annotation;
 
             //console.log(node.test, node.consequent, node.alternate);
 
@@ -138,9 +138,9 @@
         },
 
         LogicalExpression: function (node) {
-            var left = new Annotation(node.left),
-                right = new Annotation(node.right),
-                result = new Annotation(node),
+            var left = node.left.annotation,
+                right = node.right.annotation,
+                result = node.annotation,
                 operator = node.operator;
 
             if (!(operator == "&&" || operator == "||"))
@@ -176,9 +176,9 @@
 
         BinaryExpression: function (node) {
             //console.log(node.left, node.right);
-            var left = new Annotation(node.left),
-                right = new Annotation(node.right),
-                result = new Annotation(node),
+            var left = node.left.annotation,
+                right = node.right.annotation,
+                result = node.annotation,
                 operator = node.operator,
                 func = BinaryFunctions[operator];
 
@@ -239,7 +239,7 @@
 
 
         MemberExpression: function(node, parent, ctx) {
-            var result = new Annotation(node),
+            var result = node.annotation,
                 objectName = node.object.name,
                 propertyName =   node.property.name;
 
@@ -255,14 +255,14 @@
                 return;
             }
             var prop = obj[propertyName];
-            var propNode = new Annotation({ extra: prop});
+            var propNode = new Annotation({extra: prop});
             result.copy(propNode);
             result.setGlobal(obj.global);
         },
 
         CallExpression: function(node, ctx) {
-            var result = new Annotation(node),
-                callee = new Annotation(node.callee);
+            var result = node.annotation,
+                callee = node.callee.annotation;
 
             var call = callee.getCall();
             if(typeof call == "function") {
