@@ -38,6 +38,11 @@
         AssignmentExpression: function (node, ctx) {
             var right = node.right.annotation;
             node.annotation.copy(right);
+            if (node.left.type == Syntax.Identifier) {
+                ctx.updateExpression(node.left.name, right);
+            } else {
+                throw new Error("Assignment expression");
+            }
         },
         Literal: function (literal) {
             //console.log(literal);
@@ -252,6 +257,7 @@
             if (!obj) {
                 throw new Error("Can't find '" + objectName + "' in this context" + ctx);
             }
+            //console.log(objectName, obj);
             if (!obj.hasOwnProperty(propertyName)) {
                 result.setType(TYPES.UNDEFINED);
                 return;

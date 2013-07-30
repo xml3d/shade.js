@@ -65,8 +65,8 @@
         to["Math"] = MathObject;
     };
 
-    ns.MathEntry = MathObject;
-    ns.register = register;
+    ns.getEntry = function() { return MathObject };
+    ns.getId = function() { return "Math"; };
 
 
 }(exports));

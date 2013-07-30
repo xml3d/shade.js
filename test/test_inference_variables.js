@@ -6,33 +6,51 @@ var Shade = require(".."),
 
 var parseAndInferenceExpression = function (str, ctx) {
     var aast = Shade.parseAndInferenceExpression(str, ctx || {});
-    return aast.body;
+    return aast;
 }
 
 describe('Inference:', function () {
     describe('Variable initialization', function () {
 
         it("is annotated for no init expression", function () {
-            var body = parseAndInferenceExpression("var a;");
-            var declaration = body[0].declarations[0];
+            var program = parseAndInferenceExpression("var a;");
+            var declaration = program.body[0].declarations[0];
             declaration.should.have.property("extra");
             declaration.extra.should.have.property("type", TYPES.UNDEFINED);
+
+            program.should.have.property("context").property("bindings").property("a");
+            var a = program.context.bindings.a;
+            a.should.have.property("initialized", false);
+            a.should.have.property("type", TYPES.UNDEFINED);
         });
 
         it("is annotated for simple expression", function () {
-            var body = parseAndInferenceExpression("var a = 5;");
-            var declaration = body[0].declarations[0];
+            var program = parseAndInferenceExpression("var a = 5;");
+            var declaration = program.body[0].declarations[0];
             declaration.should.have.property("extra");
             declaration.extra.should.have.property("type", TYPES.INT);
             declaration.extra.should.have.property("staticValue", 5);
+
+            program.should.have.property("context").property("bindings").property("a");
+            var a = program.context.bindings.a;
+            a.should.have.property("initialized", true);
+            a.should.have.property("type", TYPES.INT);
+            a.should.have.property("staticValue", 5);
+
         });
 
         it("is annotated for expression", function () {
-            var body = parseAndInferenceExpression("var a = 5.0 * (3 + 4);");
-            var declaration = body[0].declarations[0];
+            var program = parseAndInferenceExpression("var a = 5.0 * (3 + 4);");
+            var declaration = program.body[0].declarations[0];
             declaration.should.have.property("extra");
             declaration.extra.should.have.property("type", TYPES.NUMBER);
             declaration.extra.should.have.property("staticValue", 35);
+
+            program.should.have.property("context").property("bindings").property("a");
+            var a = program.context.bindings.a;
+            a.should.have.property("initialized", true);
+            a.should.have.property("type", TYPES.NUMBER);
+            a.should.have.property("staticValue", 35);
         });
 
     });
@@ -40,25 +58,31 @@ describe('Inference:', function () {
     describe('Variable reassignment', function () {
 
         it("of same type is okay", function () {
-            var body = parseAndInferenceExpression("var a = 5; a = 3;");
-            var declaration = body[0].declarations[0];
+            var program = parseAndInferenceExpression("var a = 5; a = 3;");
+            var declaration = program.body[0].declarations[0];
             declaration.should.have.property("extra");
             declaration.extra.should.have.property("type", TYPES.INT);
             declaration.extra.should.have.property("staticValue", 5);
 
-            var exp = body[1];
+            var exp = program.body[1];
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.INT);
             exp.extra.should.have.property("staticValue", 3);
+
+            program.should.have.property("context").property("bindings").property("a");
+            var a = program.context.bindings.a;
+            a.should.have.property("initialized", true);
+            a.should.have.property("type", TYPES.INT);
+            a.should.have.property("staticValue", 3);
         });
 
         it("of uninitialized variable is okay", function () {
-            var body = parseAndInferenceExpression("var a; a = 3;");
-            var declaration = body[0].declarations[0];
+            var program = parseAndInferenceExpression("var a; a = 3;");
+            var declaration = program.body[0].declarations[0];
             declaration.should.have.property("extra");
             declaration.extra.should.have.property("type", TYPES.UNDEFINED);
 
-            var exp = body[1];
+            var exp = program.body[1];
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.INT);
             exp.extra.should.have.property("staticValue", 3);

@@ -27,6 +27,7 @@
         }
     };
 
-    ns.ShadeEntry = ShadeObject;
+    ns.getEntry = function() { return ShadeObject };
+    ns.getId = function() { return "Shade"; };
 
 }(exports));

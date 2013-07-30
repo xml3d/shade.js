@@ -31,7 +31,7 @@ var argv = require('optimist').argv,
     }());
 
     if (args.p) {
-        console.log(JSON.stringify(ast, null, 1));
+        console.log(JSON.stringify(ast, null, 2));
     } else {
         console.log(JSON.stringify(ast));
 

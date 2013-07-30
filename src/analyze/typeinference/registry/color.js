@@ -42,6 +42,8 @@
         }
     };
 
-    ns.ColorEntry = ColorObject;
+    ns.getEntry = function() { return ColorObject; };
+    ns.getId = function() { return "Color"; };
+
 
 }(exports));

@@ -83,10 +83,10 @@
 
 
     var registerGlobalContext = function(program, variables) {
-        var ctx = new Context(null, { variables: variables, name: "global" });
-        ctx.registerObject("Math", MathObject.MathEntry);
-        ctx.registerObject("Color", ColorObject.ColorEntry);
-        ctx.registerObject("Shade", ShadeObject.ShadeEntry);
+        var ctx = new Context(program, null, { variables: variables, name: "global" });
+        ctx.registerObject("Math", MathObject);
+        ctx.registerObject("Color", ColorObject);
+        ctx.registerObject("Shade", ShadeObject);
         return ctx;
     }
 
