@@ -32,6 +32,14 @@
     }
 
     var MathObject = {
+        random: {
+            type: TYPES.NUMBER,
+            evaluate: function(result, args) {
+                if (args.length)
+                    throw new Error("Math.random has no parameters.");
+                result.setDynamicValue();
+            }
+        }
     };
 
     var MathConstants = ["E", "PI", "LN2", "LOG2E", "LOG10E", "PI", "SQRT1_2", "SQRT2"];
