@@ -1,28 +1,41 @@
 (function(ns){
 
     var Base = require("../../base/index.js").Base,
-        TYPES = require("../../interfaces.js").Shade.TYPES,
         Annotation = require("./../../base/annotation.js").Annotation;
 
+    /**
+     * @param {Context|null} parent
+     * @param opt
+     * @constructor
+     */
     var Context = function(parent, opt) {
         opt = opt || {};
+
+        /** @type (Context|null) */
         this.parent = parent || opt.parent || null;
-        this.variables = opt.variables || {};
+
+        /** @type {Object.<string, {initialized: boolean, annotation: Annotation}>} */
+        this.bindings = opt.bindings || {};
 
     };
 
     Base.extend(Context.prototype, {
 
+        /**
+         *
+         * @param {string} name
+         * @returns {*}
+         */
         findVariable: function(name) {
-            if(this.variables[name] !== undefined)
-                return this.variables[name];
+            if(this.bindings[name] !== undefined)
+                return this.bindings[name];
             if (this.parent)
                 return this.parent.findVariable(name);
             return undefined;
         },
 
         declareVariable: function(name) {
-            this.variables[name] = { expression: new Annotation({}), initialized : false };
+            this.bindings[name] = { annotation: new Annotation({}), initialized : false };
         },
 
         /**
@@ -46,7 +59,7 @@
         },
 
         registerObject: function(name, obj) {
-            this.variables[name] = obj;
+            this.bindings[name] = obj;
         },
 
         findObject : function(name) {
