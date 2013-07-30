@@ -82,12 +82,22 @@
     }
 
 
-    var infer = function(ast, variables) {
-        variables && variables.env && (variables.env.global = true);
-        var ctx = new Context(null, { variables: variables });
+    var registerGlobalContext = function(program, variables) {
+        var ctx = new Context(null, { variables: variables, name: "global" });
         ctx.registerObject("Math", MathObject.MathEntry);
         ctx.registerObject("Color", ColorObject.ColorEntry);
         ctx.registerObject("Shade", ShadeObject.ShadeEntry);
+        return ctx;
+    }
+
+
+    var infer = function(ast, variables) {
+        variables && variables.env && (variables.env.global = true);
+
+        var ctx = null;
+        if (ast.type == Syntax.Program) {
+            ctx = registerGlobalContext(ast, variables);
+        }
 
         walk.traverse(ast, {
             enter: enterNode.bind(this, ctx),

@@ -1,7 +1,8 @@
 (function(ns){
 
     var Base = require("../../base/index.js").Base,
-        Annotation = require("./../../base/annotation.js").Annotation;
+        Annotation = require("./../../base/annotation.js").Annotation,
+        TYPES = require("../../interfaces.js").Shade.TYPES;
 
     /**
      * @param {Context|null} parent
@@ -16,6 +17,8 @@
 
         /** @type {Object.<string, {initialized: boolean, annotation: Annotation}>} */
         this.bindings = opt.bindings || {};
+
+        this.name = opt.name || "<anonymous>";
 
     };
 
@@ -35,7 +38,9 @@
         },
 
         declareVariable: function(name) {
-            this.bindings[name] = { annotation: new Annotation({}), initialized : false };
+            var init = { annotation: new Annotation({}), initialized : false };
+            init.annotation.setType(TYPES.UNDEFINED);
+            this.bindings[name] = init;
         },
 
         /**

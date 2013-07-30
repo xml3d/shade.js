@@ -35,34 +35,38 @@
 
 
     var handlers = {
-            Literal : function (literal) {
-                //console.log(literal);
-                var value = literal.raw !== undefined ? literal.raw : literal.value,
-                    result = literal.annotation;
+        AssignmentExpression: function (node, ctx) {
+            var right = node.right.annotation;
+            node.annotation.copy(right);
+        },
+        Literal: function (literal) {
+            //console.log(literal);
+            var value = literal.raw !== undefined ? literal.raw : literal.value,
+                result = literal.annotation;
 
-                var number = parseFloat(value);
+            var number = parseFloat(value);
 
-                if (!isNaN(number)) {
-                    if (value.indexOf(".") == -1) {
-                        result.setType(TYPES.INT);
-                    }
-                    else {
-                        result.setType(TYPES.NUMBER);
-                    }
-                    result.setStaticValue(number);
-                } else if (value === 'true') {
-                    result.setType(TYPES.BOOLEAN);
-                    result.setStaticValue(true);
-                } else if (value === 'false') {
-                    result.setType(TYPES.BOOLEAN);
-                    result.setStaticValue(false);
-                } else if (value === 'null') {
-                    result.setType(TYPES.NULL);
-                } else {
-                    result.setType(TYPES.STRING);
-                    result.setStaticValue(value);
+            if (!isNaN(number)) {
+                if (value.indexOf(".") == -1) {
+                    result.setType(TYPES.INT);
                 }
-            },
+                else {
+                    result.setType(TYPES.NUMBER);
+                }
+                result.setStaticValue(number);
+            } else if (value === 'true') {
+                result.setType(TYPES.BOOLEAN);
+                result.setStaticValue(true);
+            } else if (value === 'false') {
+                result.setType(TYPES.BOOLEAN);
+                result.setStaticValue(false);
+            } else if (value === 'null') {
+                result.setType(TYPES.NULL);
+            } else {
+                result.setType(TYPES.STRING);
+                result.setStaticValue(value);
+            }
+        },
 
 
         UnaryExpression: function (node, ctx) {
@@ -102,11 +106,11 @@
         },
 
 
-        Identifier: function(node, ctx) {
+        Identifier: function (node, ctx) {
             var result = node.annotation,
                 name = node.name;
 
-            if(name === "undefined") {
+            if (name === "undefined") {
                 result.setType(TYPES.UNDEFINED);
                 return;
             }
@@ -114,7 +118,7 @@
 
         },
 
-        ConditionalExpression: function(node) {
+        ConditionalExpression: function (node) {
             var result = node.annotation,
                 test = node.test.annotation,
                 consequent = node.consequent.annotation,
@@ -170,8 +174,6 @@
                 throw new Error("Static evaluation not implemented yet");
             }
         },
-
-
 
 
         BinaryExpression: function (node) {
@@ -238,17 +240,17 @@
         },
 
 
-        MemberExpression: function(node, parent, ctx) {
+        MemberExpression: function (node, parent, ctx) {
             var result = node.annotation,
                 objectName = node.object.name,
-                propertyName =   node.property.name;
+                propertyName = node.property.name;
 
             if (!(objectName && propertyName)) {
-                throw new Error ("Can't handle dynamic objects/properties yet.")
+                throw new Error("Can't handle dynamic objects/properties yet.")
             }
             var obj = ctx.findObject(objectName);
             if (!obj) {
-                throw new Error ("Can't find '" + objectName + "' in this context" +  ctx);
+                throw new Error("Can't find '" + objectName + "' in this context" + ctx);
             }
             if (!obj.hasOwnProperty(propertyName)) {
                 result.setType(TYPES.UNDEFINED);
@@ -260,18 +262,18 @@
             result.setGlobal(obj.global);
         },
 
-        CallExpression: function(node, ctx) {
+        CallExpression: function (node, ctx) {
             var result = node.annotation,
                 callee = node.callee.annotation;
 
             var call = callee.getCall();
-            if(typeof call == "function") {
+            if (typeof call == "function") {
                 result.copy(callee);
                 call(result, node.arguments, ctx);
                 callee.clearCall();
                 result.clearCall();
             } else {
-                throw new Error ("Object '" + node.callee.object.name + "' has no method '"+ node.callee.property.name+"'");
+                throw new Error("Object '" + node.callee.object.name + "' has no method '" + node.callee.property.name + "'");
             }
         }
     };
@@ -282,7 +284,6 @@
     var enterExpression = function (node, parent, ctx) {
         switch (node.type) {
             case Syntax.AssignmentExpression:
-                console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.ArrayExpression:
                 console.log(node.type + " is not handle yet.");
@@ -346,7 +347,7 @@
 
         switch (node.type) {
             case Syntax.AssignmentExpression:
-                console.log(node.type + " is not handle yet.");
+                handlers.AssignmentExpression(node, ctx);
                 break;
             case Syntax.ArrayExpression:
                 console.log(node.type + " is not handle yet.");

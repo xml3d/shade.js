@@ -53,6 +53,8 @@
                 var init = node.init.annotation;
                 result.copy(init);
                 ctx.updateExpression(variableName, init);
+            } else {
+                result.setType(TYPES.UNDEFINED);
             }
             // TODO: result.setType(init.getType());
         }
@@ -139,7 +141,6 @@
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.VariableDeclaration:
-                console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.VariableDeclarator:
                 exitHandler.VariableDeclarator(node, ctx);
