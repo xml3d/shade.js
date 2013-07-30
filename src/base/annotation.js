@@ -2,7 +2,9 @@
 
     var Shade = require("../interfaces.js").Shade,
         Syntax = require('estraverse').Syntax,
-        TYPES = Shade.TYPES,
+        Base = require("./index.js").Base;
+
+    var TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS;
 
 
@@ -14,22 +16,26 @@
         configurable: true
     });
 
-    var Annotation = function (node) {
+    var Annotation = function (node, extra) {
         this.node = node;
         this.node.extra = this.node.extra || {};
+        if (extra) {
+            Base.deepExtend(this.node.extra, extra);
+        }
     }
 
     Annotation.createForContext = function(node, ctx) {
         var result = new Annotation(node);
-        if (result.getType() !== TYPES.ANY)
+        if (result.getType() !== TYPES.ANY) {
             return result;
+        }
 
         if (node.type == Syntax.Identifier) {
             var name = node.name;
             var variable = ctx.findVariable(name);
-            return variable.expression;
+            return new Annotation(node, variable);
         }
-        return null;
+        return result;
     }
 
     Annotation.prototype = {

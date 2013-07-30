@@ -53,6 +53,35 @@ describe('Inference:', function () {
             a.should.have.property("staticValue", 35);
         });
 
+        it("for multiple variables", function () {
+            var program = parseAndInferenceExpression("var a = b = c = 5.0;");
+            var declaration = program.body[0].declarations[0];
+            declaration.should.have.property("extra");
+            declaration.extra.should.have.property("type", TYPES.NUMBER);
+            declaration.extra.should.have.property("staticValue", 5);
+
+            program.should.have.property("context").property("bindings").property("a");
+            var variable = program.context.bindings.a;
+            variable.should.have.property("initialized", true);
+            variable.should.have.property("type", TYPES.NUMBER);
+            variable.should.have.property("staticValue", 5);
+            program.should.have.property("context").property("bindings").property("b");
+            variable = program.context.bindings.b;
+            variable.should.have.property("initialized", true);
+            variable.should.have.property("type", TYPES.NUMBER);
+            variable.should.have.property("staticValue", 5);
+            program.should.have.property("context").property("bindings").property("c");
+            variable = program.context.bindings.c;
+            variable.should.have.property("initialized", true);
+            variable.should.have.property("type", TYPES.NUMBER);
+            variable.should.have.property("staticValue", 5);
+        });
+
+        it("throws if already defined in same context", function () {
+            var program = parseAndInferenceExpression.bind(null,"var a = 5.0; var a = 4.0;");
+            program.should.throw();
+        });
+
     });
 
     describe('Variable reassignment', function () {

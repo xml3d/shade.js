@@ -36,10 +36,17 @@
 
                 }
             }
-        }())
+        }()),
+
+        VariableDeclaration: function(node, ctx) {
+            ctx.inDeclaration = true;
+        }
     }
 
     var exitHandler = {
+        VariableDeclaration: function(node, ctx) {
+            ctx.inDeclaration = false;
+        },
         VariableDeclarator: function(node, ctx) {
             var result = node.annotation;
 
@@ -50,7 +57,7 @@
             ctx.declareVariable(variableName);
 
             if (node.init) {
-                var init = node.init.annotation;
+                var init = Annotation.createForContext(node.init, ctx);
                 result.copy(init);
                 ctx.updateExpression(variableName, init);
             } else {
@@ -58,6 +65,7 @@
             }
             // TODO: result.setType(init.getType());
         }
+
     }
 
 
@@ -68,6 +76,8 @@
         switch (node.type) {
             case Syntax.IfStatement:
                 return enterHandler.IfStatement(node, ctx);
+            case Syntax.VariableDeclaration:
+                return enterHandler.VariableDeclaration(node, ctx);
 
         }
         return;
@@ -141,7 +151,7 @@
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.VariableDeclaration:
-                break;
+                return exitHandler.VariableDeclaration(node, ctx);
             case Syntax.VariableDeclarator:
                 exitHandler.VariableDeclarator(node, ctx);
                 break;

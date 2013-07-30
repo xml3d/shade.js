@@ -34,12 +34,19 @@
     };
 
 
+    var log = function() {};
+    //var log = function() { console.log.apply(console, arguments); };
+
     var handlers = {
         AssignmentExpression: function (node, ctx) {
-            var right = node.right.annotation;
+            var right = Annotation.createForContext(node.right, ctx);
             node.annotation.copy(right);
             if (node.left.type == Syntax.Identifier) {
-                ctx.updateExpression(node.left.name, right);
+                var name = node.left.name;
+                if (ctx.inDeclaration === true) {
+                    ctx.declareVariable(name)
+                }
+                ctx.updateExpression(name, right);
             } else {
                 throw new Error("Assignment expression");
             }
@@ -292,10 +299,10 @@
             case Syntax.AssignmentExpression:
                 break;
             case Syntax.ArrayExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.ArrayPattern:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.BinaryExpression:
                 break;
@@ -304,7 +311,7 @@
             case Syntax.ConditionalExpression:
                 break;
             case Syntax.FunctionExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.Identifier:
                 break;
@@ -316,30 +323,30 @@
             case Syntax.MemberExpression:
                 break;
             case Syntax.NewExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.ObjectExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.ObjectPattern:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.Property:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.SequenceExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.ThisExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.UnaryExpression:
                 break;
             case Syntax.UpdateExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.YieldExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             default:
                 throw new Error('Unknown node type: ' + node.type);
@@ -356,10 +363,10 @@
                 handlers.AssignmentExpression(node, ctx);
                 break;
             case Syntax.ArrayExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.ArrayPattern:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.BinaryExpression:
                 handlers.BinaryExpression(node);
@@ -371,7 +378,7 @@
                 handlers.ConditionalExpression(node);
                 break;
             case Syntax.FunctionExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.Identifier:
                 handlers.Identifier(node, ctx);
@@ -385,31 +392,31 @@
                 handlers.MemberExpression(node, parent, ctx);
                 break;
             case Syntax.NewExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.ObjectExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.ObjectPattern:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.Property:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.SequenceExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.ThisExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.UnaryExpression:
                 handlers.UnaryExpression(node);
                 break;
             case Syntax.UpdateExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             case Syntax.YieldExpression:
-                console.log(node.type + " is not handle yet.");
+                log(node.type + " is not handle yet.");
                 break;
             default:
                 throw new Error('Unknown node type: ' + node.type);

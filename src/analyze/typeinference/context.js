@@ -48,6 +48,8 @@
 
         declareVariable: function(name) {
             var bindings = this.getBindings();
+            if (bindings[name])
+                throw new Error(name + " was already declared in this scope.")
             var init = {
                 initialized : false,
                 type: TYPES.UNDEFINED
