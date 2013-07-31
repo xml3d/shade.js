@@ -51,7 +51,6 @@
             ctor.prototype.constructor = ctor;
             ctor.superclass = parent.prototype;
         }
-        ctor.isSuperclassOf = XML3D.isSuperclassOf.bind(ctor, ctor);
         for ( var m in methods) {
             ctor.prototype[m] = methods[m];
         }

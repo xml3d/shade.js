@@ -29,9 +29,21 @@
 
     Base.extend(Context.prototype, {
 
+        getName: function() {
+            return this.context.name;
+        },
+
         getBindings: function() {
             return this.context.bindings;
         },
+
+        updateReturnInfo: function(annotation) {
+            this.context.returnInfo = annotation.getExtra();
+        },
+        getReturnInfo: function() {
+            return this.context.returnInfo;
+        },
+
         /**
          *
          * @param {string} name
@@ -72,7 +84,7 @@
             }
             for (var prop in v) { if (v.hasOwnProperty(prop)) { delete v[prop]; } }
             Base.extend(v, annotation.getExtra());
-            v.initialized = true;
+            v.initialized = !annotation.isUndefined();
 
         },
 
@@ -86,6 +98,16 @@
         findObject : function(name) {
             var id = this.findVariable(name);
             return c_object_registry[id].getEntry();
+        },
+
+        str: function() {
+            var ctx = this;
+            var names = [];
+            while(ctx) {
+                names.unshift(ctx.getName());
+                ctx = ctx.parent;
+            }
+            return names.join(".");
         }
 
 

@@ -12,21 +12,53 @@
         Context = require("./context.js").Context,
         MathObject = require("./registry/math.js"),
         ColorObject = require("./registry/color.js"),
-        ShadeObject = require("./registry/shade.js")
+        ShadeObject = require("./registry/shade.js"),
+        Base = require("../../base/index.js").Base;
 
 
     var Syntax = walk.Syntax;
 
 
-    var enterNode = function(ctx, node, parent) {
-        return switchKind(node, parent, ctx, enterStatement, enterExpression);
+
+
+
+    var registerGlobalContext = function (program) {
+        var ctx = new Context(program, null, {name: "global"});
+        ctx.registerObject("Math", MathObject);
+        ctx.registerObject("Color", ColorObject);
+        ctx.registerObject("Shade", ShadeObject);
+        return ctx;
     }
 
-    var exitNode = function(ctx, node, parent) {
-        return switchKind(node, parent, ctx, exitStatement, exitExpression);
+    var TypeInference = function (root) {
+        this.root = root;
+        this.context = [];
+        this.context.push(registerGlobalContext(root));
     }
 
-    var switchKind = function(node, parent, ctx, statement, expression) {
+    Base.extend(TypeInference.prototype, {
+
+        infer: function () {
+            //variables && variables.env && (variables.env.global = true);
+
+            walk.traverse(this.root, {
+                enter: this.enterNode.bind(this),
+                leave: this.exitNode.bind(this)
+            });
+            return this.root;
+        },
+
+        enterNode : function (node, parent) {
+            var context = this.context[this.context.length-1];
+            return this.switchKind(node, parent, context, enterStatement, enterExpression);
+        },
+
+        exitNode : function (node, parent) {
+            var context = this.context[this.context.length-1];
+            return this.switchKind(node, parent, context, exitStatement, exitExpression);
+        },
+
+        switchKind : function (node, parent, ctx, statement, expression) {
         switch (node.type) {
             case Syntax.BlockStatement:
             case Syntax.BreakStatement:
@@ -52,7 +84,7 @@
             case Syntax.VariableDeclarator:
             case Syntax.WhileStatement:
             case Syntax.WithStatement:
-                return statement(node, parent, ctx);
+                return statement.call(this, node, parent, ctx);
 
             case Syntax.AssignmentExpression:
             case Syntax.ArrayExpression:
@@ -74,41 +106,19 @@
             case Syntax.UnaryExpression:
             case Syntax.UpdateExpression:
             case Syntax.YieldExpression:
-                return expression(node, parent, ctx);
+                return expression.call(this, node, parent, ctx);
 
             default:
                 throw new Error('Unknown node type: ' + node.type);
         }
     }
+    });
 
 
-    var registerGlobalContext = function(program, variables) {
-        var ctx = new Context(program, null, { variables: variables, name: "global" });
-        ctx.registerObject("Math", MathObject);
-        ctx.registerObject("Color", ColorObject);
-        ctx.registerObject("Shade", ShadeObject);
-        return ctx;
-    }
-
-
-    var infer = function(ast, variables) {
-        variables && variables.env && (variables.env.global = true);
-
-        var ctx = null;
-        if (ast.type == Syntax.Program) {
-            ctx = registerGlobalContext(ast, variables);
-        }
-
-        walk.traverse(ast, {
-            enter: enterNode.bind(this, ctx),
-            leave: exitNode.bind(this, ctx)
-        });
-        return ast;
+    ns.infer = function (ast, variables) {
+        var ti = new TypeInference(ast);
+        return ti.infer();
     };
-
-
-
-    ns.infer = infer;
 
 
 }(exports));

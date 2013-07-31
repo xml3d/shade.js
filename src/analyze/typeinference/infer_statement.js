@@ -5,7 +5,9 @@
         exitExpression = require('./infer_expression.js').exitExpression,
         Syntax = require('estraverse').Syntax,
         Shade = require("../../interfaces.js").Shade,
-        Annotation = require("./../../base/annotation.js").Annotation;
+        Context = require("./context.js").Context,
+        Annotation = require("./../../base/annotation.js").Annotation,
+        FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
 
     var TYPES = Shade.TYPES;
 
@@ -40,10 +42,36 @@
 
         VariableDeclaration: function(node, ctx) {
             ctx.inDeclaration = true;
+        },
+
+
+        /**
+         * @param {Object} node
+         * @param {Context} parentContext
+         * @param {Array.<Context>} contextStack
+         */
+        FunctionDeclaration: function(node, parentContext, contextStack) {
+            var result = new FunctionAnnotation(node);
+
+            if (node.id.type != Syntax.Identifier) {
+                throw new Error("Dynamic variable names are not yet supported");
+            }
+            var functionName = node.id.name;
+            parentContext.declareVariable(functionName);
+            parentContext.updateExpression(functionName, result);
+
+            var functionContext = new Context(node, parentContext, { name : functionName });
+            contextStack.push(functionContext);
         }
     }
 
     var exitHandler = {
+        FunctionDeclaration: function(node, ctx, contextStack) {
+            var result = new FunctionAnnotation(node);
+            var returnInfo = ctx.getReturnInfo();
+            result.setReturnInfo(returnInfo || { type: TYPES.UNDEFINED });
+            contextStack.pop();
+        },
         VariableDeclaration: function(node, ctx) {
             ctx.inDeclaration = false;
         },
@@ -64,6 +92,17 @@
                 result.setType(TYPES.UNDEFINED);
             }
             // TODO: result.setType(init.getType());
+        },
+        ReturnStatement: function(node, parent, ctx) {
+            var result = new Annotation(node),
+                argument = node.argument ? Annotation.createForContext(node.argument, ctx) : null;
+
+            if (argument) {
+                result.copy(argument);
+            } else {
+                result.setType(TYPES.UNDEFINED);
+            }
+            ctx.updateReturnInfo(result);
         }
 
     }
@@ -72,12 +111,13 @@
 
 
     var enterStatement = function (node, parent, ctx) {
-
         switch (node.type) {
             case Syntax.IfStatement:
                 return enterHandler.IfStatement(node, ctx);
             case Syntax.VariableDeclaration:
                 return enterHandler.VariableDeclaration(node, ctx);
+            case Syntax.FunctionDeclaration:
+                return enterHandler.FunctionDeclaration(node, ctx, this.context);
 
         }
         return;
@@ -126,7 +166,7 @@
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.FunctionDeclaration:
-                console.log(node.type + " is not handle yet.");
+                return exitHandler.FunctionDeclaration(node, ctx, this.context);
                 break;
             case Syntax.IfStatement:
                 break;
@@ -136,7 +176,7 @@
             case Syntax.Program:
                 break;
             case Syntax.ReturnStatement:
-                console.log(node.type + " is not handle yet.");
+                return exitHandler.ReturnStatement(node, parent, ctx);
                 break;
             case Syntax.SwitchStatement:
                 console.log(node.type + " is not handle yet.");

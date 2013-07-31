@@ -13,6 +13,7 @@
         OBJECT: "object",
         NULL: "null",
         UNDEFINED: "undefined",
+        FUNCTION: "function",
         STRING: "string"
     }
 

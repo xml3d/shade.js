@@ -38,8 +38,8 @@
         return !!exp;
     }
 
-    var log = function(str) {};
-    //var log = function() { console.log.apply(console, arguments); };
+    //var log = function(str) {};
+    var log = function() { console.log.apply(console, arguments); };
 
     var handlers = {
         AssignmentExpression: function (node, ctx) {
@@ -294,14 +294,32 @@
             var result = new Annotation(node),
                 callee = Annotation.createForContext(node.callee, ctx);
 
-            var call = callee.getCall();
-            if (typeof call == "function") {
-                result.copy(callee);
-                call(result, node.arguments, ctx);
-                callee.clearCall();
-                result.clearCall();
-            } else {
-                throw new Error("Object '" + node.callee.object.name + "' has no method '" + node.callee.property.name + "'");
+            var callType = node.callee.type;
+            switch (callType) {
+
+                case Syntax.MemberExpression:
+                    var call = callee.getCall();
+                    if (typeof call == "function") {
+                        result.copy(callee);
+                        call(result, node.arguments, ctx);
+                        callee.clearCall();
+                        result.clearCall();
+                    } else {
+                        throw new Error("Object '" + node.callee.object.name + "' has no method '" + node.callee.property.name + "'");
+                    }
+                    break;
+                case Syntax.Identifier:
+                    var functionName = node.callee.name;
+                    var func = ctx.findVariable(functionName);
+                    if (!(func && func.initialized)) {
+                        throw new Error(functionName + " is not defined. Context: " + ctx.str());
+                    }
+                    console.log(func);
+                    //throw new Error("Can't call " + functionName + "() in this context: " + ctx.str());
+                    break;
+                default:
+                        throw new Error("Unhandled CallExpression");
+
             }
         }
     };

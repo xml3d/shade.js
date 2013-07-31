@@ -177,11 +177,30 @@
             var extra = this.getExtra();
             return extra.global = val;
         }
-
-
-
     }
 
+    /**
+     * @param {object} node
+     * @param {object} extra
+     * @extends Annotation
+     * @constructor
+     */
+    var FunctionAnnotation = function (node, extra) {
+        Annotation.call(this, node, extra);
+        this.setType(TYPES.FUNCTION);
+        //this.updateReturnType(TYPES.UNDEFINED);
+    };
+
+    Base.createClass(FunctionAnnotation, Annotation, {
+        getReturnInfo: function() {
+            return this.getExtra().returnInfo;
+        },
+        setReturnInfo: function(info) {
+            this.getExtra().returnInfo = info;
+        }
+    });
+
     ns.Annotation = Annotation;
+    ns.FunctionAnnotation = FunctionAnnotation;
 
 }(exports));
