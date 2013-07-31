@@ -277,9 +277,12 @@
             }
             var obj = ctx.findObject(objectName);
             if (!obj) {
-                throw new Error("Can't find '" + objectName + "' in this context" + ctx);
+                throw new Error("ReferenceError: " + objectName + " is not defined. Context: " + ctx.str());
             }
-            //console.log(objectName, obj);
+            if (obj.type == TYPES.UNDEFINED) {
+                throw new Error("TypeError: Cannot read property '"+ propertyName +"' of undefined")
+            }
+            console.log(objectName, obj);
             if (!obj.hasOwnProperty(propertyName)) {
                 result.setType(TYPES.UNDEFINED);
                 return;

@@ -30,13 +30,28 @@
         return ctx;
     }
 
-    var TypeInference = function (root) {
+    var TypeInference = function (root, injections) {
         this.root = root;
         this.context = [];
-        this.context.push(registerGlobalContext(root));
+        this.injections = injections;
+        this.pushContext(registerGlobalContext(root));
+
     }
 
     Base.extend(TypeInference.prototype, {
+        pushContext: function(context) {
+            this.context.push(context);
+            var injection = this.injections[context.str()];
+            if (injection) {
+                context.updateParameters(injection);
+            }
+        },
+        popContext: function() {
+            this.context.pop();
+        },
+        peekContext: function() {
+            return this.context[this.context.length-1];
+        },
 
         infer: function () {
             //variables && variables.env && (variables.env.global = true);
@@ -115,8 +130,8 @@
     });
 
 
-    ns.infer = function (ast, variables) {
-        var ti = new TypeInference(ast);
+    ns.infer = function (ast, injection) {
+        var ti = new TypeInference(ast, injection);
         return ti.infer();
     };
 

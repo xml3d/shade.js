@@ -1,17 +1,18 @@
 {
-    "env": {
-        "diffuseColor": {
-            "type": "object",
-            "kind": "color"
-        },
-        "diffuseTexture": {
-            "type": "null"
-        },
-        "normal": {
-            "type": "object",
-            "kind": "float3",
-            "source": "vertex"
+    "global.shade": [
+        {
+            "diffuseColor": {
+                "type": "object",
+                "kind": "color"
+            },
+            "diffuseTexture": {
+                "type": "null"
+            },
+            "normal": {
+                "type": "object",
+                "kind": "float3",
+                "source": "vertex"
+            }
         }
-
-    }
+    ]
 }

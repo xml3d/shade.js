@@ -60,7 +60,7 @@
                 }
             }
         }
-        var exp = memberExpression.annotation;
+        var exp = new Annotation(memberExpression);
         if(exp.isGlobal()) {
             var decl = {
                 type: Syntax.VariableDeclaration,
@@ -73,7 +73,8 @@
                 ],
                 kind: "var"
             };
-            decl.annotation.copy(exp);
+            var declAnnotation =  new Annotation(decl);
+            declAnnotation.copy(exp);
             root.body.unshift(decl);
             console.log(root.body[0]);
 

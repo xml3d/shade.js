@@ -97,7 +97,29 @@
 
         findObject : function(name) {
             var id = this.findVariable(name);
-            return c_object_registry[id].getEntry();
+            var obj = c_object_registry[id];
+            return obj && obj.getEntry ? obj.getEntry() : id;
+        },
+
+        declareParameters: function(params) {
+            var bindings = this.getBindings();
+            this.params = [];
+            for(var i = 0; i < params.length; i++) {
+                var parameter = params[i];
+                this.params[i] = parameter.name;
+                bindings[parameter.name] = { type: TYPES.UNDEFINED };
+            }
+        },
+
+        updateParameters: function(params) {
+            for(var i = 0; i< params.length; i++) {
+                if (i == this.params.length)
+                    break;
+                var param = params[i];
+                var name = this.params[i];
+                var bindings = this.getBindings();
+                bindings[name] = param;
+            }
         },
 
         str: function() {

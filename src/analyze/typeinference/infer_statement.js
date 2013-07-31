@@ -48,9 +48,9 @@
         /**
          * @param {Object} node
          * @param {Context} parentContext
-         * @param {Array.<Context>} contextStack
+         * @param {TypeInference} root
          */
-        FunctionDeclaration: function(node, parentContext, contextStack) {
+        FunctionDeclaration: function(node, parentContext, root) {
             var result = new FunctionAnnotation(node);
 
             if (node.id.type != Syntax.Identifier) {
@@ -61,16 +61,24 @@
             parentContext.updateExpression(functionName, result);
 
             var functionContext = new Context(node, parentContext, { name : functionName });
-            contextStack.push(functionContext);
+            functionContext.declareParameters(node.params);
+
+
+            root.pushContext(functionContext);
         }
     }
 
     var exitHandler = {
-        FunctionDeclaration: function(node, ctx, contextStack) {
+        /**
+         * @param node
+         * @param {Context} ctx
+         * @param {TypeInference} root
+         */
+        FunctionDeclaration: function(node, ctx, root) {
             var result = new FunctionAnnotation(node);
             var returnInfo = ctx.getReturnInfo();
             result.setReturnInfo(returnInfo || { type: TYPES.UNDEFINED });
-            contextStack.pop();
+            root.popContext();
         },
         VariableDeclaration: function(node, ctx) {
             ctx.inDeclaration = false;
@@ -117,7 +125,7 @@
             case Syntax.VariableDeclaration:
                 return enterHandler.VariableDeclaration(node, ctx);
             case Syntax.FunctionDeclaration:
-                return enterHandler.FunctionDeclaration(node, ctx, this.context);
+                return enterHandler.FunctionDeclaration(node, ctx, this);
 
         }
         return;
@@ -166,7 +174,7 @@
                 console.log(node.type + " is not handle yet.");
                 break;
             case Syntax.FunctionDeclaration:
-                return exitHandler.FunctionDeclaration(node, ctx, this.context);
+                return exitHandler.FunctionDeclaration(node, ctx, this);
                 break;
             case Syntax.IfStatement:
                 break;

@@ -67,6 +67,8 @@
     traverse = require('estraverse').traverse;
     var TYPES = require("../../interfaces.js").Shade.TYPES;
     var KINDS = require("../../interfaces.js").Shade.OBJECT_KINDS;
+    var Annotation = require("../../base/annotation.js").Annotation;
+
 
     Syntax = {
         AssignmentExpression: 'AssignmentExpression',
@@ -1623,7 +1625,7 @@
                 break;
 
             case Syntax.VariableDeclaration:
-                result = [toGLSLType(stmt.annotation)];
+                result = [toGLSLType(new Annotation(stmt))];
                 // special path for
                 // var x = function () {
                 // };
