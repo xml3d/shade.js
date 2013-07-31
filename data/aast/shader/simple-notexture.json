@@ -1,0 +1,276 @@
+{"type": "Program", "body": [
+    {
+        "type": "FunctionDeclaration",
+        "id": {
+            "type": "Identifier",
+            "name": "shade",
+            "extra": {}
+        },
+        "params": [
+            {
+                "type": "Identifier",
+                "name": "env",
+                "extra": {}
+            }
+        ],
+        "defaults": [],
+        "body": {
+            "type": "BlockStatement",
+            "body": [
+                {
+                    "type": "VariableDeclaration",
+                    "declarations": [
+                        {
+                            "type": "VariableDeclarator",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "diffuseColor",
+                                "extra": {}
+                            },
+                            "init": {
+                                "type": "LogicalExpression",
+                                "operator": "||",
+                                "left": {
+                                    "type": "MemberExpression",
+                                    "computed": false,
+                                    "object": {
+                                        "type": "Identifier",
+                                        "name": "env",
+                                        "extra": {}
+                                    },
+                                    "property": {
+                                        "type": "Identifier",
+                                        "name": "diffuseColor",
+                                        "extra": {}
+                                    },
+                                    "extra": {
+                                        "type": "object",
+                                        "kind": "color",
+                                        "global": true
+                                    }
+                                },
+                                "right": {
+                                    "type": "CallExpression",
+                                    "callee": {
+                                        "type": "MemberExpression",
+                                        "computed": false,
+                                        "object": {
+                                            "type": "Identifier",
+                                            "name": "Color",
+                                            "extra": {}
+                                        },
+                                        "property": {
+                                            "type": "Identifier",
+                                            "name": "rgb",
+                                            "extra": {}
+                                        },
+                                        "extra": {
+                                            "type": "object",
+                                            "kind": "color"
+                                        }
+                                    },
+                                    "arguments": [
+                                        {
+                                            "type": "Literal",
+                                            "value": 255,
+                                            "raw": "255",
+                                            "extra": {
+                                                "type": "int",
+                                                "staticValue": 255
+                                            }
+                                        },
+                                        {
+                                            "type": "Literal",
+                                            "value": 0,
+                                            "raw": "0",
+                                            "extra": {
+                                                "type": "int",
+                                                "staticValue": 0
+                                            }
+                                        },
+                                        {
+                                            "type": "Literal",
+                                            "value": 0,
+                                            "raw": "0",
+                                            "extra": {
+                                                "type": "int",
+                                                "staticValue": 0
+                                            }
+                                        }
+                                    ],
+                                    "extra": {
+                                        "type": "object",
+                                        "kind": "color",
+                                        "global": false,
+                                        "staticValue": {
+                                            "r": 255,
+                                            "g": 0,
+                                            "b": 0
+                                        },
+                                        "eliminate": true
+                                    }
+                                },
+                                "extra": {
+                                    "type": "object",
+                                    "kind": "color",
+                                    "global": true
+                                }
+                            },
+                            "extra": {
+                                "type": "object",
+                                "kind": "color",
+                                "global": true
+                            }
+                        }
+                    ],
+                    "kind": "var"
+                },
+                {
+                    "type": "IfStatement",
+                    "test": {
+                        "type": "MemberExpression",
+                        "computed": false,
+                        "object": {
+                            "type": "Identifier",
+                            "name": "env",
+                            "extra": {}
+                        },
+                        "property": {
+                            "type": "Identifier",
+                            "name": "diffuseTexture",
+                            "extra": {}
+                        },
+                        "extra": {
+                            "type": "null",
+                            "global": true
+                        }
+                    },
+                    "consequent": {
+                        "type": "BlockStatement",
+                        "body": [
+                            {
+                                "type": "ExpressionStatement",
+                                "expression": {
+                                    "type": "CallExpression",
+                                    "callee": {
+                                        "type": "MemberExpression",
+                                        "computed": false,
+                                        "object": {
+                                            "type": "Identifier",
+                                            "name": "diffuseColor"
+                                        },
+                                        "property": {
+                                            "type": "Identifier",
+                                            "name": "multiply"
+                                        }
+                                    },
+                                    "arguments": [
+                                        {
+                                            "type": "CallExpression",
+                                            "callee": {
+                                                "type": "MemberExpression",
+                                                "computed": false,
+                                                "object": {
+                                                    "type": "MemberExpression",
+                                                    "computed": false,
+                                                    "object": {
+                                                        "type": "Identifier",
+                                                        "name": "env"
+                                                    },
+                                                    "property": {
+                                                        "type": "Identifier",
+                                                        "name": "diffuseTexture"
+                                                    }
+                                                },
+                                                "property": {
+                                                    "type": "Identifier",
+                                                    "name": "sample"
+                                                }
+                                            },
+                                            "arguments": [
+                                                {
+                                                    "type": "MemberExpression",
+                                                    "computed": false,
+                                                    "object": {
+                                                        "type": "Identifier",
+                                                        "name": "env"
+                                                    },
+                                                    "property": {
+                                                        "type": "Identifier",
+                                                        "name": "texcoord"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        ],
+                        "extra": {
+                            "eliminate": true
+                        }
+                    },
+                    "alternate": null
+                },
+                {
+                    "type": "ReturnStatement",
+                    "argument": {
+                        "type": "CallExpression",
+                        "callee": {
+                            "type": "MemberExpression",
+                            "computed": false,
+                            "object": {
+                                "type": "Identifier",
+                                "name": "Shade",
+                                "extra": {}
+                            },
+                            "property": {
+                                "type": "Identifier",
+                                "name": "diffuse",
+                                "extra": {}
+                            },
+                            "extra": {
+                                "type": "object",
+                                "kind": "color_closure"
+                            }
+                        },
+                        "arguments": [
+                            {
+                                "type": "MemberExpression",
+                                "computed": false,
+                                "object": {
+                                    "type": "Identifier",
+                                    "name": "env",
+                                    "extra": {}
+                                },
+                                "property": {
+                                    "type": "Identifier",
+                                    "name": "normal",
+                                    "extra": {}
+                                },
+                                "extra": {
+                                    "type": "object",
+                                    "kind": "float3",
+                                    "global": true
+                                }
+                            },
+                            {
+                                "type": "Identifier",
+                                "name": "diffuseColor",
+                                "extra": {}
+                            }
+                        ],
+                        "extra": {
+                            "type": "object",
+                            "kind": "color_closure",
+                            "global": false
+                        }
+                    }
+                }
+            ]
+        },
+        "rest": null,
+        "generator": false,
+        "expression": false
+    }
+]}
