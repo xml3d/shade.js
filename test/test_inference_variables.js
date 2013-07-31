@@ -53,6 +53,20 @@ describe('Inference:', function () {
             a.should.have.property("staticValue", 35);
         });
 
+        it("is annotated for member expression", function () {
+            var program = parseAndInferenceExpression("var a = Math.PI;");
+            var exp = program.body[0].declarations[0].init;
+            exp.extra.should.have.property("type", TYPES.NUMBER);
+            exp.extra.should.have.property("staticValue", Math.PI);
+
+            program.should.have.property("context").property("bindings").property("a");
+            var a = program.context.bindings.a;
+            a.should.have.property("initialized", true);
+            a.should.have.property("type", TYPES.NUMBER);
+            a.should.have.property("staticValue", Math.PI);
+        });
+
+
         it("for multiple variables", function () {
             var program = parseAndInferenceExpression("var a = b = c = 5.0;");
             var declaration = program.body[0].declarations[0];
@@ -122,6 +136,55 @@ describe('Inference:', function () {
             exp.should.throw();
         });
 
+
+    });
+
+    describe('Use variable in', function () {
+        it("UnaryExpression", function () {
+            var program = parseAndInferenceExpression("var a = 5; -a;");
+            var exp = program.body[1].expression;
+            exp.extra.should.have.property("type", TYPES.INT);
+            exp.extra.should.have.property("staticValue", -5);
+        });
+        it("BinaryExpression", function () {
+            var program = parseAndInferenceExpression("var a = 5; 2-a;");
+            var exp = program.body[1].expression;
+            exp.extra.should.have.property("type", TYPES.INT);
+            exp.extra.should.have.property("staticValue", -3);
+        });
+        it("CallExpression", function () {
+            var program = parseAndInferenceExpression("var a = Math.PI; Math.cos(a);");
+            var init = program.body[0].declarations[0].init;
+            init.extra.should.have.property("type", TYPES.NUMBER);
+            init.extra.should.have.property("staticValue", Math.PI);
+
+            program.should.have.property("context").property("bindings").property("a");
+            var a = program.context.bindings.a;
+            a.should.have.property("initialized", true);
+            a.should.have.property("type", TYPES.NUMBER);
+            a.should.have.property("staticValue", Math.PI);
+
+            var exp = program.body[1].expression;
+            exp.extra.should.have.property("type", TYPES.NUMBER);
+            exp.extra.should.have.property("staticValue", -1);
+        });
+
+        it("ConditionalExpression", function () {
+            var program = parseAndInferenceExpression("var test = true, cond = 2.0, alt = 1.0; test ? cond : alt");
+            var init = program.body[0].declarations[0].init;
+            init.extra.should.have.property("type", TYPES.BOOLEAN);
+            init.extra.should.have.property("staticValue", true);
+
+            program.should.have.property("context").property("bindings").property("cond");
+            var cond = program.context.bindings.cond;
+            cond.should.have.property("initialized", true);
+            cond.should.have.property("type", TYPES.NUMBER);
+            cond.should.have.property("staticValue", 2.0);
+
+            var exp = program.body[1].expression;
+            exp.extra.should.have.property("type", TYPES.NUMBER);
+            exp.extra.should.have.property("staticValue", 2);
+        });
 
     });
 

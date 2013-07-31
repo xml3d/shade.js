@@ -34,13 +34,19 @@
     };
 
 
-    var log = function() {};
+    var evaluateTruth = function(exp) {
+        return !!exp;
+    }
+
+    var log = function(str) {};
     //var log = function() { console.log.apply(console, arguments); };
 
     var handlers = {
         AssignmentExpression: function (node, ctx) {
-            var right = Annotation.createForContext(node.right, ctx);
-            node.annotation.copy(right);
+            var right = Annotation.createForContext(node.right, ctx),
+                result = new Annotation(node);
+
+            result.copy(right);
             if (node.left.type == Syntax.Identifier) {
                 var name = node.left.name;
                 if (ctx.inDeclaration === true) {
@@ -54,7 +60,7 @@
         Literal: function (literal) {
             //console.log(literal);
             var value = literal.raw !== undefined ? literal.raw : literal.value,
-                result = literal.annotation;
+                result = new Annotation(literal);
 
             var number = parseFloat(value);
 
@@ -82,8 +88,8 @@
 
 
         UnaryExpression: function (node, ctx) {
-            var result = node.annotation,
-                argument = node.argument.annotation,
+            var result = new Annotation(node),
+                argument = Annotation.createForContext(node.argument, ctx),
                 operator = node.operator,
                 func = UnaryFunctions[operator];
 
@@ -119,24 +125,33 @@
 
 
         Identifier: function (node, ctx) {
-            var result = node.annotation,
+            var result = new Annotation(node),
                 name = node.name;
 
             if (name === "undefined") {
                 result.setType(TYPES.UNDEFINED);
                 return;
             }
-            //console.error("Identifier not handled: ", name, node);
-
         },
 
-        ConditionalExpression: function (node) {
-            var result = node.annotation,
-                test = node.test.annotation,
-                consequent = node.consequent.annotation,
-                alternate = node.alternate.annotation;
+        ConditionalExpression: function (node, ctx) {
+            var result = new Annotation(node),
+                test = Annotation.createForContext(node.test, ctx),
+                consequent = Annotation.createForContext(node.consequent, ctx),
+                alternate = Annotation.createForContext(node.alternate, ctx);
 
             //console.log(node.test, node.consequent, node.alternate);
+
+            if (test.hasStaticValue()) {
+                var testResult = evaluateTruth(test.getStaticValue());
+                if(testResult === true) {
+                    result.copy(consequent);
+                } else {
+                    result.copy(alternate);
+                }
+                return;
+            }
+
 
             if (consequent.getType() == alternate.getType() && !consequent.isObject()) {
                 result.setType(consequent.getType());
@@ -153,10 +168,10 @@
 
         },
 
-        LogicalExpression: function (node) {
-            var left = node.left.annotation,
-                right = node.right.annotation,
-                result = node.annotation,
+        LogicalExpression: function (node, ctx) {
+            var left = Annotation.createForContext(node.left, ctx),
+                right = Annotation.createForContext(node.right, ctx),
+                result = new Annotation(node),
                 operator = node.operator;
 
             if (!(operator == "&&" || operator == "||"))
@@ -188,11 +203,11 @@
         },
 
 
-        BinaryExpression: function (node) {
+        BinaryExpression: function (node, ctx) {
             //console.log(node.left, node.right);
-            var left = node.left.annotation,
-                right = node.right.annotation,
-                result = node.annotation,
+            var left = Annotation.createForContext(node.left, ctx),
+                right = Annotation.createForContext(node.right, ctx),
+                result = new Annotation(node),
                 operator = node.operator,
                 func = BinaryFunctions[operator];
 
@@ -253,7 +268,7 @@
 
 
         MemberExpression: function (node, parent, ctx) {
-            var result = node.annotation,
+            var result = new Annotation(node),
                 objectName = node.object.name,
                 propertyName = node.property.name;
 
@@ -276,8 +291,8 @@
         },
 
         CallExpression: function (node, ctx) {
-            var result = node.annotation,
-                callee = node.callee.annotation;
+            var result = new Annotation(node),
+                callee = Annotation.createForContext(node.callee, ctx);
 
             var call = callee.getCall();
             if (typeof call == "function") {
@@ -369,13 +384,13 @@
                 log(node.type + " is not handle yet.");
                 break;
             case Syntax.BinaryExpression:
-                handlers.BinaryExpression(node);
+                handlers.BinaryExpression(node, ctx);
                 break;
             case Syntax.CallExpression:
                 handlers.CallExpression(node, ctx);
                 break;
             case Syntax.ConditionalExpression:
-                handlers.ConditionalExpression(node);
+                handlers.ConditionalExpression(node, ctx);
                 break;
             case Syntax.FunctionExpression:
                 log(node.type + " is not handle yet.");
@@ -386,7 +401,7 @@
             case Syntax.Literal:
                 break;
             case Syntax.LogicalExpression:
-                handlers.LogicalExpression(node);
+                handlers.LogicalExpression(node, ctx);
                 break;
             case Syntax.MemberExpression:
                 handlers.MemberExpression(node, parent, ctx);
@@ -410,7 +425,7 @@
                 log(node.type + " is not handle yet.");
                 break;
             case Syntax.UnaryExpression:
-                handlers.UnaryExpression(node);
+                handlers.UnaryExpression(node, ctx);
                 break;
             case Syntax.UpdateExpression:
                 log(node.type + " is not handle yet.");

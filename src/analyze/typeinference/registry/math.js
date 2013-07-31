@@ -5,7 +5,7 @@
 
 
     var evaluateMethod = function (name, paramCount) {
-        return function (result, args) {
+        return function (result, args, ctx) {
             if (paramCount != -1) { // Arbitrary number of arguments
                 if (!args || args.length != paramCount) {
                     throw new Error("Invalid number of parameters for Math." + name + ", expected " + paramCount);
@@ -15,7 +15,7 @@
             var argArray = [];
             var isStatic = true;
             args.forEach(function (arg, index) {
-                var param = new Annotation(arg);
+                var param = Annotation.createForContext(arg, ctx);
                 if (!param.canNumber())
                     throw new Error("Parameter " + index + " has invalid type for Math." + name + ", expected 'number', but got " + param.getType());
                 isStatic = isStatic && param.hasStaticValue();

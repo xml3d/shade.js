@@ -48,7 +48,7 @@
             ctx.inDeclaration = false;
         },
         VariableDeclarator: function(node, ctx) {
-            var result = node.annotation;
+            var result = new Annotation(node);
 
             if (node.id.type != Syntax.Identifier) {
                 throw new Error("Dynamic variable names are not yet supported");
