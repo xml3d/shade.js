@@ -38,8 +38,8 @@
         return !!exp;
     }
 
-    //var log = function(str) {};
-    var log = function() { console.log.apply(console, arguments); };
+    var log = function(str) {};
+    //var log = function() { console.log.apply(console, arguments); };
 
     var handlers = {
         AssignmentExpression: function (node, ctx) {
@@ -282,7 +282,7 @@
             if (obj.type == TYPES.UNDEFINED) {
                 throw new Error("TypeError: Cannot read property '"+ propertyName +"' of undefined")
             }
-            console.log(objectName, obj);
+            // console.log(objectName, obj);
             if (!obj.hasOwnProperty(propertyName)) {
                 result.setType(TYPES.UNDEFINED);
                 return;

@@ -5,7 +5,7 @@
         exitExpression = require('./infer_expression.js').exitExpression,
         Syntax = require('estraverse').Syntax,
         Shade = require("../../interfaces.js").Shade,
-        Context = require("./context.js").Context,
+        Context = require("./../context.js").Context,
         Annotation = require("./../../base/annotation.js").Annotation,
         FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
 

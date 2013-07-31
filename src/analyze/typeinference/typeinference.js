@@ -9,7 +9,7 @@
         exitExpression = require('./infer_expression.js').exitExpression,
         enterStatement = require('./infer_statement.js').enterStatement,
         exitStatement = require('./infer_statement.js').exitStatement,
-        Context = require("./context.js").Context,
+        Context = require("./../context.js").Context,
         MathObject = require("./registry/math.js"),
         ColorObject = require("./registry/color.js"),
         ShadeObject = require("./registry/shade.js"),
