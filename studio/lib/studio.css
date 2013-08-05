@@ -1,0 +1,33 @@
+.CodeMirror {
+    float: left;
+    width: 48%;
+    height: 350px;
+    border: 1px solid black;
+    margin: 10px 5px;
+}
+
+.console {
+    float: left;
+    width: 97%;
+    height: 100px;
+    border: 1px solid black;
+    margin: 10px 5px;
+    font-family: monospace;
+}
+
+* {
+    font-family: Droid Sans, Arial, sans-serif;
+    line-height: 1.5;
+    margin: 0px;
+    padding: 0px;
+}
+
+.main {
+    width: 1024px;
+}
+
+h1 {
+    font-size: 2.23em;
+    font-weight: bold;
+    margin: 10px;
+}
