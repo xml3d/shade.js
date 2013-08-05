@@ -4,12 +4,10 @@
         enterExpression = require('./infer_expression.js').enterExpression,
         exitExpression = require('./infer_expression.js').exitExpression,
         Syntax = require('estraverse').Syntax,
-        Shade = require("../../interfaces.js").Shade,
+        TYPES = require("../../interfaces.js").TYPES,
         Context = require("./../context.js").Context,
         Annotation = require("./../../base/annotation.js").Annotation,
         FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
-
-    var TYPES = Shade.TYPES;
 
     var enterHandler = {
         IfStatement: (function() {

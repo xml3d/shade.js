@@ -1,8 +1,6 @@
 (function(ns){
 
-    var Base = {};
-
-    Base.extend = function(a, b) {
+    ns.extend = function(a, b) {
         for ( var prop in b) {
             var g = b.__lookupGetter__(prop), s = b.__lookupSetter__(prop);
             if (g||s) {
@@ -23,7 +21,7 @@
         return a;
     };
 
-    Base.deepExtend = function(destination, source) {
+    ns.deepExtend = function(destination, source) {
         for (var property in source) {
             if (typeof source[property] === "object" && source[property] !== null && destination[property]) {
                 Base.deepExtend(destination[property], source[property]);
@@ -40,7 +38,7 @@
      * @param {Object=} methods Methods to add to the class
      * @return {Object!}
      */
-    Base.createClass = function(ctor, parent, methods) {
+    ns.createClass = function(ctor, parent, methods) {
         methods = methods || {};
         if (parent) {
             /** @constructor */
@@ -57,6 +55,5 @@
         return ctor;
     };
 
-    ns.Base = Base;
 
 }(exports))

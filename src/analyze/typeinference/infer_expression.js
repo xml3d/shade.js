@@ -1,10 +1,9 @@
 (function (ns) {
 
     var Syntax = require('estraverse').Syntax,
-        Shade = require("../../interfaces.js").Shade,
+        TYPES = require("../../interfaces.js").TYPES,
         Annotation = require("./../../base/annotation.js").Annotation;
 
-    var TYPES = Shade.TYPES;
 
     var BinaryFunctions = {
         "+" : function(a,b) { return a + b; },

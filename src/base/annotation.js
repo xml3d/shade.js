@@ -1,8 +1,8 @@
 (function(ns){
 
-    var Shade = require("../interfaces.js").Shade,
+    var Shade = require("../interfaces.js"),
         Syntax = require('estraverse').Syntax,
-        Base = require("./index.js").Base;
+        Base = require("./index.js");
 
     var TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS;

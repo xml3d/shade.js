@@ -13,7 +13,7 @@
         MathObject = require("./registry/math.js"),
         ColorObject = require("./registry/color.js"),
         ShadeObject = require("./registry/shade.js"),
-        Base = require("../../base/index.js").Base;
+        Base = require("../../base/index.js");
 
 
     var Syntax = walk.Syntax;

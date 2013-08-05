@@ -1,8 +1,7 @@
 (function(ns){
 
-    var Base = require("../base/index.js").Base,
-        Annotation = require("./../base/annotation.js").Annotation,
-        TYPES = require("../interfaces.js").Shade.TYPES;
+    var Base = require("../base/index.js"),
+        TYPES = require("../interfaces.js").TYPES;
 
 
     var c_object_registry = {};

@@ -1,6 +1,6 @@
 (function (ns) {
 
-    var TYPES = require("../../../interfaces.js").Shade.TYPES,
+    var TYPES = require("../../../interfaces.js").TYPES,
         Annotation = require("../../../base/annotation.js").Annotation;
 
 

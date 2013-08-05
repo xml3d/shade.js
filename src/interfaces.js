@@ -1,11 +1,9 @@
 (function (ns) {
 
-    ns.Shade = ns.Shade || {};
-
     /**
      * @enum
      */
-    ns.Shade.TYPES = {
+    ns.TYPES = {
         ANY: "any",
         INT: "int",
         NUMBER: "number",
@@ -17,7 +15,7 @@
         STRING: "string"
     }
 
-    ns.Shade.OBJECT_KINDS = {
+    ns.OBJECT_KINDS = {
         ANY: "any",
         COLOR: "color", // virtual kinds
         FLOAT3: "float3", // virtual kinds

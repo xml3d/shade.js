@@ -1,9 +1,9 @@
 (function (ns) {
     var parser = require('esprima'),
         parameters = require("./analyze/parameters.js"),
-        interfaces = require("./interfaces.js").Shade,
+        interfaces = require("./interfaces.js"),
         inference = require("./analyze/typeinference/typeinference.js"),
-        Base = require("./base/index.js").Base;
+        Base = require("./base/index.js");
 
 
 
