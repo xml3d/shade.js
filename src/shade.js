@@ -3,7 +3,8 @@
         parameters = require("./analyze/parameters.js"),
         interfaces = require("./interfaces.js"),
         inference = require("./analyze/typeinference/typeinference.js"),
-        Base = require("./base/index.js");
+        Base = require("./base/index.js"),
+        GLSLCompiler = require("./generate/glsl/compiler.js").GLSLCompiler;
 
 
 
@@ -27,6 +28,10 @@
             var ast = parser.parse(str, {raw: true});
             var aast = inference.infer(ast, inject);
             return aast;
+        },
+
+        compileFragmentShader: function(aast){
+            return new GLSLCompiler().compileFragmentShader(aast);
         },
 
         TYPES : interfaces.TYPES,

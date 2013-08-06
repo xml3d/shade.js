@@ -26,13 +26,13 @@
         },
         onEdit: function(instance, obj) {
             var newValue = instance.getValue();
-            this.codeViewer.setValue(newValue);
             try {
                 var params = Shade.extractParameters(newValue);
                 console.log(params);
                 this.updateParameterSelection(params);
+                this.updateOutput();
             } catch (e) {
-                console.log(e);
+                console.log(e.toString());
             }
         },
         updateParameterSelection: function(params){
@@ -54,8 +54,22 @@
                 list.append(listEntry);
             }
         },
-        updateParamTypes: function(){
-            console.log("UPDATE PARAM TYPE!!11Eins");
+        updateOutput: function(){
+            var contextData = {
+                "global.shade" : [
+                    {}
+                ]
+            }
+            for(var i = 0; i < this.paramList.length; ++i){
+                var name = this.paramList[i];
+                contextData["global.shade"][0][name] = TYPE_LIST[this.paramForm.elements[name].value];
+            }
+            var code = this.javaScriptEditor.getValue();
+
+            var aast = Shade.parseAndInferenceExpression(code, contextData);
+            var result = Shade.compileFragmentShader(aast);
+
+            this.codeViewer.setValue(result);
         }
     }
 
@@ -67,7 +81,7 @@
         select[0].name = selectName;
         select[0].value = selectedValue;
         select.change(function(){
-            ns.ShadeStudio.updateParamTypes();
+            ns.ShadeStudio.updateOutput();
         });
         return select;
     }
