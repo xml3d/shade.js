@@ -44,7 +44,6 @@
         },
 
         /**
-         *
          * @param {string} name
          * @returns {*}
          */
@@ -55,6 +54,26 @@
             if (this.parent)
                 return this.parent.findVariable(name);
             return undefined;
+        },
+
+        /**
+         * @param {string} name
+         * @returns {Context|null}
+         */
+        getContextByName: function(name) {
+            var bindings = this.getBindings();
+            if(bindings[name] !== undefined)
+                return this;
+            if (this.parent)
+                return this.parent.getContextByName(name);
+            return null;
+        },
+
+        getVariableIdentifier: function(name) {
+            var context = this.getContextByName(name);
+            if(!context)
+                return null;
+            return context.str() + "." + name;
         },
 
         declareVariable: function(name) {

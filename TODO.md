@@ -9,7 +9,7 @@
 
 ### Analysis
 
-* Find Parameters: Extend to global (KS)
+* Find Parameters: Extend to global (KS) ✔
 * Type Inference: Handle functions / function calls
 * Uniform expression detection
 * [Slicing](http://en.wikipedia.org/wiki/Program_slicing) to extract indiviual buffers
