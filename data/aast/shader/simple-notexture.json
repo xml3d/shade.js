@@ -51,24 +51,11 @@
                     }
                   },
                   "right": {
-                    "type": "CallExpression",
+                    "type": "NewExpression",
                     "callee": {
-                      "type": "MemberExpression",
-                      "computed": false,
-                      "object": {
-                        "type": "Identifier",
-                        "name": "Color",
-                        "extra": {}
-                      },
-                      "property": {
-                        "type": "Identifier",
-                        "name": "rgb",
-                        "extra": {}
-                      },
-                      "extra": {
-                        "type": "object",
-                        "kind": "color"
-                      }
+                      "type": "Identifier",
+                      "name": "Color",
+                      "extra": {}
                     },
                     "arguments": [
                       {
@@ -102,7 +89,6 @@
                     "extra": {
                       "type": "object",
                       "kind": "color",
-                      "global": false,
                       "staticValue": {
                         "r": 255,
                         "g": 0,
@@ -303,6 +289,9 @@
               "type": "object",
               "kind": "float3",
               "source": "vertex"
+            },
+            "extra": {
+              "global": true
             }
           },
           "diffuseColor": {

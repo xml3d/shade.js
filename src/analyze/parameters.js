@@ -18,7 +18,7 @@
                 switch (type) {
                     case Syntax.FunctionDeclaration:
                         var parentContext = contextStack[contextStack.length - 1];
-                        parentContext.declareVariable(node.id.name);
+                        parentContext.declareVariable(node.id.name, false);
                         context = new Context(node, parentContext, {name: node.id.name });
                         contextStack.push(context);
                         if (context.str() == contextName) {

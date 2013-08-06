@@ -20,7 +20,10 @@
         this.context = node.context = node.context || {};
 
         /** @type {Object.<string, {initialized: boolean, annotation: Annotation}>} */
-        this.context.bindings = opt.bindings || {};
+        this.context.bindings = this.context.bindings || {};
+        if(opt.bindings) {
+            Base.extend(this.context.bindings, opt.bindings);
+        }
 
         this.context.name = opt.name || "<anonymous>";
 
@@ -76,10 +79,17 @@
             return context.str() + "." + name;
         },
 
-        declareVariable: function(name) {
+        declareVariable: function(name, fail) {
             var bindings = this.getBindings();
-            if (bindings[name])
-                throw new Error(name + " was already declared in this scope.")
+            fail = fail === undefined ? true : fail;
+            if (bindings[name]) {
+                if (fail) {
+                    throw new Error(name + " was already declared in this scope.")
+                } else {
+                    return;
+                }
+            }
+
             var init = {
                 initialized : false,
                 type: TYPES.UNDEFINED
@@ -148,6 +158,19 @@
                 ctx = ctx.parent;
             }
             return names.join(".");
+        },
+
+        getAllBindings: function() {
+            var result = Object.keys(this.getBindings());
+            if (this.parent) {
+                var parentBindings = this.parent.getAllBindings();
+                for(var i = 0; i < parentBindings.length; i++) {
+                    if (result.indexOf(parentBindings[i]) !== -1) {
+                        result.push(parentBindings[i]);
+                    }
+                }
+            }
+            return result;
         }
 
 

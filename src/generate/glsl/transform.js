@@ -37,7 +37,7 @@
                     //console.log("Enter:", node.type);
                     switch (node.type) {
                         case Syntax.MemberExpression:
-                            return handleMemberExpression(node, parent, program);
+                            return handleMemberExpression(node, parent, program, context);
                         case Syntax.BinaryExpression:
                             return handleBinaryExpression(node, parent);
                         case Syntax.IfStatement:
@@ -45,15 +45,15 @@
                         case Syntax.LogicalExpression:
                             return handleLogicalExpression(node, parent);
                         case Syntax.FunctionDeclaration:
+                            // No need to declare, this has been annotated already
                             var parentContext = contextStack[contextStack.length - 1];
-                            parentContext.declareVariable(node.id.name);
                             context = new Context(node, parentContext, {name: node.id.name });
                             contextStack.push(context);
                             inMain = mainId == context.str()
                             break;
                         case Syntax.ReturnStatement:
                             if(inMain) {
-                                return handleReturnInMain(node);
+                                //return handleReturnInMain(node);
                             }
                             break;
                     }
@@ -99,15 +99,22 @@
     var handleMainFunction = function(node, parent, context) {
         var anno = new FunctionAnnotation(node);
         anno.setReturnInfo({ type: Types.UNDEFINED });
+
+        // console.log(context);
+        // Main has no parameters
+        node.params = [];
         // Rename to 'main'
         node.id.name = "main";
+        //console.log(node);
     }
 
 
-    var handleMemberExpression = function (memberExpression, parent, root) {
-        // console.log("Member:", memberExpression.object);
+    var handleMemberExpression = function (memberExpression, parent, root, context) {
         var object = memberExpression.object,
             property = memberExpression.property;
+
+        console.log("memExp", object.name, context.findObject(object.name), context.getAllBindings());
+
 
         if (object.name in ObjectRegistry) {
             var objectEntry = ObjectRegistry[object.name];
@@ -120,6 +127,7 @@
         }
         var exp = new Annotation(memberExpression);
         if(exp.isGlobal()) {
+            console.log("Found global:", property.name);
             var decl = {
                 type: Syntax.VariableDeclaration,
                 declarations: [
