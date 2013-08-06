@@ -1,7 +1,6 @@
 (function (ns) {
 
-    var Base = require("../../base/index.js").Base,
-        Shade = require("../../interfaces.js").Shade,
+    var Base = require("../../base/index.js"),
         Annotation = require("../../base/annotation.js").Annotation;
 
     var ObjectRegistry = {};
