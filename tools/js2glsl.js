@@ -19,7 +19,6 @@ var argv = require('optimist').argv,
 
     var ctx = filename.replace(/\.[^/.]+$/, "") + "-context.json";
 
-
     var code = (function () {
 
         var contextData = {};
