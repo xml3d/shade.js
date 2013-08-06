@@ -25,6 +25,32 @@ describe('Inference', function () {
 
             });
 
+            it("color instance object<color>", function () {
+                var exp = parseAndInferenceExpression("new Color(255, 0, 0)");
+                exp.should.have.property("extra");
+                exp.extra.should.have.property("type", TYPES.OBJECT);
+                exp.extra.should.have.property("kind", KINDS.COLOR);
+                exp.extra.should.have.property("staticValue");
+                exp.extra.staticValue.should.have.property("r", 255);
+                exp.extra.staticValue.should.have.property("g", 0);
+                exp.extra.staticValue.should.have.property("b", 0);
+
+            });
+
+            it("color instance object<color>", function () {
+                var exp = parseAndInferenceExpression("new Color(128)");
+                exp.should.have.property("extra");
+                exp.extra.should.have.property("type", TYPES.OBJECT);
+                exp.extra.should.have.property("kind", KINDS.COLOR);
+                exp.extra.should.have.property("staticValue");
+                exp.extra.staticValue.should.have.property("r", 128);
+                exp.extra.staticValue.should.have.property("g", 128);
+                exp.extra.staticValue.should.have.property("b", 128);
+
+            });
+
+
+
         });
     });
 

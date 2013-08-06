@@ -59,9 +59,15 @@
             return this.getKind() == kind;
         },
 
-        setType: function (type) {
+        /**
+         * @param {string} type
+         * @param {string?} kind
+         */
+        setType: function (type, kind) {
             var extra = this.getExtra();
             extra.type = type;
+            if (kind)
+                this.setKind(kind);
         },
 
         isOfType: function (type) {

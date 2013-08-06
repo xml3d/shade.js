@@ -85,6 +85,19 @@
             }
         },
 
+        NewExpression: function(node, parent, ctx) {
+            var result = new Annotation(node);
+
+            var entry = ctx.findObject(node.callee.name);
+            if (entry && entry._constructor) {
+                var constructor = entry._constructor;
+                result.setType(constructor.type, constructor.kind);
+                entry._constructor.evaluate(result, node.arguments, ctx);
+            }
+           else {
+                throw new Error("ReferenceError: " + node.callee.name + " is not defined");
+            }
+        },
 
         UnaryExpression: function (node, ctx) {
             var result = new Annotation(node),
@@ -316,7 +329,7 @@
                     if (!(func && func.initialized)) {
                         throw new Error(functionName + " is not defined. Context: " + ctx.str());
                     }
-                    console.log(func);
+                    // console.log(func);
                     //throw new Error("Can't call " + functionName + "() in this context: " + ctx.str());
                     break;
                 default:
@@ -427,7 +440,7 @@
                 handlers.MemberExpression(node, parent, ctx);
                 break;
             case Syntax.NewExpression:
-                log(node.type + " is not handle yet.");
+                handlers.NewExpression(node, parent, ctx);
                 break;
             case Syntax.ObjectExpression:
                 log(node.type + " is not handle yet.");
