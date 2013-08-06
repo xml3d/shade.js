@@ -12,15 +12,22 @@
 
             });
             this.javaScriptEditor.on("change", this.onEdit.bind(this));
-            this.codeViewer =  CodeMirror(document.querySelector(".glsl"), {
-                value: "void main(void) {}\n",
-                mode:  "clike",
+            this.codeViewer = CodeMirror(document.querySelector(".glsl"), {
+                value: "",
+                mode:  "x-shader/x-fragment",
                 readOnly: true
             });
         },
         onEdit: function(instance, obj) {
-            console.log("Edit", arguments, this.codeViewer.setValue);
-            this.codeViewer.setValue(instance.getValue())
+            var newValue = instance.getValue();
+            this.codeViewer.setValue(newValue);
+            try {
+                var params = Shade.extractParameters(newValue);
+                console.log(params);
+            } catch (e) {
+                console.log(e);
+            }
+
         }
     }
 
