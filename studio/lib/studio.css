@@ -1,19 +1,3 @@
-.CodeMirror {
-    float: left;
-    width: 48%;
-    height: 350px;
-    border: 1px solid black;
-    margin: 10px 5px;
-}
-
-.console {
-    float: left;
-    width: 97%;
-    height: 100px;
-    border: 1px solid black;
-    margin: 10px 5px;
-    font-family: monospace;
-}
 
 * {
     font-family: Droid Sans, Arial, sans-serif;
@@ -22,12 +6,80 @@
     padding: 0px;
 }
 
+
 .main {
-    width: 1024px;
 }
+
+
+.codeInput{
+    float: left;
+    width: 35%;
+    margin: 0 0.5%;
+    box-sizing: border-box;
+}
+
+.paramList{
+    float: left;
+    width: 27%;
+
+    margin: 0 0.5%;
+    box-sizing: border-box;
+}
+.codeOutput{
+    float: left;
+    margin: 0 0.5%;
+    width: 35%;
+}
+
+.console {
+    float: left;
+    width: 99%;
+    height: 100px;
+    border: 1px solid #ababab;
+    margin: 10px 0.5%;
+    font-family: monospace;
+    box-sizing: border-box;
+}
+
+
+.CodeMirror {
+    height: 500px;
+    border: 1px solid #ababab;
+    box-sizing: border-box;
+}
+
 
 h1 {
     font-size: 2.23em;
     font-weight: bold;
     margin: 10px;
+}
+
+h2{
+    background: #ababab;
+    padding: 8px;
+    margin-bottom: 4px;
+    color: white;
+    font-size: medium;
+}
+
+.paramList li{
+    list-style: none;
+    border-bottom: 1px solid #ababab;
+    padding: 0 8px;
+}
+
+.paramList label{
+    display: inline-block;
+    width: 120px;
+}
+
+.paramList select{
+    font-size: 8pt;
+}
+
+uL#inputList{
+    height: 500px;
+    overflow: auto;
+    border: 1px solid #ababab;
 }

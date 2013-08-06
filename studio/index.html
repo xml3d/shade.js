@@ -7,6 +7,7 @@
     <script type="text/javascript" src="lib/mode/javascript.js"></script>
     <script type="text/javascript" src="lib/mode/clike.js"></script>
     <script type="text/javascript" src="../lib/shade.js"></script>
+    <script type="text/javascript" src="./lib/jquery-1.8.1.min.js"></script>
     <script type="text/javascript" src="./lib/studio.js"></script>
     <link rel="stylesheet" href="./lib/codemirror.css">
     <link rel="stylesheet" href="./lib/studio.css">
@@ -16,15 +17,24 @@
 <body onload="ShadeStudio.init();">
 <div class="main">
 <h1>shade.js studio</h1>
+
+<div class="codeInput" >
+<h2>Code Input</h2>
 <textarea id="code" cols="100" rows="50">
 function shade(env) {
 
 }
 </textarea>
-<div class="glsl">
-
 </div>
-<div></div>
+
+<form class="paramList" name="paramList" id="paramList" >
+    <h2>Arguments</h2>
+    <ul id="inputList" ></ul>
+</form>
+<div class="codeOutput">
+    <h2>Code Output</h2>
+</div>
+
 <div class="console">
     Console
 </div>
