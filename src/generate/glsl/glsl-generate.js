@@ -69,7 +69,7 @@
                                methodStart.push("void");
                             } else {
                                 node.params.forEach(function (param) {
-                                    methodStart.push(param.id.name);
+                                    methodStart.push(param.name);
                                 })
                             }
                             methodStart.push(') {');
@@ -121,14 +121,8 @@
         var result = "<unhandled>";
         switch(node.type) {
             case Syntax.NewExpression:
-                result = toGLSLType(node.extra) + "(";
-                node.arguments.forEach(function(arg, index) {
-                    result += handleExpression(arg);
-                    if (index < node.arguments.length - 1) {
-                        result += ", ";
-                    }
-                });
-                result += ")";
+                result = toGLSLType(node.extra);
+                result += handleArguments(node.arguments);
                 break;
 
             case Syntax.Literal:
@@ -146,11 +140,33 @@
                 result += handleExpression(node.right);
                 break;
 
-            case Syntax.ExpressionStatement:
+            case Syntax.CallExpression:
+                result = handleExpression(node.callee);
+                result += handleArguments(node.arguments);
+                break;
 
+            case Syntax.MemberExpression:
+                result = handleExpression(node.object);
+                result += ".";
+                result += handleExpression(node.property);
+                break;
+            default:
+                //console.log("Unhandled: " , node.type);
         }
         return result;
     }
+
+    function handleArguments(container) {
+        var result = "(";
+        container.forEach(function (arg, index) {
+            result += handleExpression(arg);
+            if (index < container.length - 1) {
+                result += ", ";
+            }
+        });
+        return result + ")";
+    }
+
 
     exports.generate = generate;
 
