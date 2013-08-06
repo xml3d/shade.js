@@ -113,10 +113,10 @@
         var object = memberExpression.object,
             property = memberExpression.property;
 
-        console.log("memExp", object.name, context.findObject(object.name), context.getAllBindings());
 
+        var objectReference = context.findObject(object.name);
 
-        if (object.name in ObjectRegistry) {
+        if (objectReference in ObjectRegistry) {
             var objectEntry = ObjectRegistry[object.name];
             if (property.name in objectEntry) {
                 var propertyHandler = objectEntry[property.name];
@@ -126,14 +126,17 @@
             }
         }
         var exp = new Annotation(memberExpression);
-        if(exp.isGlobal()) {
-            console.log("Found global:", property.name);
+        if(objectReference._global) {
+            var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(objectReference, property.name)};
+            var propertyAnnotation =  new Annotation(propertyLiteral);
+            propertyAnnotation.copy(exp);
+
             var decl = {
                 type: Syntax.VariableDeclaration,
                 declarations: [
                     {
                         type: Syntax.VariableDeclarator,
-                        id: { type: Syntax.Literal, name: property.name},
+                        id: propertyLiteral,
                         init: null
                     }
                 ],
@@ -141,12 +144,23 @@
             };
             var declAnnotation =  new Annotation(decl);
             declAnnotation.copy(exp);
-            root.body.unshift(decl);
-            console.log(root.body[0]);
+            //root.body.unshift(decl);
+            //console.log(root.body[0]);
+            return propertyLiteral;
 
         }
 
     };
+
+    var getNameForGlobal = function(reference, baseName) {
+        var entry = reference[baseName];
+        if(entry) {
+            if (entry.source == "vertex") {
+                return "frag_" + baseName;
+            }
+        }
+        return baseName;
+    }
 
     var handleBinaryExpression = function (binaryExpression, parent, cb) {
         if (binaryExpression.operator = "%") {

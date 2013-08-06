@@ -12,7 +12,8 @@
                 "type": "object",
                 "kind": "float3",
                 "source": "vertex"
-            }
+            },
+            "_global": true
         }
     ]
 }
