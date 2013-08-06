@@ -1,7 +1,6 @@
 (function (ns) {
 
     var Base = require("../../base/index.js");
-    var inherits = require('inherits');
 
     var Transformer = require("./transform.js").GLASTTransformer;
     var generate = require("./generate.js").generate;
