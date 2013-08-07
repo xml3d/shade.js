@@ -86,7 +86,7 @@
         updateOutput: function(){
             var contextData = {
                 "global.shade" : [
-                    {}
+                    { "_global" : true }
                 ]
             }
             for(var i = 0; i < this.paramList.length; ++i){
