@@ -5,6 +5,8 @@
     var ShadeStudio = function() {
         this.paramList = [];
         this.paramForm = null;
+        this.console = null;
+        this.lastErrorLine = undefined;
     };
 
     ShadeStudio.prototype = {
@@ -22,17 +24,35 @@
                 readOnly: true
             });
             this.paramForm = document.getElementById("paramList");
+            this.console = $("#console");
 
         },
         onEdit: function(instance, obj) {
-            var newValue = instance.getValue();
+            var newValue = this.javaScriptEditor.getValue();
+            var codeCorrect = false;
+            if(!isNaN(this.lastErrorLine)){
+                this.javaScriptEditor.removeLineClass(this.lastErrorLine, 'background', 'line-error');
+                this.lastErrorLine = undefined;
+            }
+            $("#main").removeClass("error");
+            $("#main").removeClass("codeError");
             try {
                 var params = Shade.extractParameters(newValue);
                 console.log(params);
+                codeCorrect = true;
                 this.updateParameterSelection(params);
                 this.updateOutput();
+
             } catch (e) {
                 console.log(e.toString());
+                $("#main").addClass("error");
+                if(!codeCorrect) $("#main").addClass("codeError");
+                var lineNumber = e.lineNumber - 1;
+                this.lastErrorLine = lineNumber;
+                if(!isNaN(lineNumber))
+                    this.javaScriptEditor.addLineClass(lineNumber, 'background', 'line-error');
+                //this.javaScriptEditor.setLineClass(lineNumber, 'background', 'line-error');
+                this.addConsoleText(e.toString(), true)
             }
         },
         updateParameterSelection: function(params){
@@ -70,6 +90,25 @@
             var result = Shade.compileFragmentShader(aast);
 
             this.codeViewer.setValue(result);
+        },
+        addConsoleText: function(text, error){
+            var lastElement = this.console.find("li:last-child");
+            var lastText = lastElement.find(".text").text();
+            if(text == lastText){
+                var counter = lastElement.find(".counter");
+                if(counter.length){
+                    var newCount = counter.text()*1 + 1;
+                    counter.text(newCount);
+                }
+                else{
+                    lastElement.append($('<span class="counter">2</span>'));
+                }
+                return;
+            }
+            var entry = $('<li><span class="text" >'+ text + '</span></li>');
+            if(error) entry.addClass("error");
+            this.console.append(entry);
+            this.console[0].scrollTop = this.console[0].scrollHeight;
         }
     }
 
@@ -81,7 +120,7 @@
         select[0].name = selectName;
         select[0].value = selectedValue;
         select.change(function(){
-            ns.ShadeStudio.updateOutput();
+            ns.ShadeStudio.onEdit();
         });
         return select;
     }

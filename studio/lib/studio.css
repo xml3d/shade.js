@@ -7,7 +7,7 @@
 }
 
 
-.main {
+#main {
 }
 
 
@@ -31,14 +31,46 @@
     width: 35%;
 }
 
-.console {
+.console{
     float: left;
     width: 99%;
-    height: 100px;
+    height: 200px;
     border: 1px solid #ababab;
     margin: 10px 0.5%;
-    font-family: monospace;
     box-sizing: border-box;
+    overflow: auto;
+}
+
+.console{
+    list-style: none;
+}
+
+.console li{
+    position: relative;
+}
+
+.console li .text{
+    font-family: monospace;
+    padding-left: 40px;
+}
+.console li .counter{
+    position: absolute; left: 2px; top: 5px;
+    display: block;
+    padding: 0px 6px;
+    font-size: 8pt;
+    border-radius: 16px;
+    color: white;
+}
+
+.console li.error{
+    color: red;
+}
+
+li.error .counter{
+    background: red;
+}
+li .counter{
+    background: blue;
 }
 
 
@@ -46,6 +78,15 @@
     height: 500px;
     border: 1px solid #ababab;
     box-sizing: border-box;
+}
+
+.error .codeOutput .CodeMirror, .codeError .paramList ul#inputList{
+    border: 1px solid red;
+    background: #ffbab7;
+    opacity: 0.5;
+}
+.line-error{
+    background: #ffbab7;
 }
 
 
