@@ -25,16 +25,16 @@
     var ColorConstructor =  {
         type: TYPES.OBJECT,
         kind: KINDS.COLOR,
-        evaluate: function(result, args) {
+        evaluate: function(result, args, ctx) {
             if(!(args.length == 3 || args.length == 1)) {
                 throw new Error("Invalid number of parameters for Color.rgb, expected 1 or 3");
             }
             var argArray = [];
             var isStatic = true;
             args.forEach(function (arg, index) {
-                var param = new Annotation(arg);
-                if (!param.canInt())
-                    throw new Error("Parameter " + index + " has invalid type for Color.rgb, expected 'int', but got " + param.getType());
+                var param = Annotation.createForContext(arg, ctx);
+                if (!param.canNumber())
+                    throw new Error("Parameter " + index + " has invalid type for Color.rgb, expected 'float', but got " + param.getType());
                 isStatic = isStatic && param.hasStaticValue();
                 if (isStatic)
                     argArray.push(param.getStaticValue());

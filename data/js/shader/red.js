@@ -1,4 +1,4 @@
 
 function shade() {
-    return new Color(255, 0, 0);
+    return new Color(1, 0, 0);
 }
