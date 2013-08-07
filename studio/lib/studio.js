@@ -148,6 +148,7 @@
                 this.value = SOURCE_LIST[0];
             else
                 this.value = SOURCE_LIST[idx + 1];
+            ns.ShadeStudio.onEdit();
         });
         listEntry.append(sourceButton);
 

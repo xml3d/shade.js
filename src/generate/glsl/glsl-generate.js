@@ -56,10 +56,10 @@
         }
         function changeIndention(add){
             while(add > 0){
-                indent += "  "; add--;
+                indent += "    "; add--;
             }
             if(add < 0){
-                indent = indent.substr(0, indent.length + add*2);
+                indent = indent.substr(0, indent.length + add*4);
             }
         }
 
