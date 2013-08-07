@@ -93,7 +93,7 @@
 
 
                         default:
-                            //console.log("Unhandled: " + type);
+                            console.log("Unhandled: " + type);
 
                     }
                 },

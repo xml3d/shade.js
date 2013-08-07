@@ -2,6 +2,9 @@
 
     var TYPE_LIST = {};
 
+    var SOURCE_MAP = {},
+        SOURCE_LIST = []
+
     var ShadeStudio = function() {
         this.paramList = [];
         this.paramForm = null;
@@ -68,16 +71,16 @@
 
             var newSelects = {};
             for(var i = 0; i < params.length; ++i){
-                var paramName = params[i];
-                var oldField = this.paramForm.elements[paramName];
-                newSelects[paramName] = createParamSelect(paramName, oldField && oldField.value);
+                var paramName = params[i], sourceName = "_" + paramName + "__source";
+                var oldField = this.paramForm.elements[paramName],
+                    oldSourceField = this.paramForm.elements[sourceName];
+                newSelects[paramName] = createParamSelect(paramName,
+                    oldField && oldField.value, oldSourceField && oldSourceField.value);
             }
             var list = $("#inputList");
             list.empty();
             for(var name in newSelects){
-                var listEntry = $('<li><label for="' + name +'">' + name +'</label></li>');
-                listEntry.append(newSelects[name]);
-                list.append(listEntry);
+                list.append(newSelects[name]);
             }
         },
         updateOutput: function(){
@@ -87,8 +90,13 @@
                 ]
             }
             for(var i = 0; i < this.paramList.length; ++i){
-                var name = this.paramList[i];
-                contextData["global.shade"][0][name] = TYPE_LIST[this.paramForm.elements[name].value];
+                var name = this.paramList[i], sourceName = "_" + name + "__source";
+                var src = TYPE_LIST[this.paramForm.elements[name].value];
+                var dest = contextData["global.shade"][0][name] = {};
+                for(var j in src){
+                    dest[j] = src[j];
+                }
+                dest["source"] = SOURCE_MAP[this.paramForm.elements[sourceName].value];
             }
             var code = this.javaScriptEditor.getValue();
 
@@ -118,7 +126,9 @@
         }
     }
 
-    function createParamSelect(selectName, selectedValue){
+    function createParamSelect(selectName, selectedValue, sourceValue){
+        var listEntry = $('<li><label for="' + selectName +'">' + selectName +'</label></li>');
+
         var select = $("<select></select>");
         for(var name in TYPE_LIST){
             select.append($("<option>" + name + "</option>"));
@@ -128,7 +138,21 @@
         select.change(function(){
             ns.ShadeStudio.onEdit();
         });
-        return select;
+        listEntry.append(select);
+
+        var sourceButton = $('<input class="sourceButton" type="button" name="_' + selectName + '__source" />');
+        sourceButton[0].value = sourceValue || SOURCE_LIST[0];
+        sourceButton.click(function(){
+            var idx = SOURCE_LIST.indexOf(this.value);
+            if(idx == -1 || idx == SOURCE_LIST.length - 1)
+                this.value = SOURCE_LIST[0];
+            else
+                this.value = SOURCE_LIST[idx + 1];
+        });
+        listEntry.append(sourceButton);
+
+
+        return listEntry;
     }
 
 
@@ -141,6 +165,11 @@
         for(var name in Shade.OBJECT_KINDS){
             var objName = "OBJECT_" + name;
             TYPE_LIST[objName] = { type: Shade.TYPES.OBJECT, kind: Shade.OBJECT_KINDS[name]};
+        }
+        for(var name in Shade.SOURCES){
+            var key = name.charAt(0).toUpperCase();
+            SOURCE_MAP[key] = Shade.SOURCES[name];
+            SOURCE_LIST.push(key);
         }
     }
 

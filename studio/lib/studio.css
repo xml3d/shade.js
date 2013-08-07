@@ -89,6 +89,10 @@ li .counter{
     background: #ffbab7;
 }
 
+input.sourceButton{
+    padding: 0 6px;
+    font-size: 8pt;
+}
 
 h1 {
     font-size: 2.23em;

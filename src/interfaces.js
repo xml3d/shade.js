@@ -25,6 +25,12 @@
         COLOR_CLOSURE: "color_closure"
     }
 
+    ns.SOURCES = {
+        UNIFORM: "uniform",
+        VERTEX: "vertex",
+        CONSTANT: "constant"
+    }
+
     /**
      * The virtual Normal type
      * @interface

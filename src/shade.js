@@ -36,7 +36,8 @@
         },
 
         TYPES : interfaces.TYPES,
-        OBJECT_KINDS : interfaces.OBJECT_KINDS
+        OBJECT_KINDS : interfaces.OBJECT_KINDS,
+        SOURCES: interfaces.SOURCES
 
 });
     /**
