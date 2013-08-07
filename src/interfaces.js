@@ -68,9 +68,12 @@
      * @param {string} msg
      */
     ns.throwError = function(node, msg) {
-        console.dir(node);
+        var loc = node && node.loc;
+        if (loc && loc.start.line) {
+            msg = "Line " + loc.start.line + ": " + msg;
+        }
         var error = new Error(msg);
-        error.loc = node && node.loc;
+        error.loc = loc;
         throw error;
     }
 

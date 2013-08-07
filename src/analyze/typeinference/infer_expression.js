@@ -1,7 +1,8 @@
 (function (ns) {
 
     var Syntax = require('estraverse').Syntax,
-        TYPES = require("../../interfaces.js").TYPES,
+        Shade = require("../../interfaces.js"),
+        TYPES = Shade.TYPES,
         Annotation = require("./../../base/annotation.js").Annotation;
 
 
@@ -298,14 +299,14 @@
                 propertyName = node.property.name;
 
             if (!(objectName && propertyName)) {
-                throw new Error("Can't handle dynamic objects/properties yet.")
+                Shade.throwError(node, "Can't handle dynamic objects/properties yet.");
             }
             var obj = ctx.findObject(objectName);
             if (!obj) {
-                throw new Error("ReferenceError: " + objectName + " is not defined. Context: " + ctx.str());
+                Shade.throwError(node,"ReferenceError: " + objectName + " is not defined. Context: " + ctx.str());
             }
             if (obj.type == TYPES.UNDEFINED) {
-                throw new Error("TypeError: Cannot read property '"+ propertyName +"' of undefined")
+                Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName +"' of undefined")
             }
             // console.log(objectName, obj);
             if (!obj.hasOwnProperty(propertyName)) {
