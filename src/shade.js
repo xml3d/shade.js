@@ -15,13 +15,13 @@
          * @param {function()|string) func
          * @returns {object!}
          */
-        extractParameters: function (func) {
+        extractParameters: function (func, opt) {
             if (typeof func == 'function') {
                 func = func.toString();
             }
             var ast = parser.parse(func);
 
-            return parameters.extractParameters(ast);
+            return parameters.extractParameters(ast, opt);
         },
 
         parseAndInferenceExpression: function (str, inject) {
