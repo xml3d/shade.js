@@ -33,7 +33,7 @@
     var TypeInference = function (root, injections) {
         this.root = root;
         this.context = [];
-        this.injections = injections;
+        this.injections = injections || {};
         this.pushContext(registerGlobalContext(root));
 
     }

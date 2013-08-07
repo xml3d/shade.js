@@ -4,7 +4,7 @@ var parser = require('esprima'),
 
 var parseAndInferenceExpression = function (str, envParams) {
     var ast = parser.parse(str, {raw: true});
-    var aast = inference.infer(ast, envParams);
+    var aast = inference.infer(ast, { inject: envParams });
     return aast.body[0];
 }
 

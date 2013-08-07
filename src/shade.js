@@ -24,9 +24,10 @@
             return parameters.extractParameters(ast, opt);
         },
 
-        parseAndInferenceExpression: function (str, inject) {
-            var ast = parser.parse(str, {raw: true});
-            var aast = inference.infer(ast, inject);
+        parseAndInferenceExpression: function (str, opt) {
+            opt = opt || {};
+            var ast = parser.parse(str, {raw: true, loc: opt.loc || false });
+            var aast = inference.infer(ast, opt.inject);
             return aast;
         },
 

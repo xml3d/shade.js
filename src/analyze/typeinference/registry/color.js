@@ -32,13 +32,13 @@
          */
         evaluate: function(result, args, ctx) {
             if(!(args.length == 3 || args.length == 1)) {
-                throw new Error("Invalid number of parameters for Color.rgb, expected 1 or 3");
+                Shade.throwError(result.node, "Invalid number of parameters for Color.rgb, expected 1 or 3");
             }
             var argArray = [];
             var isStatic = true;
             args.forEach(function (param, index) {
                 if (!param.canNumber())
-                    throw new Error("Parameter " + index + " has invalid type for Color.rgb, expected 'float', but got " + param.getType());
+                    Shade.throwError(result.node, "Parameter " + index + " has invalid type for Color.rgb, expected 'float', but got " + param.getType());
                 isStatic = isStatic && param.hasStaticValue();
                 if (isStatic)
                     argArray.push(param.getStaticValue());

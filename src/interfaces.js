@@ -57,5 +57,15 @@
 
     };
 
+    /**
+     * @param {object} node
+     * @param {string} msg
+     */
+    ns.throwError = function(node, msg) {
+        console.dir(node);
+        var error = new Error(msg);
+        error.loc = node && node.loc;
+        throw error;
+    }
 
 }(exports));

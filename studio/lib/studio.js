@@ -6,7 +6,7 @@
         this.paramList = [];
         this.paramForm = null;
         this.console = null;
-        this.lastErrorLine = undefined;
+        this.lastErrorLocation = null;
         this.storage = storageSupported() ? ns.localStorage : {};
     };
 
@@ -35,9 +35,9 @@
         onEdit: function(instance, obj) {
             var newValue = this.javaScriptEditor.getValue();
             var codeCorrect = false;
-            if(!isNaN(this.lastErrorLine)){
-                this.javaScriptEditor.removeLineClass(this.lastErrorLine, 'background', 'line-error');
-                this.lastErrorLine = undefined;
+            if(this.lastErrorLocation && this.lastErrorLocation.start.line){
+                this.javaScriptEditor.removeLineClass(this.lastErrorLocation.start.line -1, 'background', 'line-error');
+                this.lastErrorLocation = null;
             }
             $("#main").removeClass("error");
             $("#main").removeClass("codeError");
@@ -50,12 +50,13 @@
                 this.storage.lastShaderCode = newValue;
             } catch (e) {
                 console.log(e.toString());
+                console.log(e.loc);
                 $("#main").addClass("error");
                 if(!codeCorrect) $("#main").addClass("codeError");
-                var lineNumber = e.lineNumber - 1;
-                this.lastErrorLine = lineNumber;
-                if(!isNaN(lineNumber))
-                    this.javaScriptEditor.addLineClass(lineNumber, 'background', 'line-error');
+                var errorLocation = e.loc || { start: { line: e.lineNumber }};
+                this.lastErrorLocation = errorLocation;
+                if(errorLocation.start.line)
+                    this.javaScriptEditor.addLineClass(errorLocation.start.line - 1, 'background', 'line-error');
                 //this.javaScriptEditor.setLineClass(lineNumber, 'background', 'line-error');
                 this.addConsoleText(e.toString(), true)
             }
@@ -91,7 +92,7 @@
             }
             var code = this.javaScriptEditor.getValue();
 
-            var aast = Shade.parseAndInferenceExpression(code, contextData);
+            var aast = Shade.parseAndInferenceExpression(code, { inject: contextData, loc: true });
             var result = Shade.compileFragmentShader(aast);
 
             this.codeViewer.setValue(result);
