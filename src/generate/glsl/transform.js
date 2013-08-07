@@ -4,7 +4,8 @@
         Annotation = require("../../base/annotation.js").Annotation,
         FunctionAnnotation = require("../../base/annotation.js").FunctionAnnotation,
         Context = require("../../analyze/context.js").Context,
-        Types = require("./../../interfaces.js").TYPES;
+        Types = require("./../../interfaces.js").TYPES,
+        Sources = require("./../../interfaces.js").SOURCES;
 
     var ObjectRegistry = {};
 
@@ -155,7 +156,7 @@
     var getNameForGlobal = function(reference, baseName) {
         var entry = reference[baseName];
         if(entry) {
-            if (entry.source == "vertex") {
+            if (entry.source == Sources.VERTEX) {
                 return "frag_" + baseName;
             }
         }
