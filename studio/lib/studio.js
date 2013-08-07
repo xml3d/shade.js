@@ -7,6 +7,7 @@
         this.paramForm = null;
         this.console = null;
         this.lastErrorLine = undefined;
+        this.storage = storageSupported() ? ns.localStorage : {};
     };
 
     ShadeStudio.prototype = {
@@ -26,6 +27,10 @@
             this.paramForm = document.getElementById("paramList");
             this.console = $("#console");
 
+            if (this.storage.lastShaderCode !== undefined) {
+                this.javaScriptEditor.setValue(this.storage.lastShaderCode);
+            };
+
         },
         onEdit: function(instance, obj) {
             var newValue = this.javaScriptEditor.getValue();
@@ -42,7 +47,7 @@
                 codeCorrect = true;
                 this.updateParameterSelection(params);
                 this.updateOutput();
-
+                this.storage.lastShaderCode = newValue;
             } catch (e) {
                 console.log(e.toString());
                 $("#main").addClass("error");
@@ -138,7 +143,13 @@
         }
     }
 
-
+    function storageSupported() {
+        try {
+            return 'localStorage' in ns && ns['localStorage'] !== null;
+        } catch (e) {
+            return false;
+        }
+    }
 
 
     ns.ShadeStudio = new ShadeStudio();
