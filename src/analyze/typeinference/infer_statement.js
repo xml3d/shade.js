@@ -13,6 +13,25 @@
     //var log = function() { console.log.apply(console, arguments); };
 
     var enterHandler = {
+        ForStatement: function(node, ctx, root) {
+            var ctx = new Context(node, ctx);
+            root.pushContext(ctx);
+
+            root.traverse(node.init);
+            root.traverse(node.test);
+
+            var test = new Annotation(node.test);
+            if (test.hasStaticValue()) { // Great! We can evaluate it!
+                console.log("Test", node.test.left)
+            }
+
+            root.traverse(node.update);
+            root.traverse(node.body);
+            //console.log("exta: ", node);
+            root.popContext();
+            return walk.VisitorOption.Skip;
+        },
+
         IfStatement: (function() {
 
             var c_evaluate = function(exp) {
@@ -121,6 +140,8 @@
 
     var enterStatement = function (node, parent, ctx) {
         switch (node.type) {
+            case Syntax.ForStatement:
+                return enterHandler.ForStatement(node, ctx, this);
             case Syntax.IfStatement:
                 return enterHandler.IfStatement(node, ctx);
             case Syntax.VariableDeclaration:

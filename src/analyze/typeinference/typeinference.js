@@ -53,14 +53,14 @@
             return this.context[this.context.length-1];
         },
 
-        infer: function () {
+        traverse: function (node) {
             //variables && variables.env && (variables.env.global = true);
 
-            walk.traverse(this.root, {
+            walk.traverse(node, {
                 enter: this.enterNode.bind(this),
                 leave: this.exitNode.bind(this)
             });
-            return this.root;
+            return node;
         },
 
         enterNode : function (node, parent) {
@@ -132,7 +132,7 @@
 
     ns.infer = function (ast, injection) {
         var ti = new TypeInference(ast, injection);
-        return ti.infer();
+        return ti.traverse(ti.root);
     };
 
 
