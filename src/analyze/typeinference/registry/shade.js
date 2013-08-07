@@ -12,7 +12,7 @@
             evaluate: function(result, args, ctx) {
                 if (args.length < 1)
                     throw new Error("Shade.diffuse expects at least 1 parameter.")
-                var normal = Annotation.createForContext(args[0], ctx);
+                var normal = args[0];
                 if(!normal.canNormal()) {
                     throw new Error("First argument of Shade.diffuse must evaluate to a normal");
                 }

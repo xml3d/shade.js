@@ -40,6 +40,18 @@
     var log = function(str) {};
     //var log = function() { console.log.apply(console, arguments); };
 
+    /**
+     *
+     * @param {Array.<object>} arr Array of nodes
+     * @param {Context} ctx
+     * @returns {Array.<Annotation>}
+     */
+    function createAnnotatedNodeArray(arr, ctx) {
+        return arr.map(function (arg) {
+            return Annotation.createForContext(arg, ctx)
+        });
+    }
+
     var handlers = {
         AssignmentExpression: function (node, ctx) {
             var right = Annotation.createForContext(node.right, ctx),
@@ -92,7 +104,8 @@
             if (entry && entry._constructor) {
                 var constructor = entry._constructor;
                 result.setType(constructor.type, constructor.kind);
-                entry._constructor.evaluate(result, node.arguments, ctx);
+                var args = createAnnotatedNodeArray(node.arguments, ctx);
+                entry._constructor.evaluate(result, args, ctx);
             }
            else {
                 throw new Error("ReferenceError: " + node.callee.name + " is not defined");
@@ -316,7 +329,8 @@
                     var call = callee.getCall();
                     if (typeof call == "function") {
                         result.copy(callee);
-                        call(result, node.arguments, ctx);
+                        var args = createAnnotatedNodeArray(node.arguments, ctx);
+                        call(result, args, ctx);
                         callee.clearCall();
                         result.clearCall();
                     } else {

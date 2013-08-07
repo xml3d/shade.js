@@ -3,8 +3,12 @@
     var TYPES = require("../../../interfaces.js").TYPES,
         Annotation = require("../../../base/annotation.js").Annotation;
 
-
     var evaluateMethod = function (name, paramCount) {
+        /**
+         * @param {Annotation} result
+         * @param {Array.<Annotation>} args
+         * @param {Context} ctx
+         */
         return function (result, args, ctx) {
             if (paramCount != -1) { // Arbitrary number of arguments
                 if (!args || args.length != paramCount) {
@@ -14,8 +18,7 @@
 
             var argArray = [];
             var isStatic = true;
-            args.forEach(function (arg, index) {
-                var param = Annotation.createForContext(arg, ctx);
+            args.forEach(function (param, index) {
                 if (!param.canNumber())
                     throw new Error("Parameter " + index + " has invalid type for Math." + name + ", expected 'number', but got " + param.getType());
                 isStatic = isStatic && param.hasStaticValue();
