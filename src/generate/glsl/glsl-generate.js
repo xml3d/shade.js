@@ -36,6 +36,8 @@
                 }
             case Types.UNDEFINED:
                 return "void";
+            case Types.NUMBER:
+                return "float";
             default:
                 throw new Error("toGLSLType: Unhandled type: " + info.type);
 
@@ -47,8 +49,19 @@
 
         opt = opt || {};
 
-
+        var indent = "";
         var lines = [];
+        function appendLine(line){
+            lines.push(indent + line);
+        }
+        function changeIndention(add){
+            while(add > 0){
+                indent += "  "; add--;
+            }
+            if(add < 0){
+                indent = indent.substr(0, indent.length + add*2);
+            }
+        }
 
         walk.traverse(ast, {
                 enter: function (node) {
@@ -73,22 +86,29 @@
                                 })
                             }
                             methodStart.push(') {');
-                            lines.push(methodStart.join(" "));
+                            appendLine(methodStart.join(" "));
+                            changeIndention(1);
                             return;
 
 
                         case Syntax.ReturnStatement:
                             var hasArguments = node.argument;
-                            lines.push("return " + (hasArguments ? handleExpression(node.argument) : "") + ";");
+                            appendLine("return " + (hasArguments ? handleExpression(node.argument) : "") + ";");
                             return;
 
+                        case Syntax.VariableDeclarator :
+                            console.log("Meep!");
+                            var line = toGLSLType(node.extra) + " " + node.id.name;
+                            if(node.init) line += " = " + handleExpression(node.init) + ";";
+                            appendLine(line);
+                            return;
 
                         case Syntax.AssignmentExpression:
-                            lines.push(handleExpression(node) + ";");
+                            appendLine(handleExpression(node) + ";")
                             return;
 
                         case Syntax.ExpressionStatement:
-                            lines.push(handleExpression(node.expression) + ";");
+                            appendLine(handleExpression(node.expression) + ";");
                             return VisitorOption.Skip;
 
 
@@ -103,7 +123,8 @@
                         case Syntax.Program:
                             break;
                         case Syntax.FunctionDeclaration:
-                            lines.push("};");
+                            changeIndention(-1);
+                            appendLine("};");
                             break
                     }
                 }
