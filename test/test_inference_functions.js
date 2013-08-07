@@ -58,7 +58,7 @@ describe('Inference:', function () {
             func.extra.should.have.property("type", TYPES.FUNCTION);
             func.extra.should.have.property("returnInfo");
             func.extra.returnInfo.should.have.property("type", TYPES.INT);
-            func.extra.returnInfo.should.have.property("staticValue", 5);
+            func.extra.returnInfo.should.not.have.property("staticValue");
 
         });
 

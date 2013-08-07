@@ -112,6 +112,7 @@
             }
             for (var prop in v) { if (v.hasOwnProperty(prop)) { delete v[prop]; } }
             Base.extend(v, annotation.getExtra());
+            delete v.staticValue; // A variable is not static
             v.initialized = !annotation.isUndefined();
 
         },

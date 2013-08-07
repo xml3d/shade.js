@@ -22,9 +22,9 @@ describe('Code generation', function () {
     it("should generate simple shader", function() {
         var code = loadAndGenerate("data/js/shader/red.js");
         //code.should.match(/vec3\(1\.0/);
-        console.log(code);
+        //console.log(code);
     });
-    it("handle return 'undefined' in main", function() {
+    xit("handle return 'undefined' in main", function() {
         var code = loadAndGenerate("data/js/shader/discard.js");
         code.should.match(/discard/);
         console.log(code);
