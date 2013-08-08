@@ -30,7 +30,8 @@
             var context = new Context(program, null, {name: "global"}),
                 contextStack = [context],
                 mainId = this.mainId,
-                inMain = mainId == context.str();
+                inMain = mainId == context.str(),
+                topDeclarations = [];
 
             walk.replace(program, {
 
@@ -38,7 +39,7 @@
                     //console.log("Enter:", node.type);
                     switch (node.type) {
                         case Syntax.MemberExpression:
-                            return handleMemberExpression(node, parent, program, context);
+                            return handleMemberExpression(node, parent, topDeclarations, context);
                         case Syntax.BinaryExpression:
                             return handleBinaryExpression(node, parent);
                         case Syntax.IfStatement:
@@ -70,6 +71,9 @@
                     }
                 }
             });
+            if(topDeclarations.length > 0)
+                program.body.unshift.apply(program.body, topDeclarations);
+
             return program;
         }
     });
@@ -110,7 +114,7 @@
     }
 
 
-    var handleMemberExpression = function (memberExpression, parent, root, context) {
+    var handleMemberExpression = function (memberExpression, parent, topDeclarations, context) {
         var object = memberExpression.object,
             property = memberExpression.property;
 
@@ -143,9 +147,9 @@
                 ],
                 kind: "var"
             };
-            var declAnnotation =  new Annotation(decl);
+            var declAnnotation =  new Annotation(decl.declarations[0]);
             declAnnotation.copy(exp);
-            //root.body.unshift(decl);
+            topDeclarations.push(decl);
             //console.log(root.body[0]);
             return propertyLiteral;
 

@@ -99,8 +99,8 @@
                         case Syntax.VariableDeclarator :
                             console.log("Meep!");
                             var line = toGLSLType(node.extra) + " " + node.id.name;
-                            if(node.init) line += " = " + handleExpression(node.init) + ";";
-                            appendLine(line);
+                            if(node.init) line += " = " + handleExpression(node.init);
+                            appendLine(line + ";");
                             return;
 
                         case Syntax.AssignmentExpression:
@@ -124,7 +124,7 @@
                             break;
                         case Syntax.FunctionDeclaration:
                             changeIndention(-1);
-                            appendLine("};");
+                            appendLine("}");
                             break
                     }
                 }
