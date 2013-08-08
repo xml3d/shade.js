@@ -1,7 +1,7 @@
 (function (ns) {
 
     /**
-     * @enum
+     * @enum {string}
      */
     ns.TYPES = {
         ANY: "any",
@@ -9,6 +9,7 @@
         NUMBER: "number",
         BOOLEAN: "boolean",
         OBJECT: "object",
+        ARRAY: "array",
         NULL: "null",
         UNDEFINED: "undefined",
         FUNCTION: "function",

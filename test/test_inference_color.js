@@ -6,7 +6,7 @@ var Shade = require(".."),
 
 var parseAndInferenceExpression = function (str, ctx) {
     var aast = Shade.parseAndInferenceExpression(str, ctx || {});
-    return aast.body[0];
+    return aast.body;
 }
 
 describe('Inference', function () {
@@ -15,6 +15,7 @@ describe('Inference', function () {
 
             it("rgb => object<color>", function () {
                 var exp = parseAndInferenceExpression("Color.rgb(255, 0, 0)");
+                exp = exp[0];
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.OBJECT);
                 exp.extra.should.have.property("kind", KINDS.COLOR);
@@ -27,6 +28,7 @@ describe('Inference', function () {
 
             it("color instance object<color>", function () {
                 var exp = parseAndInferenceExpression("new Color(255, 0, 0)");
+                exp = exp[0];
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.OBJECT);
                 exp.extra.should.have.property("kind", KINDS.COLOR);
@@ -39,6 +41,7 @@ describe('Inference', function () {
 
             it("color instance object<color>", function () {
                 var exp = parseAndInferenceExpression("new Color(128)");
+                exp = exp[0];
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.OBJECT);
                 exp.extra.should.have.property("kind", KINDS.COLOR);
@@ -47,6 +50,46 @@ describe('Inference', function () {
                 exp.extra.staticValue.should.have.property("g", 128);
                 exp.extra.staticValue.should.have.property("b", 128);
 
+            });
+
+            xit("color instance properties", function () {
+                var exp = parseAndInferenceExpression("var x = new Color(128); x.r");
+                var memexp = exp[1].expression;
+
+                // object
+                var object = memexp.object;
+                object.should.have.property("extra");
+                object.extra.should.have.property("type", TYPES.OBJECT);
+                object.extra.should.have.property("kind", KINDS.COLOR);
+
+                // property
+                var property = memexp.property;
+                property.should.have.property("extra");
+                property.extra.should.have.property("type", TYPES.NUMBER);
+
+                // expr
+                memexp.should.have.property("extra");
+                memexp.extra.should.have.property("type", TYPES.NUMBER);
+            });
+
+            it("color instance methods", function () {
+                var exp = parseAndInferenceExpression("var x = new Color(128); x.intensity();");
+                var memexp = exp[1].expression;
+
+                // object
+                var object = memexp.object;
+                object.should.have.property("extra");
+                object.extra.should.have.property("type", TYPES.OBJECT);
+                object.extra.should.have.property("kind", KINDS.COLOR);
+
+                // property
+                var property = memexp.property;
+                property.should.have.property("extra");
+                property.extra.should.have.property("type", TYPES.NUMBER);
+
+                // expr
+                memexp.should.have.property("extra");
+                memexp.extra.should.have.property("type", TYPES.NUMBER);
             });
 
 

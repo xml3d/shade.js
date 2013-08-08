@@ -55,8 +55,20 @@
         rgb: ColorConstructor
     };
 
+    var member = { type: TYPES.NUMBER };
+
+    var ColorInstance = {
+        r: { type: TYPES.NUMBER },
+        g: { type: TYPES.NUMBER },
+        b: { type: TYPES.NUMBER },
+        a: { type: TYPES.NUMBER },
+        //intensity
+    };
+
+
     ns.getEntry = function() { return ColorObject; };
     ns.getId = function() { return "Color"; };
+    ns.instance = ColorInstance;
 
 
 }(exports));

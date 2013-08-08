@@ -52,6 +52,12 @@
             return this.getExtra().kind || KINDS.ANY;
         },
 
+        getArrayElementType: function () {
+            if(!this.isArray())
+                throw new Error("Called getArrayElementType on " + this.getType());
+            return this.getExtra().elements;
+        },
+
         isOfKind: function(kind) {
             if (!this.isObject()) {
                 return false;
@@ -99,6 +105,9 @@
         isString: function () {
             return this.isOfType(TYPES.STRING);
         },
+        isArray: function () {
+            return this.isOfType(TYPES.ARRAY);
+        },
         isObject: function () {
             return this.isOfType(TYPES.OBJECT);
         },
@@ -145,17 +154,8 @@
             delete extra.evaluate;
         },
         copy: function(other) {
-            this.setType(other.getType());
-            if (other.getKind())
-                this.setKind(other.getKind());
-            if (other.hasStaticValue() && !other.isNullOrUndefined()) {
-                this.setStaticValue(other.getStaticValue());
-            } else {
-                this.setDynamicValue();
-            }
-            this.setGlobal(other.isGlobal());
-            if(other.getCall())
-                this.setCall(other.getCall());
+            this.node.extra = {};
+            Base.deepExtend(this.node.extra, other.getExtra());
         },
         str: function() {
             var extra = this.getExtra();

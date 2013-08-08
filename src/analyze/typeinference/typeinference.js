@@ -11,21 +11,26 @@
         exitStatement = require('./infer_statement.js').exitStatement,
         Context = require("./../context.js").Context,
         MathObject = require("./registry/math.js"),
-        ColorObject = require("./registry/color.js"),
+        Color = require("./registry/color.js"),
         ShadeObject = require("./registry/shade.js"),
-        Base = require("../../base/index.js");
+        Matrix = require("./registry/matrix.js"),
+        Base = require("../../base/index.js"),
+        Kinds = require("../../interfaces.js").OBJECT_KINDS;
 
 
     var Syntax = walk.Syntax;
 
+    c_instanceRegistry = {};
 
+    c_instanceRegistry[Kinds.MATRIX4] = Matrix.instance;
+    c_instanceRegistry[Kinds.COLOR] = Color.instance;
 
 
 
     var registerGlobalContext = function (program) {
         var ctx = new Context(program, null, {name: "global"});
         ctx.registerObject("Math", MathObject);
-        ctx.registerObject("Color", ColorObject);
+        ctx.registerObject("Color", Color);
         ctx.registerObject("Shade", ShadeObject);
         return ctx;
     }
@@ -73,6 +78,9 @@
             return this.switchKind(node, parent, context, exitStatement, exitExpression);
         },
 
+        getInstanceInfoFromKind: function(kind) {
+            return c_instanceRegistry[kind];
+        },
         switchKind : function (node, parent, ctx, statement, expression) {
         switch (node.type) {
             case Syntax.BlockStatement:

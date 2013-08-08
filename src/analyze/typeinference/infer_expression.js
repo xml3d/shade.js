@@ -293,30 +293,73 @@
         },
 
 
-        MemberExpression: function (node, parent, ctx) {
-            var result = new Annotation(node),
-                objectName = node.object.name,
+        MemberExpression: function (node, parent, ctx, root) {
+            var result = Annotation.createForContext(node, ctx),
+                object = Annotation.createForContext(node.object, ctx),
+                property = new Annotation(node.property),
                 propertyName = node.property.name;
 
-            if (!(objectName && propertyName)) {
-                Shade.throwError(node, "Can't handle dynamic objects/properties yet.");
+            //console.log("Member", node.object.name, node.property.name);
+            if (node.computed) {
+                if (object.isArray()) {
+                    if (!property.canInt()) {
+                        Shade.throwError(node, "Expected 'int' type for array accessor");
+                    }
+                    var elementInfo = object.getArrayElementType();
+                    result.setType(elementInfo.type, elementInfo.kind);
+                    return;
+                }
+                else {
+                    Shade.throwError(node, "Array access only possible on arrays");
+                }
             }
-            var obj = ctx.findObject(objectName);
-            if (!obj) {
-                Shade.throwError(node,"ReferenceError: " + objectName + " is not defined. Context: " + ctx.str());
+
+            if (node.object.type == Syntax.MemberExpression) {
+                console.log("Here");
+                var object = Annotation.createForContext(node.object, ctx);
+                if (object.isUndefined()) {
+                    Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName + "' of undefined");
+                }
+                if(!object.isObject()) {
+                    result.setType(TYPES.UNDEFINED);
+                    return;
+                }
+                var instanceInfo = root.getInstanceInfoFromKind(object.getKind());
+                if (!instanceInfo)  {
+                    return;
+                }
+                var prop = instanceInfo[propertyName];
+                //console.log("Property: ", prop);
+                var propNode = new Annotation(node.property, prop);
+                result.copy(propNode);
+                return;
             }
+
+            // node.object.type == Syntax.Identifier
+            console.log(node.object.name);
+            console.log(object.getType(), object.getKind());
+            console.log(property.getType(), property.getKind());
+
+            var obj = ctx.findObject(node.object.name);
+            obj || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + ctx.str());
+
             if (obj.type == TYPES.UNDEFINED) {
                 Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName +"' of undefined")
             }
-            // console.log(objectName, obj);
+
+            if (obj.type && obj.type == TYPES.OBJECT) {
+                var instanceInfo = root.getInstanceInfoFromKind(obj.kind);
+                obj = instanceInfo;
+                result.setType(obj.type, obj.kind);
+            }
             if (!obj.hasOwnProperty(propertyName)) {
-                result.setType(TYPES.UNDEFINED);
+                property.setType(TYPES.UNDEFINED);
                 return;
             }
             var prop = obj[propertyName];
-            var propNode = new Annotation({extra: prop});
+            console.log("Property: ", prop);
+            var propNode = new Annotation(node.property, prop);
             result.copy(propNode);
-            result.setGlobal(obj.global);
         },
 
         CallExpression: function (node, ctx) {
@@ -335,7 +378,11 @@
                         callee.clearCall();
                         result.clearCall();
                     } else {
-                        throw new Error("Object '" + node.callee.object.name + "' has no method '" + node.callee.property.name + "'");
+                        if(callee.isObject()) {
+                            Shade.throwError(node, "TypeError: Object #<" + callee.getKind()+ "> has no method '"+ node.callee.property.name + "'");
+                        } else {
+                            Shade.throwError(node, "TypeError: Cannot call method '"+ node.callee.property.name + "' of " + callee.getType());
+                        }
                     }
                     break;
                 case Syntax.Identifier:
@@ -452,7 +499,7 @@
                 handlers.LogicalExpression(node, ctx);
                 break;
             case Syntax.MemberExpression:
-                handlers.MemberExpression(node, parent, ctx);
+                handlers.MemberExpression(node, parent, ctx, this);
                 break;
             case Syntax.NewExpression:
                 handlers.NewExpression(node, parent, ctx);
