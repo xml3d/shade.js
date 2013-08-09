@@ -30,7 +30,7 @@
             case Types.OBJECT:
                 switch (info.kind) {
                     case Kinds.COLOR:
-                        return "vec3";
+                        return "vec4";
                     default:
                         throw new Error("toGLSLType: Unhandled kind: " + info.kind);
                 }

@@ -64,7 +64,7 @@
                             break;
                         case Syntax.ReturnStatement:
                             if(inMain) {
-                                //return handleReturnInMain(node);
+                                return handleReturnInMain(node);
                             }
                             break;
                     }

@@ -33,6 +33,12 @@
             if (this.storage.lastShaderCode !== undefined) {
                 this.javaScriptEditor.setValue(this.storage.lastShaderCode);
             };
+            try {
+                this.gl = document.createElement("canvas").getContext("experimental-webgl");
+            } catch(e) {
+                this.addConsoleText(e.toString(), true);
+                this.gl = null;
+            }
 
         },
         onEdit: function(instance, obj) {
@@ -104,6 +110,7 @@
             var result = Shade.compileFragmentShader(aast);
 
             this.codeViewer.setValue(result);
+            this.compileGL(result);
         },
         addConsoleText: function(text, error){
             var lastElement = this.console.find("li:last-child");
@@ -123,6 +130,23 @@
             if(error) entry.addClass("error");
             this.console.append(entry);
             this.console[0].scrollTop = this.console[0].scrollHeight;
+        },
+        compileGL: function(fragmentSource) {
+            var gl = this.gl;
+            if(!gl)
+                return;
+            var shader = gl.createShader(gl.FRAGMENT_SHADER);
+            gl.shaderSource(shader, fragmentSource);
+            gl.compileShader(shader);
+
+            if (gl.getShaderParameter(shader, gl.COMPILE_STATUS) == 0) {
+                var errorString = "Failed to compile: ";
+                errorString += gl.getShaderInfoLog(shader);
+                gl.getError();
+                this.addConsoleText(errorString, true);
+            } else {
+                this.addConsoleText("Compiled GL successfully");
+            }
         }
     }
 

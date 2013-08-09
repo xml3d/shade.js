@@ -6,19 +6,35 @@
         Base = require("../../../base/index.js"),
         Annotation = require("../../../base/annotation.js").Annotation;
 
-    var Color = function(r,g,b) {
+    var Color = function(r,g,b,a) {
         if (Array.isArray(r)) {
-            if (r.length == 3) {
-                this.r = r[0];
-                this.g = r[1];
-                this.b = r[2];
-            } else if (r.length == 1) {
-                this.r = this.g = this.b = r[0];
+            switch(r.length) {
+                case 1:
+                    this.r = this.g = this.b = r[0];
+                    this.alpha = 1.0;
+                    break;
+                case 2:
+                    this.r = this.g = this.b = r[0];
+                    this.alpha = r[1];
+                    break;
+                case 3:
+                    this.r = r[0];
+                    this.g = r[1];
+                    this.b = r[2];
+                    this.alpha = 1.0;
+                    break;
+                case 4:
+                    this.r = r[0];
+                    this.g = r[1];
+                    this.b = r[2];
+                    this.alpha = r[3];
+                    break;
             }
         } else {
             this.r = r;
             this.g = g;
             this.b = b;
+            this.alpha = (a==undefined) ? 1.0 : a;
         }
     };
 
@@ -32,8 +48,8 @@
          * @param {Context} ctx
          */
         evaluate: function(result, args, ctx) {
-            if(!(args.length == 3 || args.length == 1)) {
-                Shade.throwError(result.node, "Invalid number of parameters for Color.rgb, expected 1 or 3");
+            if(args.length < 1 || args.length > 4) {
+                Shade.throwError(result.node, "Invalid number of parameters for Color, expected 1-4");
             }
             var argArray = [];
             var isStatic = true;
