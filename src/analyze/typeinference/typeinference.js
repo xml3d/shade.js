@@ -38,6 +38,7 @@
         this.context = [];
         this.injections = injections || {};
         this.pushContext(registerGlobalContext(root));
+        this.root.injections = injections;
 
     }
 

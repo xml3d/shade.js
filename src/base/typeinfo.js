@@ -174,6 +174,10 @@
         canEliminate : function() {
             var extra = this.getExtra();
             return extra.eliminate == true;
+        },
+        setFromExtra: function(extra){
+            this.setType(extra.type);
+            this.setKind(extra.kind);
         }
     }
 

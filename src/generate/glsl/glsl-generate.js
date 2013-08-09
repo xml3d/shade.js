@@ -155,6 +155,7 @@
                 result = node.name;
                 break;
 
+            case Syntax.BinaryExpression:
             case Syntax.AssignmentExpression:
                 result = handleExpression(node.left);
                 result += " " + node.operator + " ";

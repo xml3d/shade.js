@@ -71,12 +71,37 @@
                     }
                 }
             });
-            if(topDeclarations.length > 0)
-                program.body.unshift.apply(program.body, topDeclarations);
+
+            var injections = program.injections[this.mainId][0];
+            for(var name in injections){
+                if(name !== "_global")
+                    program.body.unshift(handleTopDeclaration(name, injections));
+            }
 
             return program;
         }
     });
+
+    var handleTopDeclaration = function(name, injections){
+        var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(injections, name)};
+        var propertyAnnotation =  new Annotation(propertyLiteral);
+        propertyAnnotation.setFromExtra(injections[name]);
+
+        var decl = {
+            type: Syntax.VariableDeclaration,
+            declarations: [
+                {
+                    type: Syntax.VariableDeclarator,
+                    id: propertyLiteral,
+                    init: null
+                }
+            ],
+            kind: "var"
+        };
+        var declAnnotation =  new Annotation(decl.declarations[0]);
+        declAnnotation.copy(propertyAnnotation);
+        return decl;
+    }
 
 
     var handleReturnInMain = function(node) {
@@ -136,23 +161,7 @@
             var propertyAnnotation =  new Annotation(propertyLiteral);
             propertyAnnotation.copy(exp);
 
-            var decl = {
-                type: Syntax.VariableDeclaration,
-                declarations: [
-                    {
-                        type: Syntax.VariableDeclarator,
-                        id: propertyLiteral,
-                        init: null
-                    }
-                ],
-                kind: "var"
-            };
-            var declAnnotation =  new Annotation(decl.declarations[0]);
-            declAnnotation.copy(exp);
-            topDeclarations.push(decl);
-            //console.log(root.body[0]);
             return propertyLiteral;
-
         }
 
     };
@@ -168,9 +177,10 @@
     }
 
     var handleBinaryExpression = function (binaryExpression, parent, cb) {
-        if (binaryExpression.operator = "%") {
+        if (binaryExpression.operator == "%") {
             return handleModulo(binaryExpression);
         }
+        return binaryExpression;
     }
 
     var handleModulo = function (binaryExpression) {
