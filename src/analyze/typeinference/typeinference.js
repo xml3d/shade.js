@@ -12,10 +12,7 @@
         Context = require("./../../base/context.js").Context,
 
         // Objects
-        MathEntry = require("./registry/math.js"),
-        ColorEntry = require("./registry/color.js"),
-        ShadeObject = require("./registry/shade.js"),
-        Matrix = require("./registry/matrix.js"),
+        ObjectRegistry = require("./registry/index.js").Registry,
         Base = require("../../base/index.js"),
         Kinds = require("../../interfaces.js").OBJECT_KINDS;
 
@@ -27,9 +24,9 @@
 
     var registerGlobalContext = function (program) {
         var ctx = new Context(program, null, {name: "global"});
-        ctx.registerObject("Math", MathEntry);
-        ctx.registerObject("Color", ColorEntry);
-        ctx.registerObject("Shade", ShadeObject);
+        ctx.registerObject("Math", ObjectRegistry.getByName("Math"));
+        ctx.registerObject("Color", ObjectRegistry.getByName("Color"));
+        ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
         return ctx;
     }
 
@@ -47,7 +44,7 @@
             this.context.push(context);
             var injection = this.injections[context.str()];
             if (injection) {
-                context.updateParameters(injection);
+                context.injectParameters(injection);
             }
         },
         popContext: function() {
@@ -77,9 +74,6 @@
             return this.switchKind(node, parent, context, exitStatement, exitExpression);
         },
 
-        getInstanceInfoFromKind: function(kind) {
-            return c_instanceRegistry[kind];
-        },
         switchKind : function (node, parent, ctx, statement, expression) {
         switch (node.type) {
             case Syntax.BlockStatement:

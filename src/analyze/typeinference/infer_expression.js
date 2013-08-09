@@ -296,17 +296,19 @@
 
         MemberExpression: function (node, parent, ctx, root) {
             var resultType = ctx.createTypeInfo(node),
-                objectType = new Annotation(node.object),
-                propertyType = new Annotation(node.property),
+                objectAnnotation = new Annotation(node.object),
+                propertyAnnotation = new Annotation(node.property),
                 propertyName = node.property.name;
 
             //console.log("Member", node.object.name, node.property.name);
             if (node.computed) {
-                if (objectType.isArray()) {
+                if (objectAnnotation.isArray()) {
+                    // Property is computed, thus it could be a variable
+                    var propertyType =  ctx.createTypeInfo(node.property);
                     if (!propertyType.canInt()) {
                         Shade.throwError(node, "Expected 'int' type for array accessor");
                     }
-                    var elementInfo = objectType.getArrayElementType();
+                    var elementInfo = objectAnnotation.getArrayElementType();
                     resultType.setType(elementInfo.type, elementInfo.kind);
                     return;
                 }
@@ -315,42 +317,27 @@
                 }
             }
 
+            var objectOfInterest;
             if (node.object.type == Syntax.MemberExpression) {
-                var object = ctx.createTypeInfo(node.object);
-                if (object.isUndefined()) {
-                    Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName + "' of undefined");
-                }
-                if(!object.isObject()) {
-                    resultType.setType(TYPES.UNDEFINED);
-                    return;
-                }
-                var instanceInfo = root.getInstanceInfoFromKind(object.getKind());
-                if (!instanceInfo)  {
-                    return;
-                }
-                var prop = instanceInfo[propertyName];
-                //console.log("Property: ", prop);
-                var propNode = new Annotation(node.property, prop);
-                resultType.copy(propNode);
-                return;
+                objectOfInterest = ctx.createTypeInfo(node.object);
+            } else {
+                objectOfInterest = ctx.getBindingByName(node.object.name);
             }
+            objectOfInterest || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + ctx.str());
 
-            var boundObject = ctx.getBindingByName(node.object.name);
-            boundObject || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + ctx.str());
-
-            if (boundObject.getType() == TYPES.UNDEFINED) {
+            if (objectOfInterest.getType() == TYPES.UNDEFINED) {
                 Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName +"' of undefined")
             }
 
-            if (boundObject.isObject()) {
-                var objectInfo = boundObject.getObjectInfo();
+            if (objectOfInterest.isObject()) {
+                var objectInfo = objectOfInterest.getObjectInfo();
                 if(!objectInfo)
-                    throw new Error("Incomplete registration for object: ", boundObject);
+                    Shade.throwError(node, "Internal: Incomplete registration for object: " + JSON.stringify(node.object));
 
-                objectType.copy(boundObject);
+                objectAnnotation.copy(objectOfInterest);
                 if (!objectInfo.hasOwnProperty(propertyName)) {
                     resultType.setType(TYPES.UNDEFINED);
-                    propertyType.setType(TYPES.UNDEFINED);
+                    propertyAnnotation.setType(TYPES.UNDEFINED);
                     return;
                 }
 
@@ -358,9 +345,9 @@
                 var propNode = new Annotation(node.property, prop);
 
                 resultType.copy(propNode);
+            } else {
+                resultType.setType(TYPES.UNDEFINED);
             }
-
-
         },
 
         CallExpression: function (node, ctx) {

@@ -1,6 +1,7 @@
 (function (ns) {
 
-    var interfaces = require("../../../interfaces.js");
+    var interfaces = require("../../../interfaces.js"),
+    Base = require("../../../base/index.js");
 
     var TYPES = interfaces.TYPES,
         KINDS = interfaces.OBJECT_KINDS;
@@ -15,13 +16,14 @@
         }
     }
 
-    ns = {
+    Base.extend(ns, {
         id: "Matrix4",
+        kind: "matrix4",
         object: {
             constructor: null,
             static: null
         },
         instance: MatrixInstance
-    };
+    });
 
 }(exports));

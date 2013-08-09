@@ -4,11 +4,11 @@
         TYPES = require("../interfaces.js").TYPES,
         Annotation = require("./annotation.js").Annotation,
         TypeInfo = require("./typeinfo.js").TypeInfo,
-        Syntax = require('estraverse').Syntax;
+        Syntax = require('estraverse').Syntax,
+        Registry = require('../analyze/typeinference/registry').Registry;
 
 
-    var c_object_registry = {},
-        c_instance_registry = {};
+    var c_object_registry = {};
 
     /**
      *
@@ -50,7 +50,7 @@
             if (this.globalObject)
                 return this.globalObject.static;
             if (this.isObject())
-                return c_instance_registry[this.getKind()];
+                return this.node.info || Registry.getInstanceForKind(this.getKind());
             return null;
         }
     })
@@ -169,9 +169,6 @@
 
         registerObject: function(name, obj) {
             c_object_registry[obj.id] = obj;
-            if(obj.kind) {
-                c_instance_registry[obj.kind] = obj.instance;
-            }
             var bindings = this.getBindings();
             bindings[name] = {
                 extra: {
@@ -197,14 +194,19 @@
             }
         },
 
-        updateParameters: function(params) {
+        injectParameters: function(params) {
             for(var i = 0; i< params.length; i++) {
                 if (i == this.params.length)
                     break;
                 var param = params[i];
                 var name = this.params[i];
                 var bindings = this.getBindings();
-                bindings[name] = param;
+                bindings[name] = {
+                    extra : {
+                        type: TYPES.OBJECT
+                    },
+                    info : param
+                };
             }
         },
 
