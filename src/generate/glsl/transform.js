@@ -3,7 +3,7 @@
     var Base = require("../../base/index.js"),
         Annotation = require("../../base/annotation.js").Annotation,
         FunctionAnnotation = require("../../base/annotation.js").FunctionAnnotation,
-        Context = require("../../analyze/context.js").Context,
+        Context = require("../../base/context.js").Context,
         Types = require("./../../interfaces.js").TYPES,
         Sources = require("./../../interfaces.js").SOURCES;
 
@@ -119,7 +119,7 @@
             property = memberExpression.property;
 
 
-        var objectReference = context.findObject(object.name);
+        var objectReference = context.getBindingByName(object.name);
 
         if (objectReference in ObjectRegistry) {
             var objectEntry = ObjectRegistry[object.name];

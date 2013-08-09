@@ -28,18 +28,18 @@ describe('Inference of Statements:', function () {
 
             bindings.should.have.property("i");
             var i = bindings.i;
-            i.should.have.property("type", TYPES.INT);
-            i.should.not.have.property("staticValue");
+            i.extra.should.have.property("type", TYPES.INT);
+            i.extra.should.not.have.property("staticValue");
 
             bindings.should.have.property("j");
             var j = bindings.j;
-            j.should.have.property("type", TYPES.NUMBER);
-            j.should.not.have.property("staticValue");
+            j.extra.should.have.property("type", TYPES.NUMBER);
+            j.extra.should.not.have.property("staticValue");
             j.should.have.property("initialized", true);
 
             bindings.should.have.property("k");
             var k = bindings.k;
-            k.should.have.property("type", TYPES.UNDEFINED);
+            k.extra.should.have.property("type", TYPES.UNDEFINED);
             k.should.have.property("initialized", false);
         });
     });

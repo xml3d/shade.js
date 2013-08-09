@@ -3,6 +3,7 @@
     var Shade = require("../../../interfaces.js"),
         TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS,
+        Base = require("../../../base/index.js"),
         Annotation = require("../../../base/annotation.js").Annotation;
 
     var Color = function(r,g,b) {
@@ -50,8 +51,7 @@
     };
 
 
-    var ColorObject = {
-        _constructor : ColorConstructor,
+    var ColorStaticObject = {
         rgb: ColorConstructor
     };
 
@@ -66,9 +66,14 @@
     };
 
 
-    ns.getEntry = function() { return ColorObject; };
-    ns.getId = function() { return "Color"; };
-    ns.instance = ColorInstance;
+    Base.extend(ns, {
+        id: "color",
+        object: {
+            constructor: ColorConstructor,
+            static: ColorStaticObject
+        },
+        instance: ColorInstance
+    });
 
 
 }(exports));

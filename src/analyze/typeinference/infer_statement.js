@@ -5,7 +5,7 @@
         exitExpression = require('./infer_expression.js').exitExpression,
         Syntax = require('estraverse').Syntax,
         TYPES = require("../../interfaces.js").TYPES,
-        Context = require("./../context.js").Context,
+        Context = require("./../../base/context.js").Context,
         Annotation = require("./../../base/annotation.js").Annotation,
         FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
 
@@ -22,12 +22,11 @@
 
             var test = new Annotation(node.test);
             if (test.hasStaticValue()) { // Great! We can evaluate it!
-                console.log("Test", node.test.left)
+                // TODO
             }
 
             root.traverse(node.update);
             root.traverse(node.body);
-            //console.log("exta: ", node);
             root.popContext();
             return walk.VisitorOption.Skip;
         },
@@ -113,7 +112,7 @@
             ctx.declareVariable(variableName);
 
             if (node.init) {
-                var init = Annotation.createForContext(node.init, ctx);
+                var init = ctx.createTypeInfo(node.init);
                 result.copy(init);
                 ctx.updateExpression(variableName, init);
             } else {
@@ -123,7 +122,7 @@
         },
         ReturnStatement: function(node, parent, ctx) {
             var result = new Annotation(node),
-                argument = node.argument ? Annotation.createForContext(node.argument, ctx) : null;
+                argument = node.argument ? ctx.createTypeInfo(node.argument) : null;
 
             if (argument) {
                 result.copy(argument);

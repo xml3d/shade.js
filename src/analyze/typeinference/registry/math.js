@@ -1,7 +1,10 @@
 (function (ns) {
 
     var TYPES = require("../../../interfaces.js").TYPES,
+        Base = require("../../../base/index.js"),
         Annotation = require("../../../base/annotation.js").Annotation;
+
+
 
     var evaluateMethod = function (name, paramCount) {
         /**
@@ -71,13 +74,15 @@
         MathObject[method] = { type: TYPES.NUMBER, evaluate: evaluateMethod(method, -1) };
     });
 
-
-    var register = function (to) {
-        to["Math"] = MathObject;
-    };
-
-    ns.getEntry = function() { return MathObject };
-    ns.getId = function() { return "Math"; };
+    console.error(ns);
+    Base.extend(ns, {
+        id: "Math",
+        object: {
+            constructor: null,
+            static: MathObject
+        },
+        instance: MathObject
+    });
 
 
 }(exports));

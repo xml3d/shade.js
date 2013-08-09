@@ -199,7 +199,6 @@ describe('Inference', function () {
     });
 
 
-
     /*describe('with Parameters form outside', function () {
      var exp = parseAndInferenceExpression("a + 5", { a: { type: TYPES.INT }});
      exp.should.have.property("extra");

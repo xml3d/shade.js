@@ -18,7 +18,7 @@ describe('Inference:', function () {
 
             program.should.have.property("context");
             program.context.should.have.property("name", "global");
-            program.context.should.have.property("bindings").property("a").property("type", TYPES.FUNCTION);
+            program.context.should.have.property("bindings").property("a").property("extra").property("type", TYPES.FUNCTION);
 
             func.should.have.property("extra");
             func.extra.should.have.property("type", TYPES.FUNCTION);
@@ -36,7 +36,7 @@ describe('Inference:', function () {
 
             program.should.have.property("context");
             program.context.should.have.property("name", "global");
-            program.context.bindings.should.have.property("a").property("type", TYPES.FUNCTION);
+            program.context.bindings.should.have.property("a").property("extra").property("type", TYPES.FUNCTION);
             program.context.bindings.should.not.have.property("b");
 
             func.should.have.property("extra");
@@ -45,7 +45,7 @@ describe('Inference:', function () {
             func.should.have.property("context");
             func.context.should.have.property("name", "a");
 
-            func.context.bindings.should.have.property("b").property("type", TYPES.INT);
+            func.context.bindings.should.have.property("b").property("extra").property("type", TYPES.INT);
             func.context.bindings.should.not.have.property("a");
 
 

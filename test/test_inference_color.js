@@ -72,7 +72,7 @@ describe('Inference', function () {
                 memexp.extra.should.have.property("type", TYPES.NUMBER);
             });
 
-            it("color instance methods", function () {
+            xit("color instance methods", function () {
                 var exp = parseAndInferenceExpression("var x = new Color(128); x.intensity();");
                 var memexp = exp[1].expression;
 

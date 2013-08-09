@@ -21,7 +21,7 @@ describe('Inference:', function () {
             program.should.have.property("context").property("bindings").property("a");
             var a = program.context.bindings.a;
             a.should.have.property("initialized", false);
-            a.should.have.property("type", TYPES.UNDEFINED);
+            a.extra.should.have.property("type", TYPES.UNDEFINED);
         });
 
         it("is annotated for simple expression", function () {
@@ -34,8 +34,8 @@ describe('Inference:', function () {
             program.should.have.property("context").property("bindings").property("a");
             var a = program.context.bindings.a;
             a.should.have.property("initialized", true);
-            a.should.have.property("type", TYPES.INT);
-            a.should.not.have.property("staticValue");
+            a.extra.should.have.property("type", TYPES.INT);
+            a.extra.should.not.have.property("staticValue");
 
         });
 
@@ -49,8 +49,8 @@ describe('Inference:', function () {
             program.should.have.property("context").property("bindings").property("a");
             var a = program.context.bindings.a;
             a.should.have.property("initialized", true);
-            a.should.have.property("type", TYPES.NUMBER);
-            a.should.not.have.property("staticValue");
+            a.extra.should.have.property("type", TYPES.NUMBER);
+            a.extra.should.not.have.property("staticValue");
         });
 
         it("is annotated for member expression", function () {
@@ -62,8 +62,8 @@ describe('Inference:', function () {
             program.should.have.property("context").property("bindings").property("a");
             var a = program.context.bindings.a;
             a.should.have.property("initialized", true);
-            a.should.have.property("type", TYPES.NUMBER);
-            a.should.not.have.property("staticValue");
+            a.extra.should.have.property("type", TYPES.NUMBER);
+            a.extra.should.not.have.property("staticValue");
         });
 
 
@@ -77,18 +77,18 @@ describe('Inference:', function () {
             program.should.have.property("context").property("bindings").property("a");
             var variable = program.context.bindings.a;
             variable.should.have.property("initialized", true);
-            variable.should.have.property("type", TYPES.NUMBER);
-            variable.should.not.have.property("staticValue");
+            variable.extra.should.have.property("type", TYPES.NUMBER);
+            variable.extra.should.not.have.property("staticValue");
             program.should.have.property("context").property("bindings").property("b");
             variable = program.context.bindings.b;
             variable.should.have.property("initialized", true);
-            variable.should.have.property("type", TYPES.NUMBER);
-            variable.should.not.have.property("staticValue");
+            variable.extra.should.have.property("type", TYPES.NUMBER);
+            variable.extra.should.not.have.property("staticValue");
             program.should.have.property("context").property("bindings").property("c");
             variable = program.context.bindings.c;
             variable.should.have.property("initialized", true);
-            variable.should.have.property("type", TYPES.NUMBER);
-            variable.should.not.have.property("staticValue");
+            variable.extra.should.have.property("type", TYPES.NUMBER);
+            variable.extra.should.not.have.property("staticValue");
         });
 
         it("throws if already defined in same context", function () {
@@ -115,8 +115,8 @@ describe('Inference:', function () {
             program.should.have.property("context").property("bindings").property("a");
             var a = program.context.bindings.a;
             a.should.have.property("initialized", true);
-            a.should.have.property("type", TYPES.INT);
-            a.should.not.have.property("staticValue");
+            a.extra.should.have.property("type", TYPES.INT);
+            a.extra.should.not.have.property("staticValue");
         });
 
         it("of uninitialized variable is okay", function () {
@@ -161,8 +161,8 @@ describe('Inference:', function () {
             program.should.have.property("context").property("bindings").property("a");
             var a = program.context.bindings.a;
             a.should.have.property("initialized", true);
-            a.should.have.property("type", TYPES.NUMBER);
-            a.should.not.have.property("staticValue");
+            a.extra.should.have.property("type", TYPES.NUMBER);
+            a.extra.should.not.have.property("staticValue");
 
             var exp = program.body[1].expression;
             exp.extra.should.have.property("type", TYPES.NUMBER);
@@ -178,8 +178,8 @@ describe('Inference:', function () {
             program.should.have.property("context").property("bindings").property("cond");
             var cond = program.context.bindings.cond;
             cond.should.have.property("initialized", true);
-            cond.should.have.property("type", TYPES.NUMBER);
-            cond.should.not.have.property("staticValue");
+            cond.extra.should.have.property("type", TYPES.NUMBER);
+            cond.extra.should.not.have.property("staticValue");
 
             var exp = program.body[1].expression;
             exp.extra.should.have.property("type", TYPES.NUMBER);

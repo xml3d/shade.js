@@ -9,9 +9,11 @@
         exitExpression = require('./infer_expression.js').exitExpression,
         enterStatement = require('./infer_statement.js').enterStatement,
         exitStatement = require('./infer_statement.js').exitStatement,
-        Context = require("./../context.js").Context,
-        MathObject = require("./registry/math.js"),
-        Color = require("./registry/color.js"),
+        Context = require("./../../base/context.js").Context,
+
+        // Objects
+        MathEntry = require("./registry/math.js"),
+        ColorEntry = require("./registry/color.js"),
         ShadeObject = require("./registry/shade.js"),
         Matrix = require("./registry/matrix.js"),
         Base = require("../../base/index.js"),
@@ -20,17 +22,17 @@
 
     var Syntax = walk.Syntax;
 
-    c_instanceRegistry = {};
+    var c_instanceRegistry = {};
 
     c_instanceRegistry[Kinds.MATRIX4] = Matrix.instance;
-    c_instanceRegistry[Kinds.COLOR] = Color.instance;
+    c_instanceRegistry[Kinds.COLOR] = ColorEntry.instance;
 
 
 
     var registerGlobalContext = function (program) {
         var ctx = new Context(program, null, {name: "global"});
-        ctx.registerObject("Math", MathObject);
-        ctx.registerObject("Color", Color);
+        ctx.registerObject("Math", MathEntry);
+        ctx.registerObject("Color", ColorEntry);
         ctx.registerObject("Shade", ShadeObject);
         return ctx;
     }

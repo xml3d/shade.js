@@ -49,13 +49,13 @@
      */
     function createAnnotatedNodeArray(arr, ctx) {
         return arr.map(function (arg) {
-            return Annotation.createForContext(arg, ctx)
+            return ctx.createTypeInfo(arg);
         });
     }
 
     var handlers = {
         AssignmentExpression: function (node, ctx) {
-            var right = Annotation.createForContext(node.right, ctx),
+            var right = ctx.createTypeInfo(node.right),
                 result = new Annotation(node);
 
             result.copy(right);
@@ -101,12 +101,13 @@
         NewExpression: function(node, parent, ctx) {
             var result = new Annotation(node);
 
-            var entry = ctx.findObject(node.callee.name);
-            if (entry && entry._constructor) {
-                var constructor = entry._constructor;
+            var entry = ctx.getBindingByName(node.callee.name);
+            //console.error(entry);
+            if (entry && entry.hasConstructor()) {
+                var constructor = entry.getConstructor();
                 result.setType(constructor.type, constructor.kind);
                 var args = createAnnotatedNodeArray(node.arguments, ctx);
-                entry._constructor.evaluate(result, args, ctx);
+                constructor.evaluate(result, args, ctx);
             }
            else {
                 throw new Error("ReferenceError: " + node.callee.name + " is not defined");
@@ -115,7 +116,7 @@
 
         UnaryExpression: function (node, ctx) {
             var result = new Annotation(node),
-                argument = Annotation.createForContext(node.argument, ctx),
+                argument = ctx.createTypeInfo(node.argument),
                 operator = node.operator,
                 func = UnaryFunctions[operator];
 
@@ -162,9 +163,9 @@
 
         ConditionalExpression: function (node, ctx) {
             var result = new Annotation(node),
-                test = Annotation.createForContext(node.test, ctx),
-                consequent = Annotation.createForContext(node.consequent, ctx),
-                alternate = Annotation.createForContext(node.alternate, ctx);
+                test = ctx.createTypeInfo(node.test),
+                consequent = ctx.createTypeInfo(node.consequent),
+                alternate = ctx.createTypeInfo(node.alternate);
 
             //console.log(node.test, node.consequent, node.alternate);
 
@@ -195,8 +196,8 @@
         },
 
         LogicalExpression: function (node, ctx) {
-            var left = Annotation.createForContext(node.left, ctx),
-                right = Annotation.createForContext(node.right, ctx),
+            var left = ctx.createTypeInfo(node.left),
+                right = ctx.createTypeInfo(node.right),
                 result = new Annotation(node),
                 operator = node.operator;
 
@@ -231,8 +232,8 @@
 
         BinaryExpression: function (node, ctx) {
             //console.log(node.left, node.right);
-            var left = Annotation.createForContext(node.left, ctx),
-                right = Annotation.createForContext(node.right, ctx),
+            var left = ctx.createTypeInfo(node.left),
+                right = ctx.createTypeInfo(node.right),
                 result = new Annotation(node),
                 operator = node.operator,
                 func = BinaryFunctions[operator];
@@ -266,7 +267,7 @@
                         result.setType(TYPES.NUMBER);
                     }
                     else {
-                        console.error(node, left.getType(), operator, right.getType());
+                        //console.error(node, left.getType(), operator, right.getType());
                         throw new Error("Unhandled case for arithmetic BinaryExpression.");
                     }
                     break;
@@ -294,8 +295,8 @@
 
 
         MemberExpression: function (node, parent, ctx, root) {
-            var result = Annotation.createForContext(node, ctx),
-                object = Annotation.createForContext(node.object, ctx),
+            var result = ctx.createTypeInfo(node),
+                object = ctx.createTypeInfo(node.object),
                 property = new Annotation(node.property),
                 propertyName = node.property.name;
 
@@ -315,8 +316,7 @@
             }
 
             if (node.object.type == Syntax.MemberExpression) {
-                console.log("Here");
-                var object = Annotation.createForContext(node.object, ctx);
+                var object = ctx.createTypeInfo(node.object);
                 if (object.isUndefined()) {
                     Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName + "' of undefined");
                 }
@@ -336,35 +336,35 @@
             }
 
             // node.object.type == Syntax.Identifier
-            console.log(node.object.name);
-            console.log(object.getType(), object.getKind());
-            console.log(property.getType(), property.getKind());
+            //console.log(node.object.name);
+            //console.log(object.getType(), object.getKind());
+            //console.log(property.getType(), property.getKind());
 
-            var obj = ctx.findObject(node.object.name);
-            obj || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + ctx.str());
+            var boundObject = ctx.getBindingByName(node.object.name);
+            boundObject || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + ctx.str());
 
-            if (obj.type == TYPES.UNDEFINED) {
+            if (boundObject.getType() == TYPES.UNDEFINED) {
                 Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName +"' of undefined")
             }
 
-            if (obj.type && obj.type == TYPES.OBJECT) {
-                var instanceInfo = root.getInstanceInfoFromKind(obj.kind);
-                obj = instanceInfo;
-                result.setType(obj.type, obj.kind);
+            if (boundObject.isObject()) {
+                var staticInfo = boundObject.getStaticObjectInfo();
+                //console.log("Info: ", staticInfo);
+                if (!staticInfo.hasOwnProperty(propertyName)) {
+                    property.setType(TYPES.UNDEFINED);
+                    return;
+                }
+                var prop = staticInfo[propertyName];
+                var propNode = new Annotation(node.property, prop);
+                result.copy(propNode);
             }
-            if (!obj.hasOwnProperty(propertyName)) {
-                property.setType(TYPES.UNDEFINED);
-                return;
-            }
-            var prop = obj[propertyName];
-            console.log("Property: ", prop);
-            var propNode = new Annotation(node.property, prop);
-            result.copy(propNode);
+
+
         },
 
         CallExpression: function (node, ctx) {
             var result = new Annotation(node),
-                callee = Annotation.createForContext(node.callee, ctx);
+                callee = ctx.createTypeInfo(node.callee);
 
             var callType = node.callee.type;
             switch (callType) {
@@ -387,8 +387,8 @@
                     break;
                 case Syntax.Identifier:
                     var functionName = node.callee.name;
-                    var func = ctx.findVariable(functionName);
-                    if (!(func && func.initialized)) {
+                    var func = ctx.getBindingByName(functionName);
+                    if (!(func && func.isInitialized())) {
                         throw new Error(functionName + " is not defined. Context: " + ctx.str());
                     }
                     // console.log(func);

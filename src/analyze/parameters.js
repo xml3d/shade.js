@@ -1,7 +1,7 @@
 (function (ns) {
 
     var walk = require('estraverse'),
-        Context = require("./context.js").Context,
+        Context = require("./../base/context.js").Context,
         Syntax = walk.Syntax;
 
     var findParametersInProgram = function (program, contextName, param, analyzedCalls) {

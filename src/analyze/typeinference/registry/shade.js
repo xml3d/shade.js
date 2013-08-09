@@ -3,6 +3,7 @@
     var Shade = require("../../../interfaces.js"),
         TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS,
+        Base = require("../../../base/index.js"),
         Annotation = require("../../../base/annotation.js").Annotation;
 
     var ShadeObject = {
@@ -17,7 +18,7 @@
                     throw new Error("First argument of Shade.diffuse must evaluate to a normal");
                 }
                 if (args.length > 1) {
-                    var color = Annotation.createForContext(args[1], ctx);
+                    var color = args[1];
                     //console.log("Color: ", color.str(), color.getType(ctx));
                     if(!color.canColor()) {
                         throw new Error("Second argument of Shade.diffuse must evaluate to a color. Found: " + color.str());
@@ -27,7 +28,13 @@
         }
     };
 
-    ns.getEntry = function() { return ShadeObject };
-    ns.getId = function() { return "Shade"; };
+    Base.extend(ns, {
+        id: "Shade",
+        object: {
+            constructor: null,
+            static: ShadeObject
+        },
+        instance: null
+    });
 
 }(exports));

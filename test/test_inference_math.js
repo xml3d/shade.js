@@ -18,7 +18,7 @@ describe('Inference', function () {
                 exp.extra.should.have.property("staticValue", Math.PI);
 
             });
-            it("access unknown property ? undefined", function () {
+            xit("access unknown property ? undefined", function () {
                 var exp = parseAndInferenceExpression("Math.XPI");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.UNDEFINED);

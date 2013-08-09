@@ -15,6 +15,13 @@
         }
     }
 
+    ns = {
+        id: "Matrix4",
+        object: {
+            constructor: null,
+            static: null
+        },
+        instance: MatrixInstance
+    };
 
-    exports.instance = MatrixInstance;
 }(exports));

@@ -1,10 +1,54 @@
 (function(ns){
 
-    var Base = require("../base/index.js"),
-        TYPES = require("../interfaces.js").TYPES;
+    var Base = require("./index.js"),
+        TYPES = require("../interfaces.js").TYPES,
+        Annotation = require("./annotation.js").Annotation,
+        TypeInfo = require("./typeinfo.js").TypeInfo,
+        Syntax = require('estraverse').Syntax;
 
 
     var c_object_registry = {};
+
+    /**
+     *
+     * @param binding
+     * @constructor
+     */
+    var Binding = function(binding) {
+        TypeInfo.call(this, binding);
+        if(this.node.ref) {
+            this.objectInfo = c_object_registry[this.node.ref].object;
+            if (this.objectInfo) {
+                this.setType(TYPES.OBJECT);
+            }
+        }
+    };
+
+
+    Base.createClass(Binding, TypeInfo, {
+        hasConstructor: function() {
+            return !!this.getConstructor();
+        },
+        getConstructor: function() {
+            return this.objectInfo && this.objectInfo.constructor;
+        },
+        isInitialized: function() {
+            return this.node.initialized;
+        },
+        setInitialized: function(v) {
+            this.node.initialized = v;
+        },
+        hasStaticValue: function() {
+            return false;
+        },
+        getType: function() {
+            return this.objectInfo? TYPES.OBJECT : TypeInfo.prototype.getType.call(this);
+        },
+        getStaticObjectInfo: function() {
+            return this.objectInfo.static;
+        }
+    })
+
 
     /**
      * @param {Context|null} parent
@@ -50,12 +94,12 @@
          * @param {string} name
          * @returns {*}
          */
-        findVariable: function(name) {
+        getBindingByName: function(name) {
             var bindings = this.getBindings();
             if(bindings[name] !== undefined)
-                return bindings[name];
+                return new Binding(bindings[name]);
             if (this.parent)
-                return this.parent.findVariable(name);
+                return this.parent.getBindingByName(name);
             return undefined;
         },
 
@@ -81,7 +125,7 @@
 
         declareVariable: function(name, fail) {
             var bindings = this.getBindings();
-            fail = fail === undefined ? true : fail;
+            fail = (fail == undefined) ? true : fail;
             if (bindings[name]) {
                 if (fail) {
                     throw new Error(name + " was already declared in this scope.")
@@ -92,7 +136,9 @@
 
             var init = {
                 initialized : false,
-                type: TYPES.UNDEFINED
+                extra: {
+                    type: TYPES.UNDEFINED
+                }
             };
             bindings[name] = init;
         },
@@ -100,35 +146,37 @@
         /**
          *
          * @param {string} name
-         * @param {Annotation} annotation
+         * @param {TypeInfo} typeInfo
          */
-        updateExpression: function (name, annotation) {
-            var v = this.findVariable(name);
+        updateExpression: function (name, typeInfo) {
+            var v = this.getBindingByName(name);
             if (!v) {
                 throw new Error("Variable was not declared in this scope: " + name);
             }
-            if (v.initialized && v.type !== annotation.getType()) {
+            if (v.isInitialized() && v.getType() !== typeInfo.getType()) {
                 throw new Error("Variable may not change it's type: " + name);
             }
-            for (var prop in v) { if (v.hasOwnProperty(prop)) { delete v[prop]; } }
-            Base.extend(v, annotation.getExtra());
-            delete v.staticValue; // A variable is not static
-            v.initialized = !annotation.isUndefined();
-
+            v.copy(typeInfo);
+            v.setDynamicValue();
+            v.setInitialized(!typeInfo.isUndefined());
         },
 
         registerObject: function(name, obj) {
-            var id = obj.getId();
-            c_object_registry[id] = obj;
+            c_object_registry[obj.id] = obj;
             var bindings = this.getBindings();
-            bindings[name] = id;
+            bindings[name] = {
+                extra: {
+                    type: TYPES.OBJECT
+                },
+                ref: obj.id
+            };
         },
 
-        findObject : function(name) {
-            var id = this.findVariable(name);
+        /*findObject : function(name) {
+            var id = this.getBindingByName(name);
             var obj = c_object_registry[id];
             return obj && obj.getEntry ? obj.getEntry() : id;
-        },
+        },*/
 
         declareParameters: function(params) {
             var bindings = this.getBindings();
@@ -172,8 +220,25 @@
                 }
             }
             return result;
-        }
+        },
 
+        /**
+         *
+         * @param node
+         * @returns {TypeInfo}
+         */
+        createTypeInfo: function (node) {
+            var result = new Annotation(node);
+            if (result.getType() !== TYPES.ANY) {
+                return result;
+            }
+
+            if (node.type == Syntax.Identifier) {
+                var name = node.name;
+                return this.getBindingByName(name);
+            }
+            return result;
+        }
 
     });
 
