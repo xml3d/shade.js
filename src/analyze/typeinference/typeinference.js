@@ -22,10 +22,6 @@
 
     var Syntax = walk.Syntax;
 
-    var c_instanceRegistry = {};
-
-    c_instanceRegistry[Kinds.MATRIX4] = Matrix.instance;
-    c_instanceRegistry[Kinds.COLOR] = ColorEntry.instance;
 
 
 

@@ -7,18 +7,20 @@
         Syntax = require('estraverse').Syntax;
 
 
-    var c_object_registry = {};
+    var c_object_registry = {},
+        c_instance_registry = {};
 
     /**
      *
      * @param binding
+     * @extends TypeInfo
      * @constructor
      */
     var Binding = function(binding) {
         TypeInfo.call(this, binding);
         if(this.node.ref) {
-            this.objectInfo = c_object_registry[this.node.ref].object;
-            if (this.objectInfo) {
+            this.globalObject = c_object_registry[this.node.ref].object;
+            if (this.globalObject) {
                 this.setType(TYPES.OBJECT);
             }
         }
@@ -30,7 +32,7 @@
             return !!this.getConstructor();
         },
         getConstructor: function() {
-            return this.objectInfo && this.objectInfo.constructor;
+            return this.globalObject && this.globalObject.constructor;
         },
         isInitialized: function() {
             return this.node.initialized;
@@ -42,10 +44,14 @@
             return false;
         },
         getType: function() {
-            return this.objectInfo? TYPES.OBJECT : TypeInfo.prototype.getType.call(this);
+            return this.globalObject? TYPES.OBJECT : TypeInfo.prototype.getType.call(this);
         },
-        getStaticObjectInfo: function() {
-            return this.objectInfo.static;
+        getObjectInfo: function() {
+            if (this.globalObject)
+                return this.globalObject.static;
+            if (this.isObject())
+                return c_instance_registry[this.getKind()];
+            return null;
         }
     })
 
@@ -163,6 +169,9 @@
 
         registerObject: function(name, obj) {
             c_object_registry[obj.id] = obj;
+            if(obj.kind) {
+                c_instance_registry[obj.kind] = obj.instance;
+            }
             var bindings = this.getBindings();
             bindings[name] = {
                 extra: {

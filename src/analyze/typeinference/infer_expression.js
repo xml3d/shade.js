@@ -295,19 +295,19 @@
 
 
         MemberExpression: function (node, parent, ctx, root) {
-            var result = ctx.createTypeInfo(node),
-                object = ctx.createTypeInfo(node.object),
-                property = new Annotation(node.property),
+            var resultType = ctx.createTypeInfo(node),
+                objectType = new Annotation(node.object),
+                propertyType = new Annotation(node.property),
                 propertyName = node.property.name;
 
             //console.log("Member", node.object.name, node.property.name);
             if (node.computed) {
-                if (object.isArray()) {
-                    if (!property.canInt()) {
+                if (objectType.isArray()) {
+                    if (!propertyType.canInt()) {
                         Shade.throwError(node, "Expected 'int' type for array accessor");
                     }
-                    var elementInfo = object.getArrayElementType();
-                    result.setType(elementInfo.type, elementInfo.kind);
+                    var elementInfo = objectType.getArrayElementType();
+                    resultType.setType(elementInfo.type, elementInfo.kind);
                     return;
                 }
                 else {
@@ -321,7 +321,7 @@
                     Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName + "' of undefined");
                 }
                 if(!object.isObject()) {
-                    result.setType(TYPES.UNDEFINED);
+                    resultType.setType(TYPES.UNDEFINED);
                     return;
                 }
                 var instanceInfo = root.getInstanceInfoFromKind(object.getKind());
@@ -331,14 +331,9 @@
                 var prop = instanceInfo[propertyName];
                 //console.log("Property: ", prop);
                 var propNode = new Annotation(node.property, prop);
-                result.copy(propNode);
+                resultType.copy(propNode);
                 return;
             }
-
-            // node.object.type == Syntax.Identifier
-            //console.log(node.object.name);
-            //console.log(object.getType(), object.getKind());
-            //console.log(property.getType(), property.getKind());
 
             var boundObject = ctx.getBindingByName(node.object.name);
             boundObject || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + ctx.str());
@@ -348,15 +343,21 @@
             }
 
             if (boundObject.isObject()) {
-                var staticInfo = boundObject.getStaticObjectInfo();
-                //console.log("Info: ", staticInfo);
-                if (!staticInfo.hasOwnProperty(propertyName)) {
-                    property.setType(TYPES.UNDEFINED);
+                var objectInfo = boundObject.getObjectInfo();
+                if(!objectInfo)
+                    throw new Error("Incomplete registration for object: ", boundObject);
+
+                objectType.copy(boundObject);
+                if (!objectInfo.hasOwnProperty(propertyName)) {
+                    resultType.setType(TYPES.UNDEFINED);
+                    propertyType.setType(TYPES.UNDEFINED);
                     return;
                 }
-                var prop = staticInfo[propertyName];
+
+                var prop = objectInfo[propertyName];
                 var propNode = new Annotation(node.property, prop);
-                result.copy(propNode);
+
+                resultType.copy(propNode);
             }
 
 
@@ -378,7 +379,8 @@
                         callee.clearCall();
                         result.clearCall();
                     } else {
-                        if(callee.isObject()) {
+                        var object = ctx.createTypeInfo(node.callee.object);
+                        if(object.isObject()) {
                             Shade.throwError(node, "TypeError: Object #<" + callee.getKind()+ "> has no method '"+ node.callee.property.name + "'");
                         } else {
                             Shade.throwError(node, "TypeError: Cannot call method '"+ node.callee.property.name + "' of " + callee.getType());

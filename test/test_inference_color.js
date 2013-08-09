@@ -52,7 +52,7 @@ describe('Inference', function () {
 
             });
 
-            xit("color instance properties", function () {
+            it("color instance properties", function () {
                 var exp = parseAndInferenceExpression("var x = new Color(128); x.r");
                 var memexp = exp[1].expression;
 
@@ -72,27 +72,30 @@ describe('Inference', function () {
                 memexp.extra.should.have.property("type", TYPES.NUMBER);
             });
 
-            xit("color instance methods", function () {
+            it("color instance methods", function () {
                 var exp = parseAndInferenceExpression("var x = new Color(128); x.intensity();");
-                var memexp = exp[1].expression;
+                var callExpression = exp[1].expression;
 
                 // object
-                var object = memexp.object;
+                var object = callExpression.callee.object;
                 object.should.have.property("extra");
                 object.extra.should.have.property("type", TYPES.OBJECT);
                 object.extra.should.have.property("kind", KINDS.COLOR);
 
                 // property
-                var property = memexp.property;
+                var property = callExpression.callee.property;
                 property.should.have.property("extra");
                 property.extra.should.have.property("type", TYPES.NUMBER);
 
                 // expr
-                memexp.should.have.property("extra");
-                memexp.extra.should.have.property("type", TYPES.NUMBER);
+                callExpression.should.have.property("extra");
+                callExpression.extra.should.have.property("type", TYPES.NUMBER);
             });
 
-
+            it("unknown color method should throw", function () {
+                var exp = parseAndInferenceExpression.bind(null, "var x = new Color(128); x.something();");
+                exp.should.throw(/has no method 'something'/);
+            });
 
         });
     });

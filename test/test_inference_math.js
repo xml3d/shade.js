@@ -18,7 +18,7 @@ describe('Inference', function () {
                 exp.extra.should.have.property("staticValue", Math.PI);
 
             });
-            xit("access unknown property ? undefined", function () {
+            it("access unknown property ? undefined", function () {
                 var exp = parseAndInferenceExpression("Math.XPI");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.UNDEFINED);
@@ -55,7 +55,7 @@ describe('Inference', function () {
                 var evaluation = parseAndInferenceExpression.bind(undefined, "Math.cos('hallo')");
                 evaluation.should.throw(/Parameter 0 has invalid type/);
             });
-            xit("throws for unknown method", function () {
+            it("throws for unknown method", function () {
                 var evaluation = parseAndInferenceExpression.bind(undefined, "Math.foo(5.0)");
                 evaluation.should.throw(/has no method/);
             });

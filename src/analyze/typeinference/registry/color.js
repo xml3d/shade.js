@@ -62,12 +62,18 @@
         g: { type: TYPES.NUMBER },
         b: { type: TYPES.NUMBER },
         a: { type: TYPES.NUMBER },
-        //intensity
+        intensity: {
+            type: TYPES.NUMBER,
+            evaluate: function() {
+
+            }
+        }
     };
 
 
     Base.extend(ns, {
-        id: "color",
+        id: "Color",
+        kind: "color",
         object: {
             constructor: ColorConstructor,
             static: ColorStaticObject
