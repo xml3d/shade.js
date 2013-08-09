@@ -43,6 +43,9 @@
         hasStaticValue: function() {
             return false;
         },
+        isGlobal: function() {
+            return this.node.info && this.node.info._global || TypeInfo.prototype.isGlobal.call(this);
+        },
         getType: function() {
             return this.globalObject? TYPES.OBJECT : TypeInfo.prototype.getType.call(this);
         },

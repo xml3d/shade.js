@@ -31,7 +31,14 @@
                 contextStack = [context],
                 mainId = this.mainId,
                 inMain = mainId == context.str(),
-                topDeclarations = [];
+                topDeclarations = [],
+                injections = program.injections[this.mainId][0],
+                blockedNames = [],
+                idNameMap = {};
+
+            for(var name in injections){
+                blockedNames.push(name);
+            }
 
             walk.replace(program, {
 
@@ -42,6 +49,8 @@
                             return handleMemberExpression(node, parent, topDeclarations, context);
                         case Syntax.BinaryExpression:
                             return handleBinaryExpression(node, parent);
+                        case Syntax.Identifier:
+                            return handleIdentifier(node, parent, blockedNames, idNameMap);
                         case Syntax.IfStatement:
                             return handleIfStatement(node);
                         case Syntax.LogicalExpression:
@@ -72,7 +81,7 @@
                 }
             });
 
-            var injections = program.injections[this.mainId][0];
+
             for(var name in injections){
                 if(name !== "_global")
                     program.body.unshift(handleTopDeclaration(name, injections));
@@ -101,6 +110,20 @@
         var declAnnotation =  new Annotation(decl.declarations[0]);
         declAnnotation.copy(propertyAnnotation);
         return decl;
+    }
+
+    var handleIdentifier = function(node, parent, blockedNames, idNameMap){
+        if(parent.type == Syntax.FunctionDeclaration)
+            return node;
+        var name = node.name;
+        if(idNameMap[name]) node.name = idNameMap[name];
+        var newName = name, i = 1;
+        while(blockedNames.indexOf(newName) != -1){
+            newName = name + "_" + (++i);
+        }
+        idNameMap[name] = newName;
+        node.name = newName;
+        return node;
     }
 
 
@@ -156,10 +179,11 @@
             }
         }
         var exp = new Annotation(memberExpression);
-        if(objectReference._global) {
+        if(objectReference.isGlobal()) {
             var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(objectReference, property.name)};
             var propertyAnnotation =  new Annotation(propertyLiteral);
             propertyAnnotation.copy(exp);
+            propertyAnnotation.setGlobal(true);
 
             return propertyLiteral;
         }

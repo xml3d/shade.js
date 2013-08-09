@@ -112,6 +112,13 @@
         isObject: function () {
             return this.isOfType(TYPES.OBJECT);
         },
+        isGlobal: function() {
+            return !!this.getExtra().global;
+        },
+        setGlobal: function (global) {
+            var extra = this.getExtra();
+            extra.global = global;
+        },
         canNumber: function () {
             return this.isNumber() || this.isInt() || this.isBool();
         },
@@ -179,6 +186,7 @@
         setFromExtra: function(extra){
             this.setType(extra.type);
             this.setKind(extra.kind);
+            this.setGlobal(extra.global);
         },
         getObjectInfo: function() {
             if (this.isObject())
