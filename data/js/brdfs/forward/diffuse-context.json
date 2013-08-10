@@ -1,0 +1,49 @@
+{
+    "global.diffuse": [
+        {
+            "MAX_POINTLIGHTS": {
+                "type": "int",
+                "source": "constant"
+            },
+            "pointLightOn": {
+                "type": "array",
+                "elements": {
+                    "type": "boolean"
+                }
+            },
+            "pointLightPosition": {
+                "type": "array",
+                "elements": {
+                    "type": "object",
+                    "kind": "float3"
+                }
+            },
+            "pointLightAttenuation": {
+                "type": "array",
+                "elements": {
+                    "type": "object",
+                    "kind": "float3"
+                }
+            },
+            "pointLightIntensity": {
+                "type": "array",
+                "elements": {
+                    "type": "float"
+                }
+            },
+            "viewMatrix": {
+                "type": "object",
+                "kind": "matrix4"
+            },
+            "diffuseTexture": {
+                "type": "null"
+            },
+            "normal": {
+                "type": "object",
+                "kind": "float3",
+                "source": "vertex"
+            },
+            "_global": true
+        }
+    ]
+}
