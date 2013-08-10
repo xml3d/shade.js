@@ -34,7 +34,7 @@
                 this.javaScriptEditor.setValue(this.storage.lastShaderCode);
             };
             try {
-                this.gl = document.createElement("canvas").getContext("experimental-webgl");
+                this.gl = $(".theCanvas")[0].getContext("experimental-webgl");
             } catch(e) {
                 this.addConsoleText(e.toString(), true);
                 this.gl = null;
@@ -132,21 +132,56 @@
             this.console[0].scrollTop = this.console[0].scrollHeight;
         },
         compileGL: function(fragmentSource) {
-            var gl = this.gl;
-            if(!gl)
+            if(!this.gl)
                 return;
-            var shader = gl.createShader(gl.FRAGMENT_SHADER);
-            gl.shaderSource(shader, fragmentSource);
+            var info = this.compileShader(this.gl.FRAGMENT_SHADER, fragmentSource);
+            if (info.error) {
+                this.addConsoleText(info.error, true);
+            } else {
+                this.addConsoleText("GLSL: Compiled fragment shader successfully");
+                this.render(info.shader);
+            }
+        },
+        compileShader: function(kind, source) {
+            var gl = this.gl;
+            var shader = gl.createShader(kind);
+            gl.shaderSource(shader, source);
             gl.compileShader(shader);
 
             if (gl.getShaderParameter(shader, gl.COMPILE_STATUS) == 0) {
                 var errorString = "Failed to compile: ";
                 errorString += gl.getShaderInfoLog(shader);
                 gl.getError();
-                this.addConsoleText(errorString, true);
+                return { error: errorString };
             } else {
-                this.addConsoleText("Compiled GL successfully");
+                return { shader: shader };
             }
+        },
+        render : function(fragmentShader) {
+            var gl = this.gl;
+            var vertex = this.compileShader(gl.VERTEX_SHADER, ["attribute vec2 a_position;","void main() { gl_Position = vec4(a_position, 0, 1); }"].join("\n"));
+            if(vertex.error)
+                return;
+
+            var program = gl.createProgram();
+            gl.attachShader(program, fragmentShader);
+            gl.attachShader(program, vertex.shader);
+            gl.linkProgram(program);
+            if (gl.getProgramParameter(program, gl.LINK_STATUS) == 0) {
+                var errorString = "Shader linking failed: \n";
+                errorString += gl.getProgramInfoLog(program);
+                gl.getError();
+                this.addConsoleText(errorString, true);
+                return;
+            }
+            gl.useProgram(program);
+            var positionLocation = gl.getAttribLocation(program, "a_position");
+            var buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1.0, -1.0,1.0, -1.0,-1.0,  1.0,-1.0,  1.0,1.0, -1.0,1.0,  1.0]), gl.STATIC_DRAW);
+            gl.enableVertexAttribArray(positionLocation);
+            gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
         }
     }
 

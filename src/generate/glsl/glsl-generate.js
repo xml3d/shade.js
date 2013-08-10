@@ -31,6 +31,10 @@
                 switch (info.kind) {
                     case Kinds.COLOR:
                         return "vec4";
+                    case Kinds.FLOAT3:
+                        return "vec3";
+                    case Kinds.FLOAT2:
+                        return "vec2";
                     default:
                         throw new Error("toGLSLType: Unhandled kind: " + info.kind);
                 }

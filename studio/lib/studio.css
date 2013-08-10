@@ -31,12 +31,23 @@
     width: 35%;
 }
 
+.theCanvas {
+    float: left;
+    height: 200px;
+    width: 35%;
+    border: 1px solid #ababab;
+    box-sizing: border-box;
+    margin: 10px 0.5%;
+
+}
+
 .console{
     float: left;
-    width: 99%;
+    width: 63%;
     height: 200px;
     border: 1px solid #ababab;
     margin: 10px 0.5%;
+
     box-sizing: border-box;
     overflow: auto;
 }
