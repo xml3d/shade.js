@@ -151,7 +151,7 @@
                 break;
 
             case Syntax.Literal:
-                result = node.extra.staticValue;
+                result = node.extra.staticValue !== undefined ? node.extra.staticValue : node.value;
                 break;
 
 

@@ -5,11 +5,12 @@
         FunctionAnnotation = require("../../base/annotation.js").FunctionAnnotation,
         Context = require("../../base/context.js").Context,
         Types = require("./../../interfaces.js").TYPES,
+        Shade = require("./../../interfaces.js"),
+        Types = require("./../../interfaces.js").TYPES,
         Sources = require("./../../interfaces.js").SOURCES;
 
-    var ObjectRegistry = {};
+    var ObjectRegistry = require("./registry/index.js").Registry;
 
-    require("./registry/math.js").register(ObjectRegistry);
 
     var walk = require('estraverse');
     var Syntax = walk.Syntax;
@@ -25,9 +26,17 @@
     };
 
     Base.extend(GLASTTransformer.prototype, {
+        registerGlobalContext : function (program) {
+            var ctx = new Context(program, null, {name: "global"});
+            ctx.registerObject("Math", ObjectRegistry.getByName("Math"));
+            //ctx.registerObject("Color", ObjectRegistry.getByName("Color"));
+            //ctx.registerObject("Vector3", ObjectRegistry.getByName("Vector3"));
+            //ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
+            return ctx;
+        },
         transformAAST: function (program) {
             this.root = program;
-            var context = new Context(program, null, {name: "global"}),
+            var context = this.registerGlobalContext(program),
                 contextStack = [context],
                 mainId = this.mainId,
                 inMain = mainId == context.str(),
@@ -62,11 +71,6 @@
                             contextStack.push(context);
                             inMain = mainId == context.str()
                             break;
-                        case Syntax.ReturnStatement:
-                            if(inMain) {
-                                return handleReturnInMain(node);
-                            }
-                            break;
                     }
                 },
 
@@ -77,6 +81,11 @@
                             inMain = context.str() == mainId;
                             if (inMain)
                                 return handleMainFunction(node, parent, context);
+                        case Syntax.ReturnStatement:
+                            if(inMain) {
+                                return handleReturnInMain(node);
+                            }
+                            break;
                     }
                 }
             });
@@ -164,20 +173,24 @@
 
     var handleMemberExpression = function (memberExpression, parent, topDeclarations, context) {
         var object = memberExpression.object,
-            property = memberExpression.property;
+            property = memberExpression.property,
+            propertyName = property.name;
 
 
         var objectReference = context.getBindingByName(object.name);
 
-        if (objectReference in ObjectRegistry) {
-            var objectEntry = ObjectRegistry[object.name];
-            if (property.name in objectEntry) {
-                var propertyHandler = objectEntry[property.name];
+        if (objectReference.isObject()) {
+            var objectInfo = objectReference.getObjectInfo();
+            if(!objectInfo) // Every object needs an info, otherwise we did something wrong
+                Shade.throwError(memberExpression, "Internal: Incomplete registration for object: " + JSON.stringify(memberExpression.object));
+            if (objectInfo.hasOwnProperty(propertyName)) {
+                var propertyHandler = objectInfo[propertyName];
                 if (typeof propertyHandler == "function") {
-                    return propertyHandler(memberExpression, parent, cb);
+                    return propertyHandler(memberExpression, parent);
                 }
             }
         }
+
         var exp = new Annotation(memberExpression);
         if(objectReference.isGlobal()) {
             var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(objectReference, property.name)};

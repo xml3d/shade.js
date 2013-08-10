@@ -1,8 +1,7 @@
 (function (ns) {
 
     var TYPES = require("../../../interfaces.js").TYPES,
-        Base = require("../../../base/index.js"),
-        Annotation = require("../../../base/annotation.js").Annotation;
+        Base = require("../../../base/index.js");
 
 
 
@@ -74,7 +73,6 @@
         MathObject[method] = { type: TYPES.NUMBER, evaluate: evaluateMethod(method, -1) };
     });
 
-    console.error(ns);
     Base.extend(ns, {
         id: "Math",
         object: {

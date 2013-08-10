@@ -8,7 +8,6 @@
         Registry = require('../analyze/typeinference/registry').Registry;
 
 
-    var c_object_registry = {};
 
     /**
      *
@@ -16,10 +15,12 @@
      * @extends TypeInfo
      * @constructor
      */
-    var Binding = function(binding) {
+    var Binding = function(binding, registery) {
         TypeInfo.call(this, binding);
         if(this.node.ref) {
-            this.globalObject = c_object_registry[this.node.ref].object;
+            if (!registery[this.node.ref])
+                throw Error("No object has been registered for: " + this.node.ref);
+            this.globalObject = registery[this.node.ref].object;
             if (this.globalObject) {
                 this.setType(TYPES.OBJECT);
             }
@@ -69,6 +70,7 @@
 
         /** @type (Context|null) */
         this.parent = parent || opt.parent || null;
+        this.registery = parent ? parent.registery : {};
 
         this.context = node.context = node.context || {};
 
@@ -106,7 +108,7 @@
         getBindingByName: function(name) {
             var bindings = this.getBindings();
             if(bindings[name] !== undefined)
-                return new Binding(bindings[name]);
+                return new Binding(bindings[name], this.registery);
             if (this.parent)
                 return this.parent.getBindingByName(name);
             return undefined;
@@ -171,7 +173,7 @@
         },
 
         registerObject: function(name, obj) {
-            c_object_registry[obj.id] = obj;
+            this.registery[obj.id] = obj;
             var bindings = this.getBindings();
             bindings[name] = {
                 extra: {

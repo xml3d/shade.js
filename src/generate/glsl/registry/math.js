@@ -1,7 +1,8 @@
 (function(ns){
 
-   var Shade = require("../../../interfaces.js").Shade;
+   var Shade = require("../../../interfaces.js");
    var Syntax = require('estraverse').Syntax;
+   var Base = require("../../../base/index.js");
 
     var MathConstants = ["E", "PI", "LN2", "LOG2E", "LOG10E", "PI", "SQRT1_2", "SQRT2"];
 
@@ -33,9 +34,7 @@
         round: removeMemberFromExpression, // Since GLSL 1.3, what does WebGL use?
         sin:  removeMemberFromExpression,
         sqrt: removeMemberFromExpression,
-        tan: removeMemberFromExpression,
-        E: function() { return { type: Syntax.Literal, value: Math.E }},
-        PI: function() { return { type: Syntax.Literal, value: Math.PI }}
+        tan: removeMemberFromExpression
     };
 
     MathConstants.forEach( function(constant) {
@@ -44,11 +43,13 @@
         }
     });
 
-    var register = function(to) {
-        to["Math"] = MathEntry;
-    }
-
-    ns.register = register;
-    ns.MathEntry = MathEntry;
+    Base.extend(ns, {
+        id: "Math",
+        object: {
+            constructor: null,
+            static: MathEntry
+        },
+        instance: MathEntry
+    });
 
 }(exports));

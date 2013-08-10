@@ -81,6 +81,22 @@ describe('GLSL Code generation,', function () {
         });
     });
 
+    describe('Math object', function() {
+        xit("cos", function() {
+            var code = generateExpression("Math.cos(1.5);");
+            code.should.equal("cos(1.5);");
+        });
+        xit("PI", function() {
+            var code = generateExpression("Math.PI;");
+            code.should.equal("3.141592653589793;");
+        });
+        xit("modulo", function() {
+            var code = generateExpression("5 % 3;");
+            code.should.equal("mod(5.0, 3.0);");
+        });
+
+    });
+
     it("should generate simple shader", function() {
         var code = loadAndGenerate("data/js/shader/red.js");
         code.should.match(/vec4\(1/);
