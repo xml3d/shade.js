@@ -162,7 +162,6 @@
             delete extra.evaluate;
         },
         copy: function(other) {
-            this.node.extra = {};
             Base.deepExtend(this.node.extra, other.getExtra());
         },
         str: function() {

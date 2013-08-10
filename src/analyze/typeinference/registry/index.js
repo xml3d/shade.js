@@ -4,7 +4,8 @@
         Color : require("./color.js"),
         Shade : require("./shade.js"),
         Matrix4 : require("./matrix.js"),
-        Math : require("./math.js")
+        Math : require("./math.js"),
+        Vector2 : require("./vec2.js")
     };
 
     exports.Registry = {

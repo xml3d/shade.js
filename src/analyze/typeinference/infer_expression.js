@@ -180,8 +180,8 @@
             }
 
 
-            if (consequent.getType() == alternate.getType() && !consequent.isObject()) {
-                result.setType(consequent.getType());
+            if (consequent.equals(alternate)) {
+                result.copy(consequent);
             } else if (consequent.canNumber() && alternate.canNumber()) {
                 result.setType(TYPES.NUMBER);
             }
@@ -190,7 +190,7 @@
             } else {
                 // We don't allow dynamic types (the type of the result depends on the value of it's operands).
                 // At this point, the expression needs to evaluate to a result, otherwise it's an error
-                throw new Error("Static evaluation not implemented yet");
+                throw Shade.throwError(node, "Static evaluation not implemented yet");
             }
 
         },
@@ -318,12 +318,14 @@
             }
 
             var objectOfInterest;
-            if (node.object.type == Syntax.MemberExpression) {
+            var objectName = "?";
+            if (node.object.type == Syntax.MemberExpression || node.object.type == Syntax.CallExpression) {
                 objectOfInterest = ctx.createTypeInfo(node.object);
             } else {
-                objectOfInterest = ctx.getBindingByName(node.object.name);
+                objectName = node.object.name;
+                objectOfInterest = ctx.getBindingByName(objectName);
             }
-            objectOfInterest || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + ctx.str());
+            objectOfInterest || Shade.throwError(node,"ReferenceError: " + objectName + " is not defined. Context: " + ctx.str());
 
             if (objectOfInterest.getType() == TYPES.UNDEFINED) {
                 Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName +"' of undefined")

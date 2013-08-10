@@ -32,7 +32,7 @@
                 mainId = this.mainId,
                 inMain = mainId == context.str(),
                 topDeclarations = [],
-                injections = program.injections[this.mainId][0],
+                injections = program.injections[this.mainId] ? program.injections[this.mainId][0] : null,
                 blockedNames = [],
                 idNameMap = {};
 

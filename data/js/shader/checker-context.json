@@ -1,0 +1,33 @@
+{
+    "global.shade": [
+        {
+            "texcoord": {
+                "type": "object",
+                "kind": "float2",
+                "source": "vertex"
+            },
+            "frequency": {
+                "type": "number"
+            },
+            "whiteColor": {
+                "type": "object",
+                "kind": "float3",
+                "source": "vertex"
+            },
+            "blackColor": {
+                "type": "object",
+                "kind": "float3",
+                "source": "vertex"
+            },
+            "normal": {
+                "type": "object",
+                "kind": "float3",
+                "source": "vertex"
+            },
+            "shininess": {
+                "type": "number"
+            }
+        }
+    ]
+
+}
