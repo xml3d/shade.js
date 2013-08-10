@@ -3,8 +3,7 @@
     var Shade = require("../../../interfaces.js"),
         TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS,
-        Base = require("../../../base/index.js"),
-        Annotation = require("../../../base/annotation.js").Annotation;
+        Tools = require("./tools.js");
 
     var Color = function(r,g,b,a) {
         if (Array.isArray(r)) {
@@ -52,9 +51,8 @@
          * @param {Context} ctx
          */
         evaluate: function(result, args, ctx) {
-            if(args.length > 4) {
-                Shade.throwError(result.node, "Invalid number of parameters for Color, expected 0-4");
-            }
+            Tools.checkParamCount(result.node, "Color", [0,1,2,3,4], args.length);
+
             var argArray = [];
             var isStatic = true;
             args.forEach(function (param, index) {
@@ -75,8 +73,6 @@
         rgb: ColorConstructor
     };
 
-    var member = { type: TYPES.NUMBER };
-
     var ColorInstance = {
         r: { type: TYPES.NUMBER },
         g: { type: TYPES.NUMBER },
@@ -84,14 +80,33 @@
         a: { type: TYPES.NUMBER },
         intensity: {
             type: TYPES.NUMBER,
-            evaluate: function() {
+            evaluate: function(result, args) {
+                Tools.checkParamCount(result.node, "Color::scale", [0], args.length);
 
+            }
+        },
+        scale: {
+            type: TYPES.UNDEFINED,
+            evaluate: function(result, args) {
+                Tools.checkParamCount(result.node, "Color::scale", [1,2], args.length);
+                var factor = args[0];
+                if (!factor.canNumber())
+                    throw new Error("First argument of Color::scale must evaluate to a number, found: " + factor.getTypeString());
+            }
+        },
+        add: {
+            type: TYPES.UNDEFINED,
+            evaluate: function(result, args) {
+                Tools.checkParamCount(result.node, "Color::add", [1], args.length);
+                var other = args[0];
+                if (!other.canColor())
+                    throw new Error("First argument of Color::add must evaluate to a color, found: " + other.getTypeString());
             }
         }
     };
 
 
-    Base.extend(ns, {
+    Tools.extend(ns, {
         id: "Color",
         kind: "color",
         object: {

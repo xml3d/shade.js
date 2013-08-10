@@ -190,6 +190,11 @@
         getObjectInfo: function() {
             if (this.isObject())
                 return this.node.info || Registry.getInstanceForKind(this.getKind());
+        },
+        getTypeString: function() {
+            if (this.isObject())
+                return "Object #<" + this.getKind() + ">";
+            return this.getType();
         }
     }
 

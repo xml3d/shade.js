@@ -313,7 +313,7 @@
                     return;
                 }
                 else {
-                    Shade.throwError(node, "Array access only possible on arrays");
+                    Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName + "' of " + objectAnnotation.getTypeString());
                 }
             }
 

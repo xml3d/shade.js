@@ -26,6 +26,7 @@
         var ctx = new Context(program, null, {name: "global"});
         ctx.registerObject("Math", ObjectRegistry.getByName("Math"));
         ctx.registerObject("Color", ObjectRegistry.getByName("Color"));
+        ctx.registerObject("Vector3", ObjectRegistry.getByName("Vector3"));
         ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
         return ctx;
     }
