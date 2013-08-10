@@ -9,6 +9,10 @@
     var Color = function(r,g,b,a) {
         if (Array.isArray(r)) {
             switch(r.length) {
+                case 0:
+                    this.r = this.g = this.b = 0;
+                    this.alpha = 1.0;
+                    break;
                 case 1:
                     this.r = this.g = this.b = r[0];
                     this.alpha = 1.0;
@@ -48,8 +52,8 @@
          * @param {Context} ctx
          */
         evaluate: function(result, args, ctx) {
-            if(args.length < 1 || args.length > 4) {
-                Shade.throwError(result.node, "Invalid number of parameters for Color, expected 1-4");
+            if(args.length > 4) {
+                Shade.throwError(result.node, "Invalid number of parameters for Color, expected 0-4");
             }
             var argArray = [];
             var isStatic = true;

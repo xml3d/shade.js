@@ -18,16 +18,76 @@ var loadAndGenerate = function(filename) {
     return code;
 }
 
-describe('Code generation', function () {
+var generateExpression = function(exp) {
+    var aast = Shade.parseAndInferenceExpression(exp, { inject: {} });
+    return new GLSLCompiler().compileFragmentShader(aast, {omitHeader: true});
+}
+
+describe('GLSL Code generation,', function () {
+    describe('declaration of type', function() {
+        xit("int", function() {
+            var code = generateExpression("var x = 5;");
+            code.should.match(/int x = 5;/);
+        });
+        it("float", function() {
+            var code = generateExpression("var x = 5.0;");
+            code.should.match(/float x = 5;/);
+        });
+        xit("bool", function() {
+            var code = generateExpression("var x = true;");
+            code.should.match(/bool x = true;/);
+        });
+        it("Color with 4 parameters", function() {
+            var code = generateExpression("var x = new Color(0.1, 0.1, 0.1, 0.9);");
+            code.should.match(/vec4 x = vec4\(0.1, 0.1, 0.1, 0.9\);/);
+        });
+        xit("Color with 3 parameters", function() {
+            var code = generateExpression("var x = new Color(0.1, 0.1, 0.1);");
+            code.should.match(/vec4 x = vec4\(0.1, 0.1, 0.1, 1\);/);
+        });
+        xit("Color with 2 parameters", function() {
+            var code = generateExpression("var x = new Color(0.1, 0.9);");
+            code.should.match(/vec4 x = vec4\(0.1, 0.1, 0.1, 0.9\);/);
+        });
+        xit("Color with 1 parameter", function() {
+            var code = generateExpression("var x = new Color(0.1);");
+            code.should.match(/vec4 x = vec4\(0.1, 0.1, 0.1, 1.0\);/);
+        });
+        xit("Color without parameter", function() {
+            var code = generateExpression("var x = new Color();");
+            code.should.match(/vec4 x = vec4\(0, 0, 0, 1\);/);
+        });
+        xit("any", function() {
+            var code = generateExpression.bind(null, "var x;");
+            code.should.throw();
+        });
+    });
+    describe('assignment of type', function() {
+        xit("int", function() {
+            var code = generateExpression("var x; x = 5;");
+            code.should.match(/int x;\s*x = 5;/);
+        });
+        xit("float", function() {
+            var code = generateExpression("var x; x = 5.0;");
+            code.should.match(/float x;\s*x = 5;/);
+        });
+        xit("bool", function() {
+            var code = generateExpression("var x; x = true;");
+            code.should.match(/bool x;\s*x = true;/);
+        });
+        xit("Color with 4 parameters", function() {
+            var code = generateExpression("var x; x = new Color(0.1, 0.1, 0.1, 0.9);");
+            code.should.match(/vec4 x;\s*x = vec4\(0.1, 0.1, 0.1, 0.9\);/);
+        });
+    });
+
     it("should generate simple shader", function() {
         var code = loadAndGenerate("data/js/shader/red.js");
-        //code.should.match(/vec3\(1\.0/);
-        //console.log(code);
+        code.should.match(/vec4\(1/);
     });
-    xit("handle return 'undefined' in main", function() {
+    it("handle return 'undefined' in main", function() {
         var code = loadAndGenerate("data/js/shader/discard.js");
         code.should.match(/discard/);
-        console.log(code);
     });
 
 });

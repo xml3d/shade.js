@@ -11,12 +11,12 @@
 
     Base.extend(GLSLCompiler.prototype, {
 
-        compileFragmentShader: function (aast) {
+        compileFragmentShader: function (aast, opt) {
 
             var transformer = new Transformer("global.shade");
             var transformed = transformer.transformAAST(aast);
 
-            var code = generate(transformed);
+            var code = generate(transformed, opt);
 
             return code;
         }
