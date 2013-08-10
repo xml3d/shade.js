@@ -4,7 +4,8 @@
         //Color : require("./color.js"),
         //Shade : require("./shade.js"),
         //Matrix4 : require("./matrix.js"),
-        Math : require("./math.js")
+        Math : require("./math.js"),
+        System : require("./system.js")
         //Vector2 : require("./vector2.js"),
         //Vector3 : require("./vector3.js")
     };

@@ -29,7 +29,7 @@
         registerGlobalContext : function (program) {
             var ctx = new Context(program, null, {name: "global"});
             ctx.registerObject("Math", ObjectRegistry.getByName("Math"));
-            //ctx.registerObject("Color", ObjectRegistry.getByName("Color"));
+            ctx.registerObject("this", ObjectRegistry.getByName("System"));
             //ctx.registerObject("Vector3", ObjectRegistry.getByName("Vector3"));
             //ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
             return ctx;
@@ -176,10 +176,21 @@
             property = memberExpression.property,
             propertyName = property.name;
 
+        var objectName = null;
+        switch(object.type) {
+            case Syntax.Identifier:
+                objectName = object.name;
+                break;
+            case Syntax.ThisExpression:
+                objectName = "this";
+                break;
+            default:
+                //throw new Error("Unhandled object type in GLSL generation");
+        }
 
-        var objectReference = context.getBindingByName(object.name);
+        var objectReference = context.getBindingByName(objectName);
 
-        if (objectReference.isObject()) {
+        if (objectReference && objectReference.isObject()) {
             var objectInfo = objectReference.getObjectInfo();
             if(!objectInfo) // Every object needs an info, otherwise we did something wrong
                 Shade.throwError(memberExpression, "Internal: Incomplete registration for object: " + JSON.stringify(memberExpression.object));
@@ -192,7 +203,7 @@
         }
 
         var exp = new Annotation(memberExpression);
-        if(objectReference.isGlobal()) {
+        if(objectReference && objectReference.isGlobal()) {
             var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(objectReference, property.name)};
             var propertyAnnotation =  new Annotation(propertyLiteral);
             propertyAnnotation.copy(exp);

@@ -101,7 +101,7 @@
                             return;
 
                         case Syntax.VariableDeclarator :
-                            console.log("Meep!");
+                            // console.log("Meep!");
                             var line = toGLSLType(node.extra) + " " + node.id.name;
                             if(node.init) line += " = " + handleExpression(node.init);
                             appendLine(line + ";");
@@ -117,7 +117,7 @@
 
 
                         default:
-                            console.log("Unhandled: " + type);
+                            //console.log("Unhandled: " + type);
 
                     }
                 },
@@ -176,6 +176,8 @@
                 result += ".";
                 result += handleExpression(node.property);
                 break;
+
+
             default:
                 //console.log("Unhandled: " , node.type);
         }

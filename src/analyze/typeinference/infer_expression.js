@@ -319,11 +319,19 @@
 
             var objectOfInterest;
             var objectName = "?";
-            if (node.object.type == Syntax.MemberExpression || node.object.type == Syntax.CallExpression) {
-                objectOfInterest = ctx.createTypeInfo(node.object);
-            } else {
-                objectName = node.object.name;
-                objectOfInterest = ctx.getBindingByName(objectName);
+            switch (node.object.type) {
+                case Syntax.MemberExpression:
+                case Syntax.CallExpression:
+                    objectOfInterest = ctx.createTypeInfo(node.object);
+                    break;
+                case Syntax.Identifier:
+                    objectName = node.object.name;
+                    objectOfInterest = ctx.getBindingByName(objectName);
+                    break;
+                case Syntax.ThisExpression:
+                    objectOfInterest = ctx.getBindingByName("this");
+                    break;
+                throw new Error("Unhandled MemberExpression on: " + node.object.type);
             }
             objectOfInterest || Shade.throwError(node,"ReferenceError: " + objectName + " is not defined. Context: " + ctx.str());
 
@@ -439,7 +447,6 @@
                 log(node.type + " is not handle yet.");
                 break;
             case Syntax.ThisExpression:
-                log(node.type + " is not handle yet.");
                 break;
             case Syntax.UnaryExpression:
                 break;
@@ -508,7 +515,6 @@
                 log(node.type + " is not handle yet.");
                 break;
             case Syntax.ThisExpression:
-                log(node.type + " is not handle yet.");
                 break;
             case Syntax.UnaryExpression:
                 handlers.UnaryExpression(node, ctx);
