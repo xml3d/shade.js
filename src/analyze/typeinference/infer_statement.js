@@ -83,9 +83,12 @@
 
             var functionContext = new Context(node, parentContext, { name : functionName });
             functionContext.declareParameters(node.params);
-
-
             root.pushContext(functionContext);
+            if(functionContext.str() != root.entryPoint) {
+                return walk.VisitorOption.Skip;
+            } else {
+                result.setUsed(true);
+            }
         }
     }
 

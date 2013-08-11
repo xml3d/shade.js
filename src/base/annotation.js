@@ -56,7 +56,6 @@
     var FunctionAnnotation = function (node, extra) {
         Annotation.call(this, node, extra);
         this.setType(TYPES.FUNCTION);
-        //this.updateReturnType(TYPES.UNDEFINED);
     };
 
     Base.createClass(FunctionAnnotation, Annotation, {
@@ -65,6 +64,12 @@
         },
         setReturnInfo: function(info) {
             this.getExtra().returnInfo = info;
+        },
+        isUsed: function() {
+            return !!this.getExtra().used;
+        },
+        setUsed: function(v) {
+            this.getExtra().used = v;
         }
     });
 

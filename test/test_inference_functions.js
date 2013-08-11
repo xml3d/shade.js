@@ -4,8 +4,9 @@ var Shade = require(".."),
     KINDS = Shade.OBJECT_KINDS;
 
 
-var parseAndInferenceExpression = function (str, ctx) {
-    var aast = Shade.parseAndInferenceExpression(str, ctx || {});
+var parseAndInferenceExpression = function (str, opt) {
+    opt = opt || {};
+    var aast = Shade.parseAndInferenceExpression(str, opt);
     return aast;
 }
 
@@ -31,7 +32,7 @@ describe('Inference:', function () {
         });
 
         it("should have own scope.", function () {
-            var program = parseAndInferenceExpression("function a(){ var b = 5;};");
+            var program = parseAndInferenceExpression("function a(){ var b = 5;};", { entry: "global.a" });
             var func = program.body[0];
 
             program.should.have.property("context");
@@ -51,7 +52,7 @@ describe('Inference:', function () {
 
         });
         it("annotate static return type.", function () {
-            var program = parseAndInferenceExpression("function a(){ var b = 5; return b; };");
+            var program = parseAndInferenceExpression("function a(){ var b = 5; return b; };", { entry: "global.a" });
             var func = program.body[0];
 
             func.should.have.property("extra");

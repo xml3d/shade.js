@@ -32,12 +32,14 @@
         return ctx;
     }
 
-    var TypeInference = function (root, injections) {
+    var TypeInference = function (root, opt) {
+        opt = opt || {};
         this.root = root;
         this.context = [];
-        this.injections = injections || {};
+        this.injections = opt.injections || {};
+        this.entryPoint = opt.entry || "global.shade";
         this.pushContext(registerGlobalContext(root));
-        this.root.injections = injections;
+        this.root.injections = this.injections;
 
     }
 
@@ -133,8 +135,8 @@
     });
 
 
-    ns.infer = function (ast, injection) {
-        var ti = new TypeInference(ast, injection);
+    ns.infer = function (ast, opt) {
+        var ti = new TypeInference(ast, opt);
         return ti.traverse(ti.root);
     };
 
