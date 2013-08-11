@@ -36,51 +36,70 @@
         },
         transformAAST: function (program) {
             this.root = program;
-            var context = this.registerGlobalContext(program),
-                contextStack = [context],
-                mainId = this.mainId,
-                inMain = mainId == context.str(),
-                topDeclarations = [],
-                injections = program.injections[this.mainId] ? program.injections[this.mainId][0] : null,
-                blockedNames = [],
-                idNameMap = {};
+            var context = this.registerGlobalContext(program);
 
-            for(var name in injections){
-                blockedNames.push(name);
+            var state = {
+                 context: context,
+                 contextStack: [context],
+                 inMain:  this.mainId == context.str(),
+                 injections : program.injections[this.mainId] ? program.injections[this.mainId][0] : null,
+                 blockedNames : [],
+                 topDeclarations : [],
+                 idNameMap : {}
             }
 
-            walk.replace(program, {
+
+
+            for(var name in state.injections){
+                state.blockedNames.push(name);
+            }
+
+            this.replace(program, state);
+
+            for(var name in state.injections){
+                if(name !== "_global")
+                    var decl = handleTopDeclaration(name, state.injections);
+                    if (decl)
+                        program.body.unshift(decl);
+            }
+
+            return program;
+        },
+        replace: function(ast, state) {
+            walk.replace(ast, {
 
                 enter: function (node, parent) {
                     //console.log("Enter:", node.type);
                     switch (node.type) {
                         case Syntax.Identifier:
-                            return handleIdentifier(node, parent, blockedNames, idNameMap);
+                            return handleIdentifier(node, parent, state.blockedNames, state.idNameMap);
                         case Syntax.IfStatement:
                             return handleIfStatement(node);
+                        case Syntax.ConditionalExpression:
+                            return handleConditionalExpression(node, state, this);
                         case Syntax.LogicalExpression:
-                            return handleLogicalExpression(node, parent);
+                            return handleLogicalExpression(node, this);
                         case Syntax.FunctionDeclaration:
                             // No need to declare, this has been annotated already
-                            var parentContext = contextStack[contextStack.length - 1];
-                            context = new Context(node, parentContext, {name: node.id.name });
-                            contextStack.push(context);
-                            inMain = mainId == context.str()
+                            var parentContext = state.contextStack[state.contextStack.length - 1];
+                            state.context = new Context(node, parentContext, {name: node.id.name });
+                            state.contextStack.push(state.context);
+                            state.inMain = this.mainId == state.context.str();
                             break;
                     }
-                },
+                }.bind(this),
 
                 leave: function(node, parent) {
                     switch(node.type) {
                         case Syntax.MemberExpression:
-                            return handleMemberExpression(node, parent, topDeclarations, context);
+                            return handleMemberExpression(node, parent, state.topDeclarations, state.context);
                         case Syntax.FunctionDeclaration:
-                            context = contextStack.pop();
-                            inMain = context.str() == mainId;
-                            if (inMain)
-                                return handleMainFunction(node, parent, context);
+                            state.context = state.contextStack.pop();
+                            state.inMain = state.context.str() == this.mainId;
+                            if (state.inMain)
+                                return handleMainFunction(node, parent, state.context);
                         case Syntax.ReturnStatement:
-                            if(inMain) {
+                            if(state.inMain) {
                                 return handleReturnInMain(node);
                             }
                             break;
@@ -88,16 +107,9 @@
                             return handleBinaryExpression(node, parent);
 
                     }
-                }
+                }.bind(this)
             });
-
-
-            for(var name in injections){
-                if(name !== "_global")
-                    program.body.unshift(handleTopDeclaration(name, injections));
-            }
-
-            return program;
+            return ast;
         }
     });
 
@@ -105,6 +117,9 @@
         var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(injections, name)};
         var propertyAnnotation =  new Annotation(propertyLiteral);
         propertyAnnotation.setFromExtra(injections[name]);
+
+        if (propertyAnnotation.isNullOrUndefined())
+            return;
 
         var decl = {
             type: Syntax.VariableDeclaration,
@@ -294,6 +309,17 @@
         }
     }
 
+    var handleConditionalExpression = function(node, state, root) {
+        var consequent = new Annotation(node.consequent);
+        var alternate = new Annotation(node.alternate);
+        if (consequent.canEliminate()) {
+            return root.replace(node.alternate, state);
+        }
+        if (alternate.canEliminate()) {
+            return root.replace(node.consequent);
+        }
+
+    }
 
     var handleIfStatement = function (node) {
         var consequent = new Annotation(node.consequent);
@@ -330,13 +356,13 @@
 
     };
 
-    var handleLogicalExpression = function (node) {
+    var handleLogicalExpression = function (node, root) {
         var left = new Annotation(node.left);
         var right = new Annotation(node.right);
         if (left.canEliminate())
-            return node.right;
+            return root.replace(node.right);
         if (right.canEliminate())
-            return node.left;
+            return root.replace(node.left);
     }
 
     // Exports

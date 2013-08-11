@@ -229,6 +229,14 @@
                 result += handleExpression(node.property);
                 break;
 
+            case Syntax.ConditionalExpression:
+                result = handleExpression(node.test);
+                result += " ? ";
+                result += handleExpression(node.consequent);
+                result += " : ";
+                result += handleExpression(node.alternate);
+                break;
+
             default:
                 //console.log("Unhandled: " , node.type);
         }
