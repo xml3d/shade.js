@@ -1,7 +1,8 @@
 (function(ns){
 
     var Base = require("./index.js"),
-        TYPES = require("../interfaces.js").TYPES,
+        Shade = require("../interfaces.js"),
+        TYPES = Shade.TYPES,
         Annotation = require("./annotation.js").Annotation,
         TypeInfo = require("./typeinfo.js").TypeInfo,
         Syntax = require('estraverse').Syntax,
@@ -252,8 +253,8 @@
             if (node.type == Syntax.Identifier) {
                 var name = node.name;
                 var binding = this.getBindingByName(name);
-                if (binding) {
-                    result.copy(binding);
+                if (!binding) {
+                    Shade.throwError(node, "ReferenceError: " + name + " is not defined");
                 }
                 return binding;
             }
