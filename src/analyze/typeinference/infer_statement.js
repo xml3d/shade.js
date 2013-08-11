@@ -37,24 +37,26 @@
                 return !!exp;
             }
 
-            return function(node, ctx) {
-                walk.traverse(node.test, {
-                    enter: function(node, parent) { enterExpression(node, parent, ctx); },
-                    leave: function(node, parent) { exitExpression(node, parent, ctx); }
-                });
+            return function(node, ctx, root) {
+                root.traverse(node.test);
                 var test = new Annotation(node.test);
                 if (test.hasStaticValue()) { // Great! We can evaluate it!
                     //console.log("Static value in if test!");
                     var testResult = c_evaluate(test.getStaticValue());
                     if(!testResult) {
+                        if (node.alternate)
+                            root.traverse(node.alternate);
+
                         var consequent = new Annotation(node.consequent);
                         consequent.eliminate();
-                    } else if(node.alternate) {
-                        var alternate = new Annotation(node.alternate);
-                        alternate.eliminate();
+                    } else {
+                        root.traverse(node.consequent);
+                        if(node.alternate) {
+                            var alternate = new Annotation(node.alternate);
+                            alternate.eliminate();
+                        }
                     }
                     return walk.VisitorOption.Skip;
-
                 }
             }
         }()),
@@ -142,7 +144,7 @@
             case Syntax.ForStatement:
                 return enterHandler.ForStatement(node, ctx, this);
             case Syntax.IfStatement:
-                return enterHandler.IfStatement(node, ctx);
+                return enterHandler.IfStatement(node, ctx, this);
             case Syntax.VariableDeclaration:
                 return enterHandler.VariableDeclaration(node, ctx);
             case Syntax.FunctionDeclaration:
