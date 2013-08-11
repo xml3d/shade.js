@@ -251,7 +251,11 @@
 
             if (node.type == Syntax.Identifier) {
                 var name = node.name;
-                return this.getBindingByName(name);
+                var binding = this.getBindingByName(name);
+                if (binding) {
+                    result.copy(binding);
+                }
+                return binding;
             }
             return result;
         }

@@ -54,10 +54,6 @@
                 enter: function (node, parent) {
                     //console.log("Enter:", node.type);
                     switch (node.type) {
-                        case Syntax.MemberExpression:
-                            return handleMemberExpression(node, parent, topDeclarations, context);
-                        case Syntax.BinaryExpression:
-                            return handleBinaryExpression(node, parent);
                         case Syntax.Identifier:
                             return handleIdentifier(node, parent, blockedNames, idNameMap);
                         case Syntax.IfStatement:
@@ -76,6 +72,8 @@
 
                 leave: function(node, parent) {
                     switch(node.type) {
+                        case Syntax.MemberExpression:
+                            return handleMemberExpression(node, parent, topDeclarations, context);
                         case Syntax.FunctionDeclaration:
                             context = contextStack.pop();
                             inMain = context.str() == mainId;
@@ -86,6 +84,9 @@
                                 return handleReturnInMain(node);
                             }
                             break;
+                        case Syntax.BinaryExpression:
+                            return handleBinaryExpression(node, parent);
+
                     }
                 }
             });
@@ -225,10 +226,37 @@
     }
 
     var handleBinaryExpression = function (binaryExpression, parent, cb) {
+        // In GL, we can't mix up floats, ints and boold for binary expressions
+        var left = new Annotation(binaryExpression.left),
+            right = new Annotation(binaryExpression.right);
+
+        if (left.isNumber() && right.isInt()) {
+            binaryExpression.right = castToFloat(binaryExpression.right);
+        }
+        else if (right.isNumber() && left.isInt()) {
+            binaryExpression.left = castToFloat(binaryExpression.left);
+        }
+
         if (binaryExpression.operator == "%") {
             return handleModulo(binaryExpression);
         }
         return binaryExpression;
+    }
+
+    function castToFloat(ast) {
+        var exp = new Annotation(ast);
+
+        if (!exp.isNumber()) {   // Cast
+            return {
+                type: Syntax.CallExpression,
+                callee: {
+                    type: Syntax.Identifier,
+                    name: "float"
+                },
+                arguments: [ast]
+            }
+        }
+        return ast;
     }
 
     var handleModulo = function (binaryExpression) {
@@ -240,7 +268,7 @@
             },
             arguments: [
                 binaryExpression.left,
-                binaryExpression.right // TODO: Needs to be number type
+                binaryExpression.right
             ]
         }
     }
@@ -259,6 +287,26 @@
         } else if (alternate && alternate.canEliminate()) {
             return node.consequent;
         }
+        // We still have a real if statement
+       var test = new Annotation(node.test);
+       switch(test.getType()) {
+           case Types.INT:
+           case Types.NUMBER:
+               node.test = {
+                   type: Syntax.BinaryExpression,
+                   operator: "==",
+                   left: node.test,
+                   right: {
+                       type: Syntax.Literal,
+                       value: 0.0,
+                       extra: {
+                           type: Types.NUMBER
+                       }
+                   }
+               }
+       }
+
+
     };
 
     var handleLogicalExpression = function (node) {

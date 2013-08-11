@@ -31,7 +31,7 @@ describe('GLSL Code generation,', function () {
         });
         it("float", function() {
             var code = generateExpression("var x = 5.0;");
-            code.should.match(/float x = 5;/);
+            code.should.match(/float x = 5.0;/);
         });
         xit("bool", function() {
             var code = generateExpression("var x = true;");

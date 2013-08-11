@@ -13,8 +13,6 @@
         }
     }
 
-
-
     var MathEntry  = {
         abs: removeMemberFromExpression,
         acos: removeMemberFromExpression,
