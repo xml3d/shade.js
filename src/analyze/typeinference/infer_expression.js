@@ -1,6 +1,7 @@
 (function (ns) {
 
     var Syntax = require('estraverse').Syntax,
+        VisitorOption = require('estraverse').VisitorOption,
         Shade = require("../../interfaces.js"),
         TYPES = Shade.TYPES,
         Annotation = require("./../../base/annotation.js").Annotation;
@@ -161,37 +162,51 @@
             }
         },
 
-        ConditionalExpression: function (node, ctx) {
-            var result = new Annotation(node),
-                test = ctx.createTypeInfo(node.test),
-                consequent = ctx.createTypeInfo(node.consequent),
-                alternate = ctx.createTypeInfo(node.alternate);
+        // On enter
+        ConditionalExpression: function (node, ctx, root) {
+            var result = new Annotation(node);
 
-            //console.log(node.test, node.consequent, node.alternate);
+            root.traverse(node.test);
+            var test = ctx.createTypeInfo(node.test);
 
+            // console.log(node.test, node.consequent, node.alternate);
             if (test.hasStaticValue()) {
                 var testResult = evaluateTruth(test.getStaticValue());
-                if(testResult === true) {
+                if (testResult === true) {
+                    root.traverse(node.consequent);
+                    consequent = ctx.createTypeInfo(node.consequent);
                     result.copy(consequent);
+                    var alternate = new Annotation(node.alternate);
+                    alternate.eliminate();
                 } else {
+                    root.traverse(node.alternate);
+                    var alternate = ctx.createTypeInfo(node.alternate);
                     result.copy(alternate);
+                    var consequent = new Annotation(node.consequent);
+                    consequent.eliminate();
                 }
-                return;
-            }
-
-
-            if (consequent.equals(alternate)) {
-                result.copy(consequent);
-            } else if (consequent.canNumber() && alternate.canNumber()) {
-                result.setType(TYPES.NUMBER);
-            }
-            else if (test.isNullOrUndefined()) {
-                result.setType(alternate.getType())
             } else {
-                // We don't allow dynamic types (the type of the result depends on the value of it's operands).
-                // At this point, the expression needs to evaluate to a result, otherwise it's an error
-                throw Shade.throwError(node, "Static evaluation not implemented yet");
+                // We can't decide, thus traverse both;
+                root.traverse(node.consequent);
+                root.traverse(node.alternate);
+                var consequent = ctx.createTypeInfo(node.consequent),
+                    alternate = ctx.createTypeInfo(node.alternate);
+
+
+                if (consequent.equals(alternate)) {
+                    result.copy(consequent);
+                } else if (consequent.canNumber() && alternate.canNumber()) {
+                    result.setType(TYPES.NUMBER);
+                }
+                else if (test.isNullOrUndefined()) {
+                    result.setType(alternate.getType())
+                } else {
+                    // We don't allow dynamic types (the type of the result depends on the value of it's operands).
+                    // At this point, the expression needs to evaluate to a result, otherwise it's an error
+                    throw Shade.throwError(node, "Static evaluation not implemented yet");
+                }
             }
+            return VisitorOption.Skip;
 
         },
 
@@ -418,6 +433,7 @@
             case Syntax.CallExpression:
                 break;
             case Syntax.ConditionalExpression:
+                return handlers.ConditionalExpression(node, ctx, this);
                 break;
             case Syntax.FunctionExpression:
                 log(node.type + " is not handle yet.");
@@ -483,7 +499,6 @@
                 handlers.CallExpression(node, ctx);
                 break;
             case Syntax.ConditionalExpression:
-                handlers.ConditionalExpression(node, ctx);
                 break;
             case Syntax.FunctionExpression:
                 log(node.type + " is not handle yet.");
