@@ -193,7 +193,7 @@
             select.append($("<option>" + name + "</option>"));
         }
         select[0].name = selectName;
-        select[0].value = selectedValue;
+        select[0].value = selectedValue || "UNDEFINED";
         select.change(function(){
             ns.ShadeStudio.onEdit();
         });
