@@ -294,13 +294,13 @@
            case Types.NUMBER:
                node.test = {
                    type: Syntax.BinaryExpression,
-                   operator: "==",
+                   operator: "!=",
                    left: node.test,
                    right: {
                        type: Syntax.Literal,
-                       value: 0.0,
+                       value: 0,
                        extra: {
-                           type: Types.NUMBER
+                           type: test.getType()
                        }
                    }
                }

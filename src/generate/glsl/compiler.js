@@ -14,7 +14,12 @@
         compileFragmentShader: function (aast, opt) {
 
             var transformer = new Transformer("global.shade");
+
+            //console.log(JSON.stringify(aast, 0, " "));
+
             var transformed = transformer.transformAAST(aast);
+
+            //console.log(JSON.stringify(aast, 0, " "));
 
             var code = generate(transformed, opt);
 
