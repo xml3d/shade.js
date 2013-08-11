@@ -82,9 +82,16 @@
                         case Syntax.FunctionDeclaration:
                             // No need to declare, this has been annotated already
                             var parentContext = state.contextStack[state.contextStack.length - 1];
-                            state.context = new Context(node, parentContext, {name: node.id.name });
-                            state.contextStack.push(state.context);
-                            state.inMain = this.mainId == state.context.str();
+                            var context = new Context(node, parentContext, {name: node.id.name });
+                            var anno = new FunctionAnnotation(node);
+                            if(!anno.isUsed()) {
+                                return {
+                                    type: Syntax.EmptyStatement
+                                }
+                            }
+                            state.context = context;
+                            state.contextStack.push(context);
+                            state.inMain = this.mainId == context.str();
                             break;
                     }
                 }.bind(this),

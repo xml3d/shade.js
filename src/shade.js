@@ -27,7 +27,7 @@
         parseAndInferenceExpression: function (str, opt) {
             opt = opt || {};
             var ast = parser.parse(str, {raw: true, loc: opt.loc || false });
-            var aast = inference.infer(ast, opt.inject);
+            var aast = inference.infer(ast, opt);
             return aast;
         },
 
