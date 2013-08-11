@@ -42,6 +42,8 @@
                 return "void";
             case Types.NUMBER:
                 return "float";
+            case Types.INT:
+                return "int";
             default:
                 throw new Error("toGLSLType: Unhandled type: " + info.type);
 
@@ -188,7 +190,7 @@
      * @returns {string}
      */
     var handleExpression = function(node) {
-        var result = "<unhandled>";
+        var result = "<unhandled: " + node.type+ ">";
         switch(node.type) {
             case Syntax.NewExpression:
                 result = toGLSLType(node.extra);
@@ -209,6 +211,7 @@
                 break;
 
             case Syntax.BinaryExpression:
+            case Syntax.LogicalExpression:
             case Syntax.AssignmentExpression:
                 result = handleExpression(node.left);
                 result += " " + node.operator + " ";
@@ -225,7 +228,6 @@
                 result += ".";
                 result += handleExpression(node.property);
                 break;
-
 
             default:
                 //console.log("Unhandled: " , node.type);

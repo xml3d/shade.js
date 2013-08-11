@@ -25,7 +25,7 @@ var generateExpression = function(exp) {
 
 describe('GLSL Code generation,', function () {
     describe('declaration of type', function() {
-        xit("int", function() {
+        it("int", function() {
             var code = generateExpression("var x = 5;");
             code.should.match(/int x = 5;/);
         });
@@ -82,17 +82,25 @@ describe('GLSL Code generation,', function () {
     });
 
     describe('Math object', function() {
-        xit("cos", function() {
+        it("cos", function() {
             var code = generateExpression("Math.cos(1.5);");
             code.should.equal("cos(1.5);");
         });
-        xit("PI", function() {
+        it("PI", function() {
             var code = generateExpression("Math.PI;");
             code.should.equal("3.141592653589793;");
         });
-        xit("modulo", function() {
+
+    });
+
+    describe('Special treatments', function() {
+        it("modulo", function() {
             var code = generateExpression("5 % 3;");
-            code.should.equal("mod(5.0, 3.0);");
+            code.should.equal("mod(float(5), float(3));");
+        });
+        it("Math.floor changes type of call", function() {
+            var code = generateExpression("Math.floor(2.0 % 20.0) > 0");
+            code.should.equal("floor(mod(2.0, 20.0)) > float(0);");
         });
 
     });

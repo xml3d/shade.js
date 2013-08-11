@@ -259,7 +259,25 @@
         return ast;
     }
 
+    function castToInt(ast, force) {
+        var exp = new Annotation(ast);
+
+        if (!exp.isInt() || force) {   // Cast
+            return {
+                type: Syntax.CallExpression,
+                callee: {
+                    type: Syntax.Identifier,
+                    name: "int"
+                },
+                arguments: [ast]
+            }
+        }
+        return ast;
+    }
+
     var handleModulo = function (binaryExpression) {
+        binaryExpression.right = castToFloat(binaryExpression.right);
+        binaryExpression.left = castToFloat(binaryExpression.left);
         return {
             type: Syntax.CallExpression,
             callee: {
@@ -269,7 +287,10 @@
             arguments: [
                 binaryExpression.left,
                 binaryExpression.right
-            ]
+            ],
+            extra: {
+                type: Types.NUMBER
+            }
         }
     }
 

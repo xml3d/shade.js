@@ -13,16 +13,22 @@
         }
     }
 
+    var handleIntVersion = function(node, parent) {
+        parent.extra.type = Shade.TYPES.NUMBER;
+        return removeMemberFromExpression(node);
+    }
+
+
     var MathEntry  = {
         abs: removeMemberFromExpression,
         acos: removeMemberFromExpression,
         asin: removeMemberFromExpression,
         atan: removeMemberFromExpression,
         atan2: function() { return { type: Syntax.Identifier, name: "atan" } },
-        ceil: removeMemberFromExpression,
+        ceil: handleIntVersion,
         cos:  removeMemberFromExpression,
         exp: removeMemberFromExpression,
-        floor: removeMemberFromExpression,
+        floor: handleIntVersion,
         // imul: removeMemberFromExpression,
         log: removeMemberFromExpression,
         max: removeMemberFromExpression,
