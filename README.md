@@ -19,9 +19,9 @@ Using the node environment, just include index.js from the root directory:
 
   require("index.js")
 
-To built a version to run in the browser, run the build script from the root directory:
+To built a version to run in the browser, run the build script from the build directory:
 
-  node build.js
+  node build/build.js
 
 
 ## Running tests
