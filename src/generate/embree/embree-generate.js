@@ -34,10 +34,94 @@
 
     var getEpilog = function(opt) {
         var epilog = [
-            "}",
+            "} // namespace embree",
             "#endif"
         ];
         return epilog;
+    }
+
+    var generateProlog = function(ast, lines, opt) {
+        getHeader(opt).forEach(function(e) { lines.push(e) });
+        lines.appendLine("class ShadeJSMaterial : public Material");
+        lines.appendLine("{");
+        lines.appendLine("public:");
+
+        generateConstructor(ast.globals, lines);
+
+        lines.changeIndention(1); // for members
+    }
+
+    var generateEpilog = function(ast, lines, opt) {
+        lines.changeIndention(-1); // for members
+
+        generateMemberVars(ast.globals, lines);
+        lines.changeIndention(-1);
+        lines.appendLine("}; // ShadeJSMaterial");
+        getEpilog(opt).forEach(function(e) { lines.push(e) });
+    }
+
+    var generateConstructor = function(globals, lines) {
+        lines.changeIndention(1);
+        lines.appendLine("ShadeJSMaterial(const Parms& parms)");
+        lines.appendLine("{");
+        lines.changeIndention(1);
+        for (var i in globals) {
+            var declarations = globals[i].declarations;
+
+            for (var j in declarations) {
+                var decl = declarations[j];
+                var line = decl.id.name + " = parms." + getEmbreeParamGetter(decl.extra) + "(\"" + decl.id.name + "\"";
+                if (decl.init) {
+                    line += "," + handleExpression(decl.init);
+                }
+                lines.appendLine(line + ");");
+            }
+        }
+        lines.changeIndention(-1);
+        lines.appendLine("}");
+        lines.changeIndention(-1);
+    }
+
+    var generateMemberVars = function(globals, lines) {
+        lines.appendLine("protected:");
+        lines.changeIndention(1);
+        for (var i in globals) {
+            var declarations = globals[i].declarations;
+
+            for (var j in declarations) {
+                var decl = declarations[j];
+
+                var line = toEmbreeType(decl.extra) + " " + decl.id.name;
+                lines.appendLine(line + ";");
+            }
+        }
+        lines.changeIndention(-1);
+        lines.appendLine("}");
+        lines.changeIndention(-1);
+    }
+
+    var getEmbreeParamGetter = function(info) {
+        switch (info.type) {
+            case Types.OBJECT:
+                switch (info.kind) {
+                    case Kinds.COLOR:
+                        return "getColor";
+                    case Kinds.FLOAT3:
+                        return "getVector3f";
+                    case Kinds.FLOAT2:
+                        return "getVec2f";
+                    default:
+                        return "<undefined>";
+                }
+            case Types.UNDEFINED:
+                return "void";
+            case Types.NUMBER:
+                return "getFloat";
+            case Types.INT:
+                return "getInt";
+            default:
+                throw new Error("getEmbreeParamGetter: Unhandled type: " + info.type);
+        }
     }
 
     var toEmbreeType = function (info) {
@@ -45,11 +129,11 @@
             case Types.OBJECT:
                 switch (info.kind) {
                     case Kinds.COLOR:
-                        return "vec4";
+                        return "Color";
                     case Kinds.FLOAT3:
-                        return "vec3";
+                        return "Vec3";
                     case Kinds.FLOAT2:
-                        return "vec2";
+                        return "Vec2";
                     default:
                         return "<undefined>";
                 }
@@ -61,7 +145,6 @@
                 return "int";
             default:
                 throw new Error("toEmbreeType: Unhandled type: " + info.type);
-
         }
     }
 
@@ -111,9 +194,8 @@
 
 
                         case Syntax.Program:
-                            getHeader(opt).forEach(function(e) { lines.push(e) });
+                            generateProlog(ast, lines, opt);
                             break;
-
 
                         case Syntax.FunctionDeclaration:
                             var func = new FunctionAnnotation(node);
@@ -178,7 +260,7 @@
                     var type = node.type;
                     switch (type) {
                         case Syntax.Program:
-                            getEpilog(opt).forEach(function(e) { lines.push(e) });
+                            generateEpilog(ast, lines, opt);
                             break;
                         case Syntax.FunctionDeclaration:
                             lines.changeIndention(-1);

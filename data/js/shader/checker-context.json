@@ -11,12 +11,12 @@
             },
             "whiteColor": {
                 "type": "object",
-                "kind": "float3",
+                "kind": "color",
                 "source": "vertex"
             },
             "blackColor": {
                 "type": "object",
-                "kind": "float3",
+                "kind": "color",
                 "source": "vertex"
             },
             "normal": {

@@ -60,8 +60,6 @@
                 if(name !== "_global")
                     var decl = handleTopDeclaration(name, state.injections);
                     program.globals.push(decl);
-                    //if (decl)
-                    //    program.body.unshift(decl);
             }
 
             return program;
@@ -281,9 +279,9 @@
 
     var getNameForGlobal = function(reference, baseName) {
         var entry = reference[baseName];
-        if(entry) {
+        if (entry) {
             if (entry.source == Sources.VERTEX) {
-                return "frag_" + baseName;
+                return baseName; // modify it ?
             }
         }
         return baseName;
