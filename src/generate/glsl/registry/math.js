@@ -2,43 +2,38 @@
 
    var Shade = require("../../../interfaces.js");
    var Syntax = require('estraverse').Syntax;
-   var Base = require("../../../base/index.js");
+   var Tools = require('./tools.js');
 
     var MathConstants = ["E", "PI", "LN2", "LOG2E", "LOG10E", "PI", "SQRT1_2", "SQRT2"];
 
-    var removeMemberFromExpression = function(node) {
-        return {
-            type: Syntax.Identifier,
-            name: node.property.name
-        }
-    }
+
 
     var handleIntVersion = function(node, parent) {
         parent.extra.type = Shade.TYPES.NUMBER;
-        return removeMemberFromExpression(node);
+        return Tools.removeMemberFromExpression(node);
     }
 
 
     var MathEntry  = {
-        abs: removeMemberFromExpression,
-        acos: removeMemberFromExpression,
-        asin: removeMemberFromExpression,
-        atan: removeMemberFromExpression,
+        abs: Tools.removeMemberFromExpression,
+        acos: Tools.removeMemberFromExpression,
+        asin: Tools.removeMemberFromExpression,
+        atan: Tools.removeMemberFromExpression,
         atan2: function() { return { type: Syntax.Identifier, name: "atan" } },
         ceil: handleIntVersion,
-        cos:  removeMemberFromExpression,
-        exp: removeMemberFromExpression,
+        cos:  Tools.removeMemberFromExpression,
+        exp: Tools.removeMemberFromExpression,
         floor: handleIntVersion,
-        // imul: removeMemberFromExpression,
-        log: removeMemberFromExpression,
-        max: removeMemberFromExpression,
-        min: removeMemberFromExpression,
-        pow: removeMemberFromExpression,
+        // imul: Tools.removeMemberFromExpression,
+        log: Tools.removeMemberFromExpression,
+        max: Tools.removeMemberFromExpression,
+        min: Tools.removeMemberFromExpression,
+        pow: Tools.removeMemberFromExpression,
         // random: function random() { [native code] }
-        round: removeMemberFromExpression, // Since GLSL 1.3, what does WebGL use?
-        sin:  removeMemberFromExpression,
-        sqrt: removeMemberFromExpression,
-        tan: removeMemberFromExpression
+        round: Tools.removeMemberFromExpression, // Since GLSL 1.3, what does WebGL use?
+        sin:  Tools.removeMemberFromExpression,
+        sqrt: Tools.removeMemberFromExpression,
+        tan: Tools.removeMemberFromExpression
     };
 
     MathConstants.forEach( function(constant) {
@@ -47,7 +42,7 @@
         }
     });
 
-    Base.extend(ns, {
+    Tools.extend(ns, {
         id: "Math",
         object: {
             constructor: null,

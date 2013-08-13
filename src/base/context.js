@@ -1,12 +1,15 @@
 (function(ns){
 
-    var Base = require("./index.js"),
+    ns.getContext = function(registry) {
+
+        var Registry = registry;
+
+        var Base = require("./index.js"),
         Shade = require("../interfaces.js"),
         TYPES = Shade.TYPES,
         Annotation = require("./annotation.js").Annotation,
         TypeInfo = require("./typeinfo.js").TypeInfo,
-        Syntax = require('estraverse').Syntax,
-        Registry = require('../analyze/typeinference/registry').Registry;
+        Syntax = require('estraverse').Syntax;
 
 
 
@@ -264,7 +267,9 @@
     });
 
 
-    ns.Context = Context;
+        return Context;
+
+    };
 
 
 

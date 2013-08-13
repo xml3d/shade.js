@@ -5,7 +5,6 @@
         exitExpression = require('./infer_expression.js').exitExpression,
         Syntax = require('estraverse').Syntax,
         TYPES = require("../../interfaces.js").TYPES,
-        Context = require("./../../base/context.js").Context,
         Annotation = require("./../../base/annotation.js").Annotation,
         FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
 
@@ -14,7 +13,7 @@
 
     var enterHandler = {
         ForStatement: function(node, ctx, root) {
-            var ctx = new Context(node, ctx);
+            var ctx = root.createContext(node, ctx);
             root.pushContext(ctx);
 
             root.traverse(node.init);
@@ -81,7 +80,7 @@
             parentContext.declareVariable(functionName);
             parentContext.updateExpression(functionName, result);
 
-            var functionContext = new Context(node, parentContext, { name : functionName });
+            var functionContext = root.createContext(node, parentContext, { name : functionName });
             functionContext.declareParameters(node.params);
             root.pushContext(functionContext);
             if(functionContext.str() != root.entryPoint) {

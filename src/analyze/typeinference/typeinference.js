@@ -9,10 +9,10 @@
         exitExpression = require('./infer_expression.js').exitExpression,
         enterStatement = require('./infer_statement.js').enterStatement,
         exitStatement = require('./infer_statement.js').exitStatement,
-        Context = require("./../../base/context.js").Context,
 
         // Objects
         ObjectRegistry = require("./registry/index.js").Registry,
+        Context = require("./../../base/context.js").getContext(ObjectRegistry),
         Base = require("../../base/index.js"),
         Kinds = require("../../interfaces.js").OBJECT_KINDS;
 
@@ -57,6 +57,9 @@
         },
         peekContext: function() {
             return this.context[this.context.length-1];
+        },
+        createContext: function(node, parent, opt) {
+            return new Context(node, parent, opt);
         },
 
         traverse: function (node) {

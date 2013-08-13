@@ -3,13 +3,13 @@
     var Base = require("../../base/index.js"),
         Annotation = require("../../base/annotation.js").Annotation,
         FunctionAnnotation = require("../../base/annotation.js").FunctionAnnotation,
-        Context = require("../../base/context.js").Context,
         Types = require("./../../interfaces.js").TYPES,
         Shade = require("./../../interfaces.js"),
         Types = require("./../../interfaces.js").TYPES,
         Sources = require("./../../interfaces.js").SOURCES;
 
-    var ObjectRegistry = require("./registry/index.js").Registry;
+    var ObjectRegistry = require("./registry/index.js").Registry,
+        Context = require("../../base/context.js").getContext(ObjectRegistry);
 
 
     var walk = require('estraverse');

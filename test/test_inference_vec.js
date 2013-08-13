@@ -74,7 +74,14 @@ describe('Inference', function () {
                exp.extra.should.have.property("type", TYPES.NUMBER);
                exp.extra.should.have.property("staticValue", 2);
 
+               exp = parseAndInferenceExpression("var a = new Vec2(1, 2).xy(); a.x()");
+               exp = exp[1];
+               exp.should.have.property("extra");
+               exp.extra.should.have.property("type", TYPES.NUMBER);
+
            });
+
+
 
 
 
