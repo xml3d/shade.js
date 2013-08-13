@@ -4,11 +4,13 @@
     var Syntax = require('estraverse').Syntax;
 
     var SystemEntry = {
-        coord: function(node) {
-            return {
+        coord: {
+            property: function (node) {
+                return {
                     type: Syntax.Identifier,
                     name: "gl_FragCoord"
-            };
+                };
+            }
         }
     };
 

@@ -42,17 +42,7 @@
     var log = function(str) {};
     //var log = function() { console.log.apply(console, arguments); };
 
-    /**
-     *
-     * @param {Array.<object>} arr Array of nodes
-     * @param {Context} ctx
-     * @returns {Array.<Annotation>}
-     */
-    function createAnnotatedNodeArray(arr, ctx) {
-        return arr.map(function (arg) {
-            return ctx.createTypeInfo(arg);
-        });
-    }
+
 
     var handlers = {
         AssignmentExpression: function (node, ctx) {
@@ -107,7 +97,7 @@
             if (entry && entry.hasConstructor()) {
                 var constructor = entry.getConstructor();
                 result.setType(constructor.type, constructor.kind);
-                var args = createAnnotatedNodeArray(node.arguments, ctx);
+                var args = Annotation.createAnnotatedNodeArray(node.arguments, ctx);
                 constructor.evaluate(result, args, ctx);
             }
            else {
@@ -356,9 +346,9 @@
             }
 
             if (objectOfInterest.isObject()) {
-                var objectInfo = objectOfInterest.getObjectInfo();
+                var objectInfo = ctx.getObjectInfoFor(objectOfInterest);
                 if(!objectInfo)
-                    Shade.throwError(node, "Internal: Incomplete registration for object: " + JSON.stringify(node.object));
+                    Shade.throwError(node, "Internal: Incomplete registration for object: " + objectOfInterest.getTypeString() + ", " + JSON.stringify(node.object));
 
                 objectAnnotation.copy(objectOfInterest);
                 if (!objectInfo.hasOwnProperty(propertyName)) {
@@ -388,7 +378,7 @@
                     //Shade.throwError(node, "TypeError: Cannot call method '"+ node.callee.property.name + "' of " + callee.getType());
                 }
                 var call = callee.getCall();
-                var args = createAnnotatedNodeArray(node.arguments, ctx);
+                var args = Annotation.createAnnotatedNodeArray(node.arguments, ctx);
                 var type = call(result, args, ctx, callingObject);
                 result.setFromExtra(type);
                 callee.clearCall();

@@ -92,16 +92,16 @@ describe('GLSL Code generation,', function () {
         });
     });
 
-    xdescribe('Vec2', function() {
+    describe('Vec2', function() {
         it("constructor", function() {
             var code = generateExpression("var a = new Vec2();");
             code.should.equal("vec2 a = vec2();");
         });
-        it("x()", function() {
+        xit("x()", function() {
             var code = generateExpression("var a = new Vec2().x();");
             code.should.equal("float a = vec2().x;");
         });
-        it("y()", function() {
+        xit("y()", function() {
             var code = generateExpression("var a = new Vec2(1).y();");
             code.should.equal("float a = vec2().y;");
         });

@@ -15,30 +15,32 @@
 
 
     var MathEntry  = {
-        abs: Tools.removeMemberFromExpression,
-        acos: Tools.removeMemberFromExpression,
-        asin: Tools.removeMemberFromExpression,
-        atan: Tools.removeMemberFromExpression,
-        atan2: function() { return { type: Syntax.Identifier, name: "atan" } },
-        ceil: handleIntVersion,
-        cos:  Tools.removeMemberFromExpression,
-        exp: Tools.removeMemberFromExpression,
-        floor: handleIntVersion,
-        // imul: Tools.removeMemberFromExpression,
-        log: Tools.removeMemberFromExpression,
-        max: Tools.removeMemberFromExpression,
-        min: Tools.removeMemberFromExpression,
-        pow: Tools.removeMemberFromExpression,
+        abs: { property: Tools.removeMemberFromExpression },
+        acos: { property: Tools.removeMemberFromExpression },
+        asin: { property: Tools.removeMemberFromExpression },
+        atan: { property: Tools.removeMemberFromExpression },
+        atan2: { property: function() { return { type: Syntax.Identifier, name: "atan" } }},
+        ceil: { property: handleIntVersion },
+        cos:  { property: Tools.removeMemberFromExpression },
+        exp: { property: Tools.removeMemberFromExpression },
+        floor: { property: handleIntVersion },
+        // imul: { property: Tools.removeMemberFromExpression },
+        log: { property: Tools.removeMemberFromExpression },
+        max: { property: Tools.removeMemberFromExpression },
+        min: { property: Tools.removeMemberFromExpression },
+        pow: { property: Tools.removeMemberFromExpression },
         // random: function random() { [native code] }
-        round: Tools.removeMemberFromExpression, // Since GLSL 1.3, what does WebGL use?
-        sin:  Tools.removeMemberFromExpression,
-        sqrt: Tools.removeMemberFromExpression,
-        tan: Tools.removeMemberFromExpression
+        round: { property: Tools.removeMemberFromExpression }, // Since GLSL 1.3, what does WebGL use?
+        sin:  { property: Tools.removeMemberFromExpression },
+        sqrt: { property: Tools.removeMemberFromExpression },
+        tan: { property: Tools.removeMemberFromExpression }
     };
 
-    MathConstants.forEach( function(constant) {
-        MathEntry[constant] = function() {
-            return  { type: Syntax.Literal, value: Math[constant], extra: { type: Shade.TYPES.NUMBER } };
+    MathConstants.forEach(function (constant) {
+        MathEntry[constant] = {
+            property: function () {
+                return  { type: Syntax.Literal, value: Math[constant], extra: { type: Shade.TYPES.NUMBER } };
+            }
         }
     });
 

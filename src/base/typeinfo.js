@@ -2,8 +2,7 @@
 
     var Shade = require("../interfaces.js"),
         Syntax = require('estraverse').Syntax,
-        Base = require("./index.js"),
-        Registry = require('../analyze/typeinference/registry').Registry;
+        Base = require("./index.js");
 
     var TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS;
@@ -195,9 +194,9 @@
             if (extra.evaluate != undefined)
                 this.setCall(extra.evaluate);
         },
-        getObjectInfo: function() {
+        getNodeInfo: function() {
             if (this.isObject())
-                return this.node.info || Registry.getInstanceForKind(this.getKind());
+                return this.node.info;
         },
         getTypeString: function() {
             if (this.isObject())

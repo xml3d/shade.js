@@ -13,8 +13,7 @@
         // Objects
         ObjectRegistry = require("./registry/index.js").Registry,
         Context = require("./../../base/context.js").getContext(ObjectRegistry),
-        Base = require("../../base/index.js"),
-        Kinds = require("../../interfaces.js").OBJECT_KINDS;
+        Base = require("../../base/index.js");
 
 
     var Syntax = walk.Syntax;

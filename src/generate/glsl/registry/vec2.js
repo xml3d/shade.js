@@ -2,20 +2,26 @@
 
     var Shade = require("../../../interfaces.js");
     var Syntax = require('estraverse').Syntax;
-    var Base = require("../../../base/index.js");
     var Tools = require("./tools.js");
 
     var Vec2Instance = {
-        xy: function() {
-            console.log("xy");
+        xy: {
+            property: function () {
+                //console.log("Called property of xy");
+            },
+            callExp: function(node, args, parent) {
+                if (args.length == 0)
+                    return node.callee;
+                return null; // TODO
+            }
         },
-        x: function() {
+        x: function () {
             console.log("x", arguments);
         }
     }
 
 
-    Base.extend(ns, {
+    Tools.extend(ns, {
         id: "Vec2",
         kind: "float2",
         object: {

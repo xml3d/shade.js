@@ -39,11 +39,13 @@
 
     var MathObject = {
         random: {
-            type: TYPES.NUMBER,
-            evaluate: function(result, args) {
+            type: TYPES.FUNCTION,
+            evaluate: function(node, args) {
                 if (args.length)
                     throw new Error("Math.random has no parameters.");
-                result.setDynamicValue();
+                return {
+                    type: TYPES.NUMBER
+                }
             }
         }
     };

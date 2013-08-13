@@ -100,6 +100,8 @@
                     switch(node.type) {
                         case Syntax.MemberExpression:
                             return handleMemberExpression(node, parent, state.topDeclarations, state.context);
+                        case Syntax.CallExpression:
+                            return handleCallExpression(node, parent, state.topDeclarations, state.context);
                         case Syntax.FunctionDeclaration:
                             state.context = state.contextStack.pop();
                             state.inMain = state.context.str() == this.mainId;
@@ -194,40 +196,72 @@
     }
 
 
-    var handleMemberExpression = function (memberExpression, parent, topDeclarations, context) {
-        var object = memberExpression.object,
-            property = memberExpression.property,
-            propertyName = property.name;
-
-        var objectName = null;
-        switch(object.type) {
+    function getObjectReferenceFromNode(object, context) {
+        switch (object.type) {
+            case Syntax.NewExpression:
+            case Syntax.MemberExpression:
+                return context.createTypeInfo(object);
+                break;
             case Syntax.Identifier:
-                objectName = object.name;
+                return context.getBindingByName(object.name);
                 break;
             case Syntax.ThisExpression:
-                objectName = "this";
+                return context.getBindingByName("this");
                 break;
             default:
-                //throw new Error("Unhandled object type in GLSL generation");
+                throw new Error("Unhandled object type in GLSL generation: " + object.type);
         }
+    }
 
-        var objectReference = context.getBindingByName(objectName);
+    var handleCallExpression = function (callExpression, parent, topDeclarations, context) {
 
-        if (objectReference && objectReference.isObject()) {
-            var objectInfo = objectReference.getObjectInfo();
+        // Is this a call on an object?
+        if (callExpression.callee.type == Syntax.MemberExpression) {
+            var calleeReference = getObjectReferenceFromNode(callExpression.callee, context);
+            if(!(calleeReference && calleeReference.isFunction()))
+                throw new Error("Something went wrong in type inference");
+
+            var object = callExpression.callee.object,
+                propertyName = callExpression.callee.property.name;
+
+            var objectReference = getObjectReferenceFromNode(object, context);
+
+            var objectInfo = context.getObjectInfoFor(objectReference);
             if(!objectInfo) // Every object needs an info, otherwise we did something wrong
-                Shade.throwError(memberExpression, "Internal: Incomplete registration for object: " + JSON.stringify(memberExpression.object));
+                Shade.throwError(callExpression, "Internal: No registration for object: " + objectReference.getTypeString() + ", " + JSON.stringify(callExpression.object));
             if (objectInfo.hasOwnProperty(propertyName)) {
                 var propertyHandler = objectInfo[propertyName];
-                if (typeof propertyHandler == "function") {
-                    return propertyHandler(memberExpression, parent);
+                if (typeof propertyHandler.callExp == "function") {
+                    var args = Annotation.createAnnotatedNodeArray(callExpression.arguments, context);
+                    return propertyHandler.callExp(callExpression, args, parent);
+                }
+            }
+
+        }
+
+    }
+
+
+    var handleMemberExpression = function (memberExpression, parent, topDeclarations, context) {
+        var propertyName = memberExpression.property.name;
+
+        var objectReference = getObjectReferenceFromNode(memberExpression.object, context);
+
+        if (objectReference && objectReference.isObject()) {
+            var objectInfo = context.getObjectInfoFor(objectReference);
+            if(!objectInfo) // Every object needs an info, otherwise we did something wrong
+                Shade.throwError(memberExpression, "Internal: No registration for object: " + objectReference.getTypeString() + ", " + JSON.stringify(memberExpression.object));
+            if (objectInfo.hasOwnProperty(propertyName)) {
+                var propertyHandler = objectInfo[propertyName];
+                if (typeof propertyHandler.property == "function") {
+                    return propertyHandler.property(memberExpression, parent);
                 }
             }
         }
 
         var exp = new Annotation(memberExpression);
         if(objectReference && objectReference.isGlobal()) {
-            var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(objectReference, property.name)};
+            var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(objectReference, propertyName)};
             var propertyAnnotation =  new Annotation(propertyLiteral);
             propertyAnnotation.copy(exp);
             propertyAnnotation.setGlobal(true);

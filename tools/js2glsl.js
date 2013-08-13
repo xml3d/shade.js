@@ -27,7 +27,7 @@ var argv = require('optimist').argv,
             var contextData = JSON.parse(fs.readFileSync(ctx, "utf-8"));
         }
         var data = fs.readFileSync(filename, "utf-8");
-        var aast = Shade.parseAndInferenceExpression(data, { inject: contextData });
+        var aast = Shade.parseAndInferenceExpression(data, { inject: contextData, loc: true });
         return new GLSLCompiler().compileFragmentShader(aast);
     }());
 

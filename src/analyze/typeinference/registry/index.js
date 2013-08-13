@@ -12,6 +12,7 @@
     };
 
     exports.Registry = {
+        name: "TypeInference",
         getByName: function(name) {
             var result = objects[name];
             return result || null;

@@ -1,17 +1,13 @@
 (function(ns){
 
-    ns.getContext = function(registry) {
-
-        var Registry = registry;
-
-        var Base = require("./index.js"),
+    var Base = require("./index.js"),
         Shade = require("../interfaces.js"),
         TYPES = Shade.TYPES,
         Annotation = require("./annotation.js").Annotation,
         TypeInfo = require("./typeinfo.js").TypeInfo,
         Syntax = require('estraverse').Syntax;
 
-
+    ns.getContext = function(registry) {
 
     /**
      *
@@ -57,8 +53,9 @@
         getObjectInfo: function() {
             if (this.globalObject)
                 return this.globalObject.static;
-            if (this.isObject())
-                return this.node.info || Registry.getInstanceForKind(this.getKind());
+            if (this.isObject()) {
+                return this.node.info || registry.getInstanceForKind(this.getKind());
+            }
             return null;
         }
     })
@@ -262,7 +259,25 @@
                 return binding;
             }
             return result;
+        },
+
+        getObjectInfoFor: function(obj) {
+            if (!obj.isObject())
+                return null;
+
+            /* The TypeInfo might know about it's object type */
+            if (obj.getObjectInfo) {
+                return obj.getObjectInfo();
+            };
+
+            var nodeInfo = obj.getNodeInfo();
+            if (nodeInfo) {
+                console.error("Found NodeInfo");
+                return nodeInfo;
+            }
+            return registry.getInstanceForKind(obj.getKind())
         }
+
 
     });
 

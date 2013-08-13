@@ -11,6 +11,7 @@
     };
 
     ns.Registry = {
+        name: "GLSLTransformRegistry",
         getByName: function(name) {
             var result = objects[name];
             return result || null;
