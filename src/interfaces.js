@@ -75,7 +75,7 @@
         this[1] = isVec ? vec2OrX.y : y !== undefined ? y : this[0];
      }
 
-     Vec2.prototype.add = function(vec2OrX, y){
+     Vec2.prototype.add = function(vec2OrX, y){ // 0 arguments => identity or error?
         var add = getVec2(vec2OrX, y);
         return new Vec2(this[0] + add[0], this[1] + add[1]);
      }
@@ -263,5 +263,8 @@
         error.loc = loc;
         throw error;
     }
+
+    ns.Vec2 = Vec2;
+    ns.Vec3 = Vec3;
 
 }(exports));

@@ -4,12 +4,7 @@
         TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS,
         Base = require("../../../base/index.js"),
-        Tools = require("./tools.js"),
-        Annotation = require("../../../base/annotation.js").Annotation;
-
-
-
-
+        Tools = require("./tools.js");
 
     var Vector3Constructor =  {
         type: TYPES.OBJECT,
@@ -37,34 +32,30 @@
         }
     };
 
-
-    var Vector3StaticObject = {
-    };
-
     var Vector3Instance = {
-        x: { type: TYPES.NUMBER },
-        y: { type: TYPES.NUMBER },
-        z: { type: TYPES.NUMBER },
+        x: Tools.singleAccessor("Vec3.x", { type: TYPES.OBJECT, kind: KINDS.FLOAT3 }, [0,1,3]),
+        y: Tools.singleAccessor("Vec3.y", { type: TYPES.OBJECT, kind: KINDS.FLOAT3 }, [0,1,3]),
+        z: Tools.singleAccessor("Vec3.z", { type: TYPES.OBJECT, kind: KINDS.FLOAT3 }, [0,1,3]),
         sub: {
-            type: TYPES.UNDEFINED,
+            type: TYPES.FUNCTION,
             evaluate: function(result, args) {
                 Tools.checkParamCount(result.node, "Vector3::sub", [1], args.length);
             }
         },
         length: {
-            type: TYPES.NUMBER,
+            type: TYPES.FUNCTION,
             evaluate: function(result, args) {
                 Tools.checkParamCount(result.node, "Vector3::length", [0], args.length);
             }
         },
         normalize: {
-            type: TYPES.UNDEFINED,
+            type: TYPES.FUNCTION,
             evaluate: function(result, args) {
                 Tools.checkParamCount(result.node, "Vector3::normalize", [0], args.length);
             }
         },
         dot: {
-            type: TYPES.NUMBER,
+            type: TYPES.FUNCTION,
             evaluate: function(result, args) {
                 Tools.checkParamCount(result.dot, "Vector3::dot", [1], args.length);
             }
@@ -73,11 +64,11 @@
 
 
     Base.extend(ns, {
-        id: "Vector3",
+        id: "Vec3",
         kind: "float3",
         object: {
             constructor: Vector3Constructor,
-            static: Vector3StaticObject
+            static: {}
         },
         instance: Vector3Instance
     });

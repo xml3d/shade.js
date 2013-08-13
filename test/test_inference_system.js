@@ -10,7 +10,7 @@ var parseAndInferenceExpression = function (str, ctx) {
 }
 
 describe('Inference', function () {
-    describe('system variables', function () {
+    xdescribe('system variables', function () {
 
             it("this.coord", function () {
                 var exp = parseAndInferenceExpression("this.coord");

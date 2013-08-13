@@ -5,42 +5,6 @@
         KINDS = Shade.OBJECT_KINDS,
         Tools = require("./tools.js");
 
-    var Color = function(r,g,b,a) {
-        if (Array.isArray(r)) {
-            switch(r.length) {
-                case 0:
-                    this.r = this.g = this.b = 0;
-                    this.alpha = 1.0;
-                    break;
-                case 1:
-                    this.r = this.g = this.b = r[0];
-                    this.alpha = 1.0;
-                    break;
-                case 2:
-                    this.r = this.g = this.b = r[0];
-                    this.alpha = r[1];
-                    break;
-                case 3:
-                    this.r = r[0];
-                    this.g = r[1];
-                    this.b = r[2];
-                    this.alpha = 1.0;
-                    break;
-                case 4:
-                    this.r = r[0];
-                    this.g = r[1];
-                    this.b = r[2];
-                    this.alpha = r[3];
-                    break;
-            }
-        } else {
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            this.alpha = (a==undefined) ? 1.0 : a;
-        }
-    };
-
 
     var ColorConstructor =  {
         type: TYPES.OBJECT,
@@ -62,9 +26,14 @@
                 if (isStatic)
                     argArray.push(param.getStaticValue());
             });
-
+            var typeInfo = {
+                type: TYPES.OBJECT,
+                kind: KINDS.COLOR
+            }
             if (isStatic)
-                result.setStaticValue(new Color(argArray))
+                typeInfo.staticValue = null;
+
+            return typeInfo;
         }
     };
 
@@ -74,19 +43,19 @@
     };
 
     var ColorInstance = {
-        r: { type: TYPES.NUMBER },
-        g: { type: TYPES.NUMBER },
-        b: { type: TYPES.NUMBER },
-        a: { type: TYPES.NUMBER },
+        r: Tools.singleAccessor("Color.r", { type: TYPES.OBJECT, kind: KINDS.COLOR }, [0,1,3]),
+        g: Tools.singleAccessor("Color.g", { type: TYPES.OBJECT, kind: KINDS.COLOR }, [0,1,3]),
+        b: Tools.singleAccessor("Color.b", { type: TYPES.OBJECT, kind: KINDS.COLOR }, [0,1,3]),
+        a: Tools.singleAccessor("Color.a", { type: TYPES.OBJECT, kind: KINDS.COLOR }, [0,1,3]),
         intensity: {
-            type: TYPES.NUMBER,
+            type: TYPES.FUNCTION,
             evaluate: function(result, args) {
                 Tools.checkParamCount(result.node, "Color::scale", [0], args.length);
 
             }
         },
         scale: {
-            type: TYPES.UNDEFINED,
+            type: TYPES.FUNCTION,
             evaluate: function(result, args) {
                 Tools.checkParamCount(result.node, "Color::scale", [1,2], args.length);
                 var factor = args[0];
@@ -95,7 +64,7 @@
             }
         },
         add: {
-            type: TYPES.UNDEFINED,
+            type: TYPES.FUNCTION,
             evaluate: function(result, args) {
                 Tools.checkParamCount(result.node, "Color::add", [1], args.length);
                 var other = args[0];

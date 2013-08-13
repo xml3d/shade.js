@@ -337,6 +337,7 @@
             switch (node.object.type) {
                 case Syntax.MemberExpression:
                 case Syntax.CallExpression:
+                case Syntax.NewExpression:
                     objectOfInterest = ctx.createTypeInfo(node.object);
                     break;
                 case Syntax.Identifier:
@@ -366,10 +367,8 @@
                     return;
                 }
 
-                var prop = objectInfo[propertyName];
-                var propNode = new Annotation(node.property, prop);
-
-                resultType.copy(propNode);
+                var propertyTypeInfo = objectInfo[propertyName];
+                resultType.setFromExtra(propertyTypeInfo);
             } else {
                 resultType.setType(TYPES.UNDEFINED);
             }
@@ -379,27 +378,24 @@
             var result = new Annotation(node),
                 callee = ctx.createTypeInfo(node.callee);
 
-            var callType = node.callee.type;
-            switch (callType) {
 
-                case Syntax.MemberExpression:
-                    var call = callee.getCall();
-                    if (typeof call == "function") {
-                        result.copy(callee);
-                        var args = createAnnotatedNodeArray(node.arguments, ctx);
-                        call(result, args, ctx);
-                        callee.clearCall();
-                        result.clearCall();
-                    } else {
-                        var object = ctx.createTypeInfo(node.callee.object);
-                        if(object.isObject()) {
-                            Shade.throwError(node, "TypeError: Object #<" + callee.getKind()+ "> has no method '"+ node.callee.property.name + "'");
-                        } else {
-                            Shade.throwError(node, "TypeError: Cannot call method '"+ node.callee.property.name + "' of " + callee.getType());
-                        }
-                    }
-                    break;
-                case Syntax.Identifier:
+            // e.g. Math.cos()
+            if (node.callee.type == Syntax.MemberExpression) {
+                var callingObject = ctx.createTypeInfo(node.callee.object);
+
+                if (!callee.isFunction()) {
+                    Shade.throwError(node, "TypeError: Object #<" + callingObject.getType()+ "> has no method '"+ node.callee.property.name + "'");
+                    //Shade.throwError(node, "TypeError: Cannot call method '"+ node.callee.property.name + "' of " + callee.getType());
+                }
+                var call = callee.getCall();
+                var args = createAnnotatedNodeArray(node.arguments, ctx);
+                var type = call(result, args, ctx, callingObject);
+                result.setFromExtra(type);
+                callee.clearCall();
+                return;
+            }
+
+                /*case Syntax.Identifier:
                     var functionName = node.callee.name;
                     var func = ctx.getBindingByName(functionName);
                     if (!(func && func.isInitialized())) {
@@ -408,10 +404,9 @@
                     // console.log(func);
                     //throw new Error("Can't call " + functionName + "() in this context: " + ctx.str());
                     break;
-                default:
+                default:   */
                         throw new Error("Unhandled CallExpression");
 
-            }
         }
     };
 

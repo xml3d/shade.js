@@ -109,6 +109,9 @@
         isArray: function () {
             return this.isOfType(TYPES.ARRAY);
         },
+        isFunction: function () {
+            return this.isOfType(TYPES.FUNCTION);
+        },
         isObject: function () {
             return this.isOfType(TYPES.OBJECT);
         },
@@ -184,8 +187,13 @@
         },
         setFromExtra: function(extra){
             this.setType(extra.type);
-            this.setKind(extra.kind);
+            if (extra.kind != undefined)
+                this.setKind(extra.kind);
             this.setGlobal(extra.global);
+            if (extra.staticValue != undefined)
+                this.setStaticValue(extra.staticValue);
+            if (extra.evaluate != undefined)
+                this.setCall(extra.evaluate);
         },
         getObjectInfo: function() {
             if (this.isObject())

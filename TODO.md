@@ -2,7 +2,7 @@
 
 ### Shading Language
 * Define use-cases, types, built-in functions etc
-* Defined Color Closures
+* Define Color Closures
     * diffuse
     * phong
 
@@ -27,7 +27,7 @@ microfacet_beckmann_refraction, microfacet_ggx_refraction, transparent, transluc
 
 ### Generator
 
-* Switch to own (simple) implementation (FK)
+* Switch to own (simple) implementation (FK) ✔
 * Generate code for Forward Rendering (xml3d.js)
 * Generate code for Deferred Rendering (xml3d.js)
 * Generate code for external RT/GI renderer

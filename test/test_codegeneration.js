@@ -90,6 +90,25 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("Math.PI;");
             code.should.equal("3.141592653589793;");
         });
+    });
+
+    xdescribe('Vec2', function() {
+        it("constructor", function() {
+            var code = generateExpression("var a = new Vec2();");
+            code.should.equal("vec2 a = vec2();");
+        });
+        it("x()", function() {
+            var code = generateExpression("var a = new Vec2().x();");
+            code.should.equal("float a = vec2().x;");
+        });
+        it("y()", function() {
+            var code = generateExpression("var a = new Vec2(1).y();");
+            code.should.equal("float a = vec2().y;");
+        });
+        it("xy()", function() {
+            var code = generateExpression("var a = new Vec2(1, 2).xy();");
+            code.should.equal("vec2 a = vec2(1, 2).xy;");
+        });
 
     });
 

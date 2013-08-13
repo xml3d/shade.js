@@ -5,7 +5,7 @@
 
 
 
-    var evaluateMethod = function (name, paramCount) {
+    var evaluateMethod = function (name, paramCount, returnType) {
         /**
          * @param {Annotation} result
          * @param {Array.<Annotation>} args
@@ -27,12 +27,13 @@
                 if (isStatic)
                     argArray.push(param.getStaticValue());
             });
-
-            if (isStatic) {
-                result.setStaticValue(Math[name].apply(undefined, argArray));
-            } else {
-                result.setDynamicValue();
+            var typeInfo = {
+                type: returnType || TYPES.NUMBER
             }
+            if (isStatic) {
+                typeInfo.staticValue = Math[name].apply(undefined, argArray);
+            }
+            return typeInfo;
         }
     }
 
@@ -58,19 +59,19 @@
     });
 
     OneParameterNumberMethods.forEach(function (method) {
-        MathObject[method] = { type: TYPES.NUMBER, evaluate: evaluateMethod(method, 1) };
+        MathObject[method] = { type: TYPES.FUNCTION, evaluate: evaluateMethod(method, 1) };
     });
 
     TwoParameterNumberMethods.forEach(function (method) {
-        MathObject[method] = { type: TYPES.NUMBER, evaluate: evaluateMethod(method, 2) };
+        MathObject[method] = { type: TYPES.FUNCTION, evaluate: evaluateMethod(method, 2) };
     });
 
     OneParameterIntMethods.forEach(function (method) {
-        MathObject[method] = { type: TYPES.INT, evaluate: evaluateMethod(method, 1) };
+        MathObject[method] = { type: TYPES.FUNCTION, evaluate: evaluateMethod(method, 1, TYPES.INT) };
     });
 
     ArbitraryParameterNumberMethods.forEach(function (method) {
-        MathObject[method] = { type: TYPES.NUMBER, evaluate: evaluateMethod(method, -1) };
+        MathObject[method] = { type: TYPES.FUNCTION, evaluate: evaluateMethod(method, -1) };
     });
 
     Base.extend(ns, {

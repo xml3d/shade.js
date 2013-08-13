@@ -11,35 +11,23 @@ var parseAndInferenceExpression = function (str, ctx) {
 
 describe('Inference', function () {
     describe('Object Registry', function () {
-        describe('for Color::', function () {
+       xdescribe('for Color::', function () {
 
-            it("rgb => object<color>", function () {
-                var exp = parseAndInferenceExpression("Color.rgb(255, 0, 0)");
+
+            it("constructor, 3 args", function () {
+                var exp = parseAndInferenceExpression("new Color(1.0, 0, 0)");
                 exp = exp[0];
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.OBJECT);
                 exp.extra.should.have.property("kind", KINDS.COLOR);
                 exp.extra.should.have.property("staticValue");
-                exp.extra.staticValue.should.have.property("r", 255);
+                exp.extra.staticValue.should.have.property("r", 1.0);
                 exp.extra.staticValue.should.have.property("g", 0);
                 exp.extra.staticValue.should.have.property("b", 0);
 
             });
 
-            it("color instance object<color>", function () {
-                var exp = parseAndInferenceExpression("new Color(255, 0, 0)");
-                exp = exp[0];
-                exp.should.have.property("extra");
-                exp.extra.should.have.property("type", TYPES.OBJECT);
-                exp.extra.should.have.property("kind", KINDS.COLOR);
-                exp.extra.should.have.property("staticValue");
-                exp.extra.staticValue.should.have.property("r", 255);
-                exp.extra.staticValue.should.have.property("g", 0);
-                exp.extra.staticValue.should.have.property("b", 0);
-
-            });
-
-            it("color instance object<color>", function () {
+            it("color instance object<color> one arg", function () {
                 var exp = parseAndInferenceExpression("new Color(128)");
                 exp = exp[0];
                 exp.should.have.property("extra");
@@ -53,7 +41,7 @@ describe('Inference', function () {
             });
 
             it("color instance properties", function () {
-                var exp = parseAndInferenceExpression("var x = new Color(128); x.r");
+                var exp = parseAndInferenceExpression("var x = new Color(128); x.r()");
                 var memexp = exp[1].expression;
 
                 // object
