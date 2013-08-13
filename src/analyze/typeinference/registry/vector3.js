@@ -6,7 +6,7 @@
         Base = require("../../../base/index.js"),
         Tools = require("./tools.js");
 
-    var Vector3Constructor =  {
+    var Vec3Constructor =  {
         type: TYPES.OBJECT,
         kind: KINDS.FLOAT3,
         /**
@@ -15,13 +15,13 @@
          * @param {Context} ctx
          */
         evaluate: function(result, args, ctx) {
-            Tools.checkParamCount(result.node, "Vector3", [0,3], args.length);
+            Tools.checkParamCount(result.node, "Vec3", [0,3], args.length);
 
             var argArray = [];
             var isStatic = true;
             args.forEach(function (param, index) {
                 if (!param.canNumber())
-                    Shade.throwError(result.node, "Parameter " + index + " has invalid type for Vector3, expected 'number', but got " + param.getType());
+                    Shade.throwError(result.node, "Parameter " + index + " has invalid type for Vec3, expected 'number', but got " + param.getType());
                 isStatic = isStatic && param.hasStaticValue();
                 if (isStatic)
                     argArray.push(param.getStaticValue());
@@ -32,29 +32,29 @@
         }
     };
 
-    var Vector3Instance = {
+    var Vec3Instance = {
         x: Tools.singleAccessor("Vec3.x", { type: TYPES.OBJECT, kind: KINDS.FLOAT3 }, [0,1,3]),
         y: Tools.singleAccessor("Vec3.y", { type: TYPES.OBJECT, kind: KINDS.FLOAT3 }, [0,1,3]),
         z: Tools.singleAccessor("Vec3.z", { type: TYPES.OBJECT, kind: KINDS.FLOAT3 }, [0,1,3]),
         sub: {
             type: TYPES.FUNCTION,
             evaluate: function(result, args) {
-                Tools.checkParamCount(result.node, "Vector3::sub", [1], args.length);
+                Tools.checkParamCount(result.node, "Vec3::sub", [1], args.length);
             }
         },
         length: {
             type: TYPES.FUNCTION,
             evaluate: function(result, args) {
-                Tools.checkParamCount(result.node, "Vector3::length", [0], args.length);
+                Tools.checkParamCount(result.node, "Vec3::length", [0], args.length);
             }
         },
         normalized: {
             type: TYPES.FUNCTION,
             evaluate: function(result, args) {
-                Tools.checkParamCount(result.node, "Vector3::normalized", [0], args.length);
+                Tools.checkParamCount(result.node, "Vec3::normalized", [0], args.length);
                 var typeInfo = {
                     type: TYPES.OBJECT,
-                    kind: TYPES.FLOAT3
+                    kind: KINDS.FLOAT3
                 }
                 return typeInfo;
             }
@@ -62,7 +62,7 @@
         dot: {
             type: TYPES.FUNCTION,
             evaluate: function(result, args) {
-                Tools.checkParamCount(result.dot, "Vector3::dot", [1], args.length);
+                Tools.checkParamCount(result.dot, "Vec3::dot", [1], args.length);
             }
         }
     };
@@ -72,10 +72,10 @@
         id: "Vec3",
         kind: "float3",
         object: {
-            constructor: Vector3Constructor,
+            constructor: Vec3Constructor,
             static: {}
         },
-        instance: Vector3Instance
+        instance: Vec3Instance
     });
 
 

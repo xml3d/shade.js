@@ -2,12 +2,12 @@
 
     var objects = {
         //Color : require("./color.js"),
-        //Shade : require("./shade.js"),
+        Shade : require("./shade.js"),
         //Matrix4 : require("./matrix.js"),
         Math : require("./math.js"),
         System : require("./system.js"),
-        Vec2 : require("./vec2.js")
-        //Vector3 : require("./vector3.js")
+        Vec2 : require("./vec2.js"),
+        Vec3 : require("./vec3.js")
     };
 
     ns.Registry = {

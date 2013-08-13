@@ -30,8 +30,7 @@
             var ctx = new Context(program, null, {name: "global"});
             ctx.registerObject("Math", ObjectRegistry.getByName("Math"));
             ctx.registerObject("this", ObjectRegistry.getByName("System"));
-            //ctx.registerObject("Vector3", ObjectRegistry.getByName("Vector3"));
-            //ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
+            ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
             return ctx;
         },
         transformAAST: function (program) {
@@ -199,6 +198,7 @@
     function getObjectReferenceFromNode(object, context) {
         switch (object.type) {
             case Syntax.NewExpression:
+            case Syntax.CallExpression:
             case Syntax.MemberExpression:
                 return context.createTypeInfo(object);
                 break;
@@ -227,8 +227,11 @@
             var objectReference = getObjectReferenceFromNode(object, context);
 
             var objectInfo = context.getObjectInfoFor(objectReference);
-            if(!objectInfo) // Every object needs an info, otherwise we did something wrong
-                Shade.throwError(callExpression, "Internal: No registration for object: " + objectReference.getTypeString() + ", " + JSON.stringify(callExpression.object));
+            if(!objectInfo) { // Every object needs an info, otherwise we did something wrong
+                console.error("No object registered for: ", objectReference.getTypeString(), JSON.stringify(callExpression.object));
+                return;
+                //Shade.throwError(callExpression, "Internal: No registration for object: " + objectReference.getTypeString() + ", " + JSON.stringify(callExpression.object));
+            }
             if (objectInfo.hasOwnProperty(propertyName)) {
                 var propertyHandler = objectInfo[propertyName];
                 if (typeof propertyHandler.callExp == "function") {
@@ -249,8 +252,11 @@
 
         if (objectReference && objectReference.isObject()) {
             var objectInfo = context.getObjectInfoFor(objectReference);
-            if(!objectInfo) // Every object needs an info, otherwise we did something wrong
-                Shade.throwError(memberExpression, "Internal: No registration for object: " + objectReference.getTypeString() + ", " + JSON.stringify(memberExpression.object));
+            if(!objectInfo) {// Every object needs an info, otherwise we did something wrong
+                console.error("No object registered for: ", objectReference.getTypeString(), JSON.stringify(memberExpression.object))
+                //Shade.throwError(memberExpression, "Internal: No registration for object: " + objectReference.getTypeString() + ", " + JSON.stringify(memberExpression.object));
+                return;
+            }
             if (objectInfo.hasOwnProperty(propertyName)) {
                 var propertyHandler = objectInfo[propertyName];
                 if (typeof propertyHandler.property == "function") {

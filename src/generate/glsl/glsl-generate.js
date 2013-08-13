@@ -36,7 +36,7 @@
                     case Kinds.FLOAT2:
                         return "vec2";
                     default:
-                        throw new Error("toGLSLType: Unhandled kind: " + info.kind);
+                        return "<undefined>";
                 }
             case Types.UNDEFINED:
                 return "void";
