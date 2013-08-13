@@ -3,7 +3,6 @@
     var Shade = require("../../../interfaces.js"),
         TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS,
-        Base = require("../../../base/index.js"),
         Tools = require("./tools.js");
 
     var Vec3Constructor =  {
@@ -68,7 +67,7 @@
     };
 
 
-    Base.extend(ns, {
+    Tools.extend(ns, {
         id: "Vec3",
         kind: "float3",
         object: {
