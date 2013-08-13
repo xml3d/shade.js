@@ -35,6 +35,24 @@
     };
 
 
+    function getObjectReferenceFromNode(object, context) {
+        switch (object.type) {
+            case Syntax.NewExpression:
+            case Syntax.CallExpression:
+            case Syntax.MemberExpression:
+                return context.createTypeInfo(object);
+                break;
+            case Syntax.Identifier:
+                return context.getBindingByName(object.name);
+                break;
+            case Syntax.ThisExpression:
+                return context.getBindingByName("this");
+                break;
+            default:
+                throw new Error("Unhandled object type in TypeInference: " + object.type);
+        }
+    }
+
     var evaluateTruth = function(exp) {
         return !!exp;
     }
@@ -322,67 +340,68 @@
                 }
             }
 
-            var objectOfInterest;
-            var objectName = "?";
-            switch (node.object.type) {
-                case Syntax.MemberExpression:
-                case Syntax.CallExpression:
-                case Syntax.NewExpression:
-                    objectOfInterest = ctx.createTypeInfo(node.object);
-                    break;
-                case Syntax.Identifier:
-                    objectName = node.object.name;
-                    objectOfInterest = ctx.getBindingByName(objectName);
-                    break;
-                case Syntax.ThisExpression:
-                    objectOfInterest = ctx.getBindingByName("this");
-                    break;
-                throw new Error("Unhandled MemberExpression on: " + node.object.type);
-            }
-            objectOfInterest || Shade.throwError(node,"ReferenceError: " + objectName + " is not defined. Context: " + ctx.str());
+            var objectOfInterest = getObjectReferenceFromNode(node.object, ctx);
 
-            if (objectOfInterest.getType() == TYPES.UNDEFINED) {
+            objectOfInterest || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + ctx.str());
+
+            if (objectOfInterest.getType() == TYPES.UNDEFINED) {  // e.g. var a = undefined; a.unknown;
                 Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName +"' of undefined")
             }
-
-            if (objectOfInterest.isObject()) {
-                var objectInfo = ctx.getObjectInfoFor(objectOfInterest);
-                if(!objectInfo)
-                    Shade.throwError(node, "Internal: Incomplete registration for object: " + objectOfInterest.getTypeString() + ", " + JSON.stringify(node.object));
-
-                objectAnnotation.copy(objectOfInterest);
-                if (!objectInfo.hasOwnProperty(propertyName)) {
-                    resultType.setType(TYPES.UNDEFINED);
-                    propertyAnnotation.setType(TYPES.UNDEFINED);
-                    return;
-                }
-
-                var propertyTypeInfo = objectInfo[propertyName];
-                resultType.setFromExtra(propertyTypeInfo);
-            } else {
+            if (objectOfInterest.getType() != TYPES.OBJECT) { // e.g. var a = 5; a.unknown;
                 resultType.setType(TYPES.UNDEFINED);
+                return;
             }
+
+            var objectInfo = ctx.getObjectInfoFor(objectOfInterest);
+            if(!objectInfo)
+                Shade.throwError(node, "Internal: Incomplete registration for object: " + objectOfInterest.getTypeString() + ", " + JSON.stringify(node.object));
+
+            objectAnnotation.copy(objectOfInterest);
+            if (!objectInfo.hasOwnProperty(propertyName)) {
+                resultType.setType(TYPES.UNDEFINED);
+                propertyAnnotation.setType(TYPES.UNDEFINED);
+                return;
+            }
+
+            var propertyTypeInfo = objectInfo[propertyName];
+            resultType.setFromExtra(propertyTypeInfo);
         },
 
         CallExpression: function (node, ctx) {
-            var result = new Annotation(node),
-                callee = ctx.createTypeInfo(node.callee);
+            var result = new Annotation(node);
 
 
-            // e.g. Math.cos()
+            // Call on an object, e.g. Math.cos()
             if (node.callee.type == Syntax.MemberExpression) {
-                var callingObject = ctx.createTypeInfo(node.callee.object);
+                var callingObject = getObjectReferenceFromNode(node.callee, ctx);
 
-                if (!callee.isFunction()) {
+                if (!callingObject.isFunction()) { // e.g. Math.PI()
                     Shade.throwError(node, "TypeError: Object #<" + callingObject.getType()+ "> has no method '"+ node.callee.property.name + "'");
-                    //Shade.throwError(node, "TypeError: Cannot call method '"+ node.callee.property.name + "' of " + callee.getType());
                 }
-                var call = callee.getCall();
-                var args = Annotation.createAnnotatedNodeArray(node.arguments, ctx);
-                var type = call(result, args, ctx, callingObject);
-                result.setFromExtra(type);
-                callee.clearCall();
-                return;
+
+                var object = node.callee.object,
+                    propertyName = node.callee.property.name;
+
+                var objectReference = getObjectReferenceFromNode(object, ctx);
+                if(!objectReference)  {
+                    console.error("No object info for: ", object);
+                    return;
+                }
+
+                var objectInfo = ctx.getObjectInfoFor(objectReference);
+                if(!objectInfo) { // Every object needs an info, otherwise we did something wrong
+                    console.error("No object registered for: ", objectReference.getTypeString(), JSON.stringify(node.object));
+                    return;
+                }
+                if (objectInfo.hasOwnProperty(propertyName)) {
+                    var propertyHandler = objectInfo[propertyName];
+                    if (typeof propertyHandler.evaluate == "function") {
+                        var args = Annotation.createAnnotatedNodeArray(node.arguments, ctx);
+                        var extra = propertyHandler.evaluate(result, args, ctx, objectReference);
+                        result.setFromExtra(extra);
+                        return;
+                    }
+                }
             }
 
                 /*case Syntax.Identifier:
@@ -395,7 +414,7 @@
                     //throw new Error("Can't call " + functionName + "() in this context: " + ctx.str());
                     break;
                 default:   */
-                        throw new Error("Unhandled CallExpression");
+                        throw new Error("Unhandled CallExpression:" + node.callee.type);
 
         }
     };
