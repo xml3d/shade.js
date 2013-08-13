@@ -1,15 +1,12 @@
 (function (ns) {
 
     var Base = require("../../../base/index.js");
-    var Syntax = require('estraverse').Syntax;
 
     var SystemEntry = {
         coord: {
             property: function (node) {
-                return {
-                    type: Syntax.Identifier,
-                    name: "gl_FragCoord"
-                };
+                node.property.name = "gl_FragCoord";
+                return node.property;
             }
         }
     };

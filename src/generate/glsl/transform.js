@@ -3,9 +3,10 @@
     var Base = require("../../base/index.js"),
         Annotation = require("../../base/annotation.js").Annotation,
         FunctionAnnotation = require("../../base/annotation.js").FunctionAnnotation,
-        Types = require("./../../interfaces.js").TYPES,
+        TypeInfo = require("../../base/typeinfo.js").TypeInfo,
         Shade = require("./../../interfaces.js"),
-        Types = require("./../../interfaces.js").TYPES,
+        Types = Shade.TYPES,
+        Kinds = Shade.OBJECT_KINDS,
         Sources = require("./../../interfaces.js").SOURCES;
 
     var ObjectRegistry = require("./registry/index.js").Registry,
@@ -31,6 +32,14 @@
             ctx.registerObject("Math", ObjectRegistry.getByName("Math"));
             ctx.registerObject("this", ObjectRegistry.getByName("System"));
             ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
+            ctx.declareVariable("gl_FragCoord", false);
+            ctx.updateExpression("gl_FragCoord", new TypeInfo({
+                extra: {
+                    type: Types.OBJECT,
+                    kind: Kinds.FLOAT3
+                }
+            }));
+
             return ctx;
         },
         transformAAST: function (program) {
@@ -225,6 +234,10 @@
                 propertyName = callExpression.callee.property.name;
 
             var objectReference = getObjectReferenceFromNode(object, context);
+            if(!objectReference)  {
+                console.error("No object info for: ", object);
+                return;
+            }
 
             var objectInfo = context.getObjectInfoFor(objectReference);
             if(!objectInfo) { // Every object needs an info, otherwise we did something wrong
@@ -260,7 +273,7 @@
             if (objectInfo.hasOwnProperty(propertyName)) {
                 var propertyHandler = objectInfo[propertyName];
                 if (typeof propertyHandler.property == "function") {
-                    return propertyHandler.property(memberExpression, parent);
+                    return propertyHandler.property(memberExpression, parent, context);
                 }
             }
         }
