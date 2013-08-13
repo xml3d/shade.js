@@ -55,11 +55,12 @@
             else if(arg instanceof Vec3) cnt = 3;
             else if(arg instanceof Vec4) cnt = 4;
 
-            if(cnt == 1) dest[idx++] = arg || 0;
-
-            for(var j = 0; idx < vecSize && j < cnt; ++j){
-                dest[idx++] = arg[j];
-            }
+            if(cnt == 1)
+                dest[idx++] = arg || 0;
+            else
+                for(var j = 0; idx < vecSize && j < cnt; ++j){
+                    dest[idx++] = arg[j];
+                }
         }
         if(i < arguments.length)
             throw new Error("Too many arguments for " + (color ? "Color" : "Vec" + vecSize) + ".");
@@ -413,5 +414,7 @@
 
     ns.Vec2 = Vec2;
     ns.Vec3 = Vec3;
+    ns.Vec4 = Vec4;
+    ns.Color = Color;
 
 }(exports));

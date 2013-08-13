@@ -37,7 +37,11 @@
 
         TYPES : interfaces.TYPES,
         OBJECT_KINDS : interfaces.OBJECT_KINDS,
-        SOURCES: interfaces.SOURCES
+        SOURCES: interfaces.SOURCES,
+        Vec2: interfaces.Vec2,
+        Vec3: interfaces.Vec3,
+        Vec4: interfaces.Vec4,
+        Color: interfaces.Color
 
 });
     /**
