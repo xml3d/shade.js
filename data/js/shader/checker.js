@@ -11,14 +11,14 @@
  */
 function shade(env) {
 
-    var smod = (env.texcoord.x * env.frequency) % 1.0,
-        tmod = (env.texcoord.y * env.frequency) % 1.0,
+    var smod = (env.texcoord.x() * env.frequency) % 1.0,
+        tmod = (env.texcoord.y() * env.frequency) % 1.0,
         color;
 
     color = ((smod < 0.5 && tmod < 0.5) || (smod >= 0.5 && tmod >= 0.5)) ?
         env.whiteColor :
         env.blackColor;
 
-    //var normal = env.normal.normalized();
+    var normal = env.normal.normalized();
     return Shade.diffuse(env.normal).multiply(color).add(Shade.phong(env.normal, env.shininess));
 }

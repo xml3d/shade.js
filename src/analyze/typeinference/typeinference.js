@@ -37,7 +37,7 @@
         opt = opt || {};
         this.root = root;
         this.context = [];
-        this.injections = opt.injections || {};
+        this.injections = opt.inject || {};
         this.entryPoint = opt.entry || "global.shade";
         this.pushContext(registerGlobalContext(root));
         this.root.injections = this.injections;

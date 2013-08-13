@@ -8,8 +8,7 @@
 
     var ShadeObject = {
         diffuse: {
-            type: TYPES.OBJECT,
-            kind: KINDS.COLOR_CLOSURE,
+            type: TYPES.FUNCTION,
             evaluate: function(result, args, ctx) {
                 if (args.length < 1)
                     throw new Error("Shade.diffuse expects at least 1 parameter.")
@@ -24,11 +23,14 @@
                         throw new Error("Second argument of Shade.diffuse must evaluate to a color. Found: " + color.str());
                     }
                 }
+                return {
+                    type: TYPES.OBJECT,
+                    kind: KINDS.COLOR_CLOSURE
+                };
             }
         },
         phong: {
-            type: TYPES.OBJECT,
-            kind: KINDS.COLOR_CLOSURE,
+            type: TYPES.FUNCTION,
             evaluate: function(result, args, ctx) {
                 if (args.length < 1)
                     throw new Error("Shade.phong expects at least 1 parameter.")
@@ -43,35 +45,21 @@
                         throw new Error("Second argument of Shade.phong must evaluate to a number. Found: " + color.str());
                     }
                 }
-            }
-        }
-    };
-
-    var ShadeInstance = {
-        multiply: {
-            type: TYPES.OBJECT,
-            kind: KINDS.COLOR_CLOSURE,
-            evaluate: function() {
-
-            }
-        },
-        add: {
-            type: TYPES.OBJECT,
-            kind: KINDS.COLOR_CLOSURE,
-            evaluate: function() {
-
+                return {
+                    type: TYPES.OBJECT,
+                    kind: KINDS.COLOR_CLOSURE
+                };
             }
         }
     };
 
     Base.extend(ns, {
         id: "Shade",
-        kind:  KINDS.COLOR_CLOSURE,
         object: {
             constructor: null,
             static: ShadeObject
         },
-        instance: ShadeInstance
+        instance: null
     });
 
 }(exports));

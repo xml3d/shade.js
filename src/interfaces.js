@@ -214,6 +214,20 @@
             return this.xyz(other[0], this[1], other[1]);
         }
      }
+    Vec3.prototype.length = function(){
+        var x = this[0],
+            y = this[1],
+            z = this[2];
+        return Math.sqrt(x*x + y*y + z*z);
+    },
+
+    Vec3.prototype.normalized = function(){
+        var len = 1 / this.length();
+        if (isNaN(len))
+            return this;
+        return this.mul(len);
+
+    }
 
 
 

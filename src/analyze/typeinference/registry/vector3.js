@@ -48,10 +48,15 @@
                 Tools.checkParamCount(result.node, "Vector3::length", [0], args.length);
             }
         },
-        normalize: {
+        normalized: {
             type: TYPES.FUNCTION,
             evaluate: function(result, args) {
-                Tools.checkParamCount(result.node, "Vector3::normalize", [0], args.length);
+                Tools.checkParamCount(result.node, "Vector3::normalized", [0], args.length);
+                var typeInfo = {
+                    type: TYPES.OBJECT,
+                    kind: TYPES.FLOAT3
+                }
+                return typeInfo;
             }
         },
         dot: {

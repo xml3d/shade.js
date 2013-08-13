@@ -283,7 +283,7 @@
                     }
                     else {
                         //console.error(node, left.getType(), operator, right.getType());
-                        throw new Error("Unhandled case for arithmetic BinaryExpression.");
+                        Shade.throwError(node, "Evaluates to NaN: " + left.getTypeString() + " " + operator + " " + right.getTypeString());
                     }
                     break;
                 case "==": // comparison

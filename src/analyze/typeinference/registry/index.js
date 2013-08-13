@@ -7,7 +7,8 @@
         Math : require("./math.js"),
         Vec2 : require("./vector2.js"),
         Vec3 : require("./vector3.js"),
-        System: require("./system.js")
+        System: require("./system.js"),
+        ColorClosure: require("./colorclosure.js")
     };
 
     exports.Registry = {
