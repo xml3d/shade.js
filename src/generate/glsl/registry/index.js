@@ -7,7 +7,8 @@
         Math : require("./math.js"),
         System : require("./system.js"),
         Vec2 : require("./vec2.js"),
-        Vec3 : require("./vec3.js")
+        Vec3 : require("./vec3.js"),
+        ColorClosure: require("./colorclosure.js")
     };
 
     ns.Registry = {
