@@ -23,13 +23,18 @@
                     argArray.push(param.getStaticValue());
             });
 
-            if (isStatic)
-                var v = new Shade.Vec2();
-                Shade.Vec2.apply(v, argArray);
-                result.setStaticValue(v);
-            return {
-                returnType: VEC2TYPE
+            var typeInfo = {
+                type: TYPES.OBJECT,
+                kind: KINDS.FLOAT2
             }
+
+            if (isStatic) {
+                var v = new Shade.Vec2();
+                console.log(argArray);
+                Shade.Vec2.apply(v, argArray);
+                typeInfo.staticValue = v;
+            }
+            return typeInfo;
         }
     };
 

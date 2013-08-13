@@ -6,28 +6,34 @@
         Tools = require("./tools.js");
 
     var Vec3Constructor =  {
-        type: TYPES.OBJECT,
-        kind: KINDS.FLOAT3,
+        type: TYPES.FUNCTION,
         /**
          * @param {Annotation} result
          * @param {Array.<Annotation>} args
          * @param {Context} ctx
          */
-        evaluate: function(result, args, ctx) {
-            Tools.checkParamCount(result.node, "Vec3", [0,3], args.length);
-
+        evaluate: function (result, args, ctx) {
+            Tools.checkParamCount(result.node, "Vec3()", [0, 1, 3], args.length);
             var argArray = [];
             var isStatic = true;
             args.forEach(function (param, index) {
-                if (!param.canNumber())
-                    Shade.throwError(result.node, "Parameter " + index + " has invalid type for Vec3, expected 'number', but got " + param.getType());
                 isStatic = isStatic && param.hasStaticValue();
                 if (isStatic)
                     argArray.push(param.getStaticValue());
             });
 
-            //if (isStatic)
-            //    result.setStaticValue(new Color(argArray))
+            var typeInfo = {
+                type: TYPES.OBJECT,
+                kind: KINDS.FLOAT3
+            }
+
+            if (isStatic) {
+                var v = new Shade.Vec3();
+                Shade.Vec3.apply(v, argArray);
+                typeInfo.staticValue = v;
+            }
+            return typeInfo;
+
         }
     };
 
