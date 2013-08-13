@@ -96,9 +96,9 @@
             //console.error(entry);
             if (entry && entry.hasConstructor()) {
                 var constructor = entry.getConstructor();
-                result.setType(constructor.type, constructor.kind);
                 var args = Annotation.createAnnotatedNodeArray(node.arguments, ctx);
-                constructor.evaluate(result, args, ctx);
+                var extra = constructor.evaluate(result, args, ctx);
+                result.setFromExtra(extra);
             }
            else {
                 throw new Error("ReferenceError: " + node.callee.name + " is not defined");

@@ -30,7 +30,6 @@
 
             if (isStatic) {
                 var v = new Shade.Vec2();
-                console.log(argArray);
                 Shade.Vec2.apply(v, argArray);
                 typeInfo.staticValue = v;
             }
