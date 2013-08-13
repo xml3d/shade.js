@@ -13,5 +13,5 @@ if(!fs.existsSync(outpath))
 var stream = fs.createWriteStream(outpath);
 var b = browserify();
 b.add(base);
-b.bundle().pipe(stream);
+b.bundle({debug: true}).pipe(stream);
 
