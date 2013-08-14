@@ -24,9 +24,10 @@
             this.javaScriptEditor.on("change", this.onEdit.bind(this));
             this.codeViewer = CodeMirror(document.querySelector(".codeOutput"), {
                 value: "",
-                mode:  "x-shader/x-fragment",
-                readOnly: true
+                mode:  "x-shader/x-fragment"
             });
+            this.codeViewer.on("change", this.compileGL.bind(this));
+
             this.paramForm = document.getElementById("paramList");
             this.console = $("#console");
 
@@ -110,7 +111,7 @@
             var result = Shade.compileFragmentShader(aast);
 
             this.codeViewer.setValue(result);
-            this.compileGL(result);
+            this.compileGL();
         },
         addConsoleText: function(text, error){
             var lastElement = this.console.find("li:last-child");
@@ -131,7 +132,8 @@
             this.console.append(entry);
             this.console[0].scrollTop = this.console[0].scrollHeight;
         },
-        compileGL: function(fragmentSource) {
+        compileGL: function() {
+            var fragmentSource = this.codeViewer.getValue();
             if(!this.gl)
                 return;
             var info = this.compileShader(this.gl.FRAGMENT_SHADER, fragmentSource);
