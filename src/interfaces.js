@@ -21,6 +21,7 @@
         COLOR: "color", // virtual kinds
         FLOAT2: "float2", // virtual kinds
         FLOAT3: "float3", // virtual kinds
+        FLOAT4: "float4", // virtual kinds
         NORMAL: "normal",
         MATRIX4: "matrix4",
         MATRIX3: "matrix3",

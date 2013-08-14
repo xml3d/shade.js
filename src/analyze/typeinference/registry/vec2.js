@@ -51,10 +51,11 @@
     var Vector2Instance = {
         x: Tools.singleAccessor("Vec.x", VEC2TYPE, [0, 1], getStaticValue(0)),
         y: Tools.singleAccessor("Vec.y", VEC2TYPE, [0, 1], getStaticValue(1)),
+        yx: Tools.Vec.getSwizzleEvaluate("Vec2", 2, "yx"),
         xy: {
             type: TYPES.FUNCTION,
             evaluate: function (result, args) {
-                Tools.checkParamCount(result.node, "Vec2.xy", [0, 1], args.length);
+                Tools.checkParamCount(result.node, "Vec2.xy", [0, 1, 2], args.length);
                 // TODO: Check arg parameters
                 var typeInfo = {};
                 Tools.extend(typeInfo, VEC2TYPE);

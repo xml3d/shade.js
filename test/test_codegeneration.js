@@ -97,19 +97,22 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("var a = new Vec2();");
             code.should.equal("vec2 a = vec2();");
         });
-        xit("x()", function() {
+        it("x()", function() {
             var code = generateExpression("var a = new Vec2().x();");
             code.should.equal("float a = vec2().x;");
         });
-        xit("y()", function() {
+        it("y()", function() {
             var code = generateExpression("var a = new Vec2(1).y();");
-            code.should.equal("float a = vec2().y;");
+            code.should.equal("float a = vec2(1).y;");
         });
         it("xy()", function() {
             var code = generateExpression("var a = new Vec2(1, 2).xy();");
             code.should.equal("vec2 a = vec2(1, 2).xy;");
         });
-
+        it("x(5)", function() {
+            var code = generateExpression("var a = new Vec2().x(5);");
+            code.should.equal("vec2 a = vec2(5, vec2().y);");
+        });
     });
 
     describe('Special treatments', function() {

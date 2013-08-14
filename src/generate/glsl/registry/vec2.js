@@ -3,22 +3,15 @@
     var Shade = require("../../../interfaces.js");
     var Syntax = require('estraverse').Syntax;
     var Tools = require("./tools.js");
+    var ANNO = require("../../../base/annotation.js").ANNO;
+
+    var TYPES = Shade.TYPES,
+        KINDS = Shade.OBJECT_KINDS;
 
     var Vec2Instance = {
-        xy: {
-            property: function () {
-                //console.log("Called property of xy");
-            },
-            callExp: function(node, args, parent) {
-                if (args.length == 0)
-                    return node.callee;
-                return null; // TODO
-            }
-        },
-        x: function () {
-            console.log("x", arguments);
-        }
+
     }
+    Tools.Vec.attachSwizzles(Vec2Instance, 2);
 
 
     Tools.extend(ns, {

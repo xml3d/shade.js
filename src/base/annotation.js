@@ -54,6 +54,7 @@
         });
     }
 
+
     /**
      * @param {object} node
      * @param {object} extra
@@ -82,5 +83,6 @@
 
     ns.Annotation = Annotation;
     ns.FunctionAnnotation = FunctionAnnotation;
+    ns.ANNO = function(object){return new Annotation(object)};
 
 }(exports));
