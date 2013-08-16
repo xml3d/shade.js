@@ -6,7 +6,7 @@
         Base = require("../../../base/index.js");
 
     var SystemObject = {
-        coord: {
+        coords: {
             type: TYPES.OBJECT,
             kind: KINDS.FLOAT3
         }

@@ -3,7 +3,7 @@
     var Base = require("../../../base/index.js");
 
     var SystemEntry = {
-        coord: {
+        coords: {
             property: function (node) {
                 node.property.name = "gl_FragCoord";
                 return node.property;
