@@ -8,6 +8,11 @@
         KINDS = Shade.OBJECT_KINDS;
 
 
+    /**
+     * @param {*} node Carrier object for the type info, only node.extra gets polluted
+     * @param {Object?} extra
+     * @constructor
+     */
     var TypeInfo = function (node, extra) {
         this.node = node;
         this.node.extra = this.node.extra || {};
@@ -203,6 +208,7 @@
                 return "Object #<" + this.getKind() + ">";
             return this.getType();
         }
+
     }
 
     ns.TypeInfo = TypeInfo;

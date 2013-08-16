@@ -108,7 +108,7 @@
                                 methodStart.push("void");
                             } else {
                                 node.params.forEach(function (param) {
-                                    methodStart.push(param.name);
+                                    methodStart.push(toGLSLType(param.extra), param.name);
                                 })
                             }
                             methodStart.push(') {');

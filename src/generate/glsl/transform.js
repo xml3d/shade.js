@@ -50,7 +50,7 @@
                  context: context,
                  contextStack: [context],
                  inMain:  this.mainId == context.str(),
-                 injections : program.injections[this.mainId] ? program.injections[this.mainId][0] : null,
+                 injections : program.injections[this.mainId] && program.injections[this.mainId][0] ? program.injections[this.mainId][0].node.info : null,
                  blockedNames : [],
                  topDeclarations : [],
                  idNameMap : {}
@@ -73,6 +73,12 @@
 
             return program;
         },
+        /**
+         *
+         * @param {Object!} ast
+         * @param {Object!} state
+         * @returns {*}
+         */
         replace: function(ast, state) {
             walk.replace(ast, {
 
@@ -86,17 +92,11 @@
                         case Syntax.ConditionalExpression:
                             return handleConditionalExpression(node, state, this);
                         case Syntax.LogicalExpression:
-                            return handleLogicalExpression(node, this);
+                            return handleLogicalExpression(node, this, state);
                         case Syntax.FunctionDeclaration:
                             // No need to declare, this has been annotated already
                             var parentContext = state.contextStack[state.contextStack.length - 1];
                             var context = new Context(node, parentContext, {name: node.id.name });
-                            var anno = new FunctionAnnotation(node);
-                            if(!anno.isUsed()) {
-                                return {
-                                    type: Syntax.EmptyStatement
-                                }
-                            }
                             state.context = context;
                             state.contextStack.push(context);
                             state.inMain = this.mainId == context.str();
@@ -376,7 +376,7 @@
             return root.replace(node.alternate, state);
         }
         if (alternate.canEliminate()) {
-            return root.replace(node.consequent);
+            return root.replace(node.consequent, state);
         }
 
     }
@@ -416,13 +416,13 @@
 
     };
 
-    var handleLogicalExpression = function (node, root) {
+    var handleLogicalExpression = function (node, root, state) {
         var left = new Annotation(node.left);
         var right = new Annotation(node.right);
         if (left.canEliminate())
-            return root.replace(node.right);
+            return root.replace(node.right, state);
         if (right.canEliminate())
-            return root.replace(node.left);
+            return root.replace(node.left, state);
     }
 
     // Exports

@@ -57,7 +57,21 @@
                 return this.node.info || registry.getInstanceForKind(this.getKind());
             }
             return null;
+        },
+        getInfoForSignature: function(signature) {
+            var extra = this.getExtra();
+            if(!extra.signatures)
+                return null;
+            return extra.signatures[signature];
+        },
+        setInfoForSignature: function(signature, info) {
+            var extra = this.getExtra();
+            if(!extra.signatures)
+                extra.signatures = {};
+            return extra.signatures[signature] = info;
         }
+
+
     })
 
 
@@ -81,7 +95,7 @@
             Base.extend(this.context.bindings, opt.bindings);
         }
 
-        this.context.name = opt.name || "<anonymous>";
+        this.context.name = opt.name || node.name || "<anonymous>";
 
     };
 
@@ -108,8 +122,9 @@
          */
         getBindingByName: function(name) {
             var bindings = this.getBindings();
-            if(bindings[name] !== undefined)
-                return new Binding(bindings[name], this.registery);
+            var binding = bindings[name];
+            if(binding !== undefined)
+                return new Binding(binding, this.registery);
             if (this.parent)
                 return this.parent.getBindingByName(name);
             return undefined;
@@ -119,17 +134,17 @@
          * @param {string} name
          * @returns {Context|null}
          */
-        getContextByName: function(name) {
+        getContextForName: function(name) {
             var bindings = this.getBindings();
             if(bindings[name] !== undefined)
                 return this;
             if (this.parent)
-                return this.parent.getContextByName(name);
+                return this.parent.getContextForName(name);
             return null;
         },
 
         getVariableIdentifier: function(name) {
-            var context = this.getContextByName(name);
+            var context = this.getContextForName(name);
             if(!context)
                 return null;
             return context.str() + "." + name;
@@ -142,7 +157,7 @@
                 if (fail) {
                     throw new Error(name + " was already declared in this scope.")
                 } else {
-                    return;
+                    return false;
                 }
             }
 
@@ -153,6 +168,7 @@
                 }
             };
             bindings[name] = init;
+            return true;
         },
 
         /**
@@ -184,12 +200,6 @@
             };
         },
 
-        /*findObject : function(name) {
-            var id = this.getBindingByName(name);
-            var obj = c_object_registry[id];
-            return obj && obj.getEntry ? obj.getEntry() : id;
-        },*/
-
         declareParameters: function(params) {
             var bindings = this.getBindings();
             this.params = [];
@@ -200,19 +210,22 @@
             }
         },
 
+        /**
+         *
+         * @param {Array.<TypeInfo>} <params
+         */
         injectParameters: function(params) {
             for(var i = 0; i< params.length; i++) {
                 if (i == this.params.length)
                     break;
-                var param = params[i];
                 var name = this.params[i];
                 var bindings = this.getBindings();
-                bindings[name] = {
-                    extra : {
-                        type: TYPES.OBJECT
-                    },
-                    info : param
-                };
+                bindings[name] = { extra: {} };
+                Base.deepExtend(bindings[name].extra, params[i].getExtra());
+                if (params[i].getNodeInfo()) {
+                    bindings[name].info = {};
+                    Base.deepExtend(bindings[name].info, params[i].getNodeInfo());
+                }
             }
         },
 
@@ -277,7 +290,6 @@
             }
             return registry.getInstanceForKind(obj.getKind())
         }
-
 
     });
 

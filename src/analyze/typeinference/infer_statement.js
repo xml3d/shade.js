@@ -77,16 +77,11 @@
                 throw new Error("Dynamic variable names are not yet supported");
             }
             var functionName = node.id.name;
-            parentContext.declareVariable(functionName);
-            parentContext.updateExpression(functionName, result);
-
-            var functionContext = root.createContext(node, parentContext, { name : functionName });
+            var functionContext = root.createContext(node, parentContext, functionName);
             functionContext.declareParameters(node.params);
             root.pushContext(functionContext);
             if(functionContext.str() != root.entryPoint) {
                 return walk.VisitorOption.Skip;
-            } else {
-                result.setUsed(true);
             }
         }
     }

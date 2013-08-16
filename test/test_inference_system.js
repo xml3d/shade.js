@@ -10,16 +10,16 @@ var parseAndInferenceExpression = function (str, ctx) {
 }
 
 describe('Inference', function () {
-    xdescribe('system variables', function () {
+    describe('system variables', function () {
 
-            it("this.coord", function () {
-                var exp = parseAndInferenceExpression("this.coord");
+            it("this.coords", function () {
+                var exp = parseAndInferenceExpression("this.coords");
                 exp = exp[0];
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.OBJECT);
                 exp.extra.should.have.property("kind", TYPES.FLOAT3);
 
-                var exp = parseAndInferenceExpression("this.coord.x");
+                var exp = parseAndInferenceExpression("this.coords.x()");
                 exp = exp[0];
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.NUMBER);

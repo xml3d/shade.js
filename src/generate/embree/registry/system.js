@@ -4,7 +4,7 @@
     var Syntax = require('estraverse').Syntax;
 
     var SystemEntry = {
-        coord: {
+        coords: {
             property: function (node) {
                 return {
                     type: Syntax.Identifier,
