@@ -206,6 +206,7 @@
         },
 
         inferProgram: function(prg, params) {
+            var params = params || {};
             var programContext = registerGlobalContext(prg);
 
             this.pushContext(programContext);
