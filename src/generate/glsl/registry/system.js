@@ -8,6 +8,11 @@
                 node.property.name = "gl_FragCoord";
                 return node.property;
             }
+        },
+        normalizedCoords: {
+            property: function (node) {
+                return node.property;
+            }
         }
     };
 

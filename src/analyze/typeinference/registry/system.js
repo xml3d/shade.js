@@ -9,6 +9,10 @@
         coords: {
             type: TYPES.OBJECT,
             kind: KINDS.FLOAT3
+        },
+        normalizedCoords: {
+            type: TYPES.OBJECT,
+            kind: KINDS.FLOAT3
         }
     };
 
