@@ -8,8 +8,8 @@ var parseAndInferenceExpression = function (str, ctx) {
     return aast.body[0];
 }
 
-describe('Inference', function () {
-    describe('of Literals', function () {
+describe('Expression Inference:', function () {
+    describe('Literals', function () {
         it("should annotate the type of an INT literal", function () {
             var exp = parseAndInferenceExpression("8");
             exp.should.have.property("extra");
@@ -49,7 +49,7 @@ describe('Inference', function () {
 
     });
 
-    describe('of UnaryExpressions', function () {
+    describe('UnaryExpressions', function () {
         it("should annotate !boolean => boolean", function () {
             var exp = parseAndInferenceExpression("!true");
             exp.should.have.property("extra");

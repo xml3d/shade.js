@@ -14,7 +14,7 @@ describe('Inference:', function () {
     describe('Functions', function () {
 
         it("are annotated", function () {
-            var program = parseAndInferenceExpression("function a(){};");
+            var program = parseAndInferenceExpression("function a(){};", { entry: "global.a" });
             var func = program.body[0];
 
             program.should.have.property("context");

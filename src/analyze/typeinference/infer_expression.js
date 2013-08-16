@@ -4,7 +4,8 @@
         VisitorOption = require('estraverse').VisitorOption,
         Shade = require("../../interfaces.js"),
         TYPES = Shade.TYPES,
-        Annotation = require("./../../base/annotation.js").Annotation;
+        Annotation = require("./../../base/annotation.js").Annotation,
+        Base = require("./../../base/index.js");
 
 
     var BinaryFunctions = {
@@ -61,22 +62,53 @@
     //var log = function() { console.log.apply(console, arguments); };
 
 
+    var enterHandlers = {
+        // On enter
+        ConditionalExpression: function (node, parent, ctx, root) {
+            var result = new Annotation(node);
 
-    var handlers = {
-        AssignmentExpression: function (node, ctx) {
-            var right = ctx.createTypeInfo(node.right),
-                result = new Annotation(node);
+            root.traverse(node.test);
+            var test = ctx.createTypeInfo(node.test);
 
-            result.copy(right);
-            if (node.left.type == Syntax.Identifier) {
-                var name = node.left.name;
-                if (ctx.inDeclaration === true) {
-                    ctx.declareVariable(name)
+            // console.log(node.test, node.consequent, node.alternate);
+            if (test.hasStaticValue()) {
+                var testResult = evaluateTruth(test.getStaticValue());
+                if (testResult === true) {
+                    root.traverse(node.consequent);
+                    consequent = ctx.createTypeInfo(node.consequent);
+                    result.copy(consequent);
+                    var alternate = new Annotation(node.alternate);
+                    alternate.eliminate();
+                } else {
+                    root.traverse(node.alternate);
+                    var alternate = ctx.createTypeInfo(node.alternate);
+                    result.copy(alternate);
+                    var consequent = new Annotation(node.consequent);
+                    consequent.eliminate();
                 }
-                ctx.updateExpression(name, right);
             } else {
-                throw new Error("Assignment expression");
+                // We can't decide, thus traverse both;
+                root.traverse(node.consequent);
+                root.traverse(node.alternate);
+                var consequent = ctx.createTypeInfo(node.consequent),
+                    alternate = ctx.createTypeInfo(node.alternate);
+
+
+                if (consequent.equals(alternate)) {
+                    result.copy(consequent);
+                } else if (consequent.canNumber() && alternate.canNumber()) {
+                    result.setType(TYPES.NUMBER);
+                }
+                else if (test.isNullOrUndefined()) {
+                    result.setType(alternate.getType())
+                } else {
+                    // We don't allow dynamic types (the type of the result depends on the value of it's operands).
+                    // At this point, the expression needs to evaluate to a result, otherwise it's an error
+                    throw Shade.throwError(node, "Static evaluation not implemented yet");
+                }
             }
+            return VisitorOption.Skip;
+
         },
         Literal: function (literal) {
             //console.log(literal);
@@ -105,7 +137,26 @@
                 result.setType(TYPES.STRING);
                 result.setStaticValue(value);
             }
+        }
+    }
+
+    var handlers = {
+        AssignmentExpression: function (node, ctx) {
+            var right = ctx.createTypeInfo(node.right),
+                result = new Annotation(node);
+
+            result.copy(right);
+            if (node.left.type == Syntax.Identifier) {
+                var name = node.left.name;
+                if (ctx.inDeclaration === true) {
+                    ctx.declareVariable(name)
+                }
+                ctx.updateExpression(name, right);
+            } else {
+                throw new Error("Assignment expression");
+            }
         },
+
 
         NewExpression: function(node, parent, ctx) {
             var result = new Annotation(node);
@@ -170,53 +221,7 @@
             }
         },
 
-        // On enter
-        ConditionalExpression: function (node, ctx, root) {
-            var result = new Annotation(node);
 
-            root.traverse(node.test);
-            var test = ctx.createTypeInfo(node.test);
-
-            // console.log(node.test, node.consequent, node.alternate);
-            if (test.hasStaticValue()) {
-                var testResult = evaluateTruth(test.getStaticValue());
-                if (testResult === true) {
-                    root.traverse(node.consequent);
-                    consequent = ctx.createTypeInfo(node.consequent);
-                    result.copy(consequent);
-                    var alternate = new Annotation(node.alternate);
-                    alternate.eliminate();
-                } else {
-                    root.traverse(node.alternate);
-                    var alternate = ctx.createTypeInfo(node.alternate);
-                    result.copy(alternate);
-                    var consequent = new Annotation(node.consequent);
-                    consequent.eliminate();
-                }
-            } else {
-                // We can't decide, thus traverse both;
-                root.traverse(node.consequent);
-                root.traverse(node.alternate);
-                var consequent = ctx.createTypeInfo(node.consequent),
-                    alternate = ctx.createTypeInfo(node.alternate);
-
-
-                if (consequent.equals(alternate)) {
-                    result.copy(consequent);
-                } else if (consequent.canNumber() && alternate.canNumber()) {
-                    result.setType(TYPES.NUMBER);
-                }
-                else if (test.isNullOrUndefined()) {
-                    result.setType(alternate.getType())
-                } else {
-                    // We don't allow dynamic types (the type of the result depends on the value of it's operands).
-                    // At this point, the expression needs to evaluate to a result, otherwise it's an error
-                    throw Shade.throwError(node, "Static evaluation not implemented yet");
-                }
-            }
-            return VisitorOption.Skip;
-
-        },
 
         LogicalExpression: function (node, ctx) {
             var left = ctx.createTypeInfo(node.left),
@@ -367,9 +372,8 @@
             resultType.setFromExtra(propertyTypeInfo);
         },
 
-        CallExpression: function (node, ctx) {
+        CallExpression: function (node, ctx, root) {
             var result = new Annotation(node);
-
 
             // Call on an object, e.g. Math.cos()
             if (node.callee.type == Syntax.MemberExpression) {
@@ -402,6 +406,21 @@
                         return;
                     }
                 }
+            }  else if (node.callee.type == Syntax.Identifier) {
+                var functionName = node.callee.name;
+                var func = ctx.getBindingByName(functionName);
+                if (!func) {
+                    Shade.throwError(node, "ReferenceError: " + functionName + " is not defined");
+                }
+                if(!func.isFunction()) {
+                    Shade.throwError(node, "TypeError: " + func.getTypeString() + " is not a function");
+                }
+                var args = Annotation.createAnnotatedNodeArray(node.arguments, ctx);
+                var definingContext = ctx.getContextForName(functionName);
+                var extra = root.getFunctionInformationFor(ctx.getVariableIdentifier(functionName), args, definingContext);
+                extra && result.setFromExtra(extra);
+                node.callee.name = extra.newName;
+                return;
             }
 
                 /*case Syntax.Identifier:
@@ -419,69 +438,10 @@
         }
     };
 
-
-
-
     var enterExpression = function (node, parent, ctx) {
-        switch (node.type) {
-            case Syntax.AssignmentExpression:
-                break;
-            case Syntax.ArrayExpression:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.ArrayPattern:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.BinaryExpression:
-                break;
-            case Syntax.CallExpression:
-                break;
-            case Syntax.ConditionalExpression:
-                return handlers.ConditionalExpression(node, ctx, this);
-                break;
-            case Syntax.FunctionExpression:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.Identifier:
-                break;
-            case Syntax.Literal:
-                handlers.Literal(node);
-                break;
-            case Syntax.LogicalExpression:
-                break;
-            case Syntax.MemberExpression:
-                break;
-            case Syntax.NewExpression:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.ObjectExpression:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.ObjectPattern:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.Property:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.SequenceExpression:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.ThisExpression:
-                break;
-            case Syntax.UnaryExpression:
-                break;
-            case Syntax.UpdateExpression:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.YieldExpression:
-                log(node.type + " is not handle yet.");
-                break;
-            default:
-                throw new Error('Unknown node type: ' + node.type);
-
-
+        if (enterHandlers.hasOwnProperty(node.type)) {
+            return enterHandlers[node.type](node, parent, ctx, this);
         }
-
     };
 
     var exitExpression = function (node, parent, ctx) {
@@ -500,7 +460,7 @@
                 handlers.BinaryExpression(node, ctx);
                 break;
             case Syntax.CallExpression:
-                handlers.CallExpression(node, ctx);
+                handlers.CallExpression(node, ctx, this);
                 break;
             case Syntax.ConditionalExpression:
                 break;

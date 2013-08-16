@@ -1,6 +1,11 @@
 {
     "global.shade": [
         {
+            "extra" : {
+                "type": "object",
+                "kind": "any"
+            },
+            "info" : {
             "texcoord": {
                 "type": "object",
                 "kind": "float2",
@@ -26,6 +31,7 @@
             },
             "shininess": {
                 "type": "number"
+            }
             }
         }
     ]
