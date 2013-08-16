@@ -93,13 +93,19 @@
         updateOutput: function(){
             var contextData = {
                 "global.shade" : [
-                    { "_global" : true }
+                    { "_global" : true,
+                      "extra": {
+                          "type": "object",
+                          "kind": "any"
+                      },
+                      "info" : {}
+                    }
                 ]
             }
             for(var i = 0; i < this.paramList.length; ++i){
                 var name = this.paramList[i], sourceName = "_" + name + "__source";
                 var src = TYPE_LIST[this.paramForm.elements[name].value];
-                var dest = contextData["global.shade"][0][name] = {};
+                var dest = contextData["global.shade"][0].info[name] = {};
                 for(var j in src){
                     dest[j] = src[j];
                 }
