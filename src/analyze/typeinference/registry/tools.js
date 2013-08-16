@@ -33,7 +33,14 @@
             1: { type: TYPES.NUMBER },
             2: { type: TYPES.OBJECT, kind: KINDS.FLOAT2 },
             3: { type: TYPES.OBJECT, kind: KINDS.FLOAT3 },
-            4: { type: TYPES.OBJECT, kind: KINDS.FLOAT4 }
+            4: { type: TYPES.OBJECT, kind: KINDS.FLOAT4 },
+            color: { type: TYPES.OBJECT, kind: KINDS.COLOR }
+        },
+        getType: function(destVector, color){
+            if(destVector == 4 && color)
+                return Vec.TYPES.color;
+            else
+                return Vec.TYPES[destVector];
         },
         getStaticValue: function(typeInfo, methodName, args, callObject){
             if(callObject.hasStaticValue() && args.every(function(a) {return a.hasStaticValue(); })){
@@ -44,7 +51,9 @@
                     typeInfo.staticValue = method.apply(object, callArgs);
             }
         },
-        checkVecArguments: function(methodName, vecSize, withEmpty, result, args){
+        checkVecArguments: function(methodName, color, vecSize, withEmpty, result, args){
+            withEmpty = (withEmpty || vecSize == 0);
+            color = color && vecSize == 4;
             var allowed = [];
             for(var i = withEmpty ? 0 : 1; i <= vecSize; ++i) allowed.push(i);
             ns.checkParamCount(result.node, methodName, allowed, args.length);
@@ -67,41 +76,49 @@
                 // TODO: Print Type?
                 idx += cnt;
             }
-            if(idx < vecSize)
+
+            if(idx < vecSize && (!color || idx + 1 < vecSize))
                 Shade.throwError(result.node, "Inavlid parameters for " + methodName + ", expected " + vecSize + " scalar values, got " + idx);
             else if(i < args.length){
                 Shade.throwError(result.node, "Inavlid parameters for " + methodName + ", too many parameters");
             }
         },
-        vecEvaluate: function(objectName, methodName, destVecSize, srcVecSize, result, args, ctx, callObject){
-            Vec.checkVecArguments(objectName + "." + methodName, srcVecSize, true, result, args);
+        vecEvaluate: function(objectName, methodName, color, destVecSize, srcVecSize, result, args, ctx, callObject){
+            Vec.checkVecArguments(objectName + "." + methodName, color, srcVecSize, true, result, args);
 
             var typeInfo = {};
-            Base.extend(typeInfo, Vec.TYPES[destVecSize]);
+            Base.extend(typeInfo, Vec.getType(destVecSize, color));
 
             Vec.getStaticValue(typeInfo, methodName, args, callObject);
             return typeInfo;
         },
 
-        swizzleEvaluate: function(objectName, vecSize, swizzle, withSetter, result, args, ctx, callObject) {
-            var methodName = objectName + "." + swizzle;
+        optionalZeroEvaluate: function(objectName, methodName, color, destVecSize, zeroDestVecSize, srcVecSize, result, args, ctx, callObject) {
+            var methodName = objectName + "." + methodName;
             var typeInfo = {};
 
             if(args.length == 0){
-                Base.extend(typeInfo, Vec.TYPES[swizzle.length]);
+                Base.extend(typeInfo, Vec.getType(zeroDestVecSize, color));
             }
             else{
-                if(withSetter)
-                    Vec.checkVecArguments(methodName, swizzle.length, true, result, args);
-                else
-                    ns.checkParamCount(result.node, methodName, [0], args.length);
-                Base.extend(typeInfo, Vec.TYPES[vecSize]);
+                Vec.checkVecArguments(methodName, color, srcVecSize, true, result, args);
+                Base.extend(typeInfo, Vec.getType(destVecSize, color));
             }
-            Vec.getStaticValue(typeInfo, swizzle, args, callObject);
+            Vec.getStaticValue(typeInfo, methodName, args, callObject);
 
             return typeInfo;
         },
-        getSwizzleEvaluate: function(objectName, vecSize, swizzle){
+
+        swizzleEvaluate: function(objectName, color, vecSize, swizzle, withSetter, result, args, ctx, callObject) {
+            if(withSetter){
+                return Vec.optionalZeroEvaluate(objectName, swizzle, color, vecSize, swizzle.length, swizzle.length,
+                    result, args, ctx, callObject);
+            }
+            else{
+                return Vec.vecEvaluate(objectName, swizzle, color, swizzle.length, 0, result, args, ctx, callObject);
+            }
+        },
+        getSwizzleEvaluate: function(objectName, color, vecSize, swizzle){
             var indices = [], withSetter = (swizzle.length <= vecSize);
             for(var i = 0; withSetter && i < swizzle.length; ++i){
                 var idx = VecBase.swizzleToIndex(swizzle.charAt(i));
@@ -112,12 +129,12 @@
             }
             return  {
                 type: TYPES.FUNCTION,
-                evaluate: Vec.swizzleEvaluate.bind(null, objectName, vecSize, swizzle, withSetter)
+                evaluate: Vec.swizzleEvaluate.bind(null, objectName, color, vecSize, swizzle, withSetter)
             }
         },
-        attachSwizzles: function (instance, objectName, vecCount){
+        attachSwizzles: function (instance, objectName, color, vecCount){
             for(var s = 0; s < VecBase.swizzleSets.length; ++s){
-                for(var count = 0; count < 4; ++count){
+                for(var count = 1; count <= 4; ++count){
                     var max = Math.pow(vecCount, count);
                      for(var i = 0; i < max; ++i){
                         var val = i;
@@ -127,8 +144,17 @@
                             val = Math.floor(val / vecCount);
                             key+= VecBase.swizzleSets[s][idx];
                         }
-                        instance[key] = Vec.getSwizzleEvaluate(objectName, vecCount, key);
+                        instance[key] = Vec.getSwizzleEvaluate(objectName, color, vecCount, key);
                     }
+                }
+            }
+        },
+        attachVecMethods: function(instance, objectName, color, destVecSize, srcVecSize, methodNames){
+            for(var i = 0; i < methodNames.length; ++i){
+                var methodName = methodNames[i];
+                instance[methodName] = {
+                    type: TYPES.FUNCTION,
+                    evaluate: Vec.vecEvaluate.bind(null, objectName, methodName, color, destVecSize, srcVecSize)
                 }
             }
         }

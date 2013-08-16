@@ -33,7 +33,6 @@
                 typeInfo.staticValue = v;
             }
             return typeInfo;
-
         }
     };
 

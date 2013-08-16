@@ -209,6 +209,7 @@
             case Syntax.NewExpression:
             case Syntax.CallExpression:
             case Syntax.MemberExpression:
+            case Syntax.BinaryExpression:
                 return context.createTypeInfo(object);
                 break;
             case Syntax.Identifier:

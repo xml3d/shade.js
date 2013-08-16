@@ -31,6 +31,7 @@
                 arguments: args
             };
             ANNO(result).setType(TYPES.OBJECT, KINDS['FLOAT' + vecCount]);
+            ANNO(result.callee).setType(TYPES.FUNCTION);
             return result;
         },
 
@@ -96,6 +97,42 @@
                     }
                 }
             }
+        },
+
+        createOperator: function(vecCount, operator, node, args, parent) {
+            var other = Vec.generateVecFromArgs(vecCount, node.arguments);
+            var replace = {
+                type: Syntax.BinaryExpression,
+                operator: operator,
+                left: node.callee.object,
+                right: other
+            };
+            ANNO(replace).copy(ANNO(node));
+            return replace;
+        },
+
+        attachOperators: function(instance, vecCount, operators){
+            for(var name in operators){
+                var operator = operators[name];
+                instance[name] = {
+                    callExp: Vec.createOperator.bind(null, vecCount, operator)
+                }
+            }
+        },
+
+        createFunctionCall: function(functionName, node, args, parent) {
+            var replace = {
+                type: Syntax.CallExpression,
+                callee: {
+                    type: Syntax.Identifier,
+                    name: functionName
+                },
+                arguments: [
+                    node.callee.object
+                ]
+            };
+            ANNO(replace).copy(ANNO(node));
+            return replace;
         }
     };
     ns.Vec = Vec;

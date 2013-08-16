@@ -213,9 +213,9 @@
             case Syntax.BinaryExpression:
             case Syntax.LogicalExpression:
             case Syntax.AssignmentExpression:
-                result = handleExpression(node.left);
+                result = handleBinaryArgument(node.left);
                 result += " " + node.operator + " ";
-                result += handleExpression(node.right);
+                result += handleBinaryArgument(node.right);
                 break;
 
             case Syntax.CallExpression:
@@ -239,6 +239,16 @@
 
             default:
                 //console.log("Unhandled: " , node.type);
+        }
+        return result;
+    }
+
+    function handleBinaryArgument(node){
+        var result = handleExpression(node);
+        switch(node.type) {
+            case Syntax.BinaryExpression:
+            case Syntax.LogicalExpression:
+            case Syntax.AssignmentExpression: result = "( " + result + " )"; break;
         }
         return result;
     }

@@ -14,7 +14,7 @@
          * @param {Context} ctx
          */
         evaluate: function(result, args, ctx) {
-            Tools.Vec.checkVecArguments("Vec2", 2, true, result, args);
+            Tools.Vec.checkVecArguments("Vec2", false, 2, true, result, args);
             var argArray = [];
             var isStatic = true;
             args.forEach(function (param, index) {
@@ -41,20 +41,14 @@
     };
 
     var Vector2Instance = {
-        add: {
+        length: {
             type: TYPES.FUNCTION,
-            evaluate: function (result, args, ctx, callObject) {
-                return Tools.Vec.vecEvaluate("Vec2", "add", 3, 2, result, args, ctx, callObject);
-            }
-        },
-        sub: {
-            type: TYPES.FUNCTION,
-            evaluate: function (result, args, ctx, callObject) {
-                return Tools.Vec.vecEvaluate("Vec2", "sub", 3, 2, result, args, ctx, callObject);
-            }
+            evaluate: Tools.Vec.optionalZeroEvaluate.bind(null,"Vec2", false, "length", 2, 1, 1)
         }
     };
-    Tools.Vec.attachSwizzles(Vector2Instance, "Vec2", 2);
+    Tools.Vec.attachSwizzles(Vector2Instance, "Vec2", false, 2);
+    Tools.Vec.attachVecMethods(Vector2Instance, "Vec2", false, 2, 2, ['add', 'sub', 'mul', 'div', 'mod']);
+    Tools.Vec.attachVecMethods(Vector2Instance, "Vec2", false, 2, 0, ['normalize']);
 
 
     Tools.extend(ns, {
