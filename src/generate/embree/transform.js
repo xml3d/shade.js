@@ -42,7 +42,7 @@
                  context: context,
                  contextStack: [context],
                  inMain:  this.mainId == context.str(),
-                 injections : program.injections[this.mainId] ? program.injections[this.mainId][0] : null,
+                 injections : program.injections[this.mainId] && program.injections[this.mainId][0] ? program.injections[this.mainId][0].node.info : null,
                  blockedNames : [],
                  topDeclarations : [],
                  idNameMap : {}
