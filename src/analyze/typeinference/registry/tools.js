@@ -35,6 +35,15 @@
             3: { type: TYPES.OBJECT, kind: KINDS.FLOAT3 },
             4: { type: TYPES.OBJECT, kind: KINDS.FLOAT4 }
         },
+        getStaticValue: function(typeInfo, methodName, args, callObject){
+            if(callObject.hasStaticValue() && args.every(function(a) {return a.hasStaticValue(); })){
+                var object = callObject.getStaticValue();
+                var callArgs = args.map(function(a) {return a.getStaticValue(); });
+                var method = object[methodName];
+                if(method)
+                    typeInfo.staticValue = method.apply(object, callArgs);
+            }
+        },
         checkVecArguments: function(methodName, vecSize, withEmpty, result, args){
             var allowed = [];
             for(var i = withEmpty ? 0 : 1; i <= vecSize; ++i) allowed.push(i);
@@ -64,11 +73,13 @@
                 Shade.throwError(result.node, "Inavlid parameters for " + methodName + ", too many parameters");
             }
         },
-        vecEvaluate: function(methodName, destVecSize, srcVecSize, result, args){
-            Vec.checkVecArguments(methodName, srcVecSize, true, result, args);
+        vecEvaluate: function(objectName, methodName, destVecSize, srcVecSize, result, args, ctx, callObject){
+            Vec.checkVecArguments(objectName + "." + methodName, srcVecSize, true, result, args);
 
             var typeInfo = {};
             Base.extend(typeInfo, Vec.TYPES[destVecSize]);
+
+            Vec.getStaticValue(typeInfo, methodName, args, callObject);
             return typeInfo;
         },
 
@@ -86,7 +97,7 @@
                     ns.checkParamCount(result.node, methodName, [0], args.length);
                 Base.extend(typeInfo, Vec.TYPES[vecSize]);
             }
-            // TODO: Determine static values:
+            Vec.getStaticValue(typeInfo, swizzle, args, callObject);
 
             return typeInfo;
         },
@@ -102,6 +113,23 @@
             return  {
                 type: TYPES.FUNCTION,
                 evaluate: Vec.swizzleEvaluate.bind(null, objectName, vecSize, swizzle, withSetter)
+            }
+        },
+        attachSwizzles: function (instance, objectName, vecCount){
+            for(var s = 0; s < VecBase.swizzleSets.length; ++s){
+                for(var count = 0; count < 4; ++count){
+                    var max = Math.pow(vecCount, count);
+                     for(var i = 0; i < max; ++i){
+                        var val = i;
+                        var key = "";
+                        for(var  j = 0; j < count; ++j){
+                            var idx = val % vecCount;
+                            val = Math.floor(val / vecCount);
+                            key+= VecBase.swizzleSets[s][idx];
+                        }
+                        instance[key] = Vec.getSwizzleEvaluate(objectName, vecCount, key);
+                    }
+                }
             }
         }
 

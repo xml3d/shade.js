@@ -14,7 +14,7 @@
          * @param {Context} ctx
          */
         evaluate: function(result, args, ctx) {
-            Tools.checkParamCount(result.node, "Vec2()", [0, 1, 2], args.length);
+            Tools.Vec.checkVecArguments("Vec2", 2, true, result, args);
             var argArray = [];
             var isStatic = true;
             args.forEach(function (param, index) {
@@ -37,69 +37,24 @@
         }
     };
 
-    const VEC2TYPE = { type: TYPES.OBJECT, kind: KINDS.FLOAT2 };
-
     var Vector2StaticObject = {
     };
 
-    var getStaticValue = function(index) {
-        return function(vec2, args) {
-            return vec2[index];
-        }
-    }
-
     var Vector2Instance = {
-        x: Tools.singleAccessor("Vec.x", VEC2TYPE, [0, 1], getStaticValue(0)),
-        y: Tools.singleAccessor("Vec.y", VEC2TYPE, [0, 1], getStaticValue(1)),
-        yx: Tools.Vec.getSwizzleEvaluate("Vec2", 2, "yx"),
-        xy: {
-            type: TYPES.FUNCTION,
-            evaluate: function (result, args) {
-                Tools.checkParamCount(result.node, "Vec2.xy", [0, 1, 2], args.length);
-                // TODO: Check arg parameters
-                var typeInfo = {};
-                Tools.extend(typeInfo, VEC2TYPE);
-                return typeInfo;
-            }
-        },
         add: {
             type: TYPES.FUNCTION,
-            evaluate: function (result, args) {
-                var name = "Vec2.add";
-                Tools.checkParamCount(result.node, name, [0, 1, 2], args.length);
-                switch (args.length) {
-                    case 0:   // Is this valid?
-                        break;
-                    case 1:
-                        if(!(args[0].canNumber() || args[0].equals(VEC2TYPE))) {
-                            Shade.throwError(result.node, "Expected number or Vec2 as first argument of " + name);
-                        }
-                        break;
-                    case 2:
-                        if(!(args[0].canNumber() && args[1].canNumber())) {
-                            Shade.throwError(result.node, "Expected number as first and second argument of " + name);
-                        }
-                        break;
-                }
-                var typeInfo = {};
-                Tools.extend(typeInfo, VEC2TYPE);
-                return typeInfo;
-
+            evaluate: function (result, args, ctx, callObject) {
+                return Tools.Vec.vecEvaluate("Vec2", "add", 3, 2, result, args, ctx, callObject);
             }
         },
         sub: {
             type: TYPES.FUNCTION,
-            evaluate: function (result, args) {
-                Tools.checkParamCount(result.node, "Vec2.sub", [0, 1, 2], args.length);
-                // TODO: Check arg parameters
-                var typeInfo = {};
-                Tools.extend(typeInfo, VEC2TYPE);
-                return typeInfo;
+            evaluate: function (result, args, ctx, callObject) {
+                return Tools.Vec.vecEvaluate("Vec2", "sub", 3, 2, result, args, ctx, callObject);
             }
         }
-
-
     };
+    Tools.Vec.attachSwizzles(Vector2Instance, "Vec2", 2);
 
 
     Tools.extend(ns, {
