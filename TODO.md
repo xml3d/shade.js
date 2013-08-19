@@ -17,6 +17,30 @@ microfacet_beckmann_refraction, microfacet_ggx_refraction, transparent, transluc
 * Scatter: diffuse_reflection_bsdf, diffuse_transmission_bsdf, specular_bsdf, simple_glossy_bsdf, backscattering_glossy reflection_bsdf
 * Emissive: diffuse_edf, spot_edf, measured_edf
 
+[__Embree__]
+
+* Conductor (perfectly polished metal), DielectricReflection (reflection of a dielectricum), DielectricTransmission,
+  ThinDielectricTransmission (transmission part of a thin dielectricum. Supports a color of the dielectric medium.),
+  Reflection (perfect mirror), Specular (specular Phong BRDF, approximation of glossy reflection),
+  Transmission (transmissive material)
+
+* Lambertian (reflects the same intensity independent of the viewing direction),
+  LambertianTransmission, LambertianHorizon
+
+* Minnaert (for backscattering materials (e.g. dust, fabric) this BRDF has a reflectance parameter that determines the color of
+  the surface and a parameter to determine the amount of backscattering.)
+
+* Velvety (for materials with horizon scattering (velvet, peach, etc.))
+
+* DielectricLayer (models a ground BRDF covered by a dielectric layer)
+
+* Microfacet:
+  distributions: AnisotropicBeckmannDistribution, AnisotropicPowerCosineDistribution, BeckmannDistribution
+                 PowerCosineDistribution
+  fresnel terms: FresnelNone (perfect reflection), FresnelConstant (perfect reflection), SchlickDielectric,
+                 FresnelDielectric, FresnelConductor (metal surface)
+
+* Composited BRDF (evaluates unweighted sum of multiple BRDFS)
 
 ### Analysis
 
