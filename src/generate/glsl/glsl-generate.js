@@ -1,7 +1,7 @@
 (function (ns) {
 
-    var Base = require("./../../base/index.js");
     var FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
+    var Shade = require("./../../interfaces.js");
     var Types = require("./../../interfaces.js").TYPES;
     var Kinds = require("./../../interfaces.js").OBJECT_KINDS;
     var walk = require('estraverse'),
@@ -25,7 +25,7 @@
         return header;
     }
 
-    var toGLSLType = function (info) {
+    var toGLSLType = function (info, allowUndefined) {
         switch (info.type) {
             case Types.OBJECT:
                 switch (info.kind) {
@@ -39,11 +39,15 @@
                         return "<undefined>";
                 }
             case Types.UNDEFINED:
-                return "void";
+                if (allowUndefined)
+                    return "void";
+                throw new Error("Could not determine type");
             case Types.NUMBER:
                 return "float";
             case Types.INT:
                 return "int";
+            case Types.BOOLEAN:
+                return "bool";
             default:
                 throw new Error("toGLSLType: Unhandled type: " + info.type);
 
@@ -91,72 +95,77 @@
     function traverse(ast, lines, opt) {
         walk.traverse(ast, {
                 enter: function (node) {
-                    var type = node.type;
-                    switch (type) {
+                    try {
+                        var type = node.type;
+                        switch (type) {
+
+                            case Syntax.Program:
+                                getHeader(opt).forEach(function (e) {
+                                    lines.push(e)
+                                });
+                                break;
 
 
-                        case Syntax.Program:
-                            getHeader(opt).forEach(function(e) { lines.push(e) });
-                            break;
-
-
-                        case Syntax.FunctionDeclaration:
-                            var func = new FunctionAnnotation(node);
-                            var methodStart = [toGLSLType(func.getReturnInfo())];
-                            methodStart.push(node.id.name, '(');
-                            if (!(node.params && node.params.length)) {
-                                methodStart.push("void");
-                            } else {
-                                node.params.forEach(function (param) {
-                                    methodStart.push(toGLSLType(param.extra), param.name);
-                                })
-                            }
-                            methodStart.push(') {');
-                            lines.appendLine(methodStart.join(" "));
-                            lines.changeIndention(1);
-                            return;
-
-
-                        case Syntax.ReturnStatement:
-                            var hasArguments = node.argument;
-                            lines.appendLine("return " + (hasArguments ? handleExpression(node.argument) : "") + ";");
-                            return;
-
-                        case Syntax.VariableDeclarator :
-                            // console.log("Meep!");
-                            var line = toGLSLType(node.extra) + " " + node.id.name;
-                            if(node.init) line += " = " + handleExpression(node.init);
-                            lines.appendLine(line + ";");
-                            return;
-
-                        case Syntax.AssignmentExpression:
-                            lines.appendLine(handleExpression(node) + ";")
-                            return;
-
-                        case Syntax.ExpressionStatement:
-                            lines.appendLine(handleExpression(node.expression) + ";");
-                            return VisitorOption.Skip;
-
-                        case Syntax.IfStatement:
-                            lines.appendLine("if(" + handleExpression(node.test) + ") {");
-
-                            lines.changeIndention(1);
-                            traverse(node.consequent, lines, opt);
-                            lines.changeIndention(-1);
-
-                            if (node.alternate) {
-                                lines.appendLine("} else {");
+                            case Syntax.FunctionDeclaration:
+                                var func = new FunctionAnnotation(node);
+                                var methodStart = [toGLSLType(func.getReturnInfo(), true)];
+                                methodStart.push(node.id.name, '(');
+                                if (!(node.params && node.params.length)) {
+                                    methodStart.push("void");
+                                } else {
+                                    node.params.forEach(function (param) {
+                                        methodStart.push(toGLSLType(param.extra), param.name);
+                                    })
+                                }
+                                methodStart.push(') {');
+                                lines.appendLine(methodStart.join(" "));
                                 lines.changeIndention(1);
-                                traverse(node.alternate, lines, opt);
+                                return;
+
+
+                            case Syntax.ReturnStatement:
+                                var hasArguments = node.argument;
+                                lines.appendLine("return " + (hasArguments ? handleExpression(node.argument) : "") + ";");
+                                return;
+
+                            case Syntax.VariableDeclarator :
+                                // console.log("Meep!");
+                                var line = toGLSLType(node.extra) + " " + node.id.name;
+                                if (node.init) line += " = " + handleExpression(node.init);
+                                lines.appendLine(line + ";");
+                                return;
+
+                            case Syntax.AssignmentExpression:
+                                lines.appendLine(handleExpression(node) + ";")
+                                return;
+
+                            case Syntax.ExpressionStatement:
+                                lines.appendLine(handleExpression(node.expression) + ";");
+                                return VisitorOption.Skip;
+
+                            case Syntax.IfStatement:
+                                lines.appendLine("if(" + handleExpression(node.test) + ") {");
+
+                                lines.changeIndention(1);
+                                traverse(node.consequent, lines, opt);
                                 lines.changeIndention(-1);
-                            }
-                            lines.appendLine("}");
-                            return VisitorOption.Skip;
+
+                                if (node.alternate) {
+                                    lines.appendLine("} else {");
+                                    lines.changeIndention(1);
+                                    traverse(node.alternate, lines, opt);
+                                    lines.changeIndention(-1);
+                                }
+                                lines.appendLine("}");
+                                return VisitorOption.Skip;
 
 
-                        default:
-                        //console.log("Unhandled: " + type);
+                            default:
+                            //console.log("Unhandled: " + type);
 
+                        }
+                    } catch (e) {
+                        Shade.throwError(node, e.message);
                     }
                 },
                 leave: function (node) {

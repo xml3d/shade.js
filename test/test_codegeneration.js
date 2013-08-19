@@ -33,7 +33,7 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("var x = 5.0;");
             code.should.match(/float x = 5.0;/);
         });
-        xit("bool", function() {
+        it("bool", function() {
             var code = generateExpression("var x = true;");
             code.should.match(/bool x = true;/);
         });
@@ -57,7 +57,7 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("var x = new Color();");
             code.should.match(/vec4 x = vec4\(0, 0, 0, 1\);/);
         });
-        xit("any", function() {
+        it("any", function() {
             var code = generateExpression.bind(null, "var x;");
             code.should.throw();
         });
