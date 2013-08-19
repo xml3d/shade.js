@@ -1,8 +1,9 @@
 (function (ns) {
 
-    var TYPES = require("../../../interfaces.js").TYPES,
-        Base = require("../../../base/index.js");
-
+    var Shade = require("../../../interfaces.js"),
+        TYPES = Shade.TYPES,
+        Base = require("../../../base/index.js"),
+        Tools = require("./tools.js");
 
 
     var evaluateMethod = function (name, paramCount, returnType) {
@@ -46,6 +47,22 @@
                 return {
                     type: TYPES.NUMBER
                 }
+            }
+        },
+        abs: {
+            type: TYPES.FUNCTION,
+            evaluate: function(result, args) {
+                Tools.checkParamCount(result.node, "Math.abs", [1], args.length);
+                var typeInfo = {};
+                switch(args[0].getType()) {
+                    case TYPES.NUMBER:
+                    case TYPES.INT:
+                        typeInfo.type = args[0].getType();
+                        break;
+                    default:
+                        Shade.throwError(result.node, "InvalidType for Math.abs");
+                }
+                return typeInfo;
             }
         }
     };
