@@ -7,6 +7,10 @@
     var ShadeObject = {
         diffuse: {},
         phong: {},
+        fract: { property: Tools.removeMemberFromExpression },
+        clamp: { property: Tools.removeMemberFromExpression },
+        step: { property: Tools.removeMemberFromExpression },
+        smoothstep: { property: Tools.removeMemberFromExpression }
     }
 
     Tools.extend(ns, {

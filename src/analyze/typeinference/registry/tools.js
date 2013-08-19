@@ -5,6 +5,12 @@
         KINDS = Shade.OBJECT_KINDS,
         VecBase = require("../../../base/vec.js");
 
+    var allArgumentsAreStatic = function (args) {
+        return args.every(function (arg) {
+            return arg.hasStaticValue()
+        });
+    }
+
     ns.checkParamCount = function(node, name, allowed, is) {
         if (allowed.indexOf(is) == -1) {
             Shade.throwError(node, "Invalid number of parameters for " + name + ", expected " + allowed.join(" or ") + ", found: " + is);
@@ -43,7 +49,7 @@
                 return Vec.TYPES[destVector];
         },
         getStaticValue: function(typeInfo, methodName, args, callObject){
-            if(callObject.hasStaticValue() && args.every(function(a) {return a.hasStaticValue(); })){
+            if(callObject.hasStaticValue() && allArgumentsAreStatic(args)){
                 var object = callObject.getStaticValue();
                 var callArgs = args.map(function(a) {return a.getStaticValue(); });
                 var method = object[methodName];
@@ -161,7 +167,7 @@
 
     };
     ns.Vec = Vec;
-
+    ns.allArgumentsAreStatic = allArgumentsAreStatic;
 
 
 }(exports));

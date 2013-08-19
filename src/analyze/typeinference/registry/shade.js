@@ -4,7 +4,7 @@
         TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS,
         Base = require("../../../base/index.js"),
-        Annotation = require("../../../base/annotation.js").Annotation;
+        Tools = require("./tools.js");
 
     var ShadeObject = {
         diffuse: {
@@ -49,6 +49,79 @@
                     type: TYPES.OBJECT,
                     kind: KINDS.COLOR_CLOSURE
                 };
+            }
+        },
+        clamp: {
+            type: TYPES.FUNCTION,
+            evaluate: function(result, args) {
+                Tools.checkParamCount(result.node, "Shade.clamp", [3], args.length);
+
+                if (args.every(function(e) { return e.canNumber(); })) {
+                    var typeInfo = {
+                        type: TYPES.NUMBER
+                    }
+                    if (Tools.allArgumentsAreStatic(args)) {
+                        var callArgs = args.map(function(a) {return a.getStaticValue(); });
+                        typeInfo.staticValue = Shade.Shade.clamp.apply(null, callArgs);
+                    }
+                    return typeInfo;
+                }
+                Shade.throwError(result.node, "Shade.clamp not supported with argument types: " + args.map(function(arg) { return arg.getTypeString(); }).join(", "));
+            }
+        },
+        smoothstep: {
+            type: TYPES.FUNCTION,
+            evaluate: function(result, args, ctx) {
+                Tools.checkParamCount(result.node, "Shade.smoothstep", [3], args.length);
+
+                if (args.every(function(e) { return e.canNumber(); })) {
+                    var typeInfo = {
+                        type: TYPES.NUMBER
+                    }
+                    if (Tools.allArgumentsAreStatic(args)) {
+                        var callArgs = args.map(function(a) {return a.getStaticValue(); });
+                        typeInfo.staticValue = Shade.Shade.smoothstep.apply(null, callArgs);
+                    }
+                    return typeInfo;
+                }
+                Shade.throwError(result.node, "Shade.smoothstep not supported with argument types: " + args.map(function(arg) { return arg.getTypeString(); }).join(", "));
+            }
+        },
+        step: {
+            type: TYPES.FUNCTION,
+            evaluate: function(result, args, ctx) {
+                Tools.checkParamCount(result.node, "Shade.step", [2], args.length);
+
+                if (args.every(function(e) { return e.canNumber(); })) {
+                    var typeInfo = {
+                        type: TYPES.NUMBER
+                    }
+                    if (Tools.allArgumentsAreStatic(args)) {
+                        var callArgs = args.map(function(a) {return a.getStaticValue(); });
+                        typeInfo.staticValue = Shade.Shade.step.apply(null, callArgs);
+                    }
+                    return typeInfo;
+                }
+                Shade.throwError(result.node, "Shade.step not supported with argument types: " + args.map(function(arg) { return arg.getTypeString(); }).join(", "));
+            }
+        },
+        fract: {
+            type: TYPES.FUNCTION,
+            evaluate: function(result, args) {
+                Tools.checkParamCount(result.node, "Shade.fract", [1], args.length);
+
+                var x = args[0];
+                if (x.canNumber()) {
+                    var typeInfo = {
+                        type: TYPES.NUMBER
+                    }
+
+                    if (x.hasStaticValue()) {
+                        typeInfo.staticValue = Shade.Shade.fract(x.getStaticValue());
+                    }
+                    return typeInfo;
+                }
+                Shade.throwError(result.node, "Shade.fract not supported with argument types: " + args.map(function(arg) { return arg.getTypeString(); }).join(", "));
             }
         }
     };
