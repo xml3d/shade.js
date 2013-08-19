@@ -42,6 +42,13 @@
                     kind: Kinds.FLOAT3
                 }
             }));
+            ctx.declareVariable("__sys_normalizedCoords", false);
+            ctx.updateExpression("__sys_normalizedCoords", new TypeInfo({
+                extra: {
+                    type: Types.OBJECT,
+                    kind: Kinds.FLOAT3
+                }
+            }));
 
             return ctx;
         },
@@ -245,7 +252,7 @@
 
             var objectInfo = context.getObjectInfoFor(objectReference);
             if(!objectInfo) { // Every object needs an info, otherwise we did something wrong
-                console.error("No object registered for: ", objectReference.getTypeString(), JSON.stringify(callExpression.object));
+                console.error("No object registered for: ", objectReference.getTypeString(), JSON.stringify(callExpression.callee));
                 return;
                 //Shade.throwError(callExpression, "Internal: No registration for object: " + objectReference.getTypeString() + ", " + JSON.stringify(callExpression.object));
             }

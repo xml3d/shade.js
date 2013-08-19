@@ -13,7 +13,14 @@
         normalizedCoords: {
             type: TYPES.OBJECT,
             kind: KINDS.FLOAT3
+        },
+        height: {
+            type: TYPES.INT
+        },
+        width: {
+            type: TYPES.INT
         }
+
     };
 
     Base.extend(ns, {
