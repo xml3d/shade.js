@@ -150,7 +150,7 @@
             return context.str() + "." + name;
         },
 
-        declareVariable: function(name, fail) {
+        declareVariable: function(name, fail, position) {
             var bindings = this.getBindings();
             fail = (fail == undefined) ? true : fail;
             if (bindings[name]) {
@@ -163,6 +163,7 @@
 
             var init = {
                 initialized : false,
+                initPosition: position,
                 extra: {
                     type: TYPES.UNDEFINED
                 }
@@ -184,6 +185,12 @@
             if (v.isInitialized() && v.getType() !== typeInfo.getType()) {
                 throw new Error("Variable may not change it's type: " + name);
             }
+            if (!v.isInitialized()) {
+                // Annotate the declaration, if one is given
+                if(v.node.initPosition)
+                    v.node.initPosition.copy(typeInfo);
+            }
+
             v.copy(typeInfo);
             v.setDynamicValue();
             v.setInitialized(!typeInfo.isUndefined());

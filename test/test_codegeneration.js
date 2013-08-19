@@ -55,15 +55,15 @@ describe('GLSL Code generation,', function () {
         });
     });
     describe('assignment of type', function() {
-        xit("int", function() {
+        it("int", function() {
             var code = generateExpression("var x; x = 5;");
             code.should.match(/int x;\s*x = 5;/);
         });
-        xit("float", function() {
+        it("float", function() {
             var code = generateExpression("var x; x = 5.0;");
-            code.should.match(/float x;\s*x = 5;/);
+            code.should.match(/float x;\s*x = 5.0;/);
         });
-        xit("bool", function() {
+        it("bool", function() {
             var code = generateExpression("var x; x = true;");
             code.should.match(/bool x;\s*x = true;/);
         });

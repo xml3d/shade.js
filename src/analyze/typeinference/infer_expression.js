@@ -149,7 +149,7 @@
             if (node.left.type == Syntax.Identifier) {
                 var name = node.left.name;
                 if (ctx.inDeclaration === true) {
-                    ctx.declareVariable(name)
+                    ctx.declareVariable(name, true, result)
                 }
                 ctx.updateExpression(name, right);
             } else {

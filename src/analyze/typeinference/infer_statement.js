@@ -108,7 +108,7 @@
                 throw new Error("Dynamic variable names are not yet supported");
             }
             var variableName = node.id.name;
-            ctx.declareVariable(variableName);
+            ctx.declareVariable(variableName, true, result);
 
             if (node.init) {
                 var init = ctx.createTypeInfo(node.init);

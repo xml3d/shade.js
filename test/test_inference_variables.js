@@ -123,7 +123,7 @@ describe('Inference:', function () {
             var program = parseAndInferenceExpression("var a; a = 3;");
             var declaration = program.body[0].declarations[0];
             declaration.should.have.property("extra");
-            declaration.extra.should.have.property("type", TYPES.UNDEFINED);
+            declaration.extra.should.have.property("type", TYPES.INT);
 
             var exp = program.body[1];
             exp.should.have.property("extra");
