@@ -94,14 +94,14 @@
         },
 
         optionalZeroEvaluate: function(objectName, methodName, color, destVecSize, zeroDestVecSize, srcVecSize, result, args, ctx, callObject) {
-            var methodName = objectName + "." + methodName;
+            var qualifiedName = objectName + "." + methodName;
             var typeInfo = {};
 
             if(args.length == 0){
                 Base.extend(typeInfo, Vec.getType(zeroDestVecSize, color));
             }
             else{
-                Vec.checkVecArguments(methodName, color, srcVecSize, true, result, args);
+                Vec.checkVecArguments(qualifiedName, color, srcVecSize, true, result, args);
                 Base.extend(typeInfo, Vec.getType(destVecSize, color));
             }
             Vec.getStaticValue(typeInfo, methodName, args, callObject);
