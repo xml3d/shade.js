@@ -45,7 +45,8 @@ microfacet_beckmann_refraction, microfacet_ggx_refraction, transparent, transluc
 ### Analysis
 
 * Find Parameters: Extend to global (KS) ✔
-* Type Inference: Handle functions / function calls
+* Type Inference: Handle functions / function calls (KS) ✔
+* Smarter detection for static values (SH)
 * Uniform expression detection
 * [Slicing](http://en.wikipedia.org/wiki/Program_slicing) to extract indiviual buffers
 
