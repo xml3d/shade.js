@@ -127,7 +127,7 @@
                                 return handleMainFunction(node, parent, state.context);
                         case Syntax.ReturnStatement:
                             if(state.inMain) {
-                                return handleReturnInMain(node);
+                                return handleReturnInMain(node, parent);
                             }
                             break;
                         case Syntax.BinaryExpression:
@@ -179,16 +179,24 @@
     }
 
 
-    var handleReturnInMain = function(node) {
+    var handleReturnInMain = function(node, parent) {
         if (node.argument) {
             return {
-                type: Syntax.AssignmentExpression,
-                operator: "=",
-                left: {
-                    type: Syntax.Identifier,
-                    name: "gl_FragColor"
-                },
-                right: node.argument
+                type: Syntax.BlockStatement,
+                body: [
+                    {
+                        type: Syntax.AssignmentExpression,
+                        operator: "=",
+                        left: {
+                            type: Syntax.Identifier,
+                            name: "gl_FragColor"
+                        },
+                        right: node.argument
+                    },
+                    {
+                        type: Syntax.ReturnStatement
+                    }
+                ]
             }
         } else {
             return {
