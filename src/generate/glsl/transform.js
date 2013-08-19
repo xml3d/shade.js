@@ -32,6 +32,9 @@
             ctx.registerObject("Math", ObjectRegistry.getByName("Math"));
             ctx.registerObject("this", ObjectRegistry.getByName("System"));
             ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
+            ctx.registerObject("Vec2", ObjectRegistry.getByName("Vec2"));
+            ctx.registerObject("Vec3", ObjectRegistry.getByName("Vec3"));
+            ctx.registerObject("Color", ObjectRegistry.getByName("Vec3"));
             ctx.declareVariable("gl_FragCoord", false);
             ctx.updateExpression("gl_FragCoord", new TypeInfo({
                 extra: {
