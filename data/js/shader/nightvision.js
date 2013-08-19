@@ -12,7 +12,7 @@ function shade(env) {
         return Color.black;
     }
 
-    var c = env.channel0 ? env.channel0.sample2D(this.normalizedCoords) : Vec3(0);
+    var c = env.channel0 ? env.channel0.sample2D(this.normalizedCoords) : new Vec3(0);
 
     // flicker, grain, vignette, fade in
     c = c.add(Math.sin(hash(env.time)) * 0.01);
