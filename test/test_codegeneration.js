@@ -37,25 +37,17 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("var x = true;");
             code.should.match(/bool x = true;/);
         });
-        it("Color with 4 parameters", function() {
-            var code = generateExpression("var x = new Color(0.1, 0.1, 0.1, 0.9);");
-            code.should.match(/vec4 x = vec4\(0.1, 0.1, 0.1, 0.9\);/);
-        });
-        xit("Color with 3 parameters", function() {
+        it("Color with 3 parameters", function() {
             var code = generateExpression("var x = new Color(0.1, 0.1, 0.1);");
-            code.should.match(/vec4 x = vec4\(0.1, 0.1, 0.1, 1\);/);
+            code.should.match(/vec3 x = vec3\(0.1, 0.1, 0.1\);/);
         });
-        xit("Color with 2 parameters", function() {
-            var code = generateExpression("var x = new Color(0.1, 0.9);");
-            code.should.match(/vec4 x = vec4\(0.1, 0.1, 0.1, 0.9\);/);
-        });
-        xit("Color with 1 parameter", function() {
+        it("Color with 1 parameter", function() {
             var code = generateExpression("var x = new Color(0.1);");
-            code.should.match(/vec4 x = vec4\(0.1, 0.1, 0.1, 1.0\);/);
+            code.should.match(/vec3 x = vec3\(0.1\);/);
         });
         xit("Color without parameter", function() {
             var code = generateExpression("var x = new Color();");
-            code.should.match(/vec4 x = vec4\(0, 0, 0, 1\);/);
+            code.should.match(/vec3 x = vec3\(0, 0, 0\);/);
         });
         it("any", function() {
             var code = generateExpression.bind(null, "var x;");
@@ -129,7 +121,7 @@ describe('GLSL Code generation,', function () {
 
     it("should generate simple shader", function() {
         var code = loadAndGenerate("data/js/shader/red.js");
-        code.should.match(/vec4\(1/);
+        code.should.match(/vec3\(1/);
     });
     it("handle return 'undefined' in main", function() {
         var code = loadAndGenerate("data/js/shader/discard.js");

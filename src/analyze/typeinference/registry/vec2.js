@@ -13,28 +13,7 @@
          * @param {Array.<Annotation>} args
          * @param {Context} ctx
          */
-        evaluate: function(result, args, ctx) {
-            Tools.Vec.checkVecArguments("Vec2", false, 2, true, result, args);
-            var argArray = [];
-            var isStatic = true;
-            args.forEach(function (param, index) {
-                isStatic = isStatic && param.hasStaticValue();
-                if (isStatic)
-                    argArray.push(param.getStaticValue());
-            });
-
-            var typeInfo = {
-                type: TYPES.OBJECT,
-                kind: KINDS.FLOAT2
-            }
-
-            if (isStatic) {
-                var v = new Shade.Vec2();
-                Shade.Vec2.apply(v, argArray);
-                typeInfo.staticValue = v;
-            }
-            return typeInfo;
-        }
+        evaluate: Tools.Vec.constructorEvaluate.bind(null, "Vec2", false, 2)
     };
 
     var Vector2StaticObject = {
@@ -53,7 +32,7 @@
 
     Tools.extend(ns, {
         id: "Vec2",
-        kind: "float2",
+        kind: KINDS.FLOAT2,
         object: {
             constructor: Vector2Constructor,
             static: Vector2StaticObject

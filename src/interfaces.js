@@ -18,7 +18,6 @@
 
     ns.OBJECT_KINDS = {
         ANY: "any",
-        COLOR: "color", // virtual kinds
         FLOAT2: "float2", // virtual kinds
         FLOAT3: "float3", // virtual kinds
         FLOAT4: "float4", // virtual kinds
@@ -34,8 +33,8 @@
         CONSTANT: "constant"
     }
 
-    function fillVector(dest, vecSize, arguments, color){
-        color = color || false;
+    function fillVector(dest, vecSize, arguments){
+        var color = false;
         if(arguments.length == 0 ){
             for(var i = 0; i < vecSize; ++i)
                 dest[i] = 0;
@@ -147,34 +146,36 @@
      }
 
 
-     function getVec2(object, x, y){
-        if(x instanceof Vec2)
-            return x;
-        return new Vec2(x, y);
+     function getVec2(){
+        if(arguments[0] instanceof Vec2)
+            return arguments[0];
+        var obj =  new Vec2();
+        Vec2.apply(obj, arguments);
+        return obj;
      }
 
      Vec2.prototype.add = function(x, y){ // 0 arguments => identity or error?
-        var add = getVec2(this, x, y);
+        var add = getVec2.apply(null, arguments);
         return new Vec2(this[0] + add[0], this[1] + add[1]);
      }
      Vec2.prototype.sub = function(x, y){
-        var sub = getVec2(this, x, y);
+        var sub = getVec2.apply(null, arguments);
         return new Vec2(this[0] - sub[0], this[1] - sub[1]);
      }
      Vec2.prototype.mul = function(x, y){
-        var other = getVec2(this, x, y);
+        var other = getVec2.apply(null, arguments);
         return new Vec2(this[0] * other[0], this[1] * other[1]);
      }
      Vec2.prototype.div = function(x, y){
-        var other = getVec2(this, x, y);
+        var other = getVec2.apply(null, arguments);
         return new Vec2(this[0] / other[0], this[1] / other[1]);
      }
      Vec2.prototype.mod = function(x, y){
-        var other = getVec2(this, x, y);
+        var other = getVec2.apply(null, arguments);
         return new Vec2(this[0] % other[0], this[1] % other[1]);
      }
      Vec2.prototype.dot = function(x, y){
-        var other = getVec2(this, x, y);
+        var other = getVec2.apply(null, arguments);
         return this[0]*other[0] + this[1]*other[1];
      }
      Vec2.prototype.abs = function(){
@@ -195,7 +196,7 @@
         if(arguments.length == 0)
             return this;
         else{
-            return getVec2(this, x, y);
+            return getVec2.apply(null, arguments);
         }
      }
      Vec2.prototype.x = Vec2.prototype.r = Vec2.prototype.s = function(x){
@@ -225,41 +226,43 @@
         fillVector(this, 3, arguments);
      }
 
-     function getVec3(object, x, y, z){
-        if(x instanceof Vec3)
-            return x
-        return new Vec3(x, y, z);
+     function getVec3(){
+        if(arguments[0] instanceof Vec3)
+            return arguments[0];
+        var obj = new Vec3();
+        Vec3.apply(obj, arguments);
+        return obj;
      }
 
      Vec3.prototype.add = function(x, y, z){
-        var other = getVec3(this, x, y, z);
+        var other = getVec3.apply(null, arguments);
         return new Vec3(this[0] + other[0], this[1] + other[1], this[2] + other[2]);
      }
      Vec3.prototype.sub = function(x, y, z){
-        var other = getVec3(this, x, y, z);
+        var other = getVec3.apply(null, arguments);
         return new Vec3(this[0] - other[0], this[1] - other[1], this[2] - other[2]);
      }
      Vec3.prototype.mul = function(x, y, z){
-        var other = getVec3(this, x, y, z);
+        var other = getVec3.apply(null, arguments);
         return new Vec3(this[0] * other[0], this[1] * other[1], this[2] * other[2]);
      }
      Vec3.prototype.div = function(x, y, z){
-        var other = getVec3(this, x, y, z);
+        var other = getVec3.apply(null, arguments);
         return new Vec3(this[0] / other[0], this[1] / other[1], this[2] / other[2]);
      }
      Vec3.prototype.mod = function(x, y, z){
-        var other = getVec3(this, x, y, z);
+        var other = getVec3.apply(null, arguments);
         return new Vec3(this[0] % other[0], this[1] % other[1], this[2] % other[2]);
      }
      Vec3.prototype.abs = function(){
         return new Vec3(Math.abs(this[0]), Math.abs(this[1]), Math.abs(this[2]));
      }
      Vec3.prototype.dot = function(x, y, z){
-        var other = getVec3(this, x, y, z);
+        var other = getVec3.apply(null, arguments);
         return this[0]*other[0] + this[1]*other[1] + this[2]*other[2];
      }
      Vec3.prototype.cross = function(x, y, z){
-        var other = getVec3(this, x, y, z);
+        var other = getVec3.apply(null, arguments);
         var x = this[1]*other[2] - other[1]*this[2];
         var y = this[2]*other[0] - other[2]*this[0];
         var z = this[0]*other[1] - other[0]*this[1];
@@ -312,45 +315,39 @@
         fillVector(this, 4, arguments)
      }
 
-     function getVec4(object, x, y, z, w){
-        if(object.constructor == Color){
-            if(x instanceof Color)
-                return x;
-            return new Color(x, y, z, w);
-        }
-        else{
-            if(x instanceof Vec4)
-                return x;
-            return new Vec4(x, y, z, w);
-        }
-
+     function getVec4(){
+        if(arguments[0] instanceof Vec4)
+            return arguments[0];
+        var obj = new Vec4();
+        Vec4.apply(obj, arguments);
+        return obj;
      }
 
      Vec4.prototype.add = function(x, y, z, w){
-        var other = getVec4(this, x, y, z, w);
+        var other = getVec4.apply(null, arguments);
         return new Vec4(this[0] + other[0], this[1] + other[1], this[2] + other[2], this[3] + other[3]);
      }
      Vec4.prototype.sub = function(x, y, z, w){
-        var other = getVec4(this, x, y, z, w);
+        var other = getVec4.apply(null, arguments);
         return new Vec4(this[0] - other[0], this[1] - other[1], this[2] - other[2], this[3] - other[3]);
      }
      Vec4.prototype.mul = function(x, y, z, w){
-        var other = getVec4(this, x, y, z, w);
+        var other = getVec4.apply(null, arguments);
         return new Vec4(this[0] * other[0], this[1] * other[1], this[2] * other[2], this[3] * other[3]);
      }
      Vec4.prototype.div = function(x, y, z, w){
-        var other = getVec4(this, x, y, z, w);
+        var other = getVec4.apply(null, arguments);
         return new Vec4(this[0] / other[0], this[1] / other[1], this[2] / other[2], this[3] / other[3]);
      }
      Vec4.prototype.mod = function(x, y, z, w){
-        var other = getVec4(this, x, y, z, w);
+        var other = getVec4.apply(null, arguments);
         return new Vec4(this[0] % other[0], this[1] % other[1], this[2] % other[2], this[3] % other[3]);
      }
      Vec4.prototype.abs = function(){
         return new Vec4(Math.abs(this[0]), Math.abs(this[1]), Math.abs(this[2]), Math.abs(this[3]));
      }
      Vec4.prototype.dot = function(x, y, z, w){
-        var other = getVec4(this, x, y, z, w);
+        var other = getVec4.apply(null, arguments);
         return this[0]*other[0] + this[1]*other[1] + this[2]*other[2] + this[3]*other[3];
      }
      Vec4.prototype.length = function(length){
@@ -367,32 +364,32 @@
         if(arguments.length == 0)
             return this;
         else
-            return getVec4(this, x, y, z, w);
+            return getVec4.apply(null, arguments);
      }
      Vec4.prototype.x = Vec4.prototype.r = Vec4.prototype.s = function(x){
         if(arguments.length == 0)
             return this[0];
         else
-            return getVec4(this, x, this[1], this[2], this[3]);
+            return getVec4(x, this[1], this[2], this[3]);
      }
 
      Vec4.prototype.y = Vec4.prototype.g = Vec4.prototype.t = function(y){
         if(arguments.length == 0)
             return this[1];
         else
-            return getVec4(this, this[0], y, this[2], this[3]);
+            return getVec4(this[0], y, this[2], this[3]);
      }
      Vec4.prototype.z = Vec4.prototype.b = Vec4.prototype.p = function(z){
         if(arguments.length == 0)
             return this[2];
         else
-            return getVec4(this, this[0], this[1], z, this[3]);
+            return getVec4(this[0], this[1], z, this[3]);
      }
      Vec4.prototype.w = Vec4.prototype.a = Vec4.prototype.q = function(w){
         if(arguments.length == 0)
             return this[3];
         else
-            return getVec4(this, this[0], this[1],this[2], w );
+            return getVec4(this[0], this[1],this[2], w );
      }
      addSwizzles(Vec4.prototype, 4, 2, true);
      addSwizzles(Vec4.prototype, 4, 3, true);
@@ -402,10 +399,7 @@
       * The virtual Color type
       * @constructor
       */
-     Color = function(r, g, b, a){
-        fillVector(this, 4, arguments, true)
-     }
-     Base.createClass(Color, Vec4);
+     var Color = Vec4;
 
     var Shade = {};
 

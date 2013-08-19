@@ -133,7 +133,29 @@
             };
             ANNO(replace).copy(ANNO(node));
             return replace;
-        }
+        },
+
+        generateLengthCall: function(node, args, parent){
+                if(args.length == 0){
+                    return Vec.createFunctionCall('length', node, args, parent);
+                }
+                else{
+                     var replace = {
+                        type: Syntax.BinaryExpression,
+                        operator: '*',
+                        left: node.callee.object,
+                        right: {
+                            type: Syntax.BinaryExpression,
+                            operator: '/',
+                            left: node.arguments[0],
+                            right: Vec.createFunctionCall('length', node, args, parent)
+                        }
+                    };
+                    ANNO(replace.right).setType(TYPES.NUMBER);
+                    ANNO(replace).copy(ANNO(node));
+                    return replace;
+                }
+            }
     };
     ns.Vec = Vec;
 

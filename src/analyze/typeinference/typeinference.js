@@ -27,6 +27,7 @@
         ctx.registerObject("Color", ObjectRegistry.getByName("Color"));
         ctx.registerObject("Vec2", ObjectRegistry.getByName("Vec2"));
         ctx.registerObject("Vec3", ObjectRegistry.getByName("Vec3"));
+        ctx.registerObject("Vec4", ObjectRegistry.getByName("Vec4"));
         ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
         ctx.registerObject("this", ObjectRegistry.getByName("System"));
         return ctx;

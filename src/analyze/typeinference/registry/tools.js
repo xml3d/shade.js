@@ -40,7 +40,7 @@
             2: { type: TYPES.OBJECT, kind: KINDS.FLOAT2 },
             3: { type: TYPES.OBJECT, kind: KINDS.FLOAT3 },
             4: { type: TYPES.OBJECT, kind: KINDS.FLOAT4 },
-            color: { type: TYPES.OBJECT, kind: KINDS.COLOR }
+            color: { type: TYPES.OBJECT, kind: KINDS.FLOAT3 }
         },
         getType: function(destVector, color){
             if(destVector == 4 && color)
@@ -77,7 +77,6 @@
                 else if(arg.isOfKind(KINDS.FLOAT2)) cnt = 2;
                 else if(arg.isOfKind(KINDS.FLOAT3)) cnt = 3;
                 else if(arg.isOfKind(KINDS.FLOAT4)) cnt = 4;
-                else if(arg.isOfKind(KINDS.COLOR))  cnt = 4;
                 else Shade.throwError(result.node, "Inavlid parameter for " + methodName + ", type is not supported");
                 // TODO: Print Type?
                 idx += cnt;
@@ -163,6 +162,25 @@
                     evaluate: Vec.vecEvaluate.bind(null, objectName, methodName, color, destVecSize, srcVecSize)
                 }
             }
+        },
+        constructorEvaluate: function(objectName, color, vecSize, result, args, ctx) {
+            Vec.checkVecArguments(objectName, color, vecSize, true, result, args);
+            var argArray = [];
+            var isStatic = true;
+            args.forEach(function (param, index) {
+                isStatic = isStatic && param.hasStaticValue();
+                if (isStatic)
+                    argArray.push(param.getStaticValue());
+            });
+
+            var typeInfo = Base.extend({},Vec.getType(vecSize, color));
+
+            if (isStatic) {
+                var v = new Shade[objectName]();
+                Shade[objectName].apply(v, argArray);
+                typeInfo.staticValue = v;
+            }
+            return typeInfo;
         }
 
     };

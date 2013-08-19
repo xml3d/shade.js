@@ -29,8 +29,9 @@
         switch (info.type) {
             case Types.OBJECT:
                 switch (info.kind) {
-                    case Kinds.COLOR:
+                    case Kinds.FLOAT4:
                         return "vec4";
+                    case Kinds.COLOR:
                     case Kinds.FLOAT3:
                         return "vec3";
                     case Kinds.FLOAT2:
@@ -44,6 +45,8 @@
                 throw new Error("Could not determine type");
             case Types.NUMBER:
                 return "float";
+            case Types.BOOLEAN:
+                return "bool";
             case Types.INT:
                 return "int";
             case Types.BOOLEAN:

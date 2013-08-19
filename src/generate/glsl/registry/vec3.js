@@ -3,27 +3,32 @@
     var Shade = require("../../../interfaces.js");
     var Syntax = require('estraverse').Syntax;
     var Tools = require("./tools.js");
+    var ANNO = require("../../../base/annotation.js").ANNO;
+
+    var TYPES = Shade.TYPES,
+        KINDS = Shade.OBJECT_KINDS;
 
     var Vec3Instance = {
-        xy: {
-            property: function () {
-                //console.log("Called property of xy");
-            },
-            callExp: function(node, args, parent) {
-                if (args.length == 0)
-                    return node.callee;
-                return null; // TODO
-            }
+        normalize: {
+            callExp: Tools.Vec.createFunctionCall.bind(null, 'normalize')
         },
-        x: function () {
-            console.log("x", arguments);
+        length: {
+            callExp: Tools.Vec.generateLengthCall
         }
     }
+    Tools.Vec.attachSwizzles(Vec3Instance, 3);
+    Tools.Vec.attachOperators(Vec3Instance, 3, {
+        add: '+',
+        sub: '-',
+        mul: '*',
+        div: '/',
+        mod: '%'
+    })
 
 
     Tools.extend(ns, {
         id: "Vec3",
-        kind: "float3",
+        kind: KINDS.FLOAT3,
         object: {
             constructor: null,
             static: {}

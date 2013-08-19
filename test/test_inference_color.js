@@ -19,7 +19,7 @@ describe('Inference', function () {
                 exp = exp[0];
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.OBJECT);
-                exp.extra.should.have.property("kind", KINDS.COLOR);
+                exp.extra.should.have.property("kind", KINDS.FLOAT3);
                 exp.extra.should.have.property("staticValue");
                 exp.extra.staticValue.should.have.property("r", 1.0);
                 exp.extra.staticValue.should.have.property("g", 0);
@@ -32,7 +32,7 @@ describe('Inference', function () {
                 exp = exp[0];
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.OBJECT);
-                exp.extra.should.have.property("kind", KINDS.COLOR);
+                exp.extra.should.have.property("kind", KINDS.FLOAT3);
                 exp.extra.should.have.property("staticValue");
                 exp.extra.staticValue.should.have.property("r", 128);
                 exp.extra.staticValue.should.have.property("g", 128);
@@ -48,7 +48,7 @@ describe('Inference', function () {
                 var object = memexp.object;
                 object.should.have.property("extra");
                 object.extra.should.have.property("type", TYPES.OBJECT);
-                object.extra.should.have.property("kind", KINDS.COLOR);
+                object.extra.should.have.property("kind", KINDS.FLOAT3);
 
                 // property
                 var property = memexp.property;
@@ -68,7 +68,7 @@ describe('Inference', function () {
                 var object = callExpression.callee.object;
                 object.should.have.property("extra");
                 object.extra.should.have.property("type", TYPES.OBJECT);
-                object.extra.should.have.property("kind", KINDS.COLOR);
+                object.extra.should.have.property("kind", KINDS.FLOAT3);
 
                 // property
                 var property = callExpression.callee.property;

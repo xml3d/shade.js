@@ -8,6 +8,8 @@
         System : require("./system.js"),
         Vec2 : require("./vec2.js"),
         Vec3 : require("./vec3.js"),
+        Color: require("./vec3.js"),
+        Vec4 : require("./vec4.js"),
         ColorClosure: require("./colorclosure.js")
     };
 

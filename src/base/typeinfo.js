@@ -179,7 +179,7 @@
             return this.isObject() && (this.isOfKind(KINDS.NORMAL) || this.isOfKind(KINDS.FLOAT3));
         },
         canColor: function() {
-            return this.isObject() && (this.isOfKind(KINDS.COLOR) || this.isOfKind(KINDS.FLOAT3));
+            return this.isObject() && (this.isOfKind(KINDS.FLOAT4) || this.isOfKind(KINDS.FLOAT3));
         },
         eliminate : function() {
             var extra = this.getExtra();

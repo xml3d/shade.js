@@ -8,7 +8,7 @@
     var TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS;
 
-    var Vec2Instance = {
+    var Vec4Instance = {
         normalize: {
             callExp: Tools.Vec.createFunctionCall.bind(null, 'normalize')
         },
@@ -16,8 +16,8 @@
             callExp: Tools.Vec.generateLengthCall
         }
     }
-    Tools.Vec.attachSwizzles(Vec2Instance, 2);
-    Tools.Vec.attachOperators(Vec2Instance, 2, {
+    Tools.Vec.attachSwizzles(Vec4Instance, 4);
+    Tools.Vec.attachOperators(Vec4Instance, 4, {
         add: '+',
         sub: '-',
         mul: '*',
@@ -27,13 +27,13 @@
 
 
     Tools.extend(ns, {
-        id: "Vec2",
-        kind: KINDS.FLOAT2,
+        id: "Vec4",
+        kind: KINDS.FLOAT4,
         object: {
             constructor: null,
             static: {}
         },
-        instance: Vec2Instance
+        instance: Vec4Instance
     });
 
 }(exports));

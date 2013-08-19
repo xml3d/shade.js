@@ -190,7 +190,7 @@ describe('Inference:', function () {
             var program = parseAndInferenceExpression("var a = 1, b = 0.5; new Color(a, 0, b);");
             var newExpression = program.body[1];
             newExpression.extra.should.have.property("type", TYPES.OBJECT);
-            newExpression.extra.should.have.property("kind", KINDS.COLOR);
+            newExpression.extra.should.have.property("kind", KINDS.FLOAT3);
         });
 
     });
