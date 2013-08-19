@@ -89,7 +89,7 @@
             }
         },
         vecEvaluate: function(objectName, methodName, color, destVecSize, srcVecSize, result, args, ctx, callObject){
-            Vec.checkVecArguments(objectName + "." + methodName, color, srcVecSize, true, result, args);
+            Vec.checkVecArguments(objectName + "." + methodName, color, srcVecSize, false, result, args);
 
             var typeInfo = {};
             Base.extend(typeInfo, Vec.getType(destVecSize, color));
@@ -98,7 +98,7 @@
             return typeInfo;
         },
 
-        optionalZeroEvaluate: function(objectName, methodName, color, destVecSize, zeroDestVecSize, srcVecSize, result, args, ctx, callObject) {
+        optionalZeroEvaluate: function(objectName, color, methodName, destVecSize, zeroDestVecSize, srcVecSize, result, args, ctx, callObject) {
             var qualifiedName = objectName + "." + methodName;
             var typeInfo = {};
 
@@ -116,7 +116,7 @@
 
         swizzleEvaluate: function(objectName, color, vecSize, swizzle, withSetter, result, args, ctx, callObject) {
             if(withSetter){
-                return Vec.optionalZeroEvaluate(objectName, swizzle, color, vecSize, swizzle.length, swizzle.length,
+                return Vec.optionalZeroEvaluate(objectName, color, swizzle, vecSize, swizzle.length, swizzle.length,
                     result, args, ctx, callObject);
             }
             else{

@@ -10,7 +10,10 @@
 
     var Vec4Instance = {
         normalize: {
-            callExp: Tools.Vec.createFunctionCall.bind(null, 'normalize')
+            callExp: Tools.Vec.createFunctionCall.bind(null, 'normalize', 0)
+        },
+        dot: {
+            callExp: Tools.Vec.createFunctionCall.bind(null, 'dot', 4)
         },
         length: {
             callExp: Tools.Vec.generateLengthCall

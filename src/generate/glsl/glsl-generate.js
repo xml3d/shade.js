@@ -229,6 +229,10 @@
                 result += " " + node.operator + " ";
                 result += handleBinaryArgument(node.right);
                 break;
+            case Syntax.UnaryExpression:
+                result = node.operator;
+                result += handleBinaryArgument(node.argument);
+                break;
 
             case Syntax.CallExpression:
                 result = handleExpression(node.callee);

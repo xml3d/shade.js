@@ -102,7 +102,7 @@
             }
 
             var funcArgs = "";
-            var body = '  return getVec' + maskCount + '(this, ' + args.join(", ") + ');\n';
+            var body = '  return getVec' + maskCount + '.apply(null, arguments);\n';
             if(generateSetter){
                 for(var j = 0; j < vecCount; ++j){
                     if(setterArgs[j] === undefined)
@@ -116,8 +116,8 @@
 
                 body = "  if(arguments.length == 0)\n  " + body +
                        "  else{\n" +
-                       "    var other=getVec" + maskCount + '(this, ' + funcArgs + ');\n' +
-                       "    return getVec" + vecCount + '(this, ' + setterArgs.join(", ") + ');\n' +
+                       "    var other=getVec" + maskCount + '.apply(null, arguments);\n' +
+                       "    return getVec" + vecCount + '(' + setterArgs.join(", ") + ');\n' +
                        "  }\n";
             }
             var functionCode = 'function(' + funcArgs +  '){\n' + body + '}';

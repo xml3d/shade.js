@@ -81,7 +81,7 @@
 
         attachSwizzles: function (instance, vecCount){
             for(var s = 0; s < VecBase.swizzleSets.length; ++s){
-                for(var count = 0; count < 4; ++count){
+                for(var count = 1; count <= 4; ++count){
                     var max = Math.pow(vecCount, count);
                      for(var i = 0; i < max; ++i){
                         var val = i;
@@ -120,7 +120,7 @@
             }
         },
 
-        createFunctionCall: function(functionName, node, args, parent) {
+        createFunctionCall: function(functionName, secondVecSize, node, args, parent) {
             var replace = {
                 type: Syntax.CallExpression,
                 callee: {
@@ -131,13 +131,17 @@
                     node.callee.object
                 ]
             };
+            if(secondVecSize){
+                var other = Vec.generateVecFromArgs(secondVecSize, node.arguments);
+                replace.arguments.push(other);
+            }
             ANNO(replace).copy(ANNO(node));
             return replace;
         },
 
         generateLengthCall: function(node, args, parent){
                 if(args.length == 0){
-                    return Vec.createFunctionCall('length', node, args, parent);
+                    return Vec.createFunctionCall('length', 0, node, args, parent);
                 }
                 else{
                      var replace = {
@@ -148,7 +152,7 @@
                             type: Syntax.BinaryExpression,
                             operator: '/',
                             left: node.arguments[0],
-                            right: Vec.createFunctionCall('length', node, args, parent)
+                            right: Vec.createFunctionCall('length', 0, node, args, parent)
                         }
                     };
                     ANNO(replace.right).setType(TYPES.NUMBER);
