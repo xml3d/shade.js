@@ -361,15 +361,16 @@ describe('GLSL Code generation,', function () {
         });
         it("this.normalizedCoords", function() {
             var code = generateExpression("this.normalizedCoords");
-            code.should.match(/uniform vec3 _sys_normalizedCoords;/);
+            code.should.match(/uniform vec3 _sys_coords;/);
+            code.should.match(/gl_FragCoord.xyz \/ _sys_coords/);
         });
         it("this.normalizedCoords.xy()", function() {
             var code = generateExpression("this.normalizedCoords.xy()");
-            code.should.match(/_sys_normalizedCoords.xy;/);
+            code.should.match(/vec3\(gl_FragCoord.xyz \/ _sys_coords\).xy;/);
         });
         it("this.normalizedCoords.xy().mul(2)", function() {
             var code = generateExpression("this.normalizedCoords.xy().mul(2);");
-            code.should.match(/_sys_normalizedCoords.xy \* vec2\(2\);/);
+            code.should.match(/vec3\(gl_FragCoord.xyz \/ _sys_coords\).xy \* vec2\(2\);/);
         });
 
     });
