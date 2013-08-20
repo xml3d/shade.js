@@ -168,6 +168,9 @@
         },
         render : function(fragmentShader) {
             var gl = this.gl;
+            var canvasWidth = $(".theCanvas")[0].width = $(".theCanvas")[0].clientWidth,
+                canvasHeight = $(".theCanvas")[0].height = $(".theCanvas")[0].clientHeight;
+            gl.viewport( 0, 0, canvasWidth, canvasHeight );
             var vertex = this.compileShader(gl.VERTEX_SHADER, ["attribute vec2 a_position;","void main() { gl_Position = vec4(a_position, 0, 1); }"].join("\n"));
             if(vertex.error)
                 return;
@@ -184,6 +187,13 @@
                 return;
             }
             gl.useProgram(program);
+            // Set system parameters
+
+            var location;
+            location = gl.getUniformLocation(program, "_sys_height"); location && gl.uniform1f(location, canvasHeight);
+            location = gl.getUniformLocation(program, "_sys_width"); location && gl.uniform1f(location, canvasWidth);
+            location = gl.getUniformLocation(program, "_sys_coords"); location && gl.uniform3f(location, canvasWidth, canvasHeight, 1.0);
+
             var positionLocation = gl.getAttribLocation(program, "a_position");
             var buffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
