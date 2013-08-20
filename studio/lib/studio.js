@@ -24,7 +24,8 @@
             this.javaScriptEditor.on("change", this.onEdit.bind(this));
             this.codeViewer = CodeMirror(document.querySelector(".codeOutput"), {
                 value: "",
-                mode:  "x-shader/x-fragment"
+                mode:  "x-shader/x-fragment",
+                lineNumbers: true
             });
             this.codeViewer.on("change", this.compileGL.bind(this));
 
