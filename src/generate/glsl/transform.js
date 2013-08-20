@@ -60,7 +60,7 @@
                  context: context,
                  contextStack: [context],
                  inMain:  this.mainId == context.str(),
-                 injections : program.injections[this.mainId] && program.injections[this.mainId][0] ? program.injections[this.mainId][0].node.info : null,
+                 globalParameters : program.injections[this.mainId] && program.injections[this.mainId][0] ? program.injections[this.mainId][0].node.info : {},
                  blockedNames : [],
                  topDeclarations : [],
                  idNameMap : {}
@@ -68,15 +68,15 @@
 
 
 
-            for(var name in state.injections){
+            for(var name in state.globalParameters){
                 state.blockedNames.push(name);
             }
 
             this.replace(program, state);
 
-            for(var name in state.injections){
+            for(var name in state.globalParameters){
                 if(name !== "_global")
-                    var decl = handleTopDeclaration(name, state.injections);
+                    var decl = handleTopDeclaration(name, state.globalParameters);
                     if (decl)
                         program.body.unshift(decl);
             }
@@ -117,7 +117,7 @@
                 leave: function(node, parent) {
                     switch(node.type) {
                         case Syntax.MemberExpression:
-                            return handleMemberExpression(node, parent, state.topDeclarations, state.context);
+                            return handleMemberExpression(node, parent, state);
                         case Syntax.CallExpression:
                             return handleCallExpression(node, parent, state.topDeclarations, state.context);
                         case Syntax.FunctionDeclaration:
@@ -140,10 +140,10 @@
         }
     });
 
-    var handleTopDeclaration = function(name, injections){
-        var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(injections, name)};
+    var handleTopDeclaration = function(name, globalParameters){
+        var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(globalParameters, name)};
         var propertyAnnotation =  new Annotation(propertyLiteral);
-        propertyAnnotation.setFromExtra(injections[name]);
+        propertyAnnotation.setFromExtra(globalParameters[name]);
 
         if (propertyAnnotation.isNullOrUndefined())
             return;
@@ -277,8 +277,9 @@
     }
 
 
-    var handleMemberExpression = function (memberExpression, parent, topDeclarations, context) {
-        var propertyName = memberExpression.property.name;
+    var handleMemberExpression = function (memberExpression, parent, state) {
+        var propertyName = memberExpression.property.name,
+            context = state.context;
 
         var objectReference = getObjectReferenceFromNode(memberExpression.object, context);
 
@@ -292,7 +293,7 @@
             if (objectInfo.hasOwnProperty(propertyName)) {
                 var propertyHandler = objectInfo[propertyName];
                 if (typeof propertyHandler.property == "function") {
-                    return propertyHandler.property(memberExpression, parent, context);
+                    return propertyHandler.property(memberExpression, parent, context, state);
                 }
             }
         }
