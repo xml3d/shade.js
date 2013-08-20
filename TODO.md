@@ -6,6 +6,18 @@
     * diffuse
     * phong
 
+* Define interfaces for:
+    * Vec2 ✔
+    * Vec3 ✔
+    * Vec4 ✔
+    * Color ✔
+    * Normal
+    * Texture
+    * Matrix4
+    * Matrix3
+    * Shade
+    * this
+
 [__OSL Surface Closures__](https://github.com/imageworks/OpenShadingLanguage/blob/master/src/doc/osl-languagespec.pdf?raw=true):
 
 * Scatter: diffuse, phong, orennayar, ward, microfacet_beckmann, reflection, refraction,
