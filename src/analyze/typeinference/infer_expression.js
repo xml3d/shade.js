@@ -369,6 +369,7 @@
             }
 
             var propertyTypeInfo = objectInfo[propertyName];
+            propertyAnnotation.setFromExtra(propertyTypeInfo);
             resultType.setFromExtra(propertyTypeInfo);
         },
 
@@ -388,14 +389,12 @@
 
                 var objectReference = getObjectReferenceFromNode(object, ctx);
                 if(!objectReference)  {
-                    console.error("No object info for: ", object);
-                    return;
+                    Shade.throwError(node, "Internal: No object info for: " + object);
                 }
 
                 var objectInfo = ctx.getObjectInfoFor(objectReference);
                 if(!objectInfo) { // Every object needs an info, otherwise we did something wrong
-                    console.error("No object registered for: ", objectReference.getTypeString(), JSON.stringify(node.object));
-                    return;
+                    Shade.throwError(node, "Internal Error: No object registered for: " + objectReference.getTypeString() + JSON.stringify(node.object));
                 }
                 if (objectInfo.hasOwnProperty(propertyName)) {
                     var propertyHandler = objectInfo[propertyName];

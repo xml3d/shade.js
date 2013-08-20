@@ -359,6 +359,18 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("Math.floor(2.0 % 20.0) > 0");
             code.should.equal("floor(mod(2.0, 20.0)) > float(0);");
         });
+        it("this.normalizedCoords", function() {
+            var code = generateExpression("this.normalizedCoords");
+            code.should.match(/uniform vec3 _sys_normalizedCoords;/);
+        });
+        it("this.normalizedCoords.xy()", function() {
+            var code = generateExpression("this.normalizedCoords.xy()");
+            code.should.match(/_sys_normalizedCoords.xy;/);
+        });
+        it("this.normalizedCoords.xy().mul(2)", function() {
+            var code = generateExpression("this.normalizedCoords.xy().mul(2);");
+            code.should.match(/_sys_normalizedCoords.xy \* vec2\(2\);/);
+        });
 
     });
 

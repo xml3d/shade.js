@@ -36,8 +36,10 @@
         },
 
         createSwizzle: function(vecCount, swizzle, node, args, parent){
-            if (args.length == 0)
+            if (args.length == 0) {
+                node.callee.extra = node.extra;
                 return node.callee;
+            }
             var singular = swizzle.length == 1;
             var argObject = singular ? node.arguments[0] : Vec.generateVecFromArgs(swizzle.length, node.arguments);
             var replace = {

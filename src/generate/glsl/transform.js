@@ -42,8 +42,8 @@
                     kind: Kinds.FLOAT3
                 }
             }));
-            ctx.declareVariable("__sys_normalizedCoords", false);
-            ctx.updateExpression("__sys_normalizedCoords", new TypeInfo({
+            ctx.declareVariable("_sys_normalizedCoords", false);
+            ctx.updateExpression("_sys_normalizedCoords", new TypeInfo({
                 extra: {
                     type: Types.OBJECT,
                     kind: Kinds.FLOAT3
@@ -222,6 +222,19 @@
     }
 
 
+    function getNameOfNode(node) {
+        switch (node.type) {
+            case Syntax.Identifier:
+                return node.name;
+            case Syntax.MemberExpression:
+                return getNameOfNode(node.object) + "." + getNameOfNode(node.property);
+            case Syntax.NewExpression:
+                return getNameOfNode(node.callee);
+            default:
+                return "unknown(" + node.type + ")";
+        }
+    };
+
     function getObjectReferenceFromNode(object, context) {
         switch (object.type) {
             case Syntax.NewExpression:
@@ -254,15 +267,12 @@
 
             var objectReference = getObjectReferenceFromNode(object, context);
             if(!objectReference)  {
-                console.error("No object info for: ", object);
-                return;
+                Shade.throwError(callExpression, "Internal: No object info for: " + object);
             }
 
             var objectInfo = context.getObjectInfoFor(objectReference);
             if(!objectInfo) { // Every object needs an info, otherwise we did something wrong
-                console.error("No object registered for: ", objectReference.getTypeString(), JSON.stringify(callExpression.callee));
-                return;
-                //Shade.throwError(callExpression, "Internal: No registration for object: " + objectReference.getTypeString() + ", " + JSON.stringify(callExpression.object));
+                Shade.throwError(callExpression, "Internal Error: No object registered for: " + objectReference.getTypeString() + ", " + getNameOfNode(callExpression.callee.object)+", "+callExpression.callee.object.type);
             }
             if (objectInfo.hasOwnProperty(propertyName)) {
                 var propertyHandler = objectInfo[propertyName];
@@ -286,14 +296,13 @@
         if (objectReference && objectReference.isObject()) {
             var objectInfo = context.getObjectInfoFor(objectReference);
             if(!objectInfo) {// Every object needs an info, otherwise we did something wrong
-                console.error("No object registered for: ", objectReference.getTypeString(), JSON.stringify(memberExpression.object))
-                //Shade.throwError(memberExpression, "Internal: No registration for object: " + objectReference.getTypeString() + ", " + JSON.stringify(memberExpression.object));
-                return;
+                Shade.throwError(memberExpression, "Internal Error: No object registered for: " + objectReference.getTypeString() + JSON.stringify(memberExpression.object));
             }
             if (objectInfo.hasOwnProperty(propertyName)) {
                 var propertyHandler = objectInfo[propertyName];
                 if (typeof propertyHandler.property == "function") {
-                    return propertyHandler.property(memberExpression, parent, context, state);
+                    var result = propertyHandler.property(memberExpression, parent, context, state);
+                    return result;
                 }
             }
         }
