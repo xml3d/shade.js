@@ -41,6 +41,7 @@
         Vec2: interfaces.Vec2,
         Vec3: interfaces.Vec3,
         Vec4: interfaces.Vec4,
+        Texture: interfaces.Texture,
         Color: interfaces.Color
 
 });

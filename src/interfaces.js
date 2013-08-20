@@ -24,6 +24,7 @@
         NORMAL: "normal",
         MATRIX4: "matrix4",
         MATRIX3: "matrix3",
+        TEXTURE: "texture",
         COLOR_CLOSURE: "color_closure"
     }
 
@@ -400,6 +401,15 @@
       * @constructor
       */
      var Color = Vec4;
+
+     var Texture = function(image){
+        this.image = image;
+     }
+
+     Texture.prototype.sample2D = function(x, y){
+        return new Vec4(0,0,0,0);
+     }
+
 
     var Shade = {};
 

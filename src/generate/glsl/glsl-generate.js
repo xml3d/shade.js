@@ -36,6 +36,8 @@
                         return "vec3";
                     case Kinds.FLOAT2:
                         return "vec2";
+                    case Kinds.TEXTURE:
+                        return "sampler2D"
                     default:
                         return "<undefined>";
                 }
