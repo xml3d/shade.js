@@ -417,7 +417,11 @@
                 }
                 var args = Annotation.createAnnotatedNodeArray(node.arguments, ctx);
                 var definingContext = ctx.getContextForName(functionName);
+                try {
                 var extra = root.getFunctionInformationFor(ctx.getVariableIdentifier(functionName), args, definingContext);
+                } catch(e) {
+                    Shade.throwError(node, "Failure in function call: " + e.message);
+                }
                 extra && result.setFromExtra(extra);
                 node.callee.name = extra.newName;
                 return;
