@@ -1,13 +1,21 @@
 (function (ns) {
 
     var Base = require("../../../base/index.js"),
-        Shade = require("../../../interfaces.js");
+        Shade = require("../../../interfaces.js"),
+        Syntax = require('estraverse').Syntax;
+
 
     var SystemParameterNames = {
-        "normalizedCoords" : "_sys_normalizedCoords",
+        "coords" : "_sys_coords",
         "height": "_sys_height",
         "width": "_sys_width"
     }
+
+    var CoordsType =  {
+        type: Shade.TYPES.OBJECT,
+        kind: Shade.OBJECT_KINDS.FLOAT3,
+        source: Shade.SOURCES.UNIFORM
+    };
 
     var SystemEntry = {
         coords: {
@@ -18,32 +26,56 @@
         },
         normalizedCoords: {
             property: function (node, parent, context, state) {
-                state.globalParameters[SystemParameterNames.normalizedCoords] = {
-                    type: Shade.TYPES.OBJECT,
-                    kind: Shade.OBJECT_KINDS.FLOAT3,
-                    source: Shade.SOURCES.UNIFORM
+                state.globalParameters[SystemParameterNames.coords] = CoordsType;
+                return {
+                    type: Syntax.NewExpression,
+                    callee: {
+                        type: Syntax.Identifier,
+                        name: "Vec3"
+                    },
+                    arguments: [
+                        {
+                            type: Syntax.BinaryExpression,
+                            left: {
+                                type: Syntax.MemberExpression,
+                                object: {
+                                    type: Syntax.Identifier,
+                                    name: "gl_FragCoord"
+                                },
+                                property: {
+                                    type: Syntax.Identifier,
+                                    name: "xyz"
+                                }
+                            },
+                            right: {
+                                type: Syntax.Identifier,
+                                name: SystemParameterNames.coords
+                            },
+                            operator: "/",
+                            extra: {
+                                type: Shade.TYPES.OBJECT,
+                                kind: Shade.OBJECT_KINDS.FLOAT3
+                            }
+                        }
+                    ],
+                    extra: {
+                        type: Shade.TYPES.OBJECT,
+                        kind: Shade.OBJECT_KINDS.FLOAT3
+                    }
                 }
-                node.property.name = SystemParameterNames.normalizedCoords;
-                return node.property;
             }
         },
         height: {
             property: function (node, parent, context, state) {
-                state.globalParameters[SystemParameterNames.height] = {
-                    type: Shade.TYPES.NUMBER,
-                    source: Shade.SOURCES.UNIFORM
-                }
-                node.property.name = SystemParameterNames.height;
+                state.globalParameters[SystemParameterNames.coords] = CoordsType;
+                node.property.name = SystemParameterNames.coords + ".y";
                 return node.property;
             }
         },
         width: {
             property: function (node, parent, context, state) {
-                state.globalParameters[SystemParameterNames.width] = {
-                    type: Shade.TYPES.NUMBER,
-                    source: Shade.SOURCES.UNIFORM
-                }
-                node.property.name = SystemParameterNames.width;
+                state.globalParameters[SystemParameterNames.coords] = CoordsType;
+                node.property.name = SystemParameterNames.coords + ".x";
                 return node.property;
             }
         }
