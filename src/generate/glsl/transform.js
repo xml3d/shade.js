@@ -1,6 +1,7 @@
 (function (ns) {
 
     var Base = require("../../base/index.js"),
+        ANNO = require("../../base/annotation.js").ANNO,
         Annotation = require("../../base/annotation.js").Annotation,
         FunctionAnnotation = require("../../base/annotation.js").FunctionAnnotation,
         TypeInfo = require("../../base/typeinfo.js").TypeInfo,
@@ -141,7 +142,7 @@
 
     var handleTopDeclaration = function(name, globalParameters){
         var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(globalParameters, name)};
-        var propertyAnnotation =  new Annotation(propertyLiteral);
+        var propertyAnnotation =  ANNO(propertyLiteral);
         propertyAnnotation.setFromExtra(globalParameters[name]);
 
         if (propertyAnnotation.isNullOrUndefined())
@@ -158,7 +159,7 @@
             ],
             kind: "var"
         };
-        var declAnnotation =  new Annotation(decl.declarations[0]);
+        var declAnnotation =  ANNO(decl.declarations[0]);
         declAnnotation.copy(propertyAnnotation);
         return decl;
     }
@@ -166,7 +167,7 @@
     var handleIdentifier = function(node, parent, blockedNames, idNameMap){
         if(parent.type == Syntax.FunctionDeclaration)
             return node;
-        if(parent.type == Syntax.MemberExpression && new Annotation(parent.object).isGlobal())
+        if(parent.type == Syntax.MemberExpression && ANNO(parent.object).isGlobal())
             return node;
 
 
@@ -310,13 +311,9 @@
             }
         }
 
-        var exp = new Annotation(memberExpression);
         if(objectReference && objectReference.isGlobal()) {
             var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(objectReference, propertyName)};
-            var propertyAnnotation =  new Annotation(propertyLiteral);
-            propertyAnnotation.copy(exp);
-            propertyAnnotation.setGlobal(true);
-
+            ANNO(propertyLiteral).copy(ANNO(memberExpression));
             return propertyLiteral;
         }
 
@@ -334,8 +331,8 @@
 
     var handleBinaryExpression = function (binaryExpression, parent, cb) {
         // In GL, we can't mix up floats, ints and boold for binary expressions
-        var left = new Annotation(binaryExpression.left),
-            right = new Annotation(binaryExpression.right);
+        var left = ANNO(binaryExpression.left),
+            right = ANNO(binaryExpression.right);
 
         if (left.isNumber() && right.isInt()) {
             binaryExpression.right = castToFloat(binaryExpression.right);
@@ -351,7 +348,7 @@
     }
 
     function castToFloat(ast) {
-        var exp = new Annotation(ast);
+        var exp = ANNO(ast);
 
         if (!exp.isNumber()) {   // Cast
             return {
@@ -367,7 +364,7 @@
     }
 
     function castToInt(ast, force) {
-        var exp = new Annotation(ast);
+        var exp = ANNO(ast);
 
         if (!exp.isInt() || force) {   // Cast
             return {
@@ -402,8 +399,8 @@
     }
 
     var handleConditionalExpression = function(node, state, root) {
-        var consequent = new Annotation(node.consequent);
-        var alternate = new Annotation(node.alternate);
+        var consequent = ANNO(node.consequent);
+        var alternate = ANNO(node.alternate);
         if (consequent.canEliminate()) {
             return root.replace(node.alternate, state);
         }
@@ -414,8 +411,8 @@
     }
 
     var handleIfStatement = function (node) {
-        var consequent = new Annotation(node.consequent);
-        var alternate = node.alternate ? new Annotation(node.alternate) : null;
+        var consequent = ANNO(node.consequent);
+        var alternate = node.alternate ? ANNO(node.alternate) : null;
         if (consequent.canEliminate()) {
             if (alternate) {
                 return node.alternate;
@@ -427,7 +424,7 @@
             return node.consequent;
         }
         // We still have a real if statement
-       var test = new Annotation(node.test);
+       var test = ANNO(node.test);
        switch(test.getType()) {
            case Types.INT:
            case Types.NUMBER:
@@ -449,8 +446,8 @@
     };
 
     var handleLogicalExpression = function (node, root, state) {
-        var left = new Annotation(node.left);
-        var right = new Annotation(node.right);
+        var left = ANNO(node.left);
+        var right = ANNO(node.right);
         if (left.canEliminate())
             return root.replace(node.right, state);
         if (right.canEliminate())
