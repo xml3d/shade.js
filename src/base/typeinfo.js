@@ -198,6 +198,8 @@
                 this.setStaticValue(extra.staticValue);
             if (extra.evaluate != undefined)
                 this.setCall(extra.evaluate);
+            if (extra.source != undefined)
+                this.setSource(extra.source);
         },
         getNodeInfo: function() {
             if (this.isObject())
@@ -207,6 +209,13 @@
             if (this.isObject())
                 return "Object #<" + this.getKind() + ">";
             return this.getType();
+        },
+        setSource: function(source) {
+            var extra = this.getExtra();
+            extra.source = source;
+        },
+        getSource: function() {
+            return this.getExtra().source;
         }
 
     }

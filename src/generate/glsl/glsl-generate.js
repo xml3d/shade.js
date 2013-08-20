@@ -2,12 +2,13 @@
 
     var FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
     var Shade = require("./../../interfaces.js");
-    var Types = require("./../../interfaces.js").TYPES;
-    var Kinds = require("./../../interfaces.js").OBJECT_KINDS;
     var walk = require('estraverse'),
         Syntax = walk.Syntax,
         VisitorOption = walk.VisitorOption;
 
+    var Types = Shade.TYPES,
+        Kinds = Shade.OBJECT_KINDS,
+        Sources = Shade.SOURCES;
 
 
 
@@ -31,7 +32,6 @@
                 switch (info.kind) {
                     case Kinds.FLOAT4:
                         return "vec4";
-                    case Kinds.COLOR:
                     case Kinds.FLOAT3:
                         return "vec3";
                     case Kinds.FLOAT2:
@@ -55,6 +55,18 @@
                 throw new Error("toGLSLType: Unhandled type: " + info.type);
 
         }
+    }
+
+    var toGLSLSource = function(info) {
+        if (!info.source)
+            return "";
+        if (info.source == Sources.VERTEX)
+            return "varying";
+        if (info.source == Sources.UNIFORM)
+            return "uniform";
+        if (info.source == Sources.CONSTANT)
+            return "const";
+        throw new Error("toGLSLSource: Unhandled type: " + info.source);
     }
 
     function createLineStack() {
@@ -133,7 +145,9 @@
 
                             case Syntax.VariableDeclarator :
                                 // console.log("Meep!");
-                                var line = toGLSLType(node.extra) + " " + node.id.name;
+                                var source = toGLSLSource(node.extra);
+                                var line = source ? source + " " : "";
+                                line += toGLSLType(node.extra) + " " + node.id.name;
                                 if (node.init) line += " = " + handleExpression(node.init);
                                 lines.appendLine(line + ";");
                                 return;
