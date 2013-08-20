@@ -11,6 +11,7 @@
         this.console = null;
         this.lastErrorLocation = null;
         this.storage = storageSupported() ? ns.localStorage : {};
+        this.paramStateLoaded = false;
     };
 
     ShadeStudio.prototype = {
@@ -46,6 +47,7 @@
         onEdit: function(instance, obj) {
             var newValue = this.javaScriptEditor.getValue();
             var codeCorrect = false;
+            this.storage.lastShaderCode = newValue;
             if(this.lastErrorLocation && this.lastErrorLocation.start.line){
                 this.javaScriptEditor.removeLineClass(this.lastErrorLocation.start.line -1, 'background', 'line-error');
                 this.lastErrorLocation = null;
@@ -58,7 +60,7 @@
                 codeCorrect = true;
                 this.updateParameterSelection(params);
                 this.updateOutput();
-                this.storage.lastShaderCode = newValue;
+
             } catch (e) {
                 console.log(e.toString());
                 console.log(e.loc);
@@ -90,7 +92,23 @@
             for(var name in newSelects){
                 list.append(newSelects[name]);
             }
+            if(!this.paramStateLoaded){
+                this.paramStateLoaded = true;
+                if(this.storage.lastParamState){
+                    this.loadParamInfo(JSON.parse(this.storage.lastParamState));
+                }
+            }
+
         },
+        loadParamInfo: function(paramData){
+            for(var name in paramData){
+                var data = paramData[name];
+                var sourceName = "_" + name + "__source";
+                this.paramForm.elements[name].value = data.type;
+                this.paramForm.elements[sourceName].value = data.source;
+            }
+        },
+
         updateOutput: function(){
             var contextData = {
                 "global.shade" : [
@@ -104,15 +122,24 @@
                     }
                 ]
             }
+            var paramState = {};
             for(var i = 0; i < this.paramList.length; ++i){
                 var name = this.paramList[i], sourceName = "_" + name + "__source";
-                var src = TYPE_LIST[this.paramForm.elements[name].value];
+                var selection = {
+                    type: this.paramForm.elements[name].value,
+                    source: this.paramForm.elements[sourceName].value
+                };
+                paramState[name] = selection;
+
                 var dest = contextData["global.shade"][0].info[name] = {};
-                for(var j in src){
-                    dest[j] = src[j];
+                var typeData = TYPE_LIST[selection.type];
+
+                for(var j in typeData){
+                    dest[j] = typeData[j];
                 }
-                dest["source"] = SOURCE_MAP[this.paramForm.elements[sourceName].value];
+                dest["source"] = SOURCE_MAP[selection.source];
             }
+            this.storage.lastParamState = JSON.stringify(paramState);
             var code = this.javaScriptEditor.getValue();
 
             var aast = Shade.parseAndInferenceExpression(code, { inject: contextData, loc: true });
