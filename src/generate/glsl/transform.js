@@ -75,10 +75,9 @@
             this.replace(program, state);
 
             for(var name in state.globalParameters){
-                if(name !== "_global")
-                    var decl = handleTopDeclaration(name, state.globalParameters);
-                    if (decl)
-                        program.body.unshift(decl);
+                var decl = handleTopDeclaration(name, state.globalParameters);
+                if (decl)
+                    program.body.unshift(decl);
             }
 
             return program;
@@ -167,6 +166,10 @@
     var handleIdentifier = function(node, parent, blockedNames, idNameMap){
         if(parent.type == Syntax.FunctionDeclaration)
             return node;
+        if(parent.type == Syntax.MemberExpression && new Annotation(parent.object).isGlobal())
+            return node;
+
+
         var name = node.name;
         if(idNameMap[name]) node.name = idNameMap[name];
         var newName = name, i = 1;

@@ -94,10 +94,11 @@
         updateOutput: function(){
             var contextData = {
                 "global.shade" : [
-                    { "_global" : true,
+                    {
                       "extra": {
                           "type": "object",
-                          "kind": "any"
+                          "kind": "any",
+                          "global" : true
                       },
                       "info" : {}
                     }
