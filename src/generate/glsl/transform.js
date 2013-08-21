@@ -127,7 +127,7 @@
                                 return handleMainFunction(node, parent, state.context);
                         case Syntax.ReturnStatement:
                             if(state.inMain) {
-                                return handleReturnInMain(node, parent);
+                                return handleReturnInMain(node, state.context);
                             }
                             break;
                         case Syntax.BinaryExpression:
@@ -183,7 +183,7 @@
     }
 
 
-    var handleReturnInMain = function(node, parent) {
+    var handleReturnInMain = function(node, context) {
         if (node.argument) {
             return {
                 type: Syntax.BlockStatement,
@@ -195,7 +195,7 @@
                             type: Syntax.Identifier,
                             name: "gl_FragColor"
                         },
-                        right: node.argument
+                        right: castToVec4(node.argument, context)
                     },
                     {
                         type: Syntax.ReturnStatement
@@ -377,6 +377,25 @@
             }
         }
         return ast;
+    }
+
+    function castToVec4(ast, context) {
+        var exp = TypeInfo.createForContext(ast, context);
+
+        if (exp.isOfKind(Kinds.FLOAT4))
+            return ast;
+
+        if (exp.isOfKind(Kinds.FLOAT3)) {
+            return {
+                type: Syntax.CallExpression,
+                callee: {
+                    type: Syntax.Identifier,
+                    name: "vec4"
+                },
+                arguments: [ast, { type: Syntax.Literal, value: 1.0, extra: { type: Types.NUMBER} }]
+            }
+        }
+        throw new Error("Can't cast from " + exp.getTypeString() + "to vec4");
     }
 
     var handleModulo = function (binaryExpression) {
