@@ -116,9 +116,9 @@
                       "extra": {
                           "type": "object",
                           "kind": "any",
-                          "global" : true
-                      },
-                      "info" : {}
+                          "global" : true,
+                          "info" : {}
+                      }
                     }
                 ]
             }
@@ -131,7 +131,7 @@
                 };
                 paramState[name] = selection;
 
-                var dest = contextData["global.shade"][0].info[name] = {};
+                var dest = contextData["global.shade"][0].extra.info[name] = {};
                 var typeData = TYPE_LIST[selection.type];
 
                 for(var j in typeData){

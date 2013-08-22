@@ -203,7 +203,7 @@
         },
         getNodeInfo: function() {
             if (this.isObject())
-                return this.node.info;
+                return this.getExtra().info;
         },
         getTypeString: function() {
             if (this.isObject())

@@ -3,22 +3,20 @@
         {
             "extra": {
                 "type": "object",
-                "kind": "any"
-            },
-            "info": {
-                "diffuseColor": {
-                    "type": "object",
-                    "kind": "color"
-                },
-                "diffuseTexture": {
-                    "type": "undefined"
-                },
-                "normal": {
-                    "type": "object",
-                    "kind": "float3",
-                    "source": "vertex"
+                "kind": "any",
+                "global": "true",
+                "info": {
+                    "diffuseTexture": {
+                        "type": "undefined"
+                    },
+                    "normal": {
+                        "type": "object",
+                        "kind": "float3",
+                        "source": "vertex"
+                    }
                 }
             }
+
         }
     ]
 }

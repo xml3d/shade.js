@@ -36,6 +36,7 @@
             ctx.registerObject("Vec2", ObjectRegistry.getByName("Vec2"));
             ctx.registerObject("Vec3", ObjectRegistry.getByName("Vec3"));
             ctx.registerObject("Color", ObjectRegistry.getByName("Vec3"));
+            ctx.registerObject("Texture", ObjectRegistry.getByName("Texture"));
             ctx.declareVariable("gl_FragCoord", false);
             ctx.updateExpression("gl_FragCoord", new TypeInfo({
                 extra: {
@@ -61,7 +62,7 @@
                  context: context,
                  contextStack: [context],
                  inMain:  this.mainId == context.str(),
-                 globalParameters : program.injections[this.mainId] && program.injections[this.mainId][0] ? program.injections[this.mainId][0].node.info : {},
+                 globalParameters : program.injections[this.mainId] && program.injections[this.mainId][0] ? program.injections[this.mainId][0].node.extra.info : {},
                  blockedNames : [],
                  topDeclarations : [],
                  idNameMap : {}
@@ -245,10 +246,8 @@
             case Syntax.CallExpression:
             case Syntax.MemberExpression:
             case Syntax.BinaryExpression:
-                return context.createTypeInfo(object);
-                break;
             case Syntax.Identifier:
-                return context.getBindingByName(object.name);
+                return context.createTypeInfo(object);
                 break;
             case Syntax.ThisExpression:
                 return context.getBindingByName("this");

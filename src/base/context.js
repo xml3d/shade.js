@@ -265,19 +265,14 @@
          * @returns {TypeInfo}
          */
         createTypeInfo: function (node) {
-            var result = new Annotation(node);
-            if (result.getType() !== TYPES.ANY) {
-                return result;
-            }
-
             if (node.type == Syntax.Identifier) {
                 var name = node.name;
                 var binding = this.getBindingByName(name);
-                if (!binding) {
-                    Shade.throwError(node, "ReferenceError: " + name + " is not defined");
+                if (binding) {
+                    return binding;
                 }
-                return binding;
             }
+            var result = new Annotation(node);
             return result;
         },
 
@@ -292,7 +287,6 @@
 
             var nodeInfo = obj.getNodeInfo();
             if (nodeInfo) {
-                console.error("Found NodeInfo");
                 return nodeInfo;
             }
             return registry.getInstanceForKind(obj.getKind())

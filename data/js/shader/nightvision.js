@@ -1,6 +1,6 @@
 // https://www.shadertoy.com/view/Xsl3zf
 function hash(n) {
-    return (Math.sin(n) * 43758.5453123) % 1;
+    return Shade.fract(Math.sin(n)*43758.5453123);
 }
 
 function shade(env) {
@@ -8,8 +8,8 @@ function shade(env) {
 
     var n = p.x(this.width / this.height);
 
-    if (Math.abs(p.y()) > .8 || Math.floor(this.normalizedCoords.y()) % 3.0 > 0.0) {
-        return Color.black;
+    if (Math.abs(p.y()) > .8 || Math.floor(this.coords.y()) % 3.0 > 0.0) {
+        return new Vec3(0);
     }
 
     var c = env.channel0 ? env.channel0.sample2D(this.normalizedCoords).xyz() : new Vec3(0);
