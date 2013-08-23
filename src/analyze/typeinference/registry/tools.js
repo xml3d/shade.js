@@ -77,15 +77,15 @@
                 else if(arg.isOfKind(KINDS.FLOAT2)) cnt = 2;
                 else if(arg.isOfKind(KINDS.FLOAT3)) cnt = 3;
                 else if(arg.isOfKind(KINDS.FLOAT4)) cnt = 4;
-                else Shade.throwError(result.node, "Inavlid parameter for " + methodName + ", type is not supported");
+                else Shade.throwError(result.node, "Invalid parameter for " + methodName + ", type is not supported");
                 // TODO: Print Type?
                 idx += cnt;
             }
 
             if(idx < vecSize && (!color || idx + 1 < vecSize))
-                Shade.throwError(result.node, "Inavlid parameters for " + methodName + ", expected " + vecSize + " scalar values, got " + idx);
+                Shade.throwError(result.node, "Invalid parameters for " + methodName + ", expected " + vecSize + " scalar values, got " + idx);
             else if(i < args.length){
-                Shade.throwError(result.node, "Inavlid parameters for " + methodName + ", too many parameters");
+                Shade.throwError(result.node, "Invalid parameters for " + methodName + ", too many parameters");
             }
         },
         vecEvaluate: function(objectName, methodName, color, destVecSize, srcVecSize, result, args, ctx, callObject){

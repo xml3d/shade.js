@@ -33,7 +33,7 @@
         id: "Vec4",
         kind: KINDS.FLOAT4,
         object: {
-            constructor: null,
+            constructor: Tools.Vec.generateConstructor,
             static: {}
         },
         instance: Vec4Instance

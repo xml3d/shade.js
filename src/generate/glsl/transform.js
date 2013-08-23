@@ -35,6 +35,7 @@
             ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
             ctx.registerObject("Vec2", ObjectRegistry.getByName("Vec2"));
             ctx.registerObject("Vec3", ObjectRegistry.getByName("Vec3"));
+            ctx.registerObject("Vec4", ObjectRegistry.getByName("Vec4"));
             ctx.registerObject("Color", ObjectRegistry.getByName("Vec3"));
             ctx.registerObject("Texture", ObjectRegistry.getByName("Texture"));
             ctx.declareVariable("gl_FragCoord", false);
@@ -119,6 +120,8 @@
                     switch(node.type) {
                         case Syntax.MemberExpression:
                             return handleMemberExpression(node, parent, state);
+                        case Syntax.NewExpression:
+                            return handleNewExpression(node, parent, state.context);
                         case Syntax.CallExpression:
                             return handleCallExpression(node, parent, state.topDeclarations, state.context);
                         case Syntax.FunctionDeclaration:
@@ -284,9 +287,19 @@
                     return propertyHandler.callExp(callExpression, args, parent);
                 }
             }
-
         }
+    }
 
+    var handleNewExpression = function(newExpression, parent, context){
+        var entry = context.getBindingByName(newExpression.callee.name);
+        //console.error(entry);
+        if (entry && entry.hasConstructor()) {
+            var constructor = entry.getConstructor();
+            return constructor(newExpression);
+        }
+       else {
+            throw new Error("ReferenceError: " + node.callee.name + " is not defined");
+        }
     }
 
 

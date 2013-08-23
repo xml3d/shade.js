@@ -17,9 +17,29 @@
     }
 
     var Vec = {
+        getVecArgs: function(args){
+            if(args.length == 0){
+                var result = [
+                    {
+                        type: "Literal",
+                        value: "0"
+                    }
+                ];
+                ANNO(result[0]).setType(TYPES.NUMBER);
+                return result;
+            }
+            else{
+                return args;
+            }
+        },
+
         generateVecFromArgs: function(vecCount, args){
             if(vecCount == 1)
                 return args[0];
+            if(args.length == 0){
+                args = Vec.getVecArgs(args);
+            }
+
             if(args.length == 1 && ANNO(args[0]).isOfKind(KINDS['FLOAT' + vecCount]))
                 return args[0];
             var result = {
@@ -142,26 +162,30 @@
         },
 
         generateLengthCall: function(node, args, parent){
-                if(args.length == 0){
-                    return Vec.createFunctionCall('length', 0, node, args, parent);
-                }
-                else{
-                     var replace = {
-                        type: Syntax.BinaryExpression,
-                        operator: '*',
-                        left: node.callee.object,
-                        right: {
-                            type: Syntax.BinaryExpression,
-                            operator: '/',
-                            left: node.arguments[0],
-                            right: Vec.createFunctionCall('length', 0, node, args, parent)
-                        }
-                    };
-                    ANNO(replace.right).setType(TYPES.NUMBER);
-                    ANNO(replace).copy(ANNO(node));
-                    return replace;
-                }
+            if(args.length == 0){
+                return Vec.createFunctionCall('length', 0, node, args, parent);
             }
+            else{
+                 var replace = {
+                    type: Syntax.BinaryExpression,
+                    operator: '*',
+                    left: node.callee.object,
+                    right: {
+                        type: Syntax.BinaryExpression,
+                        operator: '/',
+                        left: node.arguments[0],
+                        right: Vec.createFunctionCall('length', 0, node, args, parent)
+                    }
+                };
+                ANNO(replace.right).setType(TYPES.NUMBER);
+                ANNO(replace).copy(ANNO(node));
+                return replace;
+            }
+        },
+
+        generateConstructor: function(node){
+            node.arguments = Vec.getVecArgs(node.arguments);
+        }
     };
     ns.Vec = Vec;
 

@@ -101,7 +101,6 @@
 
         opt = opt || {};
 
-        var indent = "";
         var lines = createLineStack();
 
         traverse(ast, lines, opt);
@@ -110,6 +109,9 @@
     }
 
     function traverse(ast, lines, opt) {
+        var insideMain = false;
+
+
         walk.traverse(ast, {
                 enter: function (node) {
                     try {
@@ -127,6 +129,9 @@
                                 var func = new FunctionAnnotation(node);
                                 var methodStart = [toGLSLType(func.getReturnInfo(), true)];
                                 methodStart.push(node.id.name, '(');
+                                if(node.id.name == "main")
+                                    insideMain = true;
+
                                 if (!(node.params && node.params.length)) {
                                     methodStart.push("void");
                                 } else {
@@ -147,7 +152,7 @@
 
                             case Syntax.VariableDeclarator :
                                 // console.log("Meep!");
-                                var source = toGLSLSource(node.extra);
+                                var source = !insideMain ? toGLSLSource(node.extra) : null;
                                 var line = source ? source + " " : "";
                                 line += toGLSLType(node.extra) + " " + node.id.name;
                                 if (node.init) line += " = " + handleExpression(node.init);
