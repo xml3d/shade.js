@@ -18,8 +18,21 @@ var loadAndGenerate = function(filename) {
     return code;
 }
 
-var generateExpression = function(exp) {
-    var aast = Shade.parseAndInferenceExpression(exp, { inject: {} });
+var generateExpression = function(exp, params) {
+    params = params || {};
+    var contextData = {
+        "global.shade" : [
+            {
+                "extra": {
+                    "type": "object",
+                    "kind": "any",
+                    "global" : true,
+                    "info" : params
+                }
+            }
+        ]
+    };
+    var aast = Shade.parseAndInferenceExpression(exp, { inject: contextData });
     return new GLSLCompiler().compileFragmentShader(aast, {omitHeader: true});
 }
 
@@ -381,6 +394,26 @@ describe('GLSL Code generation,', function () {
             code.should.match(/vec3\(gl_FragCoord.xyz \/ _sys_coords\).xy \* vec2\(2\);/);
         });
 
+    });
+
+
+    describe("Dead code elimination for", function() {
+        it("undefined parameter in logical expression", function() {
+            var code = generateExpression("function shade(env) { var t = env.a || 10.0; }");
+            var lines = code.split(/\r\n|\r|\n/g);
+            lines[1].should.match(/\s*float t = 10.0;/);
+        });
+        it("defined parameter in logical expression", function() {
+            var code = generateExpression("function shade(env) { var t = env.myfloat || 10.0; }", { "myfloat": { "type": "number" }});
+            var lines = code.split(/\r\n|\r|\n/g);
+            lines[2].should.match(/\s*float t = _env_myfloat == 0.0 \? 10.0 : _env_myfloat;/);
+        });
+
+    });
+
+    it("Main function", function() {
+        var code = generateExpression("function shade(env) {}");
+        code.should.equal("void main ( void ) {\n}");
     });
 
     it("should generate simple shader", function() {

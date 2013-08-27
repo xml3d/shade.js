@@ -110,7 +110,7 @@
                         case Syntax.ConditionalExpression:
                             return handleConditionalExpression(node, state, this);
                         case Syntax.LogicalExpression:
-                            return handleLogicalExpression(node, this, state);
+                            return handleEnterLogicalExpression(node, this, state);
                         case Syntax.FunctionDeclaration:
                             // No need to declare, this has been annotated already
                             var parentContext = state.contextStack[state.contextStack.length - 1];
@@ -128,6 +128,8 @@
                             return handleMemberExpression(node, parent, state);
                         case Syntax.NewExpression:
                             return handleNewExpression(node, parent, state.context);
+                        case Syntax.LogicalExpression:
+                            return handleExitLogicalExpression(node, this, state);
                         case Syntax.CallExpression:
                             return handleCallExpression(node, parent, state.topDeclarations, state.context);
                         case Syntax.FunctionDeclaration:
@@ -459,7 +461,7 @@
 
     };
 
-    var handleLogicalExpression = function (node, root, state) {
+    var handleEnterLogicalExpression = function (node, root, state) {
         var left = ANNO(node.left);
         var right = ANNO(node.right);
         if (left.canEliminate())
@@ -467,6 +469,35 @@
         if (right.canEliminate())
             return root.replace(node.left, state);
     }
+
+    var handleExitLogicalExpression = function(node, root, state) {
+        var left = ANNO(node.left);
+        var right = ANNO(node.right);
+        // Now we have to implement the JS boolean semantic for GLSL
+        if (left.canNumber()) {
+            var test =  node.left;
+            return {
+                type: Syntax.ConditionalExpression,
+                test: {
+                    type: Syntax.BinaryExpression,
+                    operator: "==",
+                    left: test,
+                    right: {
+                        type: Syntax.Literal,
+                        value: left.isNumber() ? 0.0 : left.isInt() ? 0 : "false",
+                        extra: {
+                            type : left.getType(),
+                            staticValue: left.isNumber() ? 0.0 : left.isInt() ? 0 : "false"
+                        }
+                    },
+                    extra: { type: Types.BOOLEAN }
+                },
+                consequent: node.right,
+                alternate: test
+            }
+        }
+    }
+
 
     // Exports
     ns.GLASTTransformer = GLASTTransformer;
