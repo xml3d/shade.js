@@ -189,6 +189,22 @@
     };
     ns.Vec = Vec;
 
+    ns.castToFloat = function (ast) {
+        var exp = ANNO(ast);
+
+        if (!exp.isNumber()) {   // Cast
+            return {
+                type: Syntax.CallExpression,
+                callee: {
+                    type: Syntax.Identifier,
+                    name: "float"
+                },
+                arguments: [ast]
+            }
+        }
+        return ast;
+    }
+
     ns.extend = Base.extend;
 
 

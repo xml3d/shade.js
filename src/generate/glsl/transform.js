@@ -8,7 +8,8 @@
         Shade = require("./../../interfaces.js"),
         Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS,
-        Sources = require("./../../interfaces.js").SOURCES;
+        Sources = require("./../../interfaces.js").SOURCES,
+        Tools = require('./registry/tools.js');
 
     var ObjectRegistry = require("./registry/index.js").Registry,
         Context = require("../../base/context.js").getContext(ObjectRegistry);
@@ -347,32 +348,16 @@
             right = ANNO(binaryExpression.right);
 
         if (left.isNumber() && right.isInt()) {
-            binaryExpression.right = castToFloat(binaryExpression.right);
+            binaryExpression.right = Tools.castToFloat(binaryExpression.right);
         }
         else if (right.isNumber() && left.isInt()) {
-            binaryExpression.left = castToFloat(binaryExpression.left);
+            binaryExpression.left = Tools.castToFloat(binaryExpression.left);
         }
 
         if (binaryExpression.operator == "%") {
             return handleModulo(binaryExpression);
         }
         return binaryExpression;
-    }
-
-    function castToFloat(ast) {
-        var exp = ANNO(ast);
-
-        if (!exp.isNumber()) {   // Cast
-            return {
-                type: Syntax.CallExpression,
-                callee: {
-                    type: Syntax.Identifier,
-                    name: "float"
-                },
-                arguments: [ast]
-            }
-        }
-        return ast;
     }
 
     function castToInt(ast, force) {
@@ -411,8 +396,8 @@
     }
 
     var handleModulo = function (binaryExpression) {
-        binaryExpression.right = castToFloat(binaryExpression.right);
-        binaryExpression.left = castToFloat(binaryExpression.left);
+        binaryExpression.right = Tools.castToFloat(binaryExpression.right);
+        binaryExpression.left = Tools.castToFloat(binaryExpression.left);
         return {
             type: Syntax.CallExpression,
             callee: {
