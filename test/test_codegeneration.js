@@ -409,6 +409,17 @@ describe('GLSL Code generation,', function () {
             lines[2].should.match(/\s*float t = _env_myfloat == 0.0 \? 10.0 : _env_myfloat;/);
         });
 
+        it("test for undefined in ConditionalExpression", function() {
+            var code = generateExpression("function shade(env) { var c = env.time !== undefined ? env.time : 10.0; }", { "time": { "type": "number" }});
+            var lines = code.split(/\r\n|\r|\n/g);
+            lines[2].should.match(/\s*float c = _env_time;/);
+            var code = generateExpression("function shade(env) { var c = env.time !== undefined ? env.time : 10.0; }", { "time": { "type": "undefined" }});
+            lines = code.split(/\r\n|\r|\n/g);
+            lines[1].should.match(/\s*float c = 10.0;/);
+        });
+
+
+
     });
 
     it("Main function", function() {
