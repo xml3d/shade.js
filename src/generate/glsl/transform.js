@@ -73,7 +73,7 @@
 
 
             for(var name in state.globalParameters){
-                state.blockedNames.push(name);
+                state.blockedNames.push( getNameForGlobal(name) );
             }
 
             this.replace(program, state);
@@ -146,7 +146,7 @@
     });
 
     var handleTopDeclaration = function(name, globalParameters){
-        var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(globalParameters, name)};
+        var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(name)};
         var propertyAnnotation =  ANNO(propertyLiteral);
         propertyAnnotation.setFromExtra(globalParameters[name]);
 
@@ -170,15 +170,12 @@
     }
 
     var handleIdentifier = function(node, parent, blockedNames, idNameMap){
-        if(parent.type == Syntax.FunctionDeclaration)
+        if(parent.type == Syntax.MemberExpression)
             return node;
-        if(parent.type == Syntax.MemberExpression && ANNO(parent.object).isGlobal())
-            return node;
-
 
         var name = node.name;
         if(idNameMap[name]) node.name = idNameMap[name];
-        var newName = name, i = 1;
+        var newName = name.replace(/_+/g, "_"), i = 1;
         while(blockedNames.indexOf(newName) != -1){
             newName = name + "_" + (++i);
         }
@@ -310,36 +307,32 @@
 
         var objectReference = getObjectReferenceFromNode(memberExpression.object, context);
 
-        if (objectReference && objectReference.isObject()) {
-            var objectInfo = context.getObjectInfoFor(objectReference);
-            if(!objectInfo) {// Every object needs an info, otherwise we did something wrong
-                Shade.throwError(memberExpression, "Internal Error: No object registered for: " + objectReference.getTypeString() + JSON.stringify(memberExpression.object));
-            }
-            if (objectInfo.hasOwnProperty(propertyName)) {
-                var propertyHandler = objectInfo[propertyName];
-                if (typeof propertyHandler.property == "function") {
-                    var result = propertyHandler.property(memberExpression, parent, context, state);
-                    return result;
-                }
-            }
-        }
+        if (!objectReference || !objectReference.isObject())
+            Shade.throwError(memberExpression, "Internal Error: Object of Member expression is no object.");
 
-        if(objectReference && objectReference.isGlobal()) {
-            var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(objectReference, propertyName)};
+        var objectInfo = context.getObjectInfoFor(objectReference);
+        if(!objectInfo) {// Every object needs an info, otherwise we did something wrong
+            Shade.throwError(memberExpression, "Internal Error: No object registered for: " + objectReference.getTypeString() + JSON.stringify(memberExpression.object));
+        }
+        if (!objectInfo.hasOwnProperty(propertyName))
+            Shade.throwError(memberExpression, "Internal Error: Object of type " + objectReference.getTypeString() + " has no property '" + propertyName +"'");
+
+        var propertyHandler = objectInfo[propertyName];
+        if (typeof propertyHandler.property == "function") {
+            var result = propertyHandler.property(memberExpression, parent, context, state);
+            return result;
+        }
+        else if(objectReference.isGlobal()) {
+            var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(propertyName)};
             ANNO(propertyLiteral).copy(ANNO(memberExpression));
             return propertyLiteral;
         }
 
     };
 
-    var getNameForGlobal = function(reference, baseName) {
-        var entry = reference[baseName];
-        if(entry) {
-            if (entry.source == Sources.VERTEX) {
-                return "frag_" + baseName;
-            }
-        }
-        return baseName;
+    var getNameForGlobal = function(baseName) {
+        var name = "_env_" + baseName;
+        return name.replace(/_+/g, "_");
     }
 
     var handleBinaryExpression = function (binaryExpression, parent, cb) {
