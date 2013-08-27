@@ -65,23 +65,28 @@
                  contextStack: [context],
                  inMain:  this.mainId == context.str(),
                  globalParameters : program.injections[this.mainId] && program.injections[this.mainId][0] ? program.injections[this.mainId][0].node.extra.info : {},
+                 systemParameters: {},
                  blockedNames : [],
                  topDeclarations : [],
                  idNameMap : {}
             }
 
 
-
+            // TODO: We should also block systemParameters here. We can block all system names, even if not used.
             for(var name in state.globalParameters){
                 state.blockedNames.push( getNameForGlobal(name) );
             }
 
             this.replace(program, state);
 
+            for(var name in state.systemParameters){
+                var decl = handleTopDeclaration(name, state.systemParameters[name]);
+                decl && program.body.unshift(decl);
+            }
+
             for(var name in state.globalParameters){
-                var decl = handleTopDeclaration(name, state.globalParameters);
-                if (decl)
-                    program.body.unshift(decl);
+                var decl = handleTopDeclaration(getNameForGlobal(name), state.globalParameters[name]);
+                decl && program.body.unshift(decl);
             }
 
             return program;
@@ -145,10 +150,10 @@
         }
     });
 
-    var handleTopDeclaration = function(name, globalParameters){
-        var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(name)};
+    var handleTopDeclaration = function(name, typeInfo){
+        var propertyLiteral =  { type: Syntax.Identifier, name: name};
         var propertyAnnotation =  ANNO(propertyLiteral);
-        propertyAnnotation.setFromExtra(globalParameters[name]);
+        propertyAnnotation.setFromExtra(typeInfo);
 
         if (propertyAnnotation.isNullOrUndefined())
             return;

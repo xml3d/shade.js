@@ -26,7 +26,7 @@
         },
         normalizedCoords: {
             property: function (node, parent, context, state) {
-                state.globalParameters[SystemParameterNames.coords] = CoordsType;
+                state.systemParameters[SystemParameterNames.coords] = CoordsType;
                 return {
                     type: Syntax.NewExpression,
                     callee: {
@@ -67,14 +67,14 @@
         },
         height: {
             property: function (node, parent, context, state) {
-                state.globalParameters[SystemParameterNames.coords] = CoordsType;
+                state.systemParameters[SystemParameterNames.coords] = CoordsType;
                 node.property.name = SystemParameterNames.coords + ".y";
                 return node.property;
             }
         },
         width: {
             property: function (node, parent, context, state) {
-                state.globalParameters[SystemParameterNames.coords] = CoordsType;
+                state.systemParameters[SystemParameterNames.coords] = CoordsType;
                 node.property.name = SystemParameterNames.coords + ".x";
                 return node.property;
             }
