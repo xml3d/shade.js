@@ -13,7 +13,7 @@
          * @param {Array.<Annotation>} args
          * @param {Context} ctx
          */
-        evaluate: Tools.Vec.constructorEvaluate.bind(null, "Vec4", false, 4)
+        evaluate: Tools.Vec.constructorEvaluate.bind(null, "Vec4", 4)
     };
 
     var Vector4StaticObject = {
@@ -22,7 +22,7 @@
     var Vector4Instance = {
         length: {
             type: TYPES.FUNCTION,
-            evaluate: Tools.Vec.optionalZeroEvaluate.bind(null,"Vec4", false, "length", 4, 1, 1)
+            evaluate: Tools.Vec.optionalZeroEvaluate.bind(null,"Vec4", "length", 4, 1, 1)
         }
     };
     Tools.Vec.attachSwizzles(Vector4Instance, "Vec4", false, 4);

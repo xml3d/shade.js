@@ -187,6 +187,87 @@
             node.arguments = Vec.getVecArgs(node.arguments);
         }
     };
+
+    var Mat = {
+        TYPES: {
+            "Mat3" : {kind: KINDS.MATRIX3, colKind: KINDS.FLOAT3},
+            "Mat4" : {kind: KINDS.MATRIX4, colKind: KINDS.FLOAT4}
+        },
+
+        generateMatFromArgs: function(matName, args){
+            if(args.length == 0){
+                args = Vec.getVecArgs(args);
+            }
+
+            if(args.length == 1 && ANNO(args[0]).isOfKind( Mat.TYPES[matName].kind))
+                return args[0];
+            var result = {
+                type: Syntax.NewExpression,
+                callee: {
+                    type: Syntax.Identifier,
+                    name: matName
+                },
+                arguments: args
+            };
+            ANNO(result).setType(TYPES.OBJECT, Mat.TYPES[matName].kind);
+            ANNO(result.callee).setType(TYPES.FUNCTION);
+            return result;
+        },
+
+        createOperator: function(matName, operator, node, args, parent) {
+            var other = Mat.generateMatFromArgs(matName, node.arguments);
+            var replace = {
+                type: Syntax.BinaryExpression,
+                operator: operator,
+                left: node.callee.object,
+                right: other
+            };
+            ANNO(replace).copy(ANNO(node));
+            return replace;
+        },
+
+        attachOperators: function(instance, matName, operators){
+            for(var name in operators){
+                var operator = operators[name];
+                instance[name] = {
+                    callExp: Mat.createOperator.bind(null, matName, operator)
+                }
+            }
+        },
+
+        generateColCall: function(matName, node, args, parent){
+            var memberAccess = {
+                type: Syntax.MemberExpression,
+                object: node.callee.object,
+                property: node.arguments[0],
+                computed: true
+            };
+            ANNO(memberAccess).setType(TYPES.OBJECT, Mat.TYPES[matName].colKind);
+
+            if(args.length == 1){
+                return memberAccess;
+            }
+            else{
+                 var replace = {
+                    type: Syntax.BinaryExpression,
+                    operator: '*',
+                    left: node.callee.object,
+                    right: {
+                        type: Syntax.BinaryExpression,
+                        operator: '/',
+                        left: node.arguments[0],
+                        right: Vec.createFunctionCall('length', 0, node, args, parent)
+                    }
+                };
+                ANNO(replace.right).setType(TYPES.NUMBER);
+                ANNO(replace).copy(ANNO(node));
+                return replace;
+            }
+        }
+
+    }
+
+
     ns.Vec = Vec;
 
     ns.castToFloat = function (ast) {

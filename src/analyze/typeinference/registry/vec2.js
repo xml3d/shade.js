@@ -13,7 +13,7 @@
          * @param {Array.<Annotation>} args
          * @param {Context} ctx
          */
-        evaluate: Tools.Vec.constructorEvaluate.bind(null, "Vec2", false, 2)
+        evaluate: Tools.Vec.constructorEvaluate.bind(null, "Vec2", 2)
     };
 
     var Vector2StaticObject = {
@@ -22,13 +22,13 @@
     var Vector2Instance = {
         length: {
             type: TYPES.FUNCTION,
-            evaluate: Tools.Vec.optionalZeroEvaluate.bind(null,"Vec2", false, "length", 2, 1, 1)
+            evaluate: Tools.Vec.optionalZeroEvaluate.bind(null,"Vec2", "length", 2, 1, 1)
         }
     };
-    Tools.Vec.attachSwizzles(Vector2Instance, "Vec2", false, 2);
-    Tools.Vec.attachVecMethods(Vector2Instance, "Vec2", false, 2, 2, ['add', 'sub', 'mul', 'div', 'mod']);
-    Tools.Vec.attachVecMethods(Vector2Instance, "Vec2", false, 1, 2, ['dot']);
-    Tools.Vec.attachVecMethods(Vector2Instance, "Vec2", false, 2, 0, ['normalize']);
+    Tools.Vec.attachSwizzles(Vector2Instance, "Vec2", 2);
+    Tools.Vec.attachVecMethods(Vector2Instance, "Vec2", 2, 2, ['add', 'sub', 'mul', 'div', 'mod']);
+    Tools.Vec.attachVecMethods(Vector2Instance, "Vec2", 1, 2, ['dot']);
+    Tools.Vec.attachVecMethods(Vector2Instance, "Vec2", 2, 0, ['normalize']);
 
 
     Tools.extend(ns, {
