@@ -299,15 +299,27 @@
                         Shade.throwError(node, "Evaluates to NaN: " + left.getTypeString() + " " + operator + " " + right.getTypeString());
                     }
                     break;
-                case "==": // comparison
-                case "!=":
                 case "===":
                 case "!==":
+                    result.setType(TYPES.BOOLEAN);
+                    if (left.isUndefined() || right.isUndefined()) {
+                        var value = left.isUndefined() && right.isUndefined();
+                        result.setStaticValue(operator == "===" ? value : !value);
+                        return;
+                    }
+                    break;
+                case "==": // comparison
+                case "!=":
                 case ">":
                 case "<":
                 case ">=":
                 case "<=":
                     result.setType(TYPES.BOOLEAN);
+                    if (left.isUndefined() || right.isUndefined()) {
+                        var value = left.isUndefined() && right.isUndefined();
+                        result.setStaticValue(operator == "!=" ? !value : value);
+                        return;
+                    }
                     break;
                 default:
                     throw new Error("Operator not supported: " + operator);
