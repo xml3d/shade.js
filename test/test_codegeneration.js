@@ -82,6 +82,14 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("Math.cos(1.5);");
             code.should.equal("cos(1.5);");
         });
+        it("cos with integer as arguments introduces cast", function() {
+            var code = generateExpression("Math.cos(5);");
+            code.should.equal("cos(float(5));");
+        });
+        it("function on object", function() {
+            var code = generateExpression("var v = new Vec3(); Math.cos(v.x());");
+            code.should.match(/cos\(v.x\);/);
+        });
         it("PI", function() {
             var code = generateExpression("Math.PI;");
             code.should.equal("3.141592653589793;");
