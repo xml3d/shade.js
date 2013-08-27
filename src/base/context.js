@@ -265,14 +265,15 @@
          * @returns {TypeInfo}
          */
         createTypeInfo: function (node) {
+            var result = new Annotation(node);
             if (node.type == Syntax.Identifier) {
                 var name = node.name;
                 var binding = this.getBindingByName(name);
                 if (binding) {
+                    result.copy(binding);
                     return binding;
                 }
             }
-            var result = new Annotation(node);
             return result;
         },
 

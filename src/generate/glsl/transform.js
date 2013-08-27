@@ -407,7 +407,7 @@
                 arguments: [ast, { type: Syntax.Literal, value: 1.0, extra: { type: Types.NUMBER} }]
             }
         }
-        throw new Error("Can't cast from " + exp.getTypeString() + "to vec4");
+        Shade.throwError(ast, "Can't cast from '" + exp.getTypeString() + "' to vec4");
     }
 
     var handleModulo = function (binaryExpression) {
