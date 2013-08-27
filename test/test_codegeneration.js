@@ -91,7 +91,7 @@ describe('GLSL Code generation,', function () {
     describe('Vec2', function() {
         it("constructor", function() {
             var code = generateExpression("var a = new Vec2();");
-            code.should.equal("vec2 a = vec2();");
+            code.should.equal("vec2 a = vec2(0.0);");
         });
         it("constructor from number", function() {
             var code = generateExpression("var a = new Vec2(1);");
@@ -111,7 +111,7 @@ describe('GLSL Code generation,', function () {
         });
         it("x()", function() {
             var code = generateExpression("var a = new Vec2().x();");
-            code.should.equal("float a = vec2().x;");
+            code.should.equal("float a = vec2(0.0).x;");
         });
         it("y()", function() {
             var code = generateExpression("var a = new Vec2(1).y();");
@@ -127,7 +127,7 @@ describe('GLSL Code generation,', function () {
         });
         it("x(5)", function() {
             var code = generateExpression("var a = new Vec2().x(5);");
-            code.should.equal("vec2 a = vec2(5, vec2().y);");
+            code.should.equal("vec2 a = vec2(5, vec2(0.0).y);");
         });
         it("yx(5,2)", function() {
             var code = generateExpression("var a = new Vec2().yx(5, 2);");
@@ -170,7 +170,7 @@ describe('GLSL Code generation,', function () {
     describe('Vec3', function() {
         it("constructor", function() {
             var code = generateExpression("var a = new Vec3();");
-            code.should.equal("vec3 a = vec3();");
+            code.should.equal("vec3 a = vec3(0.0);");
         });
         it("constructor from number", function() {
             var code = generateExpression("var a = new Vec3(1);");
@@ -194,7 +194,7 @@ describe('GLSL Code generation,', function () {
         });
         it("x()", function() {
             var code = generateExpression("var a = new Vec3().x();");
-            code.should.equal("float a = vec3().x;");
+            code.should.equal("float a = vec3(0.0).x;");
         });
         it("y()", function() {
             var code = generateExpression("var a = new Vec3(1).y();");
@@ -214,7 +214,7 @@ describe('GLSL Code generation,', function () {
         });
         it("x(5)", function() {
             var code = generateExpression("var a = new Vec3().x(5);");
-            code.should.equal("vec3 a = vec3(5, vec3().y, vec3().z);");
+            code.should.equal("vec3 a = vec3(5, vec3(0.0).y, vec3(0.0).z);");
         });
         it("yx(5,2)", function() {
             var code = generateExpression("var a = new Vec3(5).yx(5, 2);");
@@ -262,7 +262,7 @@ describe('GLSL Code generation,', function () {
     describe('Vec4', function() {
         it("constructor", function() {
             var code = generateExpression("var a = new Vec4();");
-            code.should.equal("vec4 a = vec4();");
+            code.should.equal("vec4 a = vec4(0.0);");
         });
         it("constructor from number", function() {
             var code = generateExpression("var a = new Vec4(1);");
@@ -286,7 +286,7 @@ describe('GLSL Code generation,', function () {
         });
         it("x()", function() {
             var code = generateExpression("var a = new Vec4().x();");
-            code.should.equal("float a = vec4().x;");
+            code.should.equal("float a = vec4(0.0).x;");
         });
         it("y()", function() {
             var code = generateExpression("var a = new Vec4(1).y();");
@@ -306,7 +306,7 @@ describe('GLSL Code generation,', function () {
         });
         it("x(5)", function() {
             var code = generateExpression("var a = new Vec4().w(5);");
-            code.should.equal("vec4 a = vec4(vec4().x, vec4().y, vec4().z, 5);");
+            code.should.equal("vec4 a = vec4(vec4(0.0).x, vec4(0.0).y, vec4(0.0).z, 5);");
         });
         it("wx(5,2)", function() {
             var code = generateExpression("var a = new Vec4(9).wx(5, 2);");
