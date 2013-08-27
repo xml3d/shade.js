@@ -10,6 +10,7 @@
         fract: { property: Tools.removeMemberFromExpression },
         clamp: { property: Tools.removeMemberFromExpression },
         step: { property: Tools.removeMemberFromExpression },
+        mix: { property: Tools.removeMemberFromExpression },
         smoothstep: { property: Tools.removeMemberFromExpression }
     }
 

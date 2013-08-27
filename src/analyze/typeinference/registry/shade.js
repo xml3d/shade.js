@@ -107,21 +107,26 @@
         },
         fract: {
             type: TYPES.FUNCTION,
-            evaluate: function(result, args) {
-                Tools.checkParamCount(result.node, "Shade.fract", [1], args.length);
+            evaluate: Tools.Vec.anyVecArgumentEvaluate.bind(null, "Shade.fract")
+        },
+        mix: {
+            type: TYPES.FUNCTION,
+            evaluate: function(result, args, ctx) {
+                Tools.checkParamCount(result.node, "Shade.mix", [3], args.length);
 
-                var x = args[0];
-                if (x.canNumber()) {
-                    var typeInfo = {
-                        type: TYPES.NUMBER
-                    }
+                var arg = args[0];
 
-                    if (x.hasStaticValue()) {
-                        typeInfo.staticValue = Shade.Shade.fract(x.getStaticValue());
-                    }
-                    return typeInfo;
-                }
-                Shade.throwError(result.node, "Shade.fract not supported with argument types: " + args.map(function(arg) { return arg.getTypeString(); }).join(", "));
+                var typeInfo = {};
+                var cnt = Tools.Vec.checkAnyVecArgument("Shade.mix", args[0]);
+                Base.extend(typeInfo, Tools.Vec.getType(cnt));
+
+                if(!args[1].equals(args[0]))
+                    Shade.throwError(result.node, "Shade.mix types of first two arguments do no match: got " + arg[0].getTypeString() +
+                        " and " + arg[1].getTypeString() );
+                if(!args[2].canNumber())
+                    Shade.throwError(result.node, "Shade.mix third argument is not a number.");
+
+                return typeInfo;
             }
         }
     };

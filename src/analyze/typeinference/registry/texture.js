@@ -23,7 +23,7 @@
 
     var TextureInstance = {
     };
-    Tools.Vec.attachVecMethods(TextureInstance, "Texture", false, 4, 2, ['sample2D']);
+    Tools.Vec.attachVecMethods(TextureInstance, "Texture", 4, 2, ['sample2D']);
 
 
     Tools.extend(ns, {

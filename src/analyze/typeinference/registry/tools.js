@@ -53,6 +53,17 @@
                     typeInfo.staticValue = method.apply(object, callArgs);
             }
         },
+        checkAnyVecArgument: function(methodName, arg){
+            var cnt;
+
+            if(arg.canNumber()) cnt = 1;
+            else if(arg.isOfKind(KINDS.FLOAT2)) cnt = 2;
+            else if(arg.isOfKind(KINDS.FLOAT3)) cnt = 3;
+            else if(arg.isOfKind(KINDS.FLOAT4)) cnt = 4;
+            else Shade.throwError(result.node, "Invalid parameter for " + methodName + ", type '" +
+                    arg.getTypeString() + "' is not supported");
+            return cnt;
+        },
         checkVecArguments: function(methodName, vecSize, withEmpty, argStart, result, args){
             withEmpty = (withEmpty || vecSize == 0);
             var allowed = [];
@@ -74,8 +85,7 @@
                 else if(arg.isOfKind(KINDS.FLOAT4)) cnt = 4;
                 else if(arg.isOfKind(KINDS.MATRIX3)) cnt = 9;
                 else if(arg.isOfKind(KINDS.MATRIX4)) cnt = 16;
-                else Shade.throwError(result.node, "Invalid parameter for " + methodName + ", type is not supported");
-                // TODO: Print Type?
+                else Shade.throwError(result.node, "Invalid parameter for " + methodName + ", type '" + arg.getTypeString() + "' is not supported");
                 idx += cnt;
             }
 
@@ -91,6 +101,17 @@
 
             var typeInfo = {};
             Base.extend(typeInfo, Vec.getType(destVecSize));
+
+            Vec.getStaticValue(typeInfo, methodName, args, callObject);
+            return typeInfo;
+        },
+        anyVecArgumentEvaluate: function(methodName, result, args, ctx, callObject){
+            ns.checkParamCount(result.node, methodName, [1], args.length);
+            var arg = args[0];
+
+            var typeInfo = {};
+            var cnt = Vec.checkAnyVecArgument(methodName, arg);
+            Base.extend(typeInfo, Vec.getType(cnt));
 
             Vec.getStaticValue(typeInfo, methodName, args, callObject);
             return typeInfo;
