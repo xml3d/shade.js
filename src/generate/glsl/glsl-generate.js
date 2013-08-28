@@ -183,6 +183,17 @@
                                 lines.appendLine("}");
                                 return VisitorOption.Skip;
 
+                            case Syntax.ForStatement:
+                                lines.appendLine("for (" + handleInlineDeclaration(node.init) + "; " + handleExpression(node.test) +"; " + handleExpression(node.update) + ") {");
+                                lines.changeIndention(1);
+                                traverse(node.body, lines, opt);
+                                lines.changeIndention(-1);
+                                lines.appendLine("}");
+                                return VisitorOption.Skip;
+
+                            case Syntax.ContinueStatement:
+                                lines.appendLine("continue;");
+
 
                             default:
                             //console.log("Unhandled: " + type);
@@ -274,9 +285,32 @@
                 result += handleExpression(node.alternate);
                 break;
 
+            case Syntax.UpdateExpression:
+                result = "";
+                if (node.isPrefix) {
+                    result += node.operator;
+                }
+                result += handleExpression(node.argument);
+                if (!node.isPrefix) {
+                    result += node.operator;
+                }
             default:
                 //console.log("Unhandled: " , node.type);
         }
+        return result;
+    }
+
+
+    function handleInlineDeclaration(node) {
+        if (node.type != Syntax.VariableDeclaration)
+            Shade.throwError(node, "Internal error in GLSL::handleInlineDeclaration");
+        var result = node.declarations.reduce(function(declString, declaration){
+            var decl = toGLSLType(declaration.extra) + " " + declaration.id.name;
+            if (declaration.init) {
+                decl += " = " + handleExpression(declaration.init);
+            }
+            return declString + decl;
+        }, "");
         return result;
     }
 
