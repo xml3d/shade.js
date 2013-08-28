@@ -38,6 +38,7 @@
             };
             try {
                 this.gl = $(".theCanvas")[0].getContext("experimental-webgl");
+                this.initGL();
             } catch(e) {
                 this.addConsoleText(e.toString(), true);
                 this.gl = null;
@@ -166,6 +167,12 @@
             if(error) entry.addClass("error");
             this.console.append(entry);
             this.console[0].scrollTop = this.console[0].scrollHeight;
+        },
+        initGL: function () {
+            var gl = this.gl;
+            var ext = gl.getExtension('OES_standard_derivatives');
+            if (!ext)
+                this.addConsoleText("Standard derivates are not supported on your graphics card");
         },
         compileGL: function() {
             var fragmentSource = this.codeViewer.getValue();
