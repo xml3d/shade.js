@@ -396,7 +396,6 @@ describe('GLSL Code generation,', function () {
 
     });
 
-
     describe("Dead code elimination for", function() {
         it("undefined parameter in logical expression", function() {
             var code = generateExpression("function shade(env) { var t = env.a || 10.0; }");
@@ -416,6 +415,15 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("function shade(env) { var c = env.time !== undefined ? env.time : 10.0; }", { "time": { "type": "undefined" }});
             lines = code.split(/\r\n|\r|\n/g);
             lines[1].should.match(/\s*float c = 10.0;/);
+        });
+
+        it("test object iexistance in ConditionalExpression", function() {
+            var code = generateExpression("function shade(env) { var x = env.texcoord ? env.texcoord.x() : this.coords.x(); }", { "texcoord": { "type": "object", kind: "float2" }});
+            var lines = code.split(/\r\n|\r|\n/g);
+            lines[2].should.match(/\s*float x = _env_texcoord.x;/);
+            var code = generateExpression("function shade(env) { var x = env.unknown ? env.texcoord.x() : this.coords.x(); }", { "texcoord": { "type": "object", kind: "float2" }});
+            var lines = code.split(/\r\n|\r|\n/g);
+            lines[2].should.match(/\s*float x = gl_FragCoord.x;/);
         });
 
 

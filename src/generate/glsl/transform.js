@@ -17,6 +17,7 @@
 
     var walk = require('estraverse');
     var Syntax = walk.Syntax;
+    var VisitorOption = walk.VisitorOption;
 
 
     /**
@@ -98,9 +99,9 @@
          * @returns {*}
          */
         replace: function(ast, state) {
-            walk.replace(ast, {
+            ast = walk.replace(ast, {
 
-                enter: function (node, parent) {
+                enter: function (node, parent, cb) {
                     //console.log("Enter:", node.type);
                     switch (node.type) {
                         case Syntax.Identifier:
@@ -108,7 +109,7 @@
                         case Syntax.IfStatement:
                             return handleIfStatement(node);
                         case Syntax.ConditionalExpression:
-                            return handleConditionalExpression(node, state, this);
+                            return handleConditionalExpression(node, state, this, cb);
                         case Syntax.LogicalExpression:
                             return handleEnterLogicalExpression(node, this, state);
                         case Syntax.FunctionDeclaration:
@@ -226,7 +227,6 @@
         var anno = new FunctionAnnotation(node);
         anno.setReturnInfo({ type: Types.UNDEFINED });
 
-        // console.log(context);
         // Main has no parameters
         node.params = [];
         // Rename to 'main'
@@ -271,7 +271,7 @@
         if (callExpression.callee.type == Syntax.MemberExpression) {
             var calleeReference = getObjectReferenceFromNode(callExpression.callee, context);
             if(!(calleeReference && calleeReference.isFunction()))
-                throw new Error("Something went wrong in type inference");
+                Shade.throwError(callExpression, "Something went wrong in type inference, " + callExpression.callee.object.name);
 
             var object = callExpression.callee.object,
                 propertyName = callExpression.callee.property.name;
@@ -414,16 +414,16 @@
         }
     }
 
-    var handleConditionalExpression = function(node, state, root) {
+    var handleConditionalExpression = function(node, state, root, cb) {
         var consequent = ANNO(node.consequent);
         var alternate = ANNO(node.alternate);
-        if (consequent.canEliminate()) {
-            return root.replace(node.alternate, state);
+        if (consequent.canEliminate() || alternate.canEliminate()) {
+            // In this case, we replace the whole conditional expression by the
+            // resulting expression. We have to do the traversal manually and skip the
+            // subtree for the parent traversal.
+            cb(VisitorOption.Skip);
+            return root.replace(consequent.canEliminate() ? node.alternate : node.consequent , state);
         }
-        if (alternate.canEliminate()) {
-            return root.replace(node.consequent, state);
-        }
-
     }
 
     var handleIfStatement = function (node) {
@@ -473,6 +473,12 @@
     var handleExitLogicalExpression = function(node, root, state) {
         var left = ANNO(node.left);
         var right = ANNO(node.right);
+
+        if (left.isBool() && right.isBool()) {
+            // Everything is okay, no need to modify anything
+            return;
+        }
+
         // Now we have to implement the JS boolean semantic for GLSL
         if (left.canNumber()) {
             var test =  node.left;

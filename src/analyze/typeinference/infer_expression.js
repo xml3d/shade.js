@@ -71,8 +71,8 @@
             var test = ctx.createTypeInfo(node.test);
 
             // console.log(node.test, node.consequent, node.alternate);
-            if (test.hasStaticValue()) {
-                var testResult = evaluateTruth(test.getStaticValue());
+            if (test.hasStaticValue() || test.isObject()) {
+                var testResult = test.hasStaticValue() ? evaluateTruth(test.getStaticValue()) : true;
                 if (testResult === true) {
                     root.traverse(node.consequent);
                     consequent = ctx.createTypeInfo(node.consequent);
