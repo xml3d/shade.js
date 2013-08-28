@@ -39,6 +39,8 @@
             try {
                 this.gl = $(".theCanvas")[0].getContext("experimental-webgl");
                 this.initGL();
+                $(".theCanvas").mouseenter(this.setAnimate.bind(this, true))
+                               .mouseleave(this.setAnimate.bind(this, false));
             } catch(e) {
                 this.addConsoleText(e.toString(), true);
                 this.gl = null;
@@ -173,6 +175,10 @@
             var ext = gl.getExtension('OES_standard_derivatives');
             if (!ext)
                 this.addConsoleText("Standard derivates are not supported on your graphics card");
+
+            this.quad = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.quad);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1.0, -1.0,1.0, -1.0,-1.0,  1.0,-1.0,  1.0,1.0, -1.0,1.0,  1.0]), gl.STATIC_DRAW);
         },
         compileGL: function() {
             var fragmentSource = this.codeViewer.getValue();
@@ -183,7 +189,8 @@
                 this.addConsoleText(info.error, true);
             } else {
                 this.addConsoleText("GLSL: Compiled fragment shader successfully");
-                this.render(info.shader);
+                this.compileProgram(info.shader);
+                this.renderFrame();
             }
         },
         compileShader: function(kind, source) {
@@ -201,10 +208,13 @@
                 return { shader: shader };
             }
         },
-        render : function(fragmentShader) {
+        compileProgram : function(fragmentShader) {
             var gl = this.gl;
+            this.program = null;
+
             var canvasWidth = $(".theCanvas")[0].width = $(".theCanvas")[0].clientWidth,
                 canvasHeight = $(".theCanvas")[0].height = $(".theCanvas")[0].clientHeight;
+
             gl.viewport( 0, 0, canvasWidth, canvasHeight );
             var vertex = this.compileShader(gl.VERTEX_SHADER, ["attribute vec2 a_position;","void main() { gl_Position = vec4(a_position, 0, 1); }"].join("\n"));
             if(vertex.error)
@@ -221,6 +231,7 @@
                 this.addConsoleText(errorString, true);
                 return;
             }
+            this.program = program;
             gl.useProgram(program);
             // Set system parameters
 
@@ -228,14 +239,39 @@
             location = gl.getUniformLocation(program, "_sys_height"); location && gl.uniform1f(location, canvasHeight);
             location = gl.getUniformLocation(program, "_sys_width"); location && gl.uniform1f(location, canvasWidth);
             location = gl.getUniformLocation(program, "_sys_coords"); location && gl.uniform3f(location, canvasWidth, canvasHeight, 1.0);
+        },
+        renderFrame: function(time) {
+            var gl = this.gl;
+            var program = this.program;
+            if (!(gl && program))
+                return;
+
+            time = time || 0;
+
+            gl.useProgram(program);
+
+            var location;
+            location = gl.getUniformLocation(program, "_env_time"); location && gl.uniform1f(location, time);
 
             var positionLocation = gl.getAttribLocation(program, "a_position");
-            var buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1.0, -1.0,1.0, -1.0,-1.0,  1.0,-1.0,  1.0,1.0, -1.0,1.0,  1.0]), gl.STATIC_DRAW);
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.quad);
             gl.enableVertexAttribArray(positionLocation);
             gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
             gl.drawArrays(gl.TRIANGLES, 0, 6);
+        },
+        setAnimate: function(start) {
+            this.animStatus = start;
+            if (start) {
+                this.startTime = Date.now();
+                this.tick();
+            }
+        },
+        tick: function() {
+            var time = Date.now();
+            this.renderFrame((time - this.startTime) / 1000.0);
+            if (this.animStatus == true) {
+                window.requestAnimationFrame(this.tick.bind(this));
+            }
         }
     }
 
