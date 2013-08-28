@@ -17,8 +17,8 @@
 // https://www.shadertoy.com/view/lsX3W4
 function shade(env)
 {
-    var p = this.normalizedCoords.mul(2).sub(1);
-    p = p.x(this.width / this.height);
+    var p = this.normalizedCoords.xy().mul(2).sub(1);
+    p = p.mul(this.width / this.height,1);
 
     // animation	
     var tz = 0.5 - 0.5*Math.cos(0.225*env.time);
