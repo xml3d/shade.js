@@ -272,7 +272,7 @@
                 break;
 
             case Syntax.MemberExpression:
-                result = handleExpression(node.object);
+                result = handleBinaryArgument(node.object);
                 result += ".";
                 result += handleExpression(node.property);
                 break;
