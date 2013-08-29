@@ -337,8 +337,7 @@
         MemberExpression: function (node, parent, ctx, root) {
             var resultType = ctx.createTypeInfo(node),
                 objectAnnotation = new Annotation(node.object),
-                propertyAnnotation = new Annotation(node.property),
-                propertyName = node.property.name;
+                propertyAnnotation = new Annotation(node.property);
 
             //console.log("Member", node.object.name, node.property.name);
             if (node.computed) {
@@ -353,9 +352,10 @@
                     return;
                 }
                 else {
-                    Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName + "' of " + objectAnnotation.getTypeString());
+                    Shade.throwError(node, "TypeError: Cannot access member via computed value from object '" + objectAnnotation.getTypeString());
                 }
             }
+            var propertyName = node.property.name;
 
             var objectOfInterest = getObjectReferenceFromNode(node.object, ctx);
 

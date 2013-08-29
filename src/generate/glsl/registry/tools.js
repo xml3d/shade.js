@@ -16,6 +16,27 @@
         }
     }
 
+    ns.generateFreeName = function(name, blockedNames){
+        var newName = name.replace(/_+/g, "_"), i = 1;
+        while(blockedNames.indexOf(newName) != -1){
+            newName = (name + "_" + (++i)).replace(/_+/g, "_");
+        }
+        blockedNames.push(newName);
+        return newName;
+    }
+
+    ns.getInternalFunctionName = function(state, key, type, details){
+        if(!state.internalFunctions[key]){
+            var name = ns.generateFreeName(key, state.blockedNames);
+            state.internalFunctions[key] = {
+                name: name,
+                type: type,
+                details: details
+            };
+        }
+        return state.internalFunctions[key].name;
+    }
+
     var Vec = {
         getVecArgs: function(args){
             if(args.length == 0){
@@ -190,8 +211,8 @@
 
     var Mat = {
         TYPES: {
-            "Mat3" : {kind: KINDS.MATRIX3, colKind: KINDS.FLOAT3},
-            "Mat4" : {kind: KINDS.MATRIX4, colKind: KINDS.FLOAT4}
+            "Mat3" : {kind: KINDS.MATRIX3, colKind: KINDS.FLOAT3, colCount: 3, glslType: "mat3"},
+            "Mat4" : {kind: KINDS.MATRIX4, colKind: KINDS.FLOAT4, colCount: 4, glslType: "mat3"}
         },
 
         generateMatFromArgs: function(matName, args){
@@ -235,7 +256,7 @@
             }
         },
 
-        generateColCall: function(matName, node, args, parent){
+        generateColCall: function(matName, node, args, parent, state){
             var memberAccess = {
                 type: Syntax.MemberExpression,
                 object: node.callee.object,
@@ -248,18 +269,19 @@
                 return memberAccess;
             }
             else{
+                var methodKey = "_" + matName + "_col";
+                var methodName = ns.getInternalFunctionName(state, methodKey,
+                    "MatCol", {colType: "vec" + Mat.TYPES[matName].colCount, matType: Mat.TYPES[matName].glslType});
+
                  var replace = {
-                    type: Syntax.BinaryExpression,
-                    operator: '*',
-                    left: node.callee.object,
-                    right: {
-                        type: Syntax.BinaryExpression,
-                        operator: '/',
-                        left: node.arguments[0],
-                        right: Vec.createFunctionCall('length', 0, node, args, parent)
-                    }
+                    type: Syntax.CallExpression,
+                    callee: {type: Syntax.Identifier, name: methodName},
+                    arguments: [
+                        node.callee.object,
+                        node.arguments[0],
+                        node.arguments[1]
+                    ]
                 };
-                ANNO(replace.right).setType(TYPES.NUMBER);
                 ANNO(replace).copy(ANNO(node));
                 return replace;
             }
@@ -269,6 +291,7 @@
 
 
     ns.Vec = Vec;
+    ns.Mat = Mat;
 
     ns.castToFloat = function (ast) {
         var exp = ANNO(ast);

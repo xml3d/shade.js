@@ -31,6 +31,7 @@
         ctx.registerObject("Texture", ObjectRegistry.getByName("Texture"));
         ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
         ctx.registerObject("this", ObjectRegistry.getByName("System"));
+        ctx.registerObject("Mat3", ObjectRegistry.getByName("Mat3"));
         return ctx;
     }
 

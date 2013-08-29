@@ -4,11 +4,24 @@
     var Shade = require("./../../interfaces.js");
     var walk = require('estraverse'),
         Syntax = walk.Syntax,
-        VisitorOption = walk.VisitorOption;
+        VisitorOption = walk.VisitorOption,
+        ANNO = require("../../base/annotation.js").ANNO;
 
     var Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS,
         Sources = Shade.SOURCES;
+
+    var InternalFunctions = {
+        "MatCol" : function(name, details){
+            var matType = details.matType,
+                colType = details.colType;
+            return [matType + " " + name + "(" + matType + " mat, int idx, " + colType + " value){",
+                  "  " + matType + " result = " + matType + "(mat);",
+                  "  result[idx] = value;",
+                  "  return result;",
+                  "}"];
+        }
+    }
 
 
 
@@ -37,7 +50,11 @@
                     case Kinds.FLOAT2:
                         return "vec2";
                     case Kinds.TEXTURE:
-                        return "sampler2D"
+                        return "sampler2D";
+                    case Kinds.MATRIX3:
+                        return "mat3";
+                    case Kinds.MATRIX3:
+                        return "mat4";
                     default:
                         return "<undefined>";
                 }
@@ -108,6 +125,20 @@
         return lines.join("\n");
     }
 
+    function appendInternalFunctions(lines, internalFunctions){
+        if(!internalFunctions) return;
+        for(var key in internalFunctions){
+            var entry = internalFunctions[key];
+            if(InternalFunctions[entry.type]){
+                var linesToAdd = InternalFunctions[entry.type](entry.name, entry.details);
+                lines.push.apply(lines, linesToAdd);
+            }
+            else{
+                throw Error("Internal: InlineFunction of type '" + entry.type + "' not available!");
+            }
+        }
+    }
+
     function traverse(ast, lines, opt) {
         var insideMain = false;
 
@@ -122,6 +153,7 @@
                                 getHeader(opt).forEach(function (e) {
                                     lines.push(e)
                                 });
+                                appendInternalFunctions(lines, ANNO(ast).getUserData().internalFunctions);
                                 break;
 
 
@@ -135,9 +167,11 @@
                                 if (!(node.params && node.params.length)) {
                                     methodStart.push("void");
                                 } else {
+                                    var methodArgs = [];
                                     node.params.forEach(function (param) {
-                                        methodStart.push(toGLSLType(param.extra), param.name);
+                                        methodArgs.push(toGLSLType(param.extra)+ " " + param.name);
                                     })
+                                    methodStart.push(methodArgs.join(", "));
                                 }
                                 methodStart.push(') {');
                                 lines.appendLine(methodStart.join(" "));

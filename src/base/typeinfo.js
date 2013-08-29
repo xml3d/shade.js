@@ -57,6 +57,12 @@
             return this.getExtra().kind || KINDS.ANY;
         },
 
+        getUserData: function () {
+            var extra = this.getExtra();
+            if(!extra.userData) extra.userData = {};
+            return extra.userData;
+        },
+
         getArrayElementType: function () {
             if(!this.isArray())
                 throw new Error("Called getArrayElementType on " + this.getType());

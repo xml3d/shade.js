@@ -42,7 +42,8 @@
         Vec3: interfaces.Vec3,
         Vec4: interfaces.Vec4,
         Texture: interfaces.Texture,
-        Color: interfaces.Color
+        Color: interfaces.Color,
+        Mat3: interfaces.Mat3
 
 });
     /**

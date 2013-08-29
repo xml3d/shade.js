@@ -13,17 +13,17 @@
          * @param {Array.<Annotation>} args
          * @param {Context} ctx
          */
-        evaluate: Tools.Mat.matConstructorEvaluate.bind(null, 3)
+        evaluate: Tools.Mat.matConstructorEvaluate.bind(null, "Mat3")
     };
 
     var Matrix3StaticObject = {
-       col: {
-            type: TYPES.FUNCTION,
-            evaluate: Tools.Mat.colEvaluate.bind(null,"Mat3")
-       }
     };
 
     var Matrix3Instance = {
+        col: {
+            type: TYPES.FUNCTION,
+            evaluate: Tools.Mat.colEvaluate.bind(null, "Mat3")
+        }
     };
     Tools.Mat.attachMatMethods(Matrix3Instance, "Mat3", ['add', 'sub', 'mul', 'div']);
     Tools.Vec.attachVecMethods(Matrix3Instance, "Mat3", 3, 3, ['mulVec']);

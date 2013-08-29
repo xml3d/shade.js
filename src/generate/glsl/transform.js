@@ -40,6 +40,7 @@
             ctx.registerObject("Vec4", ObjectRegistry.getByName("Vec4"));
             ctx.registerObject("Color", ObjectRegistry.getByName("Vec3"));
             ctx.registerObject("Texture", ObjectRegistry.getByName("Texture"));
+            ctx.registerObject("Mat3", ObjectRegistry.getByName("Mat3"));
             ctx.declareVariable("gl_FragCoord", false);
             ctx.updateExpression("gl_FragCoord", new TypeInfo({
                 extra: {
@@ -69,6 +70,7 @@
                  systemParameters: {},
                  blockedNames : [],
                  topDeclarations : [],
+                 internalFunctions: {},
                  idNameMap : {}
             }
 
@@ -89,6 +91,9 @@
                 var decl = handleTopDeclaration(getNameForGlobal(name), state.globalParameters[name]);
                 decl && program.body.unshift(decl);
             }
+
+            var userData = ANNO(this.root).getUserData();
+            userData.internalFunctions = state.internalFunctions;
 
             return program;
         },
@@ -132,7 +137,7 @@
                         case Syntax.LogicalExpression:
                             return handleExitLogicalExpression(node, this, state);
                         case Syntax.CallExpression:
-                            return handleCallExpression(node, parent, state.topDeclarations, state.context);
+                            return handleCallExpression(node, parent, state);
                         case Syntax.FunctionDeclaration:
                             state.context = state.contextStack.pop();
                             state.inMain = state.context.str() == this.mainId;
@@ -180,13 +185,12 @@
     var handleIdentifier = function(node, parent, blockedNames, idNameMap){
         if(parent.type == Syntax.MemberExpression)
             return node;
-
         var name = node.name;
-        if(idNameMap[name]) node.name = idNameMap[name];
-        var newName = name.replace(/_+/g, "_"), i = 1;
-        while(blockedNames.indexOf(newName) != -1){
-            newName = name + "_" + (++i);
+        if(idNameMap[name]) {
+            node.name = idNameMap[name];
+            return node;
         }
+        var newName = Tools.generateFreeName(name, blockedNames);
         idNameMap[name] = newName;
         node.name = newName;
         return node;
@@ -265,8 +269,8 @@
         }
     }
 
-    var handleCallExpression = function (callExpression, parent, topDeclarations, context) {
-
+    var handleCallExpression = function (callExpression, parent, state) {
+        var topDeclarations = state.topDeclarations, context = state.context;
         // Is this a call on an object?
         if (callExpression.callee.type == Syntax.MemberExpression) {
             var calleeReference = getObjectReferenceFromNode(callExpression.callee, context);
@@ -289,7 +293,7 @@
                 var propertyHandler = objectInfo[propertyName];
                 if (typeof propertyHandler.callExp == "function") {
                     var args = Annotation.createAnnotatedNodeArray(callExpression.arguments, context);
-                    return propertyHandler.callExp(callExpression, args, parent);
+                    return propertyHandler.callExp(callExpression, args, parent, state);
                 }
             }
         }
