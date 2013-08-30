@@ -316,6 +316,10 @@
         var propertyName = memberExpression.property.name,
             context = state.context;
 
+        if (memberExpression.computed) {
+            return handleComputedMemberExpression(memberExpression, parent, state);
+        }
+
         var objectReference = getObjectReferenceFromNode(memberExpression.object, context);
 
         if (!objectReference || !objectReference.isObject())
@@ -340,6 +344,15 @@
         }
 
     };
+
+    var handleComputedMemberExpression = function(memberExpression, parent, state) {
+        var objectReference = getObjectReferenceFromNode(memberExpression.object, state.context);
+        if (!objectReference.isArray()) {
+            Shade.throwError(memberExpression, "In shade.js, [] access is only allowed on arrays.");
+        }
+
+    }
+
 
     var getNameForGlobal = function(baseName) {
         var name = "_env_" + baseName;

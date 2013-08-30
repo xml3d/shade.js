@@ -58,6 +58,9 @@
                     default:
                         return "<undefined>";
                 }
+            case Types.ARRAY:
+                return toGLSLType(info.elements);
+
             case Types.UNDEFINED:
                 if (allowUndefined)
                     return "void";
@@ -189,6 +192,9 @@
                                 var source = !insideMain ? toGLSLSource(node.extra) : null;
                                 var line = source ? source + " " : "";
                                 line += toGLSLType(node.extra) + " " + node.id.name;
+                                if (node.extra.elements) {
+                                    line += "[" + (node.extra.staticSize ? node.extra.staticSize : "0") + "]";
+                                }
                                 if (node.init) line += " = " + handleExpression(node.init);
                                 lines.appendLine(line + ";");
                                 return;
@@ -307,8 +313,9 @@
 
             case Syntax.MemberExpression:
                 result = handleBinaryArgument(node.object);
-                result += ".";
+                result += node.computed ? "[" : ".";
                 result += handleExpression(node.property);
+                node.computed && (result += "]");
                 break;
 
             case Syntax.ConditionalExpression:
