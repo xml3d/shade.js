@@ -175,7 +175,7 @@
             delete extra.evaluate;
         },
         copy: function(other) {
-            Base.deepExtend(this.node.extra, other.getExtra());
+            this.setFromExtra(other.getExtra());
         },
         str: function() {
             var extra = this.getExtra();
@@ -196,16 +196,10 @@
             return extra.eliminate == true;
         },
         setFromExtra: function(extra){
-            this.setType(extra.type);
-            if (extra.kind != undefined)
-                this.setKind(extra.kind);
-            this.setGlobal(extra.global);
+            Base.deepExtend(this.node.extra, extra);
+            // Set static object extra: This might be an object
             if (extra.staticValue != undefined)
                 this.setStaticValue(extra.staticValue);
-            if (extra.evaluate != undefined)
-                this.setCall(extra.evaluate);
-            if (extra.source != undefined)
-                this.setSource(extra.source);
         },
         getNodeInfo: function() {
             if (this.isObject())
