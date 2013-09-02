@@ -6,23 +6,19 @@
         Base = require("../../../base/index.js"),
         Tools = require("./tools.js");
 
+    var BRDFImplementation = {};
+
     var ShadeObject = {
         diffuse: {
             type: TYPES.FUNCTION,
-            evaluate: function(result, args, ctx) {
+            evaluate: function(result, args, context, objectReference, root) {
                 if (args.length < 1)
                     throw new Error("Shade.diffuse expects at least 1 parameter.")
                 var normal = args[0];
                 if(!(normal && normal.canNormal())) {
                     throw new Error("First argument of Shade.diffuse must evaluate to a normal");
                 }
-                if (args.length > 1) {
-                    var color = args[1];
-                    //console.log("Color: ", color.str(), color.getType(ctx));
-                    if(!color.canColor()) {
-                        throw new Error("Second argument of Shade.diffuse must evaluate to a color. Found: " + color.str());
-                    }
-                }
+                root.callGlobalFunction("diffuse", args, context);
                 return {
                     type: TYPES.OBJECT,
                     kind: KINDS.COLOR_CLOSURE
@@ -138,6 +134,7 @@
             static: ShadeObject
         },
         instance: null
+
     });
 
 }(exports));

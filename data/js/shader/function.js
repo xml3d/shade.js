@@ -9,5 +9,5 @@ function shade(env) {
     var i = 2;
     i = mul(i);
     var j = mul(i);
-    return new Color(f,g,i,j);
+    return new Vec3(f,g,i);
 }

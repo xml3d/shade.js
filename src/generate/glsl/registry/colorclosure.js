@@ -4,7 +4,12 @@
     var Tools = require("./tools.js");
 
     var ColorClosureInstance = {
+        mul: {
 
+        },
+        add : {
+
+        }
     };
 
     Tools.extend(ns, {

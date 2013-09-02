@@ -50,12 +50,9 @@
         getType: function() {
             return this.globalObject? TYPES.OBJECT : TypeInfo.prototype.getType.call(this);
         },
-        getObjectInfo: function() {
+        getStaticProperties: function() {
             if (this.globalObject)
                 return this.globalObject.static;
-            if (this.isObject()) {
-                return this.node.info || registry.getInstanceForKind(this.getKind());
-            }
             return null;
         },
         getInfoForSignature: function(signature) {
@@ -209,30 +206,14 @@
 
         declareParameters: function(params) {
             var bindings = this.getBindings();
-            this.params = [];
             for(var i = 0; i < params.length; i++) {
                 var parameter = params[i];
-                this.params[i] = parameter.name;
-                bindings[parameter.name] = { type: TYPES.UNDEFINED };
-            }
-        },
+                var annotation = new Annotation(parameter);
 
-        /**
-         *
-         * @param {Array.<TypeInfo>} <params
-         */
-        injectParameters: function(params) {
-            for(var i = 0; i< params.length; i++) {
-                if (i == this.params.length)
-                    break;
-                var name = this.params[i];
-                var bindings = this.getBindings();
-                bindings[name] = { extra: {} };
-                Base.deepExtend(bindings[name].extra, params[i].getExtra());
-                if (params[i].getNodeInfo()) {
-                    bindings[name].info = {};
-                    Base.deepExtend(bindings[name].info, params[i].getNodeInfo());
-                }
+                var node = { extra: { type: TYPES.UNDEFINED }};
+                var binding = new TypeInfo(node);
+                binding.copy(annotation);
+                bindings[parameter.name] = node;
             }
         },
 
@@ -281,15 +262,21 @@
             if (!obj.isObject())
                 return null;
 
-            /* The TypeInfo might know about it's object type */
-            if (obj.getObjectInfo) {
-                return obj.getObjectInfo();
-            };
+            // There are three ways to get the properties of an object
 
-            var nodeInfo = obj.getNodeInfo();
-            if (nodeInfo) {
-                return nodeInfo;
+            // 1. Object is static and has registered it's properties via reference
+            var staticProperties = obj.getStaticProperties();
+            if (staticProperties)
+                return staticProperties;
+
+            // 1: Object is generic (any), then it carries it's information itself
+            if (obj.isOfKind(Shade.OBJECT_KINDS.ANY)) {
+                return obj.getNodeInfo();
             }
+
+
+            // 3. Last chance: The object is an instance of a registered type,
+            // then we get the information from it's kind
             return registry.getInstanceForKind(obj.getKind())
         }
 

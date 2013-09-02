@@ -118,7 +118,7 @@
             var number = parseFloat(value);
 
             if (!isNaN(number)) {
-                if (value.indexOf(".") == -1) {
+                if (value.toString().indexOf(".") == -1) {
                     result.setType(TYPES.INT);
                 }
                 else {
@@ -412,7 +412,7 @@
                     var propertyHandler = objectInfo[propertyName];
                     if (typeof propertyHandler.evaluate == "function") {
                         var args = Annotation.createAnnotatedNodeArray(node.arguments, ctx);
-                        var extra = propertyHandler.evaluate(result, args, ctx, objectReference);
+                        var extra = propertyHandler.evaluate(result, args, ctx, objectReference, root);
                         result.setFromExtra(extra);
                         return;
                     }

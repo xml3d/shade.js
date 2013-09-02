@@ -6,7 +6,7 @@
         Tools = require("./tools.js");
 
     var ColorClosureInstance = {
-        multiply: {
+        mul: {
             type: TYPES.FUNCTION,
             evaluate: function() {
                 return {
@@ -29,7 +29,10 @@
     Tools.extend(ns, {
         id: "ColorClosure",
         kind: KINDS.COLOR_CLOSURE,
-        object: null,
+        object: {
+            constructor: null,
+            static: null
+        },
         instance: ColorClosureInstance
     });
 

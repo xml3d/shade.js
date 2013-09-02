@@ -40,12 +40,15 @@
         this.root = root;
         this.context = [];
         /** @type {Object.<String, Array.<TypeInfo>} **/
-        this.injections = {};
         this.entryPoint = opt.entry || "global.shade";
-        this.root.injections = this.injections;
         this.functions = {
             orig: {},
             derived: {}
+        }
+        this.root.globalParameters = {};
+
+        if (opt.closureImplementation) {
+            this.registerClosureFunctions(opt.closureImplementation);
         }
 
     }
@@ -53,10 +56,10 @@
     Base.extend(TypeInference.prototype, {
         pushContext: function (context) {
             this.context.push(context);
-            var injection = this.injections[context.str()];
+            /*var injection = this.injections[context.str()];
             if (injection) {
                 context.injectParameters(injection);
-            }
+            }*/
         },
         popContext: function () {
             this.context.pop();
@@ -186,7 +189,7 @@
         inferFunction: function (functionAST, params, parentContext) {
             var functionName = functionAST.id.name;
             var targetContextName = parentContext.getVariableIdentifier(functionName);
-            this.injections[targetContextName] = params;
+            //this.injections[targetContextName] = params;
 
             // We have a specifc type set in params that we annotate to the
             // function AST
@@ -208,12 +211,14 @@
             return ast;
         },
 
-        inferProgram: function(prg, params) {
-            var params = params || {};
-            var programContext = registerGlobalContext(prg);
+        inferProgram: function(prg, globalParameters) {
+            var params = globalParameters || {};
+            var globalContext = registerGlobalContext(prg);
 
-            this.pushContext(programContext);
+            this.pushContext(globalContext);
+            // Removes all functions from AST and puts them into a map
             this.buildFunctionMap(prg);
+            // Traverse code outside of any function
             this.traverse(prg);
             this.popContext();
 
@@ -221,7 +226,11 @@
             if (this.functions.orig.hasOwnProperty(entryPoint)) {
                 var ast = this.functions.orig[entryPoint];
                 var params = this.annotateParameters(params[entryPoint]);
-                var aast = this.inferFunction(ast, params, programContext);
+                this.root.globalParameters[entryPoint] = params;
+                // Analyse the main function
+                var aast = this.inferFunction(ast, params, globalContext);
+
+                // Put all functions that were used during analysis back into ast
                 for(var func in this.functions.derived) {
                     var variations = this.functions.derived[func];
                     for (var signature in variations) {
@@ -229,22 +238,33 @@
                     }
 
                 }
+                // Put main function back into ast
                 prg.body.push(aast);
-
             }
 
             if (this.context.length)
                 throw Error("Something went wrong");
             return prg;
         },
-        getFunctionInformationFor: function(name, args, definingContext) {
-            var signature = args.reduce(function(str, arg) { return str + arg.getTypeString()}, "");
+        getFunctionInformationByNameAndSignature: function(name, signature) {
             if (this.functions.derived.hasOwnProperty(name)) {
                 var derivedFunction = this.functions.derived[name];
                 if (derivedFunction.hasOwnProperty(signature)) {
                     return derivedFunction[signature].info;
                 }
             }
+            return null;
+        },
+        getFunctionInformationFor: function(name, args, definingContext) {
+            var signature = args.reduce(function(str, arg) { return str + arg.getTypeString()}, "");
+            var info = this.getFunctionInformationByNameAndSignature(name, signature);
+            if (info)
+                return info;
+
+            return this.createFunctionInformationFor(name, args, definingContext);
+        },
+        createFunctionInformationFor: function(name, args, definingContext) {
+            var signature = args.reduce(function(str, arg) { return str + arg.getTypeString()}, "");
             if (this.functions.orig.hasOwnProperty(name)) {
                 var ast = this.functions.orig[name];
                 var variations = this.functions.derived[name] = this.functions.derived[name] || {};
@@ -256,6 +276,32 @@
                 return derived.info;
             }
             throw new Error("Could not resolve function " + name);
+        },
+        callGlobalFunction: function (name, args, context) {
+            // context.declareVariable(func.name);
+            var globalName = context.getVariableIdentifier(name),
+                signature = args.reduce(function (str, arg) {
+                    return str + arg.getTypeString()
+                }, "");
+
+            var info = this.getFunctionInformationByNameAndSignature(globalName, signature);
+            if (info)
+                return info;
+
+            return this.createFunctionInformationFor(globalName, args, context);
+        },
+        registerClosureFunctions: function(implementation) {
+            var parser = require('esprima');
+            var BRDFImplementation = require("../../closures/" + implementation + ".js");
+
+            for(var functionName in BRDFImplementation) {
+                console.log("Registering: " + functionName);
+                var program = parser.parse(BRDFImplementation[functionName].toString());
+                var functionAST = program.body[0];
+                // We have to declare the function in the context
+                //context.updateExpression(func.name, { extra: { type: "function"}});
+                //this.functions.orig[globalName] = functionAST;
+            }
         }
 
     });

@@ -4,6 +4,6 @@ function shade(env) {
     if(env.diffuseTexture) {
         diffuseColor.mul(env.diffuseTexture.sample(env.texcoord));
     }
-    return diffuseColor;
+    return Shade.diffuse(env.normal).mul(diffuseColor);
 
 }

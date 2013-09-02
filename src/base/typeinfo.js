@@ -216,6 +216,10 @@
         },
         getSource: function() {
             return this.getExtra().source;
+        },
+        getStaticProperties: function() {
+            // Only bound object have static properties (Math, Shade etc)
+            return null;
         }
 
     }

@@ -66,7 +66,7 @@
                  context: context,
                  contextStack: [context],
                  inMain:  this.mainId == context.str(),
-                 globalParameters : program.injections[this.mainId] && program.injections[this.mainId][0] ? program.injections[this.mainId][0].node.extra.info : {},
+                 globalParameters : program.globalParameters[this.mainId] && program.globalParameters[this.mainId][0] ? program.globalParameters[this.mainId][0].node.extra.info : {},
                  systemParameters: {},
                  blockedNames : [],
                  topDeclarations : [],
@@ -396,7 +396,7 @@
     function castToVec4(ast, context) {
         var exp = TypeInfo.createForContext(ast, context);
 
-        if (exp.isOfKind(Kinds.FLOAT4))
+        if (exp.isOfKind(Kinds.FLOAT4) || exp.isOfKind(Kinds.COLOR_CLOSURE))
             return ast;
 
         if (exp.isOfKind(Kinds.FLOAT3)) {
