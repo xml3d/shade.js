@@ -17,10 +17,7 @@
         var closureName = node.callee.property.name,
             result = {
                 type: Syntax.CallExpression,
-                arguments: [{
-                    type: Syntax.Identifier,
-                    name: "env"
-                }].concat(node.arguments),
+                arguments: node.arguments,
                 callee: {
                     type: Syntax.Identifier,
                     name: closureName

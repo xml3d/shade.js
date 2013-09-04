@@ -4,9 +4,8 @@
         /**
          * @param env Parameters from the current environment
          * @param {Vec3} normal
-         * @returns {Vec3}
          */
-        ns.diffuse = function diffuse(env, n) {
+        ns.diffuse = function diffuse(n) {
             var N = n.normalize();
             var intensity = new Vec3();
             for (var i = 0; i < this.MAX_POINTLIGHTS; i++) {
@@ -14,7 +13,7 @@
                     continue;
 
                 var L = this.viewMatrix.mulVec(this.pointLightPosition[i]);
-                L = L.sub(env.position);
+                L = L.sub(_env.position);
 
                 var dist = L.length();
                 var atten = 1.0 / (this.pointLightAttenuation[i].x() + this.pointLightAttenuation[i].y() * dist + this.pointLightAttenuation[i].z() * dist * dist);

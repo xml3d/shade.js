@@ -23,10 +23,12 @@
      * @returns {{shaderParameters: Array, systemParameters: Array}}
      */
     var findParametersInFunction = function (functionName, program, environmentObjectPosition, analyzedCalls) {
-        var contextStack = [new Context(program, null, {name: "global"})];
+        var context = new Context(program, null, {name: "global"})
+        var contextStack = [context];
+
         var result = { shaderParameters: [], systemParameters: [] };
         analyzedCalls = analyzedCalls || {};
-        //console.log("Looking for: ", functionName, param);
+        // console.log("Looking for: ", functionName, environmentObjectPosition);
 
         var activeParam = null;
         walk.traverse(program, {
@@ -40,7 +42,7 @@
                         context = new Context(node, parentContext, {name: node.id.name });
                         contextStack.push(context);
                         if (context.str() == functionName) {
-                            if (node.params.length > environmentObjectPosition) {
+                            if (environmentObjectPosition != -1 && node.params.length > environmentObjectPosition) {
                                 activeParam = node.params[environmentObjectPosition].name;
                             }
                         } else {
@@ -48,20 +50,16 @@
                         }
                         break;
                     case Syntax.CallExpression:
-                        if(!activeParam)
-                            return;
                         var pos = node.arguments.reduce(function (prev, curr, index) {
-                            if (curr.name == activeParam)
+                            if (curr.name && curr.name == activeParam)
                                 return index;
                             return prev;
                         }, -1);
-                        if (pos != -1) {
-                            context = contextStack[contextStack.length - 1];
-                            var id = context.getVariableIdentifier(node.callee.name);
-                            if (!analyzedCalls[id]) {
-                                analyzedCalls[id] = true;
-                                merge(result, findParametersInFunction(id, program, pos, analyzedCalls));
-                            }
+                        context = contextStack[contextStack.length - 1];
+                        var id = context.getVariableIdentifier(node.callee.name);
+                        if (id && !analyzedCalls[id]) {
+                            analyzedCalls[id] = true;
+                            merge(result, findParametersInFunction(id, program, pos, analyzedCalls));
                         }
                         break;
 
@@ -82,6 +80,9 @@
                         } else if (node.object.type == Syntax.ThisExpression) {
                             if (result.systemParameters.indexOf(parameterName) == -1)
                                 result.systemParameters.push(parameterName);
+                        } else if (node.object.name == "_env") {
+                            if (result.shaderParameters.indexOf(parameterName) == -1)
+                                result.shaderParameters.push(parameterName);
                         }
                         break;
                 }

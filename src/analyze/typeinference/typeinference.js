@@ -34,14 +34,19 @@
         //ctx.registerObject("this", ObjectRegistry.getByName("System"));
         ctx.registerObject("Mat3", ObjectRegistry.getByName("Mat3"));
         ctx.declareVariable("this");
+        ctx.declareVariable("_env");
         return ctx;
     };
 
-    var registerThisObject = function(context, typeInfo) {
-        if(!typeInfo)
-            return;
-        var annotation = new Annotation({}, typeInfo);
-        context.updateExpression("this", annotation);
+    var registerGlobalObjects = function(context, thisObject, envObject) {
+        if(thisObject) {
+            var thisAnnotation = new Annotation({}, thisObject);
+            context.updateExpression("this", thisAnnotation);
+        }
+        if (envObject) {
+            var envAnnotation = new Annotation({}, envObject);
+            context.updateExpression("_env", envAnnotation);
+        }
     }
 
     var TypeInference = function (root, opt) {
@@ -208,7 +213,7 @@
             var oldEntryPoint = this.entryPoint;
             this.entryPoint = targetContextName;
             this.pushContext(parentContext);
-            //console.log("Starting to traverse: " + functionName + " in context " + parentContext.str())
+            // console.error("Starting to traverse: " + functionName + " in context " + parentContext.str())
             var ast = this.traverse(functionAST);
             this.popContext();
             this.entryPoint = oldEntryPoint;
@@ -219,7 +224,7 @@
         inferProgram: function(prg, globalParameters) {
             var params = globalParameters || {};
             var globalContext = registerGlobalContext(prg);
-            registerThisObject(globalContext, params.this);
+            registerGlobalObjects(globalContext, params.this, params[this.entryPoint][0].extra);
 
             this.pushContext(globalContext);
             // Removes all functions from AST and puts them into a map
@@ -295,9 +300,7 @@
                 return info;
 
             return this.createFunctionInformationFor(globalName, args, context);
-        },
-
-
+        }
     });
 
 
