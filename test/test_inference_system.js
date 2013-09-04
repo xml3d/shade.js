@@ -53,7 +53,7 @@ describe('Inference', function () {
         });
     });
 
-    describe('system variables', function () {
+    xdescribe('system variables', function () {
 
         it("this.coords", function () {
             var exp = parseAndInferenceExpression("this.coords");
