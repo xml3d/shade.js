@@ -49,6 +49,15 @@
         }
     }
 
+    var getFirstParameterOfEntryFunction = function(parameter, entryPoint) {
+        if (!entryPoint || !parameter[entryPoint])
+            return null;
+        var entryPointParameters = parameter[entryPoint];
+        if (!Array.isArray(entryPointParameters) || !entryPointParameters.length)
+            return null;
+        return entryPointParameters[0].extra || null;
+    }
+
     var TypeInference = function (root, opt) {
         opt = opt || {};
         this.root = root;
@@ -224,7 +233,7 @@
         inferProgram: function(prg, globalParameters) {
             var params = globalParameters || {};
             var globalContext = registerGlobalContext(prg);
-            registerGlobalObjects(globalContext, params.this, params[this.entryPoint][0].extra);
+            registerGlobalObjects(globalContext, params.this, getFirstParameterOfEntryFunction(params, this.entryPoint));
 
             this.pushContext(globalContext);
             // Removes all functions from AST and puts them into a map
