@@ -2,13 +2,31 @@
 
     var walk = require('estraverse'),
         Context = require("./../base/context.js").getContext(null),
+        resolver = require("../resolve/resolve.js"),
         Syntax = walk.Syntax;
 
-    var findParametersInProgram = function (program, contextName, param, analyzedCalls) {
+    /**
+     *
+     * @param {{shaderParameters: Array, systemParameters: Array}} result
+     * @param {{shaderParameters: Array, systemParameters: Array}} other
+     */
+    function merge(result, other) {
+        result.shaderParameters = result.shaderParameters.concat(other.shaderParameters);
+        result.systemParameters = result.systemParameters.concat(other.systemParameters);
+    }
+
+    /**
+     * @param {string} functionName Global name of the function to analyze
+     * @param {*} program AST of the program
+     * @param {number} environmentObjectPosition
+     * @param {object} analyzedCalls
+     * @returns {{shaderParameters: Array, systemParameters: Array}}
+     */
+    var findParametersInFunction = function (functionName, program, environmentObjectPosition, analyzedCalls) {
         var contextStack = [new Context(program, null, {name: "global"})];
-        var foundParams = [];
+        var result = { shaderParameters: [], systemParameters: [] };
         analyzedCalls = analyzedCalls || {};
-        //console.log("Looking for: ", contextName, param);
+        //console.log("Looking for: ", functionName, param);
 
         var activeParam = null;
         walk.traverse(program, {
@@ -21,13 +39,17 @@
                         parentContext.declareVariable(node.id.name, false);
                         context = new Context(node, parentContext, {name: node.id.name });
                         contextStack.push(context);
-                        if (context.str() == contextName) {
-                            if (node.params.length > param) {
-                                activeParam = node.params[param].name;
+                        if (context.str() == functionName) {
+                            if (node.params.length > environmentObjectPosition) {
+                                activeParam = node.params[environmentObjectPosition].name;
                             }
+                        } else {
+                            return walk.VisitorOption.Skip;
                         }
                         break;
                     case Syntax.CallExpression:
+                        if(!activeParam)
+                            return;
                         var pos = node.arguments.reduce(function (prev, curr, index) {
                             if (curr.name == activeParam)
                                 return index;
@@ -38,7 +60,7 @@
                             var id = context.getVariableIdentifier(node.callee.name);
                             if (!analyzedCalls[id]) {
                                 analyzedCalls[id] = true;
-                                foundParams = foundParams.concat(findParametersInProgram(program, id, pos, analyzedCalls));
+                                merge(result, findParametersInFunction(id, program, pos, analyzedCalls));
                             }
                         }
                         break;
@@ -53,29 +75,36 @@
                         activeParam = null;
                         break;
                     case Syntax.MemberExpression:
+                        var parameterName = node.property.name;
                         if (activeParam && node.object.name == activeParam) {
-                            var parameterName = node.property.name;
-                            if (foundParams.indexOf(parameterName) == -1)
-                                foundParams.push(parameterName);
+                            if (result.shaderParameters.indexOf(parameterName) == -1)
+                                result.shaderParameters.push(parameterName);
+                        } else if (node.object.type == Syntax.ThisExpression) {
+                            if (result.systemParameters.indexOf(parameterName) == -1)
+                                result.systemParameters.push(parameterName);
                         }
                         break;
                 }
             }
         });
 
-        return foundParams;
+        return result;
     };
 
     /**
      * @param {object!} program
      * @param {object?} opt
+     * @returns {{shaderParameters: Array, systemParameters: Array}}
      */
     ns.extractParameters = function (program, opt) {
         opt = opt || {};
-        var context = opt.context || "global.shade";
-        var param = opt.param || 0;
+        var functionName = opt.context || "global.shade";
+        var parameterPosition = opt.param || 0;
 
-        return findParametersInProgram(program, context, param);
+        if(opt.implementation) {
+            program = resolver.resolveClosures(program, opt.implementation, opt);
+        }
+        return findParametersInFunction(functionName, program, parameterPosition);
     };
 
 

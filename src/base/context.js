@@ -101,6 +101,11 @@
         getName: function() {
             return this.context.name;
         },
+        getRootContext: function() {
+            if (this.parent)
+                return this.parent.getRootContext();
+            return this;
+        },
 
         getBindings: function() {
             return this.context.bindings;

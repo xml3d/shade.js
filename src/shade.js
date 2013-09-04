@@ -4,22 +4,26 @@
         interfaces = require("./interfaces.js"),
         inference = require("./analyze/typeinference/typeinference.js"),
         Base = require("./base/index.js"),
-        GLSLCompiler = require("./generate/glsl/compiler.js").GLSLCompiler;
+        GLSLCompiler = require("./generate/glsl/compiler.js").GLSLCompiler,
+        resolver = require("./resolve/resolve.js");
+
 
 
 
     Base.extend(ns, {
 
         /**
-         * Analyzes a javascript program and returns a list of parameters
-         * @param {function()|string) func
-         * @returns {object!}
+         * Analyze the given source and extract all used shader and system parameters
+         *
+         * @param {function|string} input The function of source code to analyze
+         * @param opt Options
+         * @returns {{shaderParameters: Array, systemParameters: Array}}
          */
-        extractParameters: function (func, opt) {
-            if (typeof func == 'function') {
-                func = func.toString();
+        extractParameters: function (input, opt) {
+            if (typeof input == 'function') {
+                input = input.toString();
             }
-            var ast = parser.parse(func);
+            var ast = parser.parse(input);
 
             return parameters.extractParameters(ast, opt);
         },
@@ -27,8 +31,16 @@
         parseAndInferenceExpression: function (str, opt) {
             opt = opt || {};
             var ast = parser.parse(str, {raw: true, loc: opt.loc || false });
+            if (opt.implementation)
+                ast = this.resolveClosures(ast, opt.implementation, opt);
+
             var aast = inference.infer(ast, opt);
             return aast;
+        },
+
+        resolveClosures: function(ast, implementation, opt) {
+            opt = opt || {};
+            return resolver.resolveClosures(ast, implementation, opt);
         },
 
         compileFragmentShader: function(aast){

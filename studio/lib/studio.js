@@ -61,7 +61,7 @@
                 var params = Shade.extractParameters(newValue);
                 console.log(params);
                 codeCorrect = true;
-                this.updateParameterSelection(params);
+                this.updateParameterSelection(params.shaderParameters);
                 this.updateOutput();
 
             } catch (e) {

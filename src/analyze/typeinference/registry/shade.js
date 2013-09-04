@@ -9,6 +9,17 @@
     var BRDFImplementation = {};
 
     var ShadeObject = {
+        emission: {
+            type: TYPES.FUNCTION,
+            evaluate: function(result, args, context, objectReference, root) {
+                if (args.length > 0)
+                    throw new Error("Shade.emission expects no parameters.");
+                return {
+                    type: TYPES.OBJECT,
+                    kind: KINDS.COLOR_CLOSURE
+                };
+            }
+        },
         diffuse: {
             type: TYPES.FUNCTION,
             evaluate: function(result, args, context, objectReference, root) {
@@ -18,7 +29,6 @@
                 if(!(normal && normal.canNormal())) {
                     throw new Error("First argument of Shade.diffuse must evaluate to a normal");
                 }
-                root.callGlobalFunction("diffuse", args, context);
                 return {
                     type: TYPES.OBJECT,
                     kind: KINDS.COLOR_CLOSURE

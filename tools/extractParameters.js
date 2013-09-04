@@ -8,8 +8,9 @@ var argv = require('optimist').argv,
 
     var fs = require("fs"),
         path = require("path"),
-        filename = args._[0];
-        contextId = args._[1]||null;
+        filename = args._[0],
+        contextId = args._[1] || null,
+        implementation = args.i || null;
 
 
     if (!filename) {
@@ -18,10 +19,11 @@ var argv = require('optimist').argv,
     }
 
 
+
     var parameters = (function () {
 
         var data = fs.readFileSync(filename, "utf-8");
-        return Shade.extractParameters(data, {context: contextId});
+        return Shade.extractParameters(data, {context: contextId, implementation: implementation});
     }());
 
     if (args.p) {

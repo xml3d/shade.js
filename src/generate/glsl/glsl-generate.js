@@ -96,7 +96,7 @@
         arr.push.apply(arr, arguments);
         var indent = "";
         arr.appendLine = function(line){
-            this.push(indent + line);
+            line ? this.push(indent + line) : this.push("");
         };
         arr.changeIndention = function(add){
             while(add > 0){
@@ -161,6 +161,7 @@
 
 
                             case Syntax.FunctionDeclaration:
+                                opt.newLines && lines.appendLine();
                                 var func = new FunctionAnnotation(node);
                                 var methodStart = [toGLSLType(func.getReturnInfo(), true)];
                                 methodStart.push(node.id.name, '(');
