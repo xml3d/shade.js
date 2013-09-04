@@ -10,7 +10,6 @@
         }
         try {
            var resolverImpl = Implementations[implementationName];
-            console.log("Resolving: " + implementationName);
            return resolverImpl.resolve(aast, opt);
         } catch(e) {
             console.error(e);

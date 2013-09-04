@@ -23,6 +23,14 @@
         }
     }
 
+    var GLSL = {
+        Storage: {
+            CONST: "const",
+            UNIFORM: "uniform",
+            VARYING: "varying",
+            ATTRIBUTE: "attribtue"
+        }
+    }
 
 
     /**
@@ -79,15 +87,15 @@
         }
     }
 
-    var toGLSLSource = function(info) {
+    var toGLSLStorage = function(info) {
         if (!info.source)
-            return "";
+            return null;
         if (info.source == Sources.VERTEX)
-            return "varying";
+            return GLSL.Storage.VARYING;
         if (info.source == Sources.UNIFORM)
-            return "uniform";
+            return GLSL.Storage.UNIFORM;
         if (info.source == Sources.CONSTANT)
-            return "const";
+            return GLSL.Storage.CONST;
         throw new Error("toGLSLSource: Unhandled type: " + info.source);
     }
 
@@ -190,14 +198,8 @@
 
                             case Syntax.VariableDeclarator :
                                 // console.log("Meep!");
-                                var source = !insideMain ? toGLSLSource(node.extra) : null;
-                                var line = source ? source + " " : "";
-                                line += toGLSLType(node.extra) + " " + node.id.name;
-                                if (node.extra.elements) {
-                                    line += "[" + (node.extra.staticSize ? node.extra.staticSize : "0") + "]";
-                                }
-                                if (node.init) line += " = " + handleExpression(node.init);
-                                lines.appendLine(line + ";");
+                                var decl = handleVariableDeclaration(node, insideMain);
+                                lines.appendLine(decl);
                                 return;
 
                             case Syntax.AssignmentExpression:
@@ -340,6 +342,25 @@
                 //console.log("Unhandled: " , node.type);
         }
         return result;
+    }
+
+    function getStaticValue(extra) {
+        if (!extra || !extra.staticValue) return "";
+        return extra.staticValue;
+    };
+
+    function handleVariableDeclaration(node, writeStorageQualifier) {
+        var storageQualifier = !writeStorageQualifier ? toGLSLStorage(node.extra) : null;
+        var result = storageQualifier ? storageQualifier + " " : "";
+        result += toGLSLType(node.extra) + " " + node.id.name;
+        if (node.extra.elements) {
+            result += "[" + (node.extra.staticSize ? node.extra.staticSize : "0") + "]";
+        }
+        if (node.init) result += " = " + handleExpression(node.init);
+        if (!node.init && storageQualifier == GLSL.Storage.CONST) {
+            result += " = " + getStaticValue(node.extra);
+        }
+        return result + ";";
     }
 
 

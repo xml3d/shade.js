@@ -9,6 +9,7 @@
         exitExpression = require('./infer_expression.js').exitExpression,
         enterStatement = require('./infer_statement.js').enterStatement,
         exitStatement = require('./infer_statement.js').exitStatement,
+        assert = require("assert"),
 
         ObjectRegistry = require("./registry/index.js").Registry,
         Context = require("./../../base/context.js").getContext(ObjectRegistry),
@@ -30,9 +31,17 @@
         ctx.registerObject("Vec4", ObjectRegistry.getByName("Vec4"));
         ctx.registerObject("Texture", ObjectRegistry.getByName("Texture"));
         ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
-        ctx.registerObject("this", ObjectRegistry.getByName("System"));
+        //ctx.registerObject("this", ObjectRegistry.getByName("System"));
         ctx.registerObject("Mat3", ObjectRegistry.getByName("Mat3"));
+        ctx.declareVariable("this");
         return ctx;
+    };
+
+    var registerThisObject = function(context, typeInfo) {
+        if(!typeInfo)
+            return;
+        var annotation = new Annotation({}, typeInfo);
+        context.updateExpression("this", annotation);
     }
 
     var TypeInference = function (root, opt) {
@@ -46,10 +55,6 @@
             derived: {}
         }
         this.root.globalParameters = {};
-
-        if (opt.closureImplementation) {
-            this.registerClosureFunctions(opt.closureImplementation);
-        }
 
     }
 
@@ -214,6 +219,7 @@
         inferProgram: function(prg, globalParameters) {
             var params = globalParameters || {};
             var globalContext = registerGlobalContext(prg);
+            registerThisObject(globalContext, params.this);
 
             this.pushContext(globalContext);
             // Removes all functions from AST and puts them into a map
@@ -290,19 +296,7 @@
 
             return this.createFunctionInformationFor(globalName, args, context);
         },
-        registerClosureFunctions: function(implementation) {
-            var parser = require('esprima');
-            var BRDFImplementation = require("../../closures/" + implementation + ".js");
 
-            for(var functionName in BRDFImplementation) {
-                console.log("Registering: " + functionName);
-                var program = parser.parse(BRDFImplementation[functionName].toString());
-                var functionAST = program.body[0];
-                // We have to declare the function in the context
-                //context.updateExpression(func.name, { extra: { type: "function"}});
-                //this.functions.orig[globalName] = functionAST;
-            }
-        }
 
     });
 

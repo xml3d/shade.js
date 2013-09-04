@@ -40,7 +40,7 @@
         var closureImplementation = Closures[closureName];
         try {
             var closureAST = parser.parse(closureImplementation.toString(), { raw: true });
-            //closureAST.body[0].params = closureAST.body[0].params.slice(1);
+            // closureAST.body[0].params = closureAST.body[0].params.slice(1);
             state.newFunctions.push(closureAST.body[0]);
         } catch (e) {
             console.error("Error in analysis of closure '", closureName, "'", e);

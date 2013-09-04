@@ -33,7 +33,7 @@
         registerGlobalContext : function (program) {
             var ctx = new Context(program, null, {name: "global"});
             ctx.registerObject("Math", ObjectRegistry.getByName("Math"));
-            ctx.registerObject("this", ObjectRegistry.getByName("System"));
+            //ctx.registerObject("this", ObjectRegistry.getByName("System"));
             ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
             ctx.registerObject("Vec2", ObjectRegistry.getByName("Vec2"));
             ctx.registerObject("Vec3", ObjectRegistry.getByName("Vec3"));
@@ -74,6 +74,14 @@
                  idNameMap : {}
             }
 
+            var thisObject = context.getBindingByName("this");
+            if (thisObject && thisObject.isObject()) {
+                var properties = thisObject.getNodeInfo();
+                for(name in properties) {
+                    state.blockedNames.push( getNameForSystem(name) );
+                }
+                Base.extend(state.systemParameters, properties);
+            }
 
             // TODO: We should also block systemParameters here. We can block all system names, even if not used.
             for(var name in state.globalParameters){
@@ -337,8 +345,13 @@
             var result = propertyHandler.property(memberExpression, parent, context, state);
             return result;
         }
-        else if(objectReference.isGlobal()) {
+        if(objectReference.isGlobal()) {
             var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(propertyName)};
+            ANNO(propertyLiteral).copy(ANNO(memberExpression));
+            return propertyLiteral;
+        }
+        if (memberExpression.object.type == Syntax.ThisExpression) {
+            var propertyLiteral =  { type: Syntax.Identifier, name: getNameForSystem(propertyName)};
             ANNO(propertyLiteral).copy(ANNO(memberExpression));
             return propertyLiteral;
         }
@@ -353,6 +366,10 @@
 
     }
 
+
+    var getNameForSystem = function(baseName) {
+        return baseName;
+    }
 
     var getNameForGlobal = function(baseName) {
         var name = "_env_" + baseName;
