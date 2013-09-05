@@ -38,16 +38,22 @@
         return ctx;
     };
 
+    var addDerivedParameters = function(propertyInfo) {
+        var system = ObjectRegistry.getByName("System");
+        Base.extend(propertyInfo, system.derivedParameters);
+    };
+
     var registerGlobalObjects = function(context, thisObject, envObject) {
         if(thisObject) {
             var thisAnnotation = new Annotation({}, thisObject);
+            addDerivedParameters(thisAnnotation.getNodeInfo());
             context.updateExpression("this", thisAnnotation);
         }
         if (envObject) {
             var envAnnotation = new Annotation({}, envObject);
             context.updateExpression("_env", envAnnotation);
         }
-    }
+    };
 
     var getFirstParameterOfEntryFunction = function(parameter, entryPoint) {
         if (!entryPoint || !parameter[entryPoint])
@@ -56,21 +62,38 @@
         if (!Array.isArray(entryPointParameters) || !entryPointParameters.length)
             return null;
         return entryPointParameters[0].extra || null;
-    }
+    };
 
     var TypeInference = function (root, opt) {
         opt = opt || {};
+
+        /**
+         * The root of the program AST
+         * @type {*}
+         */
         this.root = root;
+
+        /**
+         * The context stack
+         * @type {Array}
+         */
         this.context = [];
-        /** @type {Object.<String, Array.<TypeInfo>} **/
+
+        /** @type {string} **/
         this.entryPoint = opt.entry || "global.shade";
+
+        /**
+         * Struct that stores the ASTs of functions in the
+         * original state and annotated for a specific signature
+         * @type {{orig: {}, derived: {}}}
+         */
         this.functions = {
             orig: {},
             derived: {}
         }
         this.root.globalParameters = {};
 
-    }
+    };
 
     Base.extend(TypeInference.prototype, {
         pushContext: function (context) {

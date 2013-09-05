@@ -14,6 +14,63 @@
         this.paramStateLoaded = false;
     };
 
+    ShadeStudio.SystemParams = {
+            "type": "object",
+            "kind": "any",
+            "info": {
+                "coords": {
+                    "type": "object",
+                    "kind": "float3",
+                    "source": "uniform"
+                },
+                "MAX_POINTLIGHTS": {
+                    "type": "int",
+                    "source": "constant",
+                    "staticValue": 5
+                },
+                "pointLightOn": {
+                    "type": "array",
+                    "elements": {
+                        "type": "boolean"
+                    },
+                    "staticSize": 5,
+                    "source": "uniform"
+                },
+                "pointLightAttenuation": {
+                    "type": "array",
+                    "elements": {
+                        "type": "object",
+                        "kind": "float3"
+                    },
+                    "staticSize": 5,
+                    "source": "uniform"
+                },
+                "pointLightIntensity": {
+                    "type": "array",
+                    "elements": {
+                        "type": "object",
+                        "kind": "float3"
+                    },
+                    "staticSize": 5,
+                    "source": "uniform"
+                },
+                "viewMatrix": {
+                    "type": "object",
+                    "kind": "matrix3",
+                    "source": "uniform"
+                },
+                "pointLightPosition": {
+                    "type": "array",
+                    "elements": {
+                        "type": "object",
+                        "kind": "float3"
+                    },
+                    "staticSize": 5,
+                    "source": "uniform"
+                }
+            }
+    };
+
     ShadeStudio.prototype = {
         init: function() {
             initTypeList();
@@ -114,13 +171,21 @@
 
         updateOutput: function(){
             var contextData = {
+                "this" : ShadeStudio.SystemParams,
                 "global.shade" : [
                     {
                       "extra": {
                           "type": "object",
                           "kind": "any",
                           "global" : true,
-                          "info" : {}
+                          "info" : {
+                              "position": {
+                                  "type": "object",
+                                  "kind": "float3",
+                                  "source": "vertex"
+                              }
+
+                          }
                       }
                     }
                 ]
@@ -145,7 +210,7 @@
             this.storage.lastParamState = JSON.stringify(paramState);
             var code = this.javaScriptEditor.getValue();
 
-            var aast = Shade.parseAndInferenceExpression(code, { inject: contextData, loc: true });
+            var aast = Shade.parseAndInferenceExpression(code, { inject: contextData, loc: true, implementation: "xml3d-glsl-forward" });
             var result = Shade.compileFragmentShader(aast);
 
             this.codeViewer.setValue(result);
@@ -236,8 +301,6 @@
             // Set system parameters
 
             var location;
-            location = gl.getUniformLocation(program, "_sys_height"); location && gl.uniform1f(location, canvasHeight);
-            location = gl.getUniformLocation(program, "_sys_width"); location && gl.uniform1f(location, canvasWidth);
             location = gl.getUniformLocation(program, "_sys_coords"); location && gl.uniform3f(location, canvasWidth, canvasHeight, 1.0);
         },
         renderFrame: function(time) {

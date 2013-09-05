@@ -5,20 +5,23 @@
         KINDS = Shade.OBJECT_KINDS,
         Base = require("../../../base/index.js");
 
-    var SystemObject = {
-        coords: {
-            type: TYPES.OBJECT,
-            kind: KINDS.FLOAT3
-        },
+    /**
+     * Derived parameters: These exist in the system for convenience,
+     * but can be derived from other system parameters
+     */
+    var DerivedParameterInformation = {
         normalizedCoords: {
             type: TYPES.OBJECT,
-            kind: KINDS.FLOAT3
+            kind: KINDS.FLOAT3,
+            derived: true
         },
         height: {
-            type: TYPES.INT
+            type: TYPES.INT,
+            derived: true
         },
         width: {
-            type: TYPES.INT
+            type: TYPES.INT,
+            derived: true
         }
 
     };
@@ -27,9 +30,10 @@
         id: "System",
         object: {
             constructor: null,
-            static: SystemObject
+            static: DerivedParameterInformation
         },
-        instance: null
+        instance: null,
+        derivedParameters: DerivedParameterInformation
     });
 
 }(exports));

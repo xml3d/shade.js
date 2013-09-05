@@ -58,6 +58,26 @@
 
             return ctx;
         },
+        /**
+         *
+         * @param {Context} context
+         * @param {{blockedNames: Array, systemParameters: Object}} state
+         */
+        registerThisObject: function (context, state) {
+            var thisObject = context.getBindingByName("this");
+            if (thisObject && thisObject.isObject()) {
+                var properties = thisObject.getNodeInfo();
+                for (var name in properties) {
+                    state.blockedNames.push(Tools.getNameForSystem(name));
+                }
+                var system = ObjectRegistry.getByName("System");
+                //console.log(properties, system);
+                Base.deepExtend(properties, system.derivedParameters);
+                Base.extend(state.systemParameters, properties);
+            }
+        },
+
+
         transformAAST: function (program) {
             this.root = program;
             var context = this.registerGlobalContext(program);
@@ -74,29 +94,22 @@
                  idNameMap : {}
             }
 
-            var thisObject = context.getBindingByName("this");
-            if (thisObject && thisObject.isObject()) {
-                var properties = thisObject.getNodeInfo();
-                for(name in properties) {
-                    state.blockedNames.push( getNameForSystem(name) );
-                }
-                Base.extend(state.systemParameters, properties);
-            }
+            this.registerThisObject(context, state);
 
             // TODO: We should also block systemParameters here. We can block all system names, even if not used.
             for(var name in state.globalParameters){
-                state.blockedNames.push( getNameForGlobal(name) );
+                state.blockedNames.push( Tools.getNameForGlobal(name) );
             }
 
             this.replace(program, state);
 
             for(var name in state.systemParameters){
-                var decl = handleTopDeclaration(name, state.systemParameters[name]);
+                var decl = handleTopDeclaration(Tools.getNameForSystem(name), state.systemParameters[name]);
                 decl && program.body.unshift(decl);
             }
 
             for(var name in state.globalParameters){
-                var decl = handleTopDeclaration(getNameForGlobal(name), state.globalParameters[name]);
+                var decl = handleTopDeclaration(Tools.getNameForGlobal(name), state.globalParameters[name]);
                 decl && program.body.unshift(decl);
             }
 
@@ -171,7 +184,7 @@
         var propertyAnnotation =  ANNO(propertyLiteral);
         propertyAnnotation.setFromExtra(typeInfo);
 
-        if (propertyAnnotation.isNullOrUndefined())
+        if (propertyAnnotation.isNullOrUndefined() || propertyAnnotation.isDerived())
             return;
 
         var decl = {
@@ -346,12 +359,12 @@
             return result;
         }
         if(objectReference.isGlobal()) {
-            var propertyLiteral =  { type: Syntax.Identifier, name: getNameForGlobal(propertyName)};
+            var propertyLiteral =  { type: Syntax.Identifier, name: Tools.getNameForGlobal(propertyName)};
             ANNO(propertyLiteral).copy(ANNO(memberExpression));
             return propertyLiteral;
         }
         if (memberExpression.object.type == Syntax.ThisExpression) {
-            var propertyLiteral =  { type: Syntax.Identifier, name: getNameForSystem(propertyName)};
+            var propertyLiteral =  { type: Syntax.Identifier, name: Tools.getNameForSystem(propertyName)};
             ANNO(propertyLiteral).copy(ANNO(memberExpression));
             return propertyLiteral;
         }
@@ -364,16 +377,6 @@
             Shade.throwError(memberExpression, "In shade.js, [] access is only allowed on arrays.");
         }
 
-    }
-
-
-    var getNameForSystem = function(baseName) {
-        return baseName;
-    }
-
-    var getNameForGlobal = function(baseName) {
-        var name = "_env_" + baseName;
-        return name.replace(/_+/g, "_");
     }
 
     var handleBinaryExpression = function (binaryExpression, parent, cb) {

@@ -220,6 +220,9 @@
         getStaticProperties: function() {
             // Only bound object have static properties (Math, Shade etc)
             return null;
+        },
+        isDerived: function() {
+            return this.getExtra().derived == true;
         }
 
     }

@@ -309,6 +309,15 @@
         return ast;
     }
 
+    ns.getNameForSystem = function(baseName) {
+        return "_sys_" + baseName;
+    }
+
+    ns.getNameForGlobal = function(baseName) {
+        var name = "_env_" + baseName;
+        return name.replace(/_+/g, "_");
+    }
+
     ns.extend = Base.extend;
 
 

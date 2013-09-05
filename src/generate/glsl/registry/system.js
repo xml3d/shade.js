@@ -1,14 +1,12 @@
 (function (ns) {
 
-    var Base = require("../../../base/index.js"),
-        Shade = require("../../../interfaces.js"),
+    var Shade = require("../../../interfaces.js"),
+        Tools = require("./tools.js"),
         Syntax = require('estraverse').Syntax;
 
 
     var SystemParameterNames = {
-        "coords" : "_sys_coords",
-        "height": "_sys_height",
-        "width": "_sys_width"
+        "coords" : "coords"
     }
 
     var CoordsType =  {
@@ -17,7 +15,7 @@
         source: Shade.SOURCES.UNIFORM
     };
 
-    var SystemEntry = {
+    var DerivedParameters = {
         coords: {
             property: function (node) {
                 node.property.name = "gl_FragCoord";
@@ -25,8 +23,7 @@
             }
         },
         normalizedCoords: {
-            property: function (node, parent, context, state) {
-                state.systemParameters[SystemParameterNames.coords] = CoordsType;
+            property: function (node, parent, context) {
                 return {
                     type: Syntax.NewExpression,
                     callee: {
@@ -49,7 +46,7 @@
                             },
                             right: {
                                 type: Syntax.Identifier,
-                                name: SystemParameterNames.coords
+                                name: Tools.getNameForSystem(SystemParameterNames.coords)
                             },
                             operator: "/",
                             extra: {
@@ -66,28 +63,27 @@
             }
         },
         height: {
-            property: function (node, parent, context, state) {
-                state.systemParameters[SystemParameterNames.coords] = CoordsType;
-                node.property.name = SystemParameterNames.coords + ".y";
+            property: function (node) {
+                node.property.name = Tools.getNameForSystem(SystemParameterNames.coords) + ".y";
                 return node.property;
             }
         },
         width: {
-            property: function (node, parent, context, state) {
-                state.systemParameters[SystemParameterNames.coords] = CoordsType;
-                node.property.name = SystemParameterNames.coords + ".x";
+            property: function (node) {
+                node.property.name = Tools.getNameForSystem(SystemParameterNames.coords) + ".x";
                 return node.property;
             }
         }
 
     };
 
-    Base.extend(ns, {
+    Tools.extend(ns, {
         id: "System",
         object: {
             constructor: null,
-            static: SystemEntry
+            static: null
         },
-        instance: null
+        instance: null,
+        derivedParameters: DerivedParameters
     });
 }(exports));

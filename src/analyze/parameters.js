@@ -5,6 +5,13 @@
         resolver = require("../resolve/resolve.js"),
         Syntax = walk.Syntax;
 
+    var derivedSystemParameters = {
+        normalizedCoords: ["coords"],
+        height: ["coords"],
+        width: ["coords"]
+    };
+
+
     /**
      *
      * @param {{shaderParameters: Array, systemParameters: Array}} result
@@ -15,15 +22,30 @@
         result.systemParameters = result.systemParameters.concat(other.systemParameters);
     }
 
+    function addSystemParameter(parameterName, container, parameterMap) {
+        // Is parameter already in container?
+        if (container.indexOf(parameterName) != -1)
+            return;
+
+        if (parameterMap && parameterMap.hasOwnProperty(parameterName)) {
+            var requiredParameters = parameterMap[parameterName];
+            requiredParameters.forEach(function (param) {
+                addSystemParameter(param, container, parameterMap);
+            });
+            return;
+        }
+        container.push(parameterName);
+    }
+
     /**
      * @param {string} functionName Global name of the function to analyze
      * @param {*} program AST of the program
      * @param {number} environmentObjectPosition
-     * @param {object} analyzedCalls
+     * @param {object=} analyzedCalls
      * @returns {{shaderParameters: Array, systemParameters: Array}}
      */
     var findParametersInFunction = function (functionName, program, environmentObjectPosition, analyzedCalls) {
-        var context = new Context(program, null, {name: "global"})
+        var context = new Context(program, null, {name: "global"});
         var contextStack = [context];
 
         var result = { shaderParameters: [], systemParameters: [] };
@@ -34,7 +56,7 @@
         walk.traverse(program, {
             enter: function (node) {
                 var type = node.type,
-                    context;
+                    context, retVal = null;
                 switch (type) {
                     case Syntax.FunctionDeclaration:
                         var parentContext = contextStack[contextStack.length - 1];
@@ -46,7 +68,7 @@
                                 activeParam = node.params[environmentObjectPosition].name;
                             }
                         } else {
-                            return walk.VisitorOption.Skip;
+                            retVal = walk.VisitorOption.Skip;
                         }
                         break;
                     case Syntax.CallExpression:
@@ -62,8 +84,9 @@
                             merge(result, findParametersInFunction(id, program, pos, analyzedCalls));
                         }
                         break;
-
+                    default:
                 }
+                return retVal;
             },
             leave: function (node) {
                 var type = node.type;
@@ -74,15 +97,15 @@
                         break;
                     case Syntax.MemberExpression:
                         var parameterName = node.property.name;
+                        // In a specific parameter of the current method
                         if (activeParam && node.object.name == activeParam) {
-                            if (result.shaderParameters.indexOf(parameterName) == -1)
-                                result.shaderParameters.push(parameterName);
-                        } else if (node.object.type == Syntax.ThisExpression) {
-                            if (result.systemParameters.indexOf(parameterName) == -1)
-                                result.systemParameters.push(parameterName);
-                        } else if (node.object.name == "_env") {
-                            if (result.shaderParameters.indexOf(parameterName) == -1)
-                                result.shaderParameters.push(parameterName);
+                            addSystemParameter(parameterName, result.shaderParameters);
+                        } // In 'this' is a system parameter
+                        else if (node.object.type == Syntax.ThisExpression) {
+                            addSystemParameter(parameterName, result.systemParameters, derivedSystemParameters);
+                        } // In global variable '_env'
+                        else if (node.object.name == "_env") {
+                            addSystemParameter(parameterName, result.shaderParameters);
                         }
                         break;
                 }
