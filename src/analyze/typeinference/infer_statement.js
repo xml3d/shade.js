@@ -113,7 +113,7 @@
             if (node.init) {
                 var init = ctx.createTypeInfo(node.init);
                 result.copy(init);
-                ctx.updateExpression(variableName, init);
+                ctx.updateTypeInfo(variableName, init);
             } else {
                 result.setType(TYPES.UNDEFINED);
             }

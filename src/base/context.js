@@ -185,7 +185,7 @@
          * @param {string} name
          * @param {TypeInfo} typeInfo
          */
-        updateExpression: function (name, typeInfo) {
+        updateTypeInfo: function (name, typeInfo) {
             var v = this.getBindingByName(name);
             if (!v) {
                 throw new Error("Variable was not declared in this scope: " + name);

@@ -47,11 +47,11 @@
         if(thisObject) {
             var thisAnnotation = new Annotation({}, thisObject);
             addDerivedParameters(thisAnnotation.getNodeInfo());
-            context.updateExpression("this", thisAnnotation);
+            context.updateTypeInfo("this", thisAnnotation);
         }
         if (envObject) {
             var envAnnotation = new Annotation({}, envObject);
-            context.updateExpression("_env", envAnnotation);
+            context.updateTypeInfo("_env", envAnnotation);
         }
     };
 
@@ -133,7 +133,7 @@
                         var functionContext = that.createContext(node, parentContext, functionName);
                         functionContext.declareParameters(node.params);
                         parentContext.declareVariable(functionName);
-                        parentContext.updateExpression(functionName, result);
+                        parentContext.updateTypeInfo(functionName, result);
                         that.pushContext(functionContext);
                         that.functions.orig[functionContext.str()] = node;
                     }

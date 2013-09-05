@@ -151,7 +151,7 @@
                 if (ctx.inDeclaration === true) {
                     ctx.declareVariable(name, true, result)
                 }
-                ctx.updateExpression(name, right);
+                ctx.updateTypeInfo(name, right);
             } else {
                 throw new Error("Assignment expression");
             }

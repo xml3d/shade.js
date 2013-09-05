@@ -42,14 +42,7 @@
             ctx.registerObject("Texture", ObjectRegistry.getByName("Texture"));
             ctx.registerObject("Mat3", ObjectRegistry.getByName("Mat3"));
             ctx.declareVariable("gl_FragCoord", false);
-            ctx.updateExpression("gl_FragCoord", new TypeInfo({
-                extra: {
-                    type: Types.OBJECT,
-                    kind: Kinds.FLOAT3
-                }
-            }));
-            ctx.declareVariable("_sys_normalizedCoords", false);
-            ctx.updateExpression("_sys_normalizedCoords", new TypeInfo({
+            ctx.updateTypeInfo("gl_FragCoord", new TypeInfo({
                 extra: {
                     type: Types.OBJECT,
                     kind: Kinds.FLOAT3
