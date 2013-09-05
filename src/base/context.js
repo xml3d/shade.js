@@ -42,7 +42,13 @@
             this.node.initialized = v;
         },
         hasStaticValue: function() {
-            return false;
+            return this.globalObject ? true : false;
+        },
+        getStaticValue : function() {
+            if (!this.hasStaticValue()) {
+                throw new Error("Node has no static value: " + this.node);
+            }
+           return this.globalObject.staticValue;
         },
         isGlobal: function() {
             return this.node.info && this.node.info._global || TypeInfo.prototype.isGlobal.call(this);

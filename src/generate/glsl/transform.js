@@ -72,7 +72,11 @@
                 }
                 var system = ObjectRegistry.getByName("System");
                 //console.log(properties, system);
-                Base.deepExtend(properties, system.derivedParameters);
+                for (var property in system.derivedParameters) {
+                    if(properties[property]) {
+                        Base.deepExtend(properties[property], system.derivedParameters[property]);
+                    }
+                }
                 Base.extend(state.systemParameters, properties);
             }
         },

@@ -11,7 +11,7 @@ var parseAndInferenceExpression = function (str, ctx) {
 
 describe('Inference', function () {
     describe('Object Registry', function () {
-       xdescribe('for Color::', function () {
+       describe('for Color::', function () {
 
 
             it("constructor, 3 args", function () {
@@ -21,9 +21,9 @@ describe('Inference', function () {
                 exp.extra.should.have.property("type", TYPES.OBJECT);
                 exp.extra.should.have.property("kind", KINDS.FLOAT3);
                 exp.extra.should.have.property("staticValue");
-                exp.extra.staticValue.should.have.property("r", 1.0);
-                exp.extra.staticValue.should.have.property("g", 0);
-                exp.extra.staticValue.should.have.property("b", 0);
+                exp.extra.staticValue.should.have.property("0", 1.0);
+                exp.extra.staticValue.should.have.property("1", 0);
+                exp.extra.staticValue.should.have.property("2", 0);
 
             });
 
@@ -34,34 +34,34 @@ describe('Inference', function () {
                 exp.extra.should.have.property("type", TYPES.OBJECT);
                 exp.extra.should.have.property("kind", KINDS.FLOAT3);
                 exp.extra.should.have.property("staticValue");
-                exp.extra.staticValue.should.have.property("r", 128);
-                exp.extra.staticValue.should.have.property("g", 128);
-                exp.extra.staticValue.should.have.property("b", 128);
+                exp.extra.staticValue.should.have.property("0", 128);
+                exp.extra.staticValue.should.have.property("1", 128);
+                exp.extra.staticValue.should.have.property("2", 128);
 
             });
 
-            it("color instance properties", function () {
+            it("color instance swizzle", function () {
                 var exp = parseAndInferenceExpression("var x = new Color(128); x.r()");
-                var memexp = exp[1].expression;
+                var callexp = exp[1].expression;
 
                 // object
-                var object = memexp.object;
+                var object = callexp.callee.object;
                 object.should.have.property("extra");
                 object.extra.should.have.property("type", TYPES.OBJECT);
                 object.extra.should.have.property("kind", KINDS.FLOAT3);
 
                 // property
-                var property = memexp.property;
+                var property = callexp.callee.property;
                 property.should.have.property("extra");
-                property.extra.should.have.property("type", TYPES.NUMBER);
+                property.extra.should.have.property("type", TYPES.FUNCTION);
 
                 // expr
-                memexp.should.have.property("extra");
-                memexp.extra.should.have.property("type", TYPES.NUMBER);
+                callexp.should.have.property("extra");
+                callexp.extra.should.have.property("type", TYPES.NUMBER);
             });
 
             it("color instance methods", function () {
-                var exp = parseAndInferenceExpression("var x = new Color(128); x.intensity();");
+                var exp = parseAndInferenceExpression("var x = new Color(128); x.mul(new Color());");
                 var callExpression = exp[1].expression;
 
                 // object
@@ -73,11 +73,12 @@ describe('Inference', function () {
                 // property
                 var property = callExpression.callee.property;
                 property.should.have.property("extra");
-                property.extra.should.have.property("type", TYPES.NUMBER);
+                property.extra.should.have.property("type", TYPES.FUNCTION);
 
                 // expr
                 callExpression.should.have.property("extra");
-                callExpression.extra.should.have.property("type", TYPES.NUMBER);
+                callExpression.extra.should.have.property("type", TYPES.OBJECT);
+                callExpression.extra.should.have.property("kind", TYPES.FLOAT3);
             });
 
             it("unknown color method should throw", function () {

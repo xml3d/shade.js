@@ -113,7 +113,7 @@
         },
         fract: {
             type: TYPES.FUNCTION,
-            evaluate: Tools.Vec.anyVecArgumentEvaluate.bind(null, "Shade.fract")
+            evaluate: Tools.Vec.anyVecArgumentEvaluate.bind(null, "fract")
         },
         mix: {
             type: TYPES.FUNCTION,
@@ -141,7 +141,8 @@
         id: "Shade",
         object: {
             constructor: null,
-            static: ShadeObject
+            static: ShadeObject,
+            staticValue: Shade.Shade
         },
         instance: null
 

@@ -18,16 +18,21 @@ var loadAndGenerate = function(filename) {
     return code;
 }
 
-var generateExpression = function(exp, params) {
+var generateExpression = function(exp, params, thisParams) {
     params = params || {};
     var contextData = {
-        "global.shade" : [
+        "this": {
+            "type": "object",
+            "kind": "any",
+            "info": thisParams || {}
+        },
+        "global.shade": [
             {
                 "extra": {
                     "type": "object",
                     "kind": "any",
-                    "global" : true,
-                    "info" : params
+                    "global": true,
+                    "info": params
                 }
             }
         ]
@@ -62,9 +67,9 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("var x = new Color(0.1);");
             code.should.match(/vec3 x = vec3\(0.1\);/);
         });
-        xit("Color without parameter", function() {
+        it("Color without parameter", function() {
             var code = generateExpression("var x = new Color();");
-            code.should.match(/vec3 x = vec3\(0, 0, 0\);/);
+            code.should.match(/vec3 x = vec3\(0\.0\);/);
         });
         it("any", function() {
             var code = generateExpression.bind(null, "var x;");
@@ -84,9 +89,9 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("var x; x = true;");
             code.should.match(/bool x;\s*x = true;/);
         });
-        xit("Color with 4 parameters", function() {
-            var code = generateExpression("var x; x = new Color(0.1, 0.1, 0.1, 0.9);");
-            code.should.match(/vec4 x;\s*x = vec4\(0.1, 0.1, 0.1, 0.9\);/);
+        it("Color with 3 parameters", function() {
+            var code = generateExpression("var x; x = new Color(0.1, 0.2, 0.3);");
+            code.should.match(/vec3 x;\s*x = vec3\(0.1, 0.2, 0.3\);/);
         });
     });
 
@@ -380,16 +385,15 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("Math.floor(2.0 % 20.0) > 0");
             code.should.equal("floor(mod(2.0, 20.0)) > float(0);");
         });
-        xit("this.normalizedCoords", function() {
+        it("this.normalizedCoords", function() {
             var code = generateExpression("this.normalizedCoords");
-            code.should.match(/uniform vec3 _sys_coords;/);
             code.should.match(/gl_FragCoord.xyz \/ _sys_coords/);
         });
-        xit("this.normalizedCoords.xy()", function() {
+        it("this.normalizedCoords.xy()", function() {
             var code = generateExpression("this.normalizedCoords.xy()");
             code.should.match(/vec3\(gl_FragCoord.xyz \/ _sys_coords\).xy;/);
         });
-        xit("this.normalizedCoords.xy().mul(2)", function() {
+        it("this.normalizedCoords.xy().mul(2)", function() {
             var code = generateExpression("this.normalizedCoords.xy().mul(2);");
             code.should.match(/vec3\(gl_FragCoord.xyz \/ _sys_coords\).xy \* vec2\(2\);/);
         });
@@ -417,13 +421,13 @@ describe('GLSL Code generation,', function () {
             lines[1].should.match(/\s*float c = 10.0;/);
         });
 
-        xit("test object iexistance in ConditionalExpression", function() {
-            var code = generateExpression("function shade(env) { var x = env.texcoord ? env.texcoord.x() : this.coords.x(); }", { "texcoord": { "type": "object", kind: "float2" }});
+        it("test object existence in ConditionalExpression", function() {
+            var code = generateExpression("function shade(env) { var x = env.texcoord ? env.texcoord.x() : this.coords.x(); }", { "texcoord": { "type": "object", kind: "float2" }}, {"coords": { type: "object", kind: "float3"}});
             var lines = code.split(/\r\n|\r|\n/g);
-            lines[2].should.match(/\s*float x = _env_texcoord.x;/);
-            var code = generateExpression("function shade(env) { var x = env.unknown ? env.texcoord.x() : this.coords.x(); }", { "texcoord": { "type": "object", kind: "float2" }});
+            lines[3].should.match(/\s*float x = _env_texcoord.x;/);
+            var code = generateExpression("function shade(env) { var x = env.unknown ? env.texcoord.x() : this.coords.x(); }", { "texcoord": { "type": "object", kind: "float2" }}, {"coords": { type: "object", kind: "float3"}});
             var lines = code.split(/\r\n|\r|\n/g);
-            lines[2].should.match(/\s*float x = gl_FragCoord.x;/);
+            lines[3].should.match(/\s*float x = gl_FragCoord.x;/);
         });
 
 
