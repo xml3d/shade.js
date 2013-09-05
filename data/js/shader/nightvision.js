@@ -1,6 +1,6 @@
 // https://www.shadertoy.com/view/Xsl3zf
 function hash(n) {
-    return Shade.fract(Math.sin(n)*43758.5453123);
+    return Math.fract(Math.sin(n)*43758.5453123);
 }
 
 function shade(env) {
@@ -18,9 +18,9 @@ function shade(env) {
     // flicker, grain, vignette, fade in
     c = c.add(Math.sin(hash(time)) * 0.01);
     c = c.add(hash((hash(n.x()) + n.y()) * time) * 0.4);
-    c = c.mul(Shade.smoothstep(n.mul(0.18).length(), 0.8, 0.4));
+    c = c.mul(Math.smoothstep(n.mul(0.18).length(), 0.8, 0.4));
     c = c.mul(1.9);
-    c = c.mul(Shade.smoothstep(0.001, 3.5, time));
+    c = c.mul(Math.smoothstep(0.001, 3.5, time));
 
     var s = c.dot(0.2126, 0.7152, 0.0722);
     return new Vec3(0.2, 1.5 - hash(time) * 0.1, 0.4).mul(s);

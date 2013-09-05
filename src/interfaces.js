@@ -578,20 +578,23 @@
 
     var Shade = {};
 
-    Shade.clamp = function(x, minVal, maxVal) {
+
+    // Extensions of Math,
+    // TODO: Implement for Vectors
+    Math.clamp = function(x, minVal, maxVal) {
         return Math.min(Math.max(x, minVal), maxVal);
     };
 
-    Shade.smoothstep = function(edge1, edge2, x) {
-        var t = Shade.clamp((x - edge1) / (edge2 - edge1), 0.0, 1.0);
+    Math.smoothstep = function(edge1, edge2, x) {
+        var t = Math.clamp((x - edge1) / (edge2 - edge1), 0.0, 1.0);
         return t * t * (3.0 - 2.0 * t);
     };
 
-    Shade.step = function(edge, x) {
+    Math.step = function(edge, x) {
         return x < edge ? 0 : 1;
     };
 
-    Shade.fract = function(x) {
+    Math.fract = function(x) {
         return x - Math.floor(x);
     }
 

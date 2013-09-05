@@ -3,11 +3,11 @@ function mul(n) {
 }
 
 function shade(env) {
-    var f = this.coords.x();
+    var f = this.normalizedCoords.x();
     f = mul(f);
-    var g = mul(f);
+    var g = mul(this.normalizedCoords.y());
     var i = 2;
     i = mul(i);
     var j = mul(i);
-    return new Vec3(f,g,i);
+    return new Vec3(f,g,i/5);
 }

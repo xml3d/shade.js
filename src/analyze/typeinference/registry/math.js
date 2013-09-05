@@ -41,7 +41,7 @@
     var MathObject = {
         random: {
             type: TYPES.FUNCTION,
-            evaluate: function(node, args) {
+            evaluate: function (node, args) {
                 if (args.length)
                     throw new Error("Math.random has no parameters.");
                 return {
@@ -51,10 +51,10 @@
         },
         abs: {
             type: TYPES.FUNCTION,
-            evaluate: function(result, args) {
+            evaluate: function (result, args) {
                 Tools.checkParamCount(result.node, "Math.abs", [1], args.length);
                 var typeInfo = {};
-                switch(args[0].getType()) {
+                switch (args[0].getType()) {
                     case TYPES.NUMBER:
                     case TYPES.INT:
                         typeInfo.type = args[0].getType();
@@ -62,6 +62,105 @@
                     default:
                         Shade.throwError(result.node, "InvalidType for Math.abs");
                 }
+                return typeInfo;
+            }
+        },
+
+
+        // Non-standard methods
+        clamp: {
+            type: TYPES.FUNCTION,
+            evaluate: function (result, args) {
+                Tools.checkParamCount(result.node, "Math.clamp", [3], args.length);
+
+                if (args.every(function (e) {
+                    return e.canNumber();
+                })) {
+                    var typeInfo = {
+                        type: TYPES.NUMBER
+                    }
+                    if (Tools.allArgumentsAreStatic(args)) {
+                        var callArgs = args.map(function (a) {
+                            return a.getStaticValue();
+                        });
+                        typeInfo.staticValue = Math.clamp.apply(null, callArgs);
+                    }
+                    return typeInfo;
+                }
+                Shade.throwError(result.node, "Math.clamp not supported with argument types: " + args.map(function (arg) {
+                    return arg.getTypeString();
+                }).join(", "));
+            }
+        },
+        smoothstep: {
+            type: TYPES.FUNCTION,
+            evaluate: function (result, args, ctx) {
+                Tools.checkParamCount(result.node, "Math.smoothstep", [3], args.length);
+
+                if (args.every(function (e) {
+                    return e.canNumber();
+                })) {
+                    var typeInfo = {
+                        type: TYPES.NUMBER
+                    }
+                    if (Tools.allArgumentsAreStatic(args)) {
+                        var callArgs = args.map(function (a) {
+                            return a.getStaticValue();
+                        });
+                        typeInfo.staticValue = Math.smoothstep.apply(null, callArgs);
+                    }
+                    return typeInfo;
+                }
+                Shade.throwError(result.node, "Math.smoothstep not supported with argument types: " + args.map(function (arg) {
+                    return arg.getTypeString();
+                }).join(", "));
+            }
+        },
+        step: {
+            type: TYPES.FUNCTION,
+            evaluate: function (result, args, ctx) {
+                Tools.checkParamCount(result.node, "Shade.step", [2], args.length);
+
+                if (args.every(function (e) {
+                    return e.canNumber();
+                })) {
+                    var typeInfo = {
+                        type: TYPES.NUMBER
+                    }
+                    if (Tools.allArgumentsAreStatic(args)) {
+                        var callArgs = args.map(function (a) {
+                            return a.getStaticValue();
+                        });
+                        typeInfo.staticValue = Math.step.apply(null, callArgs);
+                    }
+                    return typeInfo;
+                }
+                Shade.throwError(result.node, "Shade.step not supported with argument types: " + args.map(function (arg) {
+                    return arg.getTypeString();
+                }).join(", "));
+            }
+        },
+        fract: {
+            type: TYPES.FUNCTION,
+            evaluate: Tools.Vec.anyVecArgumentEvaluate.bind(null, "fract")
+        },
+        mix: {
+            type: TYPES.FUNCTION,
+            evaluate: function (result, args, ctx) {
+                Tools.checkParamCount(result.node, "Shade.mix", [3], args.length);
+
+                var arg = args[0];
+
+                var typeInfo = {};
+                var cnt = Tools.Vec.checkAnyVecArgument("Shade.mix", args[0]);
+                Base.extend(typeInfo, Tools.Vec.getType(cnt));
+
+                if (!args[1].equals(args[0]))
+                    Shade.throwError(result.node, "Shade.mix types of first two arguments do no match: got " + arg[0].getTypeString() +
+                        " and " + arg[1].getTypeString());
+                if (!args[2].canNumber())
+                    Shade.throwError(result.node, "Shade.mix third argument is not a number.");
+
                 return typeInfo;
             }
         }
@@ -97,7 +196,8 @@
         id: "Math",
         object: {
             constructor: null,
-            static: MathObject
+            static: MathObject,
+            staticValue: Math
         },
         instance: MathObject
     });

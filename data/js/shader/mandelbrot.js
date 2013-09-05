@@ -52,7 +52,7 @@ function shade(env)
 
 
     // do some soft coloring based on distance
-    d = Shade.clamp( 4.0*d/zoo, 0.0, 1.0 );
+    d = Math.clamp( 4.0*d/zoo, 0.0, 1.0 );
     d = Math.pow( d, 0.25 );
     return new Vec3( d );
 }

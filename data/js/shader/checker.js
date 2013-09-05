@@ -20,5 +20,5 @@ function shade(env) {
         env.blackColor;
 
     var normal = env.normal.normalized();
-    return Shade.diffuse(env.normal).multiply(color).add(Shade.phong(env.normal, env.shininess));
+    return new Shade().diffuse(color, env.normal).phong(env.normal, env.shininess);
 }

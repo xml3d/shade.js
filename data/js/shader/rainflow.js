@@ -10,5 +10,5 @@ function shade(env) {
     var tints1 = new Vec3(.3, .8, .4);
     var tints2 = new Vec3(.3, .6, 1);
     var tint = modAmount > 2 ? tints2 : (modAmount > 1) ? tints1 : tints0;
-    return tint.mul(Shade.fract(modAmount));
+    return tint.mul(Math.fract(modAmount));
 }

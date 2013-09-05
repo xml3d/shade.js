@@ -33,8 +33,6 @@
         }
     };
 
-
-
     var MathEntry  = {
         abs: { callExp: handleMathCall() },
         acos: { callExp: handleMathCall() },
@@ -54,7 +52,14 @@
         round: { callExp: handleMathCall() }, // Since GLSL 1.3, what does WebGL use?
         sin:  { callExp: handleMathCall() },
         sqrt: { callExp: handleMathCall() },
-        tan: { callExp: handleMathCall() }
+        tan: { callExp: handleMathCall() },
+
+        // Non-standard methods
+        clamp: { callExp: handleMathCall() },
+        smoothstep: { callExp: handleMathCall() },
+        step: { callExp: handleMathCall() },
+        fract: { callExp: handleMathCall() },
+        mix: { callExp: handleMathCall() }
     };
 
     MathConstants.forEach(function (constant) {
