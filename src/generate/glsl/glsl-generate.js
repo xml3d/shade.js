@@ -48,6 +48,8 @@
     }
 
     var toGLSLType = function (info, allowUndefined) {
+        if(!info) return "?";
+
         switch (info.type) {
             case Types.OBJECT:
                 switch (info.kind) {
@@ -63,6 +65,8 @@
                         return "mat3";
                     case Kinds.MATRIX3:
                         return "mat4";
+                    case Kinds.COLOR_CLOSURE:
+                        return "vec4";
                     default:
                         return "<undefined>";
                 }
@@ -244,6 +248,7 @@
 
                         }
                     } catch (e) {
+                        console.error(e);
                         Shade.throwError(node, e.message);
                     }
                 },
@@ -411,12 +416,23 @@
                 break;
 
             case Types.OBJECT:
-                result = toGLSLType(node.extra);
-                var args = node.arguments.map(function(value) {
-                    return handleStaticValue(value);
-                });
-                result += "(" + args.join(",") + ")";
+                var staticValue = node.extra.staticValue;
+                switch(node.extra.kind) {
+                    case Kinds.FLOAT2:
+                        result = "vec2(" + staticValue.r() + ", " + staticValue.g() + ")";
+                        break;
+                    case Kinds.FLOAT3:
+                        result = "vec3(" + staticValue.r() + ", " + staticValue.g() + ", " + staticValue.b() + ")";
+                        break;
+                    case Kinds.FLOAT4:
+                        result = "vec4(" + staticValue.r() + ", " + staticValue.g() + ", " + staticValue.b() + ", " + staticValue.a() + ")";
+                        break;
+                    default:
+                        Shade.throwError(node, "Internal: Can't generate static GLSL value for kind: " + node.extra.kind);
+                }
                 break;
+            default:
+                Shade.throwError(node, "Internal: Can't generate static GLSL value for type: " + node.extra.type);
 
         }
         return result;

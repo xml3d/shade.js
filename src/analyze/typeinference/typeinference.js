@@ -240,6 +240,7 @@
                     break;
                 var funcParam = new Annotation(functionAST.params[i]);
                 funcParam.setFromExtra(params[i].getExtra());
+                funcParam.setDynamicValue();
             }
 
             var oldEntryPoint = this.entryPoint;

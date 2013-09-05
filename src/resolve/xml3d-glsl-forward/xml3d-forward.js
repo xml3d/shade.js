@@ -5,7 +5,7 @@
          * @param env Parameters from the current environment
          * @param {Vec3} normal
          */
-        ns.diffuse = function diffuse(n) {
+        ns.diffuse = function diffuse(color, n) {
             var N = n.normalize();
             var intensity = new Vec3();
             for (var i = 0; i < this.MAX_POINTLIGHTS; i++) {
@@ -21,11 +21,11 @@
                 var kd = this.pointLightIntensity[i].mul(Math.max(N.dot(L.normalize()), 0.0) * atten);
                 intensity = intensity.add(kd);
             }
-            return intensity;
+            return new Vec4(intensity.mul(color), 1.0);
         },
 
-        ns.emission = function emission() {
-            return new Vec4(1);
+        ns.phong = function phong(color, n, shininess) {
+            return new Vec4(color, 1);
         }
 
 

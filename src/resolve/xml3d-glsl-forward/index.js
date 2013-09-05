@@ -4,7 +4,9 @@
         Traversal = require('estraverse'),
         Syntax = Traversal.Syntax,
         parser = require('esprima'),
-        Shade = require("../../interfaces.js");
+        Shade = require("../../interfaces.js"),
+        ANNO = require("./../../base/annotation.js").ANNO;
+
 
 
     function containsClosure(arr, name) {
@@ -21,8 +23,14 @@
                 callee: {
                     type: Syntax.Identifier,
                     name: closureName
+                },
+                extra: {
+                    type: Shade.TYPES.OBJECT,
+                    kind: Shade.OBJECT_KINDS.COLOR_CLOSURE
                 }
             };
+
+        console.log("Leaving:" + closureName);
 
         // Already contains the function. Normally we have to also check for the signature
         if (containsClosure(state.newFunctions, closureName)) {
@@ -37,28 +45,67 @@
         var closureImplementation = Closures[closureName];
         try {
             var closureAST = parser.parse(closureImplementation.toString(), { raw: true });
-            // closureAST.body[0].params = closureAST.body[0].params.slice(1);
             state.newFunctions.push(closureAST.body[0]);
         } catch (e) {
             console.error("Error in analysis of closure '", closureName, "'", e);
             return;
         }
-        return result;
-    }
+        if (node.callee.object.type == Syntax.NewExpression) {
+            return result;
+        } else {
+            return {
+                type: Syntax.CallExpression,
+                callee: {
+                    type: "MemberExpression",
+                    computed: false,
+                    object: node.callee.object,
+                    property: {
+                        "type": "Identifier",
+                        "name": "add"
+                    }
 
-    var handleCall = function (node, state) {
-        if (node.callee.type == Syntax.MemberExpression) {
-            var object = node.callee.object;
-            if (object.type == Syntax.Identifier && object.name == "Shade") {
-                return handleClosure(node, state);
-            }
+                },
+                arguments: [ result ]};
         }
     }
 
-    var switcher = function (state, node) {
+    var handleCallExpression = function (node, state) {
+        var callee = ANNO(node.callee);
+        // console.log("Call", node.callee.property, callee.getTypeString(), node.callee.object)
+        if(callee.isOfKind(Shade.OBJECT_KINDS.COLOR_CLOSURE)) {
+            return handleClosure(node, state);
+        }
+    }
+
+    function handleNewExpression(node, state, parent) {
+        if (node.callee.name == "Shade") {
+            var result = ANNO(node);
+            result.setType(Shade.TYPES.OBJECT, Shade.OBJECT_KINDS.COLOR_CLOSURE);
+            //console.log(parent);
+        }
+    }
+
+    function handleMemberExpression(node, state, parent) {
+        var object = ANNO(node.object);
+        var result = ANNO(node);
+        if (object.isOfKind(Shade.OBJECT_KINDS.COLOR_CLOSURE)) {
+            var closureName = node.property.name;
+            if (!Closures.hasOwnProperty(closureName)) {
+                console.error("No implementation for closure '", closureName, "'");
+                return;
+            };
+            result.copy(object);
+        }
+    }
+
+    var switcher = function (state, node, parent) {
         switch (node.type) {
             case Syntax.CallExpression:
-                return handleCall(node, state);
+                return handleCallExpression(node, state);
+            case Syntax.NewExpression:
+                return handleNewExpression(node, state, parent);
+            case Syntax.MemberExpression:
+                return handleMemberExpression(node, state, parent);
         }
     }
 

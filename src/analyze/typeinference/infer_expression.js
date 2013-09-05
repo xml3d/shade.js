@@ -96,6 +96,7 @@
 
                 if (consequent.equals(alternate)) {
                     result.copy(consequent);
+                    result.setDynamicValue();
                 } else if (consequent.canNumber() && alternate.canNumber()) {
                     result.setType(TYPES.NUMBER);
                 }

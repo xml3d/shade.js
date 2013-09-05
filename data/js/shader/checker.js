@@ -12,13 +12,10 @@
 function shade(env) {
 
     var smod = (env.texcoord.x() * env.frequency) % 1.0,
-        tmod = (env.texcoord.y() * env.frequency) % 1.0,
-        color;
-
-    color = ((smod < 0.5 && tmod < 0.5) || (smod >= 0.5 && tmod >= 0.5)) ?
-        env.whiteColor :
+        tmod = (env.texcoord.y() * env.frequency) % 1.0;
+    var color = ((smod < 0.5 && tmod < 0.5) || (smod >= 0.5 && tmod >= 0.5)) ?
+        env.whiteColor:
         env.blackColor;
 
-    var normal = env.normal.normalized();
-    return new Shade().diffuse(color, env.normal).phong(env.normal, env.shininess);
+    return new Shade().diffuse(color, env.normal).phong(new Vec3(0.8), env.normal, env.shininess);
 }

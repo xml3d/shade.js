@@ -29,6 +29,7 @@ var argv = require('optimist').argv,
         var data = fs.readFileSync(filename, "utf-8");
         var opt = { inject: contextData, loc: true, implementation: "xml3d-glsl-forward"};
         var aast = Shade.parseAndInferenceExpression(data, opt);
+        //return require("../src/generate/glsl/generate.js").generate(aast);
         return new GLSLCompiler().compileFragmentShader(aast, {useStatic: true});
     }());
 

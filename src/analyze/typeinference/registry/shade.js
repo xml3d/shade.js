@@ -6,7 +6,28 @@
         Base = require("../../../base/index.js"),
         Tools = require("./tools.js");
 
-    var BRDFImplementation = {};
+    var ShadeConstructor =  {
+        type: TYPES.OBJECT,
+        kind: KINDS.COLOR_CLOSURE,
+        /**
+         * @param {Annotation} result
+         * @param {Array.<Annotation>} args
+         * @param {Context} ctx
+         */
+        evaluate: function(result, args, context, objectReference, root) {
+            if (args.length > 0)
+                throw new Error("Shade.emission expects no parameters.");
+            return {
+                type: TYPES.OBJECT,
+                kind: KINDS.COLOR_CLOSURE
+            };
+        }
+    };
+
+    var checkFirstArgumentIsColor = function(node, args, name) {
+        if(!args.length || !args[0].canColor())
+            Shade.throwError(node, "First argument of Shade." + name + " must evaluate to a color, found " + (args.length ? args[0].getTypeString() : "undefined"));
+    };
 
     var ShadeObject = {
         emission: {
@@ -22,12 +43,12 @@
         },
         diffuse: {
             type: TYPES.FUNCTION,
+            name: "diffuse",
             evaluate: function(result, args, context, objectReference, root) {
-                if (args.length < 1)
-                    throw new Error("Shade.diffuse expects at least 1 parameter.")
-                var normal = args[0];
+                checkFirstArgumentIsColor(result.node, args, this.name);
+                var normal = args[1];
                 if(!(normal && normal.canNormal())) {
-                    throw new Error("First argument of Shade.diffuse must evaluate to a normal");
+                    Shade.throwError(result.node, "Second argument of Shade.diffuse must evaluate to a normal, but");
                 }
                 return {
                     type: TYPES.OBJECT,
@@ -37,18 +58,20 @@
         },
         phong: {
             type: TYPES.FUNCTION,
+            name: "phong",
             evaluate: function(result, args, ctx) {
-                if (args.length < 1)
-                    throw new Error("Shade.phong expects at least 1 parameter.")
-                var normal = args[0];
+                checkFirstArgumentIsColor(result.node, args, this.name);
+
+                var normal = args[1];
                 if(!(normal && normal.canNormal())) {
-                    throw new Error("First argument of Shade.phong must evaluate to a normal");
+                    throw new Error("Second argument of Shade.phong must evaluate to a normal");
                 }
+
                 if (args.length > 1) {
-                    var shininess = args[1];
+                    var shininess = args[2];
                     //console.log("Color: ", color.str(), color.getType(ctx));
                     if(!shininess.canNumber()) {
-                        throw new Error("Second argument of Shade.phong must evaluate to a number. Found: " + color.str());
+                        throw new Error("Second argument of Shade.phong must evaluate to a number. Found: " + shininess.str());
                     }
                 }
                 return {
@@ -61,12 +84,12 @@
 
     Base.extend(ns, {
         id: "Shade",
+        kind: KINDS.COLOR_CLOSURE,
         object: {
-            constructor: null,
-            static: ShadeObject,
-            staticValue: Shade.Shade
+            constructor: ShadeConstructor,
+            static: null
         },
-        instance: null
+        instance: ShadeObject
 
     });
 

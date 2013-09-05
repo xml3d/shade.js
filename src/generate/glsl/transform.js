@@ -325,7 +325,7 @@
             return constructor(newExpression);
         }
        else {
-            throw new Error("ReferenceError: " + node.callee.name + " is not defined");
+            throw new Error("ReferenceError: " + newExpression.callee.name + " is not defined");
         }
     }
 
