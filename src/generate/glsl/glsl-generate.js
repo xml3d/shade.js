@@ -194,25 +194,25 @@
 
                             case Syntax.ReturnStatement:
                                 var hasArguments = node.argument;
-                                lines.appendLine("return " + (hasArguments ? handleExpression(node.argument) : "") + ";");
+                                lines.appendLine("return " + (hasArguments ? handleExpression(node.argument, opt) : "") + ";");
                                 return;
 
                             case Syntax.VariableDeclarator :
                                 // console.log("Meep!");
-                                var decl = handleVariableDeclaration(node, insideMain);
+                                var decl = handleVariableDeclaration(node, insideMain, opt);
                                 lines.appendLine(decl);
                                 return;
 
                             case Syntax.AssignmentExpression:
-                                lines.appendLine(handleExpression(node) + ";")
+                                lines.appendLine(handleExpression(node, opt) + ";")
                                 return;
 
                             case Syntax.ExpressionStatement:
-                                lines.appendLine(handleExpression(node.expression) + ";");
+                                lines.appendLine(handleExpression(node.expression, opt) + ";");
                                 return VisitorOption.Skip;
 
                             case Syntax.IfStatement:
-                                lines.appendLine("if(" + handleExpression(node.test) + ") {");
+                                lines.appendLine("if(" + handleExpression(node.test, opt) + ") {");
 
                                 lines.changeIndention(1);
                                 traverse(node.consequent, lines, opt);
@@ -228,7 +228,7 @@
                                 return VisitorOption.Skip;
 
                             case Syntax.ForStatement:
-                                lines.appendLine("for (" + handleInlineDeclaration(node.init) + "; " + handleExpression(node.test) +"; " + handleExpression(node.update) + ") {");
+                                lines.appendLine("for (" + handleInlineDeclaration(node.init, opt) + "; " + handleExpression(node.test, opt) +"; " + handleExpression(node.update, opt) + ") {");
                                 lines.changeIndention(1);
                                 traverse(node.body, lines, opt);
                                 lines.changeIndention(-1);
@@ -277,20 +277,22 @@
      * @param node
      * @returns {string}
      */
-    var handleExpression = function(node) {
-        var result = "<unhandled: " + node.type+ ">";
+    var handleExpression = function(node, opt) {
+        var result = "<unhandled: " + node.type+ ">",
+            opt = opt || {};
+
+        if(opt.useStatic && node.extra && node.extra.staticValue) {
+            return handleStaticValue(node);
+        }
+
         switch(node.type) {
             case Syntax.NewExpression:
                 result = toGLSLType(node.extra);
-                result += handleArguments(node.arguments);
+                result += handleArguments(node.arguments, opt);
                 break;
 
             case Syntax.Literal:
-                var value = node.extra.staticValue !== undefined ? node.extra.staticValue : node.value;
-                if (node.extra.type == Types.NUMBER)
-                    result = generateFloat(value);
-                else
-                    result = value;
+                result = handleLiteral(node.extra, node.value);
                 break;
 
 
@@ -301,33 +303,33 @@
             case Syntax.BinaryExpression:
             case Syntax.LogicalExpression:
             case Syntax.AssignmentExpression:
-                result = handleBinaryArgument(node.left);
+                result = handleBinaryArgument(node.left, opt);
                 result += " " + node.operator + " ";
-                result += handleBinaryArgument(node.right);
+                result += handleBinaryArgument(node.right, opt);
                 break;
             case Syntax.UnaryExpression:
                 result = node.operator;
-                result += handleBinaryArgument(node.argument);
+                result += handleBinaryArgument(node.argument, opt);
                 break;
 
             case Syntax.CallExpression:
-                result = handleExpression(node.callee);
-                result += handleArguments(node.arguments);
+                result = handleExpression(node.callee, opt);
+                result += handleArguments(node.arguments, opt);
                 break;
 
             case Syntax.MemberExpression:
-                result = handleBinaryArgument(node.object);
+                result = handleBinaryArgument(node.object, opt);
                 result += node.computed ? "[" : ".";
-                result += handleExpression(node.property);
+                result += handleExpression(node.property, opt);
                 node.computed && (result += "]");
                 break;
 
             case Syntax.ConditionalExpression:
-                result = handleExpression(node.test);
+                result = handleExpression(node.test, opt);
                 result += " ? ";
-                result += handleExpression(node.consequent);
+                result += handleExpression(node.consequent, opt);
                 result += " : ";
-                result += handleExpression(node.alternate);
+                result += handleExpression(node.alternate, opt);
                 break;
 
             case Syntax.UpdateExpression:
@@ -335,7 +337,7 @@
                 if (node.isPrefix) {
                     result += node.operator;
                 }
-                result += handleExpression(node.argument);
+                result += handleExpression(node.argument, opt);
                 if (!node.isPrefix) {
                     result += node.operator;
                 }
@@ -350,14 +352,14 @@
         return extra.staticValue;
     };
 
-    function handleVariableDeclaration(node, writeStorageQualifier) {
+    function handleVariableDeclaration(node, writeStorageQualifier, opt) {
         var storageQualifier = !writeStorageQualifier ? toGLSLStorage(node.extra) : null;
         var result = storageQualifier ? storageQualifier + " " : "";
         result += toGLSLType(node.extra) + " " + node.id.name;
         if (node.extra.elements) {
             result += "[" + (node.extra.staticSize ? node.extra.staticSize : "0") + "]";
         }
-        if (node.init) result += " = " + handleExpression(node.init);
+        if (node.init) result += " = " + handleExpression(node.init, opt);
         if (!node.init && storageQualifier == GLSL.Storage.CONST) {
             result += " = " + getStaticValue(node.extra);
         }
@@ -365,21 +367,21 @@
     }
 
 
-    function handleInlineDeclaration(node) {
+    function handleInlineDeclaration(node, opt) {
         if (node.type != Syntax.VariableDeclaration)
             Shade.throwError(node, "Internal error in GLSL::handleInlineDeclaration");
         var result = node.declarations.reduce(function(declString, declaration){
             var decl = toGLSLType(declaration.extra) + " " + declaration.id.name;
             if (declaration.init) {
-                decl += " = " + handleExpression(declaration.init);
+                decl += " = " + handleExpression(declaration.init, opt);
             }
             return declString + decl;
         }, "");
         return result;
     }
 
-    function handleBinaryArgument(node){
-        var result = handleExpression(node);
+    function handleBinaryArgument(node, opt){
+        var result = handleExpression(node, opt);
         switch(node.type) {
             case Syntax.BinaryExpression:
             case Syntax.LogicalExpression:
@@ -388,10 +390,10 @@
         return result;
     }
 
-    function handleArguments(container) {
+    function handleArguments(container, opt) {
         var result = "(";
         container.forEach(function (arg, index) {
-            result += handleExpression(arg);
+            result += handleExpression(arg, opt);
             if (index < container.length - 1) {
                 result += ", ";
             }
@@ -399,6 +401,34 @@
         return result + ")";
     }
 
+    function handleStaticValue(node) {
+        var result = "unhandled static value: " + node.type;
+        switch(node.extra.type) {
+            case Types.NUMBER:
+            case Types.INT:
+            case Types.BOOLEAN:
+                result = handleLiteral(node.extra);
+                break;
+
+            case Types.OBJECT:
+                result = toGLSLType(node.extra);
+                var args = node.arguments.map(function(value) {
+                    return handleStaticValue(value);
+                });
+                result += "(" + args.join(",") + ")";
+                break;
+
+        }
+        return result;
+    }
+
+    function handleLiteral(extra, alternative) {
+        var value = extra.staticValue !== undefined ? extra.staticValue : alternative;
+        if (extra.type == Types.NUMBER)
+            return generateFloat(value);
+        else
+            return value;
+    }
 
     exports.generate = generate;
 

@@ -34,8 +34,7 @@
             if (opt.implementation)
                 ast = this.resolveClosures(ast, opt.implementation, opt);
 
-            var aast = inference.infer(ast, opt);
-            return aast;
+            return inference.infer(ast, opt);
         },
 
         resolveClosures: function(ast, implementation, opt) {
@@ -43,8 +42,8 @@
             return resolver.resolveClosures(ast, implementation, opt);
         },
 
-        compileFragmentShader: function(aast){
-            return new GLSLCompiler().compileFragmentShader(aast);
+        compileFragmentShader: function(aast, opt){
+            return new GLSLCompiler().compileFragmentShader(aast, opt);
         },
 
         TYPES : interfaces.TYPES,
