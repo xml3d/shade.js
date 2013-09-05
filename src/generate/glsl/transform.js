@@ -130,7 +130,7 @@
                         case Syntax.Identifier:
                             return handleIdentifier(node, parent, state.blockedNames, state.idNameMap);
                         case Syntax.IfStatement:
-                            return handleIfStatement(node);
+                            return handleIfStatement(node, state, this, cb);
                         case Syntax.ConditionalExpression:
                             return handleConditionalExpression(node, state, this, cb);
                         case Syntax.LogicalExpression:
@@ -460,18 +460,20 @@
         }
     }
 
-    var handleIfStatement = function (node) {
+    var handleIfStatement = function (node, state, root, cb) {
         var consequent = ANNO(node.consequent);
         var alternate = node.alternate ? ANNO(node.alternate) : null;
         if (consequent.canEliminate()) {
             if (alternate) {
-                return node.alternate;
+                cb(VisitorOption.Skip);
+                return root.replace(node.alternate, state);
             }
             return {
                 type: Syntax.EmptyStatement
             }
-        } else if (alternate && alternate.canEliminate()) {
-            return node.consequent;
+        } else if (!alternate || alternate.canEliminate()) {
+            cb(VisitorOption.Skip);
+            return root.replace(node.consequent, state);
         }
         // We still have a real if statement
        var test = ANNO(node.test);

@@ -244,6 +244,8 @@
             } else if (left.isObject() && operator == "||") { // An object that is not null evaluates to true
                 result.copy(left);
                 right.eliminate();
+            } else if (left.isObject() && operator == "&&") {
+                    result.copy(right);
             }
             else if (left.getType() == right.getType()) {
                 if (left.isObject() && left.getKind() != right.getKind()) {
