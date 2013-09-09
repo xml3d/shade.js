@@ -198,7 +198,7 @@
 
                             case Syntax.ReturnStatement:
                                 var hasArguments = node.argument;
-                                lines.appendLine("return " + (hasArguments ? handleExpression(node.argument, opt) : "") + ";");
+                                lines.appendLine("return" + (hasArguments ? (" " + handleExpression(node.argument, opt)) : "") + ";");
                                 return;
 
                             case Syntax.VariableDeclarator :
@@ -248,7 +248,7 @@
 
                         }
                     } catch (e) {
-                        console.error(e);
+                        // console.error(e);
                         Shade.throwError(node, e.message);
                     }
                 },

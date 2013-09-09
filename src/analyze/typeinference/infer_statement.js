@@ -41,10 +41,9 @@
                 root.traverse(node.test);
                 var test = new Annotation(node.test);
                 if (test.hasStaticValue()  || test.isObject()) { // Great! We can evaluate it!
-                    //console.log("Static value in if test!");
                     var testResult = test.isObject() ? true : c_evaluate(test.getStaticValue());
-                    //test.isObject() && test.setType(TYPES.BOOLEAN);
-                    test.isNullOrUndefined() || test.setStaticValue(testResult);
+                    test.setType(TYPES.BOOLEAN);
+                    test.setStaticValue(testResult);
                     if(!testResult) {
                         if (node.alternate)
                             root.traverse(node.alternate);

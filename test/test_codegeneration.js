@@ -430,9 +430,97 @@ describe('GLSL Code generation,', function () {
             lines[3].should.match(/\s*float x = gl_FragCoord.x;/);
         });
 
-
-
     });
+
+    describe("IfStatement with", function() {
+        it("dynamic test", function(){
+            var code = generateExpression("function shade(env) { if(env.a < 5.0) { return new Vec3(1) }}", { "a": { "type": "number" }});
+            code.should.not.match(/else/);
+            var lines = code.split(/\r\n|\r|\n/g);
+            lines[2].should.match(/\s*if\(_env_a < 5\.0\) {/);
+        });
+        it("static test that evaluates to true, no alternative", function(){
+            var code = generateExpression("function shade(env) { if(1.0 < 5.0) { return new Vec3(1) }}");
+            code.should.not.match(/else/);
+            code.should.not.match(/if/);
+            code.should.match(/gl_FragColor = vec4\(vec3\(1\)/);
+        });
+        it("static test that evaluates to false, no alternative", function(){
+            var code = generateExpression("function shade(env) { if(1.0 > 5.0) { return new Vec3(1) }}");
+            code.should.not.match(/if/);
+            code.should.not.match(/else/);
+            code.should.not.match(/vec3/);
+        });
+        it("static test that evaluates to true, with alternative", function(){
+            var code = generateExpression("function shade(env) { if(1.0 < 5.0) { return new Vec3(1) } else { return new Vec3(0); }}");
+            code.should.not.match(/else/);
+            code.should.not.match(/if/);
+            code.should.match(/gl_FragColor = vec4\(vec3\(1\)/);
+            code.should.not.match(/gl_FragColor = vec4\(vec3\(0\)/);
+        });
+        it("static test that evaluates to false, with alternative", function(){
+            var code = generateExpression("function shade(env) { if(1.0 > 5.0) { return new Vec3(1) } else { return new Vec3(0); }}");
+            code.should.not.match(/else/);
+            code.should.not.match(/if/);
+            code.should.match(/gl_FragColor = vec4\(vec3\(0\)/);
+            code.should.not.match(/gl_FragColor = vec4\(vec3\(1\)/);
+        });
+        it("static test using a static variable", function(){
+            var code = generateExpression("function shade(env) { if(env.a < 5.0) { return new Vec3(1) }}", { "a": { "type": "number", "source": "constant", "staticValue": 6 }});
+            code.should.not.match(/if/);
+            code.should.not.match(/else/);
+            code.should.not.match(/vec3/);
+        });
+        it("test against defined object", function(){
+            var code = generateExpression("function shade(env) { if(env.a) { return new Vec3(1) }}", { "a": { "type": "object", "kind": "float3"}});
+                code.should.not.match(/else/);
+            code.should.not.match(/if/);
+            code.should.match(/gl_FragColor = vec4\(vec3\(1\)/);
+        });
+        it("negated test against defined object", function(){
+            var code = generateExpression("function shade(env) { if(!env.a) { return new Vec3(1) }}", { "a": { "type": "object", "kind": "float3" }});
+            code.should.not.match(/if/);
+            code.should.not.match(/else/);
+            code.should.not.match(/vec3\(/);
+        });
+        it("test against undefined variable", function(){
+            var code = generateExpression("function shade(env) { if(env.a) { return new Vec3(1) }}");
+            //console.log(code);
+            code.should.not.match(/else/);
+            code.should.not.match(/if/);
+            code.should.not.match(/vec3\(/);
+        });
+        it("test against defined number variable", function(){
+            var code = generateExpression("function shade(env) { if(env.a) { return new Vec3(1) } else { return new Vec3(0) }}", { "a": { "type": "number" }});
+            code.should.match(/if\(_env_a != 0.0\)/);
+        });
+        it("test against defined int variable", function(){
+            var code = generateExpression("function shade(env) { if(env.a) { return new Vec3(1) } else { return new Vec3(0) }}", { "a": { "type": "int" }});
+            code.should.match(/if\(_env_a != 0\)/);
+        });
+        it("test against defined bool variable", function(){
+            var code = generateExpression("function shade(env) { if(env.a) { return new Vec3(1) } else { return new Vec3(0) }}", { "a": { "type": "boolean" }});
+            code.should.match(/if\(_env_a\)/);
+        });
+        it("negated test against defined number variable", function(){
+            var code = generateExpression("function shade(env) { if(!env.a) { return new Vec3(1) } else { return new Vec3(0) }}", { "a": { "type": "number" }});
+            code.should.match(/if\(_env_a == 0.0\)/);
+        });
+        it("negated test against defined int variable", function(){
+            var code = generateExpression("function shade(env) { if(!env.a) { return new Vec3(1) } else { return new Vec3(0) }}", { "a": { "type": "int" }});
+            code.should.match(/if\(_env_a == 0\)/);
+        });
+        it("negated test against defined bool variable", function(){
+            var code = generateExpression("function shade(env) { if(!env.a) { return new Vec3(1) } else { return new Vec3(0) }}", { "a": { "type": "boolean" }});
+            code.should.match(/if\(!_env_a\)/);
+        });
+        xit("complex test", function(){
+            var code = generateExpression("function shade(env) { if(!env.a && env.b) { return new Vec3(1) } else { return new Vec3(0) }}", { "a": { "type": "boolean" }});
+            console.log(code);
+            code.should.match(/if\(!_env_a\)/);
+        });
+
+    })
 
     it("Main function", function() {
         var code = generateExpression("function shade(env) {}");

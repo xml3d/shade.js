@@ -183,8 +183,11 @@
 
             switch (operator) {
                 case "!":
-
                     result.setType(TYPES.BOOLEAN);
+                    if (argument.isObject()) {
+                        result.setStaticValue(false); // !obj == false
+                        return;
+                    }
                     break;
                 case "+":
                 case "-":

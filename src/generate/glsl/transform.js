@@ -156,6 +156,8 @@
                             return handleExitLogicalExpression(node, this, state);
                         case Syntax.CallExpression:
                             return handleCallExpression(node, parent, state);
+                        case Syntax.UnaryExpression:
+                            return handleUnaryExpression(node, parent, state);
                         case Syntax.FunctionDeclaration:
                             state.context = state.contextStack.pop();
                             state.inMain = state.context.str() == this.mainId;
@@ -214,6 +216,29 @@
         return node;
     }
 
+
+    var handleUnaryExpression = function(node, parent, state) {
+        if(node.operator == "!") {
+            var argument = ANNO(node.argument);
+            switch(argument.getType()) {
+                case Types.INT:
+                case Types.NUMBER:
+                    return {
+                        type: Syntax.BinaryExpression,
+                        operator: "==",
+                        left: node.argument,
+                        right: {
+                            type: Syntax.Literal,
+                            value: 0,
+                            extra: {
+                                type: argument.getType()
+                            }
+                        }
+                    }
+                    break;
+            }
+        }
+    }
 
     var handleReturnInMain = function(node, context) {
         if (node.argument) {
@@ -461,20 +486,27 @@
     }
 
     var handleIfStatement = function (node, state, root, cb) {
+        var test = ANNO(node.test);
         var consequent = ANNO(node.consequent);
         var alternate = node.alternate ? ANNO(node.alternate) : null;
-        if (consequent.canEliminate()) {
-            if (alternate) {
+        if (test.hasStaticValue()) {
+            var staticValue = test.getStaticValue();
+            if (staticValue === true) {
                 cb(VisitorOption.Skip);
-                return root.replace(node.alternate, state);
+                return root.replace(node.consequent, state);
             }
-            return {
-                type: Syntax.EmptyStatement
+            if (staticValue === false) {
+                if (alternate) {
+                    cb(VisitorOption.Skip);
+                    return root.replace(node.alternate, state);
+                }
+                return {
+                    type: Syntax.EmptyStatement
+                }
             }
-        } else if (!alternate || alternate.canEliminate()) {
-            cb(VisitorOption.Skip);
-            return root.replace(node.consequent, state);
+            Shade.throwError(node, "Internal error: Unknown static value: " + test.getStaticValue());
         }
+
         // We still have a real if statement
        var test = ANNO(node.test);
        switch(test.getType()) {
@@ -492,6 +524,7 @@
                        }
                    }
                }
+               break;
        }
 
 
