@@ -12,6 +12,9 @@
         normalize: {
             callExp: Tools.Vec.createFunctionCall.bind(null, 'normalize', 0)
         },
+        flip: {
+            callExp: Tools.Vec.createFunctionCall.bind(null, '-', 0)
+        },
         dot: {
             callExp: Tools.Vec.createFunctionCall.bind(null, 'dot', 4)
         },

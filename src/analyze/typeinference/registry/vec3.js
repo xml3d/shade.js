@@ -28,7 +28,7 @@
     Tools.Vec.attachSwizzles(Vector3Instance, "Vec3", 3);
     Tools.Vec.attachVecMethods(Vector3Instance, "Vec3", 3, 3, ['add', 'sub', 'mul', 'div', 'mod']);
     Tools.Vec.attachVecMethods(Vector3Instance, "Vec3", 1, 3, ['dot']);
-    Tools.Vec.attachVecMethods(Vector3Instance, "Vec3", 3, 0, ['normalize']);
+    Tools.Vec.attachVecMethods(Vector3Instance, "Vec3", 3, 0, ['normalize', 'flip']);
 
 
     Tools.extend(ns, {
