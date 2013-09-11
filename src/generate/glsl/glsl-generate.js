@@ -353,7 +353,7 @@
     }
 
     function getStaticValue(extra) {
-        if (!extra || !extra.staticValue) return "";
+        if (!extra || extra.staticValue === undefined) return "";
         return extra.staticValue;
     };
 

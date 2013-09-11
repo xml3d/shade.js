@@ -187,6 +187,9 @@
         if (propertyAnnotation.isNullOrUndefined() || propertyAnnotation.isDerived())
             return;
 
+        if( propertyAnnotation.isOfType(Types.ARRAY) && typeInfo.staticSize == 0)
+            return;
+
         var decl = {
             type: Syntax.VariableDeclaration,
             declarations: [
