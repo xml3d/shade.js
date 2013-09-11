@@ -167,8 +167,8 @@
     };
 
     var MathConstants = ["E", "PI", "LN2", "LOG2E", "LOG10E", "PI", "SQRT1_2", "SQRT2"];
-    var OneParameterNumberMethods = ["acos", "asin", "atan", "cos", "exp", "log", "round", "sin", "sqrt", "tan"];
-    var OneParameterIntMethods = ["ceil", "floor"];
+    var OneParameterNumberMethods = ["acos", "asin", "atan", "cos", "exp", "log", "round", "sin", "sqrt", "tan", "ceil", "floor"];
+    var OneParameterIntMethods = [];
     var TwoParameterNumberMethods = ["atan2", "pow"];
     var ArbitraryParameterNumberMethods = ["max", "min"];
 
