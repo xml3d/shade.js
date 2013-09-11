@@ -12,7 +12,7 @@
                 if (!this.pointLightOn[i])
                     continue;
 
-                var L = this.viewMatrix.mulVec(this.pointLightPosition[i]);
+                var L = this.viewMatrix.mulVec(this.pointLightPosition[i], 0).xyz();
                 L = L.sub(_env.position);
 
                 var dist = L.length();
@@ -21,6 +21,8 @@
                 var kd = this.pointLightIntensity[i].mul(Math.max(N.dot(L.normalize()), 0.0) * atten);
                 intensity = intensity.add(kd);
             }
+            if(_env.ambientIntensity !== undefined)
+                intensity = intensity.add(_env.ambientIntensity);
             return new Vec4(intensity.mul(color), 1.0);
         },
 
