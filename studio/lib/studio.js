@@ -67,7 +67,46 @@
                     },
                     "staticSize": 5,
                     "source": "uniform"
+                },
+
+                "MAX_DIRECTIONALLIGHTS": { "type": "int", "source": "constant", "staticValue": 5 },
+                "directionalLightOn": { "type": "array", "elements": { "type": "boolean" }, "staticSize": 5, "source": "uniform"},
+                "directionalLightIntensity": {
+                    "type": "array", "elements": { "type": "object", "kind": "float3" }, "staticSize": 5,
+                    "source": "uniform"
+                },
+                "directionalLightDirection": {
+                    "type": "array", "elements": { "type": "object", "kind": "float3" }, "staticSize": 5,
+                    "source": "uniform"
+                },
+
+                "MAX_SPOTLIGHTS": { "type": "int", "source": "constant", "staticValue": 5 },
+                "spotLightOn": { "type": "array", "elements": { "type": "boolean" }, "staticSize": 5, "source": "uniform"},
+                "spotLightAttenuation": {
+                    "type": "array", "elements": { "type": "object", "kind": "float3" }, "staticSize": 5,
+                    "source": "uniform"
+                },
+                "spotLightIntensity": {
+                    "type": "array", "elements": { "type": "object", "kind": "float3" }, "staticSize": 5,
+                    "source": "uniform"
+                },
+                "spotLightPosition": {
+                    "type": "array", "elements": { "type": "object", "kind": "float3" }, "staticSize": 5,
+                    "source": "uniform"
+                },
+                "spotLightDirection": {
+                    "type": "array", "elements": { "type": "object", "kind": "float3" }, "staticSize": 5,
+                    "source": "uniform"
+                },
+                "spotLightCosFalloffAngle": {
+                    "type": "array", "elements": { "type": "number" }, "staticSize": 5,
+                    "source": "uniform"
+                },
+                "spotLightCosSoftFalloffAngle": {
+                    "type": "array", "elements": { "type": "number" }, "staticSize": 5,
+                    "source": "uniform"
                 }
+
             }
     };
 
