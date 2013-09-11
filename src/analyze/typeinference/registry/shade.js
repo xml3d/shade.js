@@ -64,14 +64,14 @@
 
                 var normal = args[1];
                 if(!(normal && normal.canNormal())) {
-                    throw new Error("Second argument of Shade.phong must evaluate to a normal");
+                    throw new Error("Second argument (normal) of Shade.phong must evaluate to a normal");
                 }
 
                 if (args.length > 1) {
                     var shininess = args[2];
                     //console.log("Color: ", color.str(), color.getType(ctx));
                     if(!shininess.canNumber()) {
-                        throw new Error("Second argument of Shade.phong must evaluate to a number. Found: " + shininess.str());
+                        throw new Error("Third argument (shininess) of Shade.phong must evaluate to a number. Found: " + shininess.str());
                     }
                 }
                 return {
