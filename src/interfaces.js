@@ -617,6 +617,7 @@
     ns.Vec3 = Vec3;
     ns.Vec4 = Vec4;
     ns.Mat3 = Mat3;
+    ns.Mat4 = Mat4;
     ns.Color = Color;
     ns.Shade = Shade;
 

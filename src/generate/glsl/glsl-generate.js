@@ -63,7 +63,7 @@
                         return "sampler2D";
                     case Kinds.MATRIX3:
                         return "mat3";
-                    case Kinds.MATRIX3:
+                    case Kinds.MATRIX4:
                         return "mat4";
                     case Kinds.COLOR_CLOSURE:
                         return "vec4";

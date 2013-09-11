@@ -41,6 +41,7 @@
             ctx.registerObject("Color", ObjectRegistry.getByName("Vec3"));
             ctx.registerObject("Texture", ObjectRegistry.getByName("Texture"));
             ctx.registerObject("Mat3", ObjectRegistry.getByName("Mat3"));
+            ctx.registerObject("Mat4", ObjectRegistry.getByName("Mat4"));
             ctx.declareVariable("gl_FragCoord", false);
             ctx.updateTypeInfo("gl_FragCoord", new TypeInfo({
                 extra: {

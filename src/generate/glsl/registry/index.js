@@ -9,6 +9,7 @@
         Color: require("./vec3.js"),
         Vec4 : require("./vec4.js"),
         Mat3 : require("./mat3.js"),
+        Mat4 : require("./mat4.js"),
         Texture : require("./texture.js")
     };
 

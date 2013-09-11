@@ -33,6 +33,7 @@
         ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
         //ctx.registerObject("this", ObjectRegistry.getByName("System"));
         ctx.registerObject("Mat3", ObjectRegistry.getByName("Mat3"));
+        ctx.registerObject("Mat4", ObjectRegistry.getByName("Mat4"));
         ctx.declareVariable("this");
         ctx.declareVariable("_env");
         return ctx;
