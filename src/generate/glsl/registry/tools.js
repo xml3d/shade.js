@@ -310,7 +310,7 @@
     }
 
     ns.getNameForSystem = function(baseName) {
-        return "_sys_" + baseName;
+        return baseName;
     }
 
     ns.getNameForGlobal = function(baseName) {
