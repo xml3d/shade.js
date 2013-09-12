@@ -5,9 +5,8 @@
         Syntax = require('estraverse').Syntax;
 
 
-    var SystemParameterNames = {
-        "coords" : "coords"
-    }
+    var SystemParameterNames = {};
+    SystemParameterNames.CANVAS_DIMENSIONS = "coords";
 
     var CoordsType =  {
         type: Shade.TYPES.OBJECT,
@@ -23,7 +22,10 @@
             }
         },
         normalizedCoords: {
-            property: function (node, parent, context) {
+            property: function (node, parent, context, state) {
+                var parameterName = Tools.getNameForSystem(SystemParameterNames.CANVAS_DIMENSIONS);
+                state.usedParameters.system[parameterName] = state.systemParameters[SystemParameterNames.CANVAS_DIMENSIONS];
+
                 return {
                     type: Syntax.NewExpression,
                     callee: {
@@ -46,7 +48,7 @@
                             },
                             right: {
                                 type: Syntax.Identifier,
-                                name: Tools.getNameForSystem(SystemParameterNames.coords)
+                                name: Tools.getNameForSystem(SystemParameterNames.CANVAS_DIMENSIONS)
                             },
                             operator: "/",
                             extra: {
@@ -63,14 +65,20 @@
             }
         },
         height: {
-            property: function (node) {
-                node.property.name = Tools.getNameForSystem(SystemParameterNames.coords) + ".y";
+            property: function (node, parent, context, state) {
+                var parameterName = Tools.getNameForSystem(SystemParameterNames.CANVAS_DIMENSIONS);
+                state.usedParameters.system[parameterName] = state.systemParameters[SystemParameterNames.CANVAS_DIMENSIONS];
+
+                node.property.name = parameterName + ".y";
                 return node.property;
             }
         },
         width: {
-            property: function (node) {
-                node.property.name = Tools.getNameForSystem(SystemParameterNames.coords) + ".x";
+            property: function (node, parent, context, state) {
+                var parameterName = Tools.getNameForSystem(SystemParameterNames.CANVAS_DIMENSIONS);
+                state.usedParameters.system[parameterName] = state.systemParameters[SystemParameterNames.CANVAS_DIMENSIONS];
+
+                node.property.name = parameterName + ".x";
                 return node.property;
             }
         }

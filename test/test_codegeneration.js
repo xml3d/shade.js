@@ -386,15 +386,15 @@ describe('GLSL Code generation,', function () {
             code.should.equal("floor(mod(2.0, 20.0)) > float(0);");
         });
         it("this.normalizedCoords", function() {
-            var code = generateExpression("this.normalizedCoords");
+            var code = generateExpression("this.normalizedCoords", undefined, { coords: { type: Shade.TYPES.OBJECT, kind: Shade.OBJECT_KINDS.FLOAT3 }});
             code.should.match(/gl_FragCoord.xyz \/ coords/);
         });
         it("this.normalizedCoords.xy()", function() {
-            var code = generateExpression("this.normalizedCoords.xy()");
+            var code = generateExpression("this.normalizedCoords.xy()", undefined, { coords: { type: Shade.TYPES.OBJECT, kind: Shade.OBJECT_KINDS.FLOAT3 }});
             code.should.match(/vec3\(gl_FragCoord.xyz \/ coords\).xy;/);
         });
         it("this.normalizedCoords.xy().mul(2)", function() {
-            var code = generateExpression("this.normalizedCoords.xy().mul(2);");
+            var code = generateExpression("this.normalizedCoords.xy().mul(2);", undefined, { coords: { type: Shade.TYPES.OBJECT, kind: Shade.OBJECT_KINDS.FLOAT3 }});
             code.should.match(/vec3\(gl_FragCoord.xyz \/ coords\).xy \* vec2\(2\);/);
         });
 
@@ -424,10 +424,10 @@ describe('GLSL Code generation,', function () {
         it("test object existence in ConditionalExpression", function() {
             var code = generateExpression("function shade(env) { var x = env.texcoord ? env.texcoord.x() : this.coords.x(); }", { "texcoord": { "type": "object", kind: "float2" }}, {"coords": { type: "object", kind: "float3"}});
             var lines = code.split(/\r\n|\r|\n/g);
-            lines[3].should.match(/\s*float x = _env_texcoord.x;/);
+            lines[2].should.match(/\s*float x = _env_texcoord.x;/);
             var code = generateExpression("function shade(env) { var x = env.unknown ? env.texcoord.x() : this.coords.x(); }", { "texcoord": { "type": "object", kind: "float2" }}, {"coords": { type: "object", kind: "float3"}});
             var lines = code.split(/\r\n|\r|\n/g);
-            lines[3].should.match(/\s*float x = gl_FragCoord.x;/);
+            lines[1].should.match(/\s*float x = gl_FragCoord.x;/);
         });
 
     });

@@ -78,13 +78,18 @@
 
         transformAAST: function (program) {
             this.root = program;
-            var context = this.registerGlobalContext(program);
+            var context = this.registerGlobalContext(program),
+                name, decl;
 
             var state = {
                  context: context,
                  contextStack: [context],
                  inMain:  this.mainId == context.str(),
                  globalParameters : program.globalParameters[this.mainId] && program.globalParameters[this.mainId][0] ? program.globalParameters[this.mainId][0].node.extra.info : {},
+                 usedParameters: {
+                     shader: {},
+                     system: {}
+                 },
                  systemParameters: {},
                  blockedNames : [],
                  topDeclarations : [],
@@ -95,19 +100,20 @@
             this.registerThisObject(context, state);
 
             // TODO: We should also block systemParameters here. We can block all system names, even if not used.
-            for(var name in state.globalParameters){
+            for(name in state.globalParameters){
                 state.blockedNames.push( Tools.getNameForGlobal(name) );
             }
 
             this.replace(program, state);
 
-            for(var name in state.systemParameters){
-                var decl = handleTopDeclaration(Tools.getNameForSystem(name), state.systemParameters[name]);
+            var usedParameters = state.usedParameters;
+            for(name in usedParameters.system){
+                decl = handleTopDeclaration(name, usedParameters.system[name]);
                 decl && program.body.unshift(decl);
             }
 
-            for(var name in state.globalParameters){
-                var decl = handleTopDeclaration(Tools.getNameForGlobal(name), state.globalParameters[name]);
+            for(name in usedParameters.shader){
+                decl = handleTopDeclaration(name, usedParameters.shader[name]);
                 decl && program.body.unshift(decl);
             }
 
@@ -361,7 +367,9 @@
 
     var handleMemberExpression = function (memberExpression, parent, state) {
         var propertyName = memberExpression.property.name,
-            context = state.context;
+            context = state.context,
+            parameterName,
+            propertyLiteral;
 
         if (memberExpression.computed) {
             return handleComputedMemberExpression(memberExpression, parent, state);
@@ -384,13 +392,25 @@
             var result = propertyHandler.property(memberExpression, parent, context, state);
             return result;
         }
+
+        var usedParameters = state.usedParameters;
         if(objectReference.isGlobal()) {
-            var propertyLiteral =  { type: Syntax.Identifier, name: Tools.getNameForGlobal(propertyName)};
+            parameterName = Tools.getNameForGlobal(propertyName);
+            if(!usedParameters.shader.hasOwnProperty(parameterName)) {
+                usedParameters.shader[parameterName] = state.globalParameters[propertyName];
+            }
+
+            propertyLiteral =  { type: Syntax.Identifier, name: parameterName};
             ANNO(propertyLiteral).copy(ANNO(memberExpression));
             return propertyLiteral;
         }
         if (memberExpression.object.type == Syntax.ThisExpression) {
-            var propertyLiteral =  { type: Syntax.Identifier, name: Tools.getNameForSystem(propertyName)};
+            parameterName = Tools.getNameForSystem(propertyName);
+            if(!usedParameters.system.hasOwnProperty(parameterName)) {
+                usedParameters.system[parameterName] = state.systemParameters[propertyName];
+            }
+
+            propertyLiteral =  { type: Syntax.Identifier, name: parameterName};
             ANNO(propertyLiteral).copy(ANNO(memberExpression));
             return propertyLiteral;
         }
