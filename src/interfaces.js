@@ -1,5 +1,8 @@
 (function (ns) {
     var Base = require("./base/index.js");
+    var CodeGen = require("escodegen");
+
+
     /**
      * @enum {string}
      */
@@ -608,6 +611,10 @@
         if (loc && loc.start.line) {
             msg = "Line " + loc.start.line + ": " + msg;
         }
+        msg += ": " + CodeGen.generate(node);
+
+
+
         var error = new Error(msg);
         error.loc = loc;
         throw error;
