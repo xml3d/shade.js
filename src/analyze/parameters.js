@@ -18,8 +18,15 @@
      * @param {{shaderParameters: Array, systemParameters: Array}} other
      */
     function merge(result, other) {
-        result.shaderParameters = result.shaderParameters.concat(other.shaderParameters);
-        result.systemParameters = result.systemParameters.concat(other.systemParameters);
+        var i, param;
+        for (var container in result) {
+            for(i = 0; i < other[container].length; i++) {
+                param = other[container][i];
+                if (result[container].indexOf(param) == -1) {
+                    result[container].push(param);
+                }
+            }
+        }
     }
 
     function addSystemParameter(parameterName, container, parameterMap) {
