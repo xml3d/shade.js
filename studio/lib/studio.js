@@ -340,7 +340,7 @@
             // Set system parameters
 
             var location;
-            location = gl.getUniformLocation(program, "_sys_coords"); location && gl.uniform3f(location, canvasWidth, canvasHeight, 1.0);
+            location = gl.getUniformLocation(program, "coords"); location && gl.uniform3f(location, canvasWidth, canvasHeight, 1.0);
         },
         renderFrame: function(time) {
             var gl = this.gl;
