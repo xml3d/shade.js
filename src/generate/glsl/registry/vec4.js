@@ -18,6 +18,9 @@
         dot: {
             callExp: Tools.Vec.createFunctionCall.bind(null, 'dot', 4)
         },
+        reflect: {
+            callExp: Tools.Vec.createFunctionCall.bind(null, 'reflect', 4)
+        },
         length: {
             callExp: Tools.Vec.generateLengthCall
         }
