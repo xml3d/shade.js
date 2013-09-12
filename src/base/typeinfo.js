@@ -223,6 +223,20 @@
         },
         isDerived: function() {
             return this.getExtra().derived == true;
+        },
+        getStaticTruthValue: function() {
+            // !!undefined == false;
+            if (this.isNullOrUndefined())
+                return false;
+            // !!{} == true
+            if (this.isObject())
+                return true;
+            // In all other cases, it depends on the value,
+            // thus we can only evaluate this for static objects
+            if (this.hasStaticValue()) {
+                return !!this.getStaticValue();
+            }
+            return undefined;
         }
 
     }

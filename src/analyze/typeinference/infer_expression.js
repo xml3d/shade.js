@@ -64,6 +64,23 @@
 
     var enterHandlers = {
         // On enter
+        LogicalExpression: function(node, parent, ctx, root) {
+            var result = new Annotation(node);
+            root.traverse(node.left);
+
+            var left = ctx.createTypeInfo(node.left);
+            var leftBool = left.getStaticTruthValue();
+
+            if (leftBool == true && node.operator == "||") {
+                return VisitorOption.Skip; // Don't evaluate right expression
+            }
+            if (leftBool == false && node.operator == "&&") {
+                return VisitorOption.Skip; // Don't evaluate right expression
+            }
+            // In all other cases we also evaluate the right expression
+            root.traverse(node.right);
+            return VisitorOption.Skip;
+        },
         ConditionalExpression: function (node, parent, ctx, root) {
             var result = new Annotation(node);
 
@@ -233,34 +250,65 @@
                 result = new Annotation(node),
                 operator = node.operator;
 
-            if (!(operator == "&&" || operator == "||"))
-                throw new Error("Operator not supported: " + node.operator);
+            // static: true || false, dynamic: undefined
+            var leftBool = left.getStaticTruthValue();
+            var rightBool = right.getStaticTruthValue();
 
-            if (left.isNullOrUndefined()) {  // evaluates to false
-                if (operator == "||") {      // false || x = x
+            if (operator === "||") {
+                if (leftBool === false) {
                     result.copy(right);
                     left.eliminate();
-                } else {                     // false && x = false
+                    return;
+                }
+                if (leftBool === true) {
                     result.copy(left);
                     right.eliminate();
+                    return;
                 }
-            } else if (left.isObject() && operator == "||") { // An object that is not null evaluates to true
-                result.copy(left);
-                right.eliminate();
-            } else if (left.isObject() && operator == "&&") {
+                // Left is dynamic, let's check right
+                if (rightBool === false) {
+                    // Now the result type is always the one of the left value
+                    result.copy(left);
+                    right.eliminate();
+                    return;
+                }
+            } else if (operator === "&&") {
+                if (leftBool === false) {
+                    // T(x) == false => x && y == x
+                    result.copy(left);
+                    right.eliminate();
+                    return;
+                }
+                if (leftBool === true) {
                     result.copy(right);
-            }
-            else if (left.getType() == right.getType()) {
-                if (left.isObject() && left.getKind() != right.getKind()) {
-                    throw new Error("Can't evaluate logical expression with two different kind of objects");
+                    left.eliminate();
+                    return;
                 }
-                result.copy(left); // TODO: Static value?
+                // Left is dynamic, let's check right
+                if (rightBool === true) {
+                    // Now the result type is always the one of the left value
+                    result.copy(left);
+                    right.eliminate();
+                    return;
+                }
+                if (rightBool === false) {
+                    // Now the result must be false
+                    result.setType(TYPES.BOOLEAN);
+                    result.setStaticValue(false);
+                    return;
+                }
+            }
+
+            if (left.getType() == right.getType()) {
+                result.copy(left);
             }
             else {
                 // We don't allow dynamic types (the type of the result depends on the value of it's operands).
                 // At this point, the expression needs to evaluate to a result, otherwise it's an error
-                throw new Error("Static evaluation not implemented yet");
+                Shade.throwError(node, "Type of Logical expression depends on values of its arguments. This is not supported in shade.js.");
             }
+            //throw new Error("Operator not supported: " + node.operator);
+
         },
 
 

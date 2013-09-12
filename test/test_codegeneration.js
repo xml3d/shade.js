@@ -401,12 +401,12 @@ describe('GLSL Code generation,', function () {
     });
 
     describe("Dead code elimination for", function() {
-        it("undefined parameter in logical expression", function() {
+        it("undefined parameter in LogicalExpression", function() {
             var code = generateExpression("function shade(env) { var t = env.a || 10.0; }");
             var lines = code.split(/\r\n|\r|\n/g);
             lines[1].should.match(/\s*float t = 10.0;/);
         });
-        it("defined parameter in logical expression", function() {
+        it("defined parameter in LogicalExpression", function() {
             var code = generateExpression("function shade(env) { var t = env.myfloat || 10.0; }", { "myfloat": { "type": "number" }});
             var lines = code.split(/\r\n|\r|\n/g);
             lines[2].should.match(/\s*float t = _env_myfloat == 0.0 \? 10.0 : _env_myfloat;/);
@@ -514,10 +514,13 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("function shade(env) { if(!env.a) { return new Vec3(1) } else { return new Vec3(0) }}", { "a": { "type": "boolean" }});
             code.should.match(/if\(!_env_a\)/);
         });
-        xit("complex test", function(){
-            var code = generateExpression("function shade(env) { if(!env.a && env.b) { return new Vec3(1) } else { return new Vec3(0) }}", { "a": { "type": "boolean" }});
-            console.log(code);
+        it("and expression with static 'true' in right argument", function(){
+            var code = generateExpression("function shade(env) { if(!env.a && env.b) { return new Vec3(1) } else { return new Vec3(0) }}", { "a": { "type": "boolean" }, "b": { "type": "object" }});
             code.should.match(/if\(!_env_a\)/);
+        });
+        it("and expression with static 'false' in right argument", function(){
+            var code = generateExpression("function shade(env) { if(!env.a && env.b) { return new Vec3(1) } else { return new Vec3(0) }}", { "a": { "type": "boolean" }});
+            code.should.not.match(/if\(!_env_a\)/);
         });
 
     })
