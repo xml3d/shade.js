@@ -83,6 +83,6 @@
 
     ns.Annotation = Annotation;
     ns.FunctionAnnotation = FunctionAnnotation;
-    ns.ANNO = function(object){return new Annotation(object)};
+    ns.ANNO = function(object, extra){return new Annotation(object, extra)};
 
 }(exports));

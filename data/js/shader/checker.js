@@ -13,6 +13,11 @@ function shade(env) {
 
     var smod = (env.texcoord.x() * env.frequency) % 1.0,
         tmod = (env.texcoord.y() * env.frequency) % 1.0;
+
+    if (this.fwidth) {
+        var width = this.fwidth(env.texcoord);
+    }
+
     var color = ((smod < 0.5 && tmod < 0.5) || (smod >= 0.5 && tmod >= 0.5)) ?
         env.whiteColor:
         env.blackColor;

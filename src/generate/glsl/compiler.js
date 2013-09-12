@@ -17,7 +17,7 @@
 
             //console.log(JSON.stringify(aast, 0, " "));
 
-            var transformed = transformer.transformAAST(aast);
+            var transformed = transformer.transformAAST(aast, opt);
 
             //console.log(JSON.stringify(aast, 0, " "));
 

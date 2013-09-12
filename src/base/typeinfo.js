@@ -125,6 +125,9 @@
         isObject: function () {
             return this.isOfType(TYPES.OBJECT);
         },
+        isVector: function () {
+            return this.isObject() && this.isOfKind(KINDS.FLOAT2) || this.isOfKind(KINDS.FLOAT3) || this.isOfKind(KINDS.FLOAT4);
+        },
         isGlobal: function() {
             return !!this.getExtra().global;
         },
@@ -229,7 +232,7 @@
             if (this.isNullOrUndefined())
                 return false;
             // !!{} == true
-            if (this.isObject())
+            if (this.isObject() || this.isFunction())
                 return true;
             // In all other cases, it depends on the value,
             // thus we can only evaluate this for static objects

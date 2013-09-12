@@ -5,8 +5,9 @@
         Syntax = require('estraverse').Syntax;
 
 
-    var SystemParameterNames = {};
-    SystemParameterNames.CANVAS_DIMENSIONS = "coords";
+    var SystemDefines = {};
+    SystemDefines.CANVAS_DIMENSIONS = "coords";
+    SystemDefines.DERIVATE_EXTENSION = "#extension GL_OES_standard_derivatives : enable";
 
     var CoordsType =  {
         type: Shade.TYPES.OBJECT,
@@ -23,8 +24,8 @@
         },
         normalizedCoords: {
             property: function (node, parent, context, state) {
-                var parameterName = Tools.getNameForSystem(SystemParameterNames.CANVAS_DIMENSIONS);
-                state.usedParameters.system[parameterName] = state.systemParameters[SystemParameterNames.CANVAS_DIMENSIONS];
+                var parameterName = Tools.getNameForSystem(SystemDefines.CANVAS_DIMENSIONS);
+                state.usedParameters.system[parameterName] = state.systemParameters[SystemDefines.CANVAS_DIMENSIONS];
 
                 return {
                     type: Syntax.NewExpression,
@@ -48,7 +49,7 @@
                             },
                             right: {
                                 type: Syntax.Identifier,
-                                name: Tools.getNameForSystem(SystemParameterNames.CANVAS_DIMENSIONS)
+                                name: Tools.getNameForSystem(SystemDefines.CANVAS_DIMENSIONS)
                             },
                             operator: "/",
                             extra: {
@@ -66,8 +67,8 @@
         },
         height: {
             property: function (node, parent, context, state) {
-                var parameterName = Tools.getNameForSystem(SystemParameterNames.CANVAS_DIMENSIONS);
-                state.usedParameters.system[parameterName] = state.systemParameters[SystemParameterNames.CANVAS_DIMENSIONS];
+                var parameterName = Tools.getNameForSystem(SystemDefines.CANVAS_DIMENSIONS);
+                state.usedParameters.system[parameterName] = state.systemParameters[SystemDefines.CANVAS_DIMENSIONS];
 
                 node.property.name = parameterName + ".y";
                 return node.property;
@@ -75,11 +76,19 @@
         },
         width: {
             property: function (node, parent, context, state) {
-                var parameterName = Tools.getNameForSystem(SystemParameterNames.CANVAS_DIMENSIONS);
-                state.usedParameters.system[parameterName] = state.systemParameters[SystemParameterNames.CANVAS_DIMENSIONS];
+                var parameterName = Tools.getNameForSystem(SystemDefines.CANVAS_DIMENSIONS);
+                state.usedParameters.system[parameterName] = state.systemParameters[SystemDefines.CANVAS_DIMENSIONS];
 
                 node.property.name = parameterName + ".x";
                 return node.property;
+            }
+        },
+        fwidth: {
+            property: function (node, parent, context, state) {
+                if (state.headers.indexOf(SystemDefines.DERIVATE_EXTENSION) == -1) {
+                    state.headers.push(SystemDefines.DERIVATE_EXTENSION);
+                }
+                return Tools.removeMemberFromExpression(node);
             }
         }
 

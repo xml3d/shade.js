@@ -40,8 +40,8 @@
                 var result = new Annotation(node);
                 root.traverse(node.test);
                 var test = new Annotation(node.test);
-                if (test.hasStaticValue()  || test.isObject()) { // Great! We can evaluate it!
-                    var testResult = test.isObject() ? true : c_evaluate(test.getStaticValue());
+                if (test.getStaticTruthValue() != undefined) { // Great! We can evaluate it!
+                    var testResult = test.getStaticTruthValue();
                     test.setType(TYPES.BOOLEAN);
                     test.setStaticValue(testResult);
                     if(!testResult) {

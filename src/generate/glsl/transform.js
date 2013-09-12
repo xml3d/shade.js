@@ -62,7 +62,9 @@
             if (thisObject && thisObject.isObject()) {
                 var properties = thisObject.getNodeInfo();
                 for (var name in properties) {
-                    state.blockedNames.push(Tools.getNameForSystem(name));
+                    var prop = ANNO({}, properties[name]);
+                    if (!prop.isDerived())
+                        state.blockedNames.push(Tools.getNameForSystem(name));
                 }
                 var system = ObjectRegistry.getByName("System");
                 //console.log(properties, system);
@@ -76,7 +78,8 @@
         },
 
 
-        transformAAST: function (program) {
+        transformAAST: function (program, opt) {
+            opt = opt || {};
             this.root = program;
             var context = this.registerGlobalContext(program),
                 name, decl;
@@ -94,7 +97,8 @@
                  blockedNames : [],
                  topDeclarations : [],
                  internalFunctions: {},
-                 idNameMap : {}
+                 idNameMap : {},
+                 headers: [] // Collection of headerlines to define
             }
 
             this.registerThisObject(context, state);
@@ -107,19 +111,21 @@
             this.replace(program, state);
 
             var usedParameters = state.usedParameters;
-            for(name in usedParameters.system){
-                decl = handleTopDeclaration(name, usedParameters.system[name]);
-                decl && program.body.unshift(decl);
-            }
-
             for(name in usedParameters.shader){
                 decl = handleTopDeclaration(name, usedParameters.shader[name]);
                 decl && program.body.unshift(decl);
             }
 
+            for(name in usedParameters.system){
+                decl = handleTopDeclaration(name, usedParameters.system[name]);
+                decl && program.body.unshift(decl);
+            }
+
+
             var userData = ANNO(this.root).getUserData();
             userData.internalFunctions = state.internalFunctions;
 
+            opt.headers = state.headers;
             return program;
         },
         /**
@@ -190,7 +196,7 @@
         var propertyAnnotation =  ANNO(propertyLiteral);
         propertyAnnotation.setFromExtra(typeInfo);
 
-        if (propertyAnnotation.isNullOrUndefined() || propertyAnnotation.isDerived())
+        if (propertyAnnotation.isNullOrUndefined() || propertyAnnotation.isDerived() || propertyAnnotation.isFunction())
             return;
 
         if( propertyAnnotation.isOfType(Types.ARRAY) && typeInfo.staticSize == 0)

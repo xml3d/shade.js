@@ -447,7 +447,7 @@
                 var callingObject = getObjectReferenceFromNode(node.callee, ctx);
 
                 if (!callingObject.isFunction()) { // e.g. Math.PI()
-                    Shade.throwError(node, "TypeError: Object #<" + callingObject.getType()+ "> has no method '"+ node.callee.property.name + "'");
+                    Shade.throwError(node, "TypeError: Object #<" + callingObject.getTypeString() + "> has no method '"+ node.callee.property.name + "'");
                 }
 
                 var object = node.callee.object,
@@ -469,8 +469,13 @@
                         var extra = propertyHandler.evaluate(result, args, ctx, objectReference, root);
                         result.setFromExtra(extra);
                         return;
+                    } else {
+                        Shade.throwError(node, "Internal: no handler registered for '" + propertyName + "'");
                     }
+                } else {
+                    Shade.throwError(node, "TypeError: " + objectReference.getTypeString() + " has no method '" + propertyName + "')");
                 }
+
             }  else if (node.callee.type == Syntax.Identifier) {
                 var functionName = node.callee.name;
                 var func = ctx.getBindingByName(functionName);
@@ -492,17 +497,7 @@
                 return;
             }
 
-                /*case Syntax.Identifier:
-                    var functionName = node.callee.name;
-                    var func = ctx.getBindingByName(functionName);
-                    if (!(func && func.isInitialized())) {
-                        throw new Error(functionName + " is not defined. Context: " + ctx.str());
-                    }
-                    // console.log(func);
-                    //throw new Error("Can't call " + functionName + "() in this context: " + ctx.str());
-                    break;
-                default:   */
-                        throw new Error("Unhandled CallExpression:" + node.callee.type);
+            throw new Error("Unhandled CallExpression:" + node.callee.type);
 
         }
     };

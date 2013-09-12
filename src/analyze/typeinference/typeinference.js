@@ -14,6 +14,7 @@
         ObjectRegistry = require("./registry/index.js").Registry,
         Context = require("./../../base/context.js").getContext(ObjectRegistry),
         Base = require("../../base/index.js"),
+        Shade = require("../../interfaces.js"),
         Annotation = require("./../../base/annotation.js").Annotation,
         FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
 
@@ -41,7 +42,16 @@
 
     var addDerivedParameters = function(propertyInfo) {
         var system = ObjectRegistry.getByName("System");
+        for(var name in system.optionalMethods) {
+            if(propertyInfo.hasOwnProperty(name)) {
+                var method = propertyInfo[name];
+                if (method.type == Shade.TYPES.FUNCTION) {
+                    propertyInfo[name] = system.optionalMethods[name];
+                }
+            }
+        }
         Base.extend(propertyInfo, system.derivedParameters);
+
     };
 
     var registerGlobalObjects = function(context, thisObject, envObject) {

@@ -52,7 +52,11 @@
                 },
                 "staticSize": 5,
                 "source": "uniform"
+            },
+            "fwidth": {
+                "type": "function"
             }
+
 
         }
     },
