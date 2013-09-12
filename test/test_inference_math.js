@@ -41,10 +41,10 @@ describe('Inference', function () {
                 exp.extra.should.have.property("type", TYPES.NUMBER);
                 exp.extra.should.have.property("staticValue", -1);
             });
-            it("call Math.floor(number) ? int", function () {
+            it("call Math.floor(number) ? number", function () {
                 var exp = parseAndInferenceExpression("Math.floor(5.5)");
                 exp.should.have.property("extra");
-                exp.extra.should.have.property("type", TYPES.INT);
+                exp.extra.should.have.property("type", TYPES.NUMBER);
                 exp.extra.should.have.property("staticValue", 5);
             });
             it("Math.cos(number, number) ? throw invalid number of parameters", function () {
