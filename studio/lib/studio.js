@@ -56,7 +56,7 @@
                 },
                 "viewMatrix": {
                     "type": "object",
-                    "kind": "matrix3",
+                    "kind": "matrix4",
                     "source": "uniform"
                 },
                 "pointLightPosition": {

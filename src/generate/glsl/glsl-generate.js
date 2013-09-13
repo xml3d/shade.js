@@ -274,7 +274,7 @@
         if(isNaN(value))
             throw Error("Internal: Expression generated NaN!");
         var result = '' + value;
-        if (result.indexOf(".") == -1) {
+        if (result.indexOf(".") == -1 && result.indexOf("e") == -1) {
             result += ".0";
         }
         return result;

@@ -22,15 +22,17 @@
             var argArray = [];
             var isStatic = true;
             args.forEach(function (param, index) {
-                if (!param.canNumber())
+                if (!(param.canNumber() || param.isVector()))
                     throw new Error("Parameter " + index + " has invalid type for Math." + name + ", expected 'number', but got " + param.getType());
                 isStatic = isStatic && param.hasStaticValue();
                 if (isStatic)
                     argArray.push(param.getStaticValue());
             });
             var typeInfo = {
-                type: returnType || TYPES.NUMBER
+                type: returnType || args[0].isVector() ? args[0].getType() : TYPES.NUMBER
             }
+            args[0].isVector() && (typeInfo.kind = args[0].getKind());
+
             if (isStatic) {
                 typeInfo.staticValue = Math[name].apply(undefined, argArray);
             }
@@ -54,14 +56,17 @@
             evaluate: function (result, args) {
                 Tools.checkParamCount(result.node, "Math.abs", [1], args.length);
                 var typeInfo = {};
-                switch (args[0].getType()) {
-                    case TYPES.NUMBER:
-                    case TYPES.INT:
-                        typeInfo.type = args[0].getType();
-                        break;
-                    default:
-                        Shade.throwError(result.node, "InvalidType for Math.abs");
+                if(args[0].canNumber()) {
+                    typeInfo.type = args[0].getType();
                 }
+                else if (args[0].isVector()) {
+                    typeInfo.type = args[0].getType();
+                    typeInfo.kind = args[0].getKind();
+                }
+                else {
+                    Shade.throwError(result.node, "InvalidType for Math.abs");
+                }
+                // TODO: Static value
                 return typeInfo;
             }
         },
