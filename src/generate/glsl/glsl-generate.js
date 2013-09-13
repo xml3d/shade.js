@@ -44,7 +44,7 @@
         ];
         if (opt.headers)
             header = header.concat(opt.headers)
-        var floatPrecision = opt.floatPrecision || "mediump";
+        var floatPrecision = opt.floatPrecision || "highp";
         header.push("precision " + floatPrecision + " float;");
         header.push("");
         return header;

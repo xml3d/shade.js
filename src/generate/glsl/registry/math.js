@@ -15,15 +15,16 @@
 
     var handleMathCall = function(opt) {
         opt = opt ||{};
-        return function(node) {
+        return function(node, args) {
             if (node.type !== Syntax.CallExpression) {
                 Shade.throwError(node, "Internal Error in Math object");
             }
             // Cast all arguments of the math function to float, as they are
             // not defined for other types (int, bool)
             // Don't replace the arguments array, it's already cached by the traversal
-            for(var i = 0; i < node.arguments.length; i++) {
-                node.arguments[i] = Tools.castToFloat(node.arguments[i]);
+            for(var i = 0; i < args.length; i++) {
+                if (args[i].isInt())
+                    node.arguments[i] = Tools.castToFloat(node.arguments[i]);
             }
             node.callee = Tools.removeMemberFromExpression(node.callee);
             if (opt.name) {
