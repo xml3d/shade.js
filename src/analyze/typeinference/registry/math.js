@@ -111,6 +111,20 @@
                     }
                     return typeInfo;
                 }
+                if (args.every(function (e) {
+                    return e.isVector();
+                })) {
+                    if (!(args[0].equals(args[1]) && args[1].equals(args[2]))) {
+                        Shade.throwError(result.node, "Math.smoothstep: All arguments have to have the same type: " + args.map(function (arg) {
+                            return arg.getTypeString();
+                        }).join(", "));
+                    };
+                    return typeInfo = {
+                        type: TYPES.OBJECT,
+                        kind: args[0].getKind()
+                    }
+
+                };
                 Shade.throwError(result.node, "Math.smoothstep not supported with argument types: " + args.map(function (arg) {
                     return arg.getTypeString();
                 }).join(", "));
