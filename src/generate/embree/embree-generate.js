@@ -70,7 +70,9 @@
 
             for (var j in declarations) {
                 var decl = declarations[j];
-                var line = decl.id.name + " = parms." + getEmbreeParamGetter(decl.extra) + "(\"" + decl.id.name + "\"";
+                // decl.extra.propertName is set in transform.js
+                var name = decl.extra.propertyName || decl.id.name;
+                var line = decl.id.name + " = parms." + getEmbreeParamGetter(decl.extra) + "(\"" + name + "\"";
                 if (decl.init) {
                     line += "," + handleExpression(decl.init);
                 }

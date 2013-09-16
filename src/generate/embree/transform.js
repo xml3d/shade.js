@@ -101,6 +101,13 @@
                  headers: [] // Collection of headerlines to define
             }
 
+            // Dmitri: add information about original propertyName
+            for (name in state.globalParameters) {
+                state.globalParameters[name].propertyName = name;
+            }
+
+            program.globals = program.globals || [];
+
             this.registerThisObject(context, state);
 
             // TODO: We should also block systemParameters here. We can block all system names, even if not used.
@@ -113,12 +120,14 @@
             var usedParameters = state.usedParameters;
             for(name in usedParameters.shader){
                 decl = handleTopDeclaration(name, usedParameters.shader[name]);
-                decl && program.body.unshift(decl);
+                // Dmitri: add globals to program.globals instead of body
+                decl && program.globals.unshift(decl);
             }
 
             for(name in usedParameters.system){
                 decl = handleTopDeclaration(name, usedParameters.system[name]);
-                decl && program.body.unshift(decl);
+                // Dmitri: add globals to program.globals instead of body
+                decl && program.globals.unshift(decl);
             }
 
 
