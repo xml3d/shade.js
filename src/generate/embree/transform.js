@@ -300,10 +300,51 @@
         var anno = new FunctionAnnotation(node);
         anno.setReturnInfo({ type: Types.UNDEFINED });
 
-        // Main has no parameters
-        node.params = [];
-        // Rename to 'main'
-        node.id.name = "main";
+        // Dmitri: Define Embree's main shade function
+        node.params = [
+            {
+                name: "ray",
+                type: Syntax.Identifier,
+                extra: {
+                    global: true,
+                    kind: "any",
+                    type: "object",
+                    cxxType: "const Ray&"
+                }
+            },
+            {
+                name: "currentMedium",
+                type: Syntax.Identifier,
+                extra: {
+                    global: true,
+                    kind: "any",
+                    type: "object",
+                    cxxType: "const Medium&"
+                }
+            },
+            {
+                name: "dg",
+                type: Syntax.Identifier,
+                extra: {
+                    global: true,
+                    kind: "any",
+                    type: "object",
+                    cxxType: "const DifferentialGeometry&"
+                }
+            },
+            {
+                name: "brdfs",
+                type: Syntax.Identifier,
+                extra: {
+                    global: true,
+                    kind: "any",
+                    type: "object",
+                    cxxType: "CompositedBRDF&"
+                }
+            }
+        ]
+        // Rename to 'shade'
+        node.id.name = "shade";
         //console.log(node);
     }
 

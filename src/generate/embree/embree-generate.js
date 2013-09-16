@@ -127,6 +127,8 @@
     }
 
     var toEmbreeType = function (info) {
+        if (info.cxxType)
+            return info.cxxType;
         switch (info.type) {
             case Types.OBJECT:
                 switch (info.kind) {
@@ -203,13 +205,16 @@
                             var func = new FunctionAnnotation(node);
                             var methodStart = [toEmbreeType(func.getReturnInfo())];
                             methodStart.push(node.id.name, '(');
+
+                            var methodArgs = [];
                             if (!(node.params && node.params.length)) {
-                                methodStart.push("void");
+                                methodArgs.push("void");
                             } else {
                                 node.params.forEach(function (param) {
-                                    methodStart.push(param.name);
+                                    methodArgs.push(toEmbreeType(param.extra) + " " + param.name);
                                 })
                             }
+                            methodStart.push(methodArgs.join(", "));
                             methodStart.push(') {');
                             lines.appendLine(methodStart.join(" "));
                             lines.changeIndention(1);
