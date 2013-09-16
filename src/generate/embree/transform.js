@@ -38,7 +38,7 @@
             ctx.registerObject("Vec2", ObjectRegistry.getByName("Vec2"));
             ctx.registerObject("Vec3", ObjectRegistry.getByName("Vec3"));
             ctx.registerObject("Vec4", ObjectRegistry.getByName("Vec4"));
-            ctx.registerObject("Color", ObjectRegistry.getByName("Vec3"));
+            ctx.registerObject("Color", ObjectRegistry.getByName("Color"));
             ctx.registerObject("Texture", ObjectRegistry.getByName("Texture"));
             ctx.registerObject("Mat3", ObjectRegistry.getByName("Mat3"));
             ctx.registerObject("Mat4", ObjectRegistry.getByName("Mat4"));
@@ -300,6 +300,7 @@
         var anno = new FunctionAnnotation(node);
         anno.setReturnInfo({ type: Types.UNDEFINED });
 
+        node.extra.cxxModifier = "const"; // FIXME This should be possibly moved to FunctionAnnotation
         // Dmitri: Define Embree's main shade function
         node.params = [
             {

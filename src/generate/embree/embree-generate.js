@@ -42,9 +42,25 @@
 
     var generateProlog = function(ast, lines, opt) {
         getHeader(opt).forEach(function(e) { lines.push(e) });
-        lines.appendLine("class ShadeJSMaterial : public Material");
-        lines.appendLine("{");
-        lines.appendLine("public:");
+
+        var classHeader = [
+            "class ShadeJSMaterial : public Material",
+            "{",
+            "public:",
+            "",
+            "    static float mod(float a, float b)",
+            "    {",
+            "        // From Texturing & Modeling (a procedural approach) David S. Ebert",
+            "        int n = (int)(a/b);",
+            "        a -= n*b;",
+            "        if (a < 0)",
+            "          a += b;",
+            "        return a;",
+            "    }",
+            ""
+        ]
+
+        classHeader.forEach(function(e) { lines.appendLine(e); });
 
         generateConstructor(ast.globals, lines);
 
@@ -97,9 +113,6 @@
                 lines.appendLine(line + ";");
             }
         }
-        lines.changeIndention(-1);
-        lines.appendLine("}");
-        lines.changeIndention(-1);
     }
 
     var getEmbreeParamGetter = function(info) {
@@ -135,7 +148,7 @@
                     case Kinds.COLOR:
                         return "Color";
                     case Kinds.FLOAT3:
-                        return "Vec3";
+                        return "Vector3f";
                     case Kinds.FLOAT2:
                         return "Vec2";
                     default:
@@ -215,7 +228,11 @@
                                 })
                             }
                             methodStart.push(methodArgs.join(", "));
-                            methodStart.push(') {');
+                            if (node.extra.cxxModifier) {
+                                methodStart.push(') '+node.extra.cxxModifier+" {");
+                            }
+                            else
+                                methodStart.push(') {');
                             lines.appendLine(methodStart.join(" "));
                             lines.changeIndention(1);
                             return;
