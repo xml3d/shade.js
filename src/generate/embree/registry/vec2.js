@@ -3,29 +3,43 @@
     var Shade = require("../../../interfaces.js");
     var Syntax = require('estraverse').Syntax;
     var Tools = require("./tools.js");
+    var ANNO = require("../../../base/annotation.js").ANNO;
+
+    var TYPES = Shade.TYPES,
+        KINDS = Shade.OBJECT_KINDS;
 
     var Vec2Instance = {
-        xy: {
-            property: function () {
-                //console.log("Called property of xy");
-            },
-            callExp: function(node, args, parent) {
-                if (args.length == 0)
-                    return node.callee;
-                return null; // TODO
-            }
+        normalize: {
+            callExp: Tools.Vec.createFunctionCall.bind(null, 'normalize', 0)
         },
-        x: function () {
-            console.log("x", arguments);
+        flip: {
+            callExp: Tools.Vec.createFunctionCall.bind(null, '-', 0)
+        },
+        dot: {
+            callExp: Tools.Vec.createFunctionCall.bind(null, 'dot', 2)
+        },
+        reflect: {
+            callExp: Tools.Vec.createFunctionCall.bind(null, 'reflect', 2)
+        },
+        length: {
+            callExp: Tools.Vec.generateLengthCall
         }
     }
+    Tools.Vec.attachSwizzles(Vec2Instance, 2);
+    Tools.Vec.attachOperators(Vec2Instance, 2, {
+        add: '+',
+        sub: '-',
+        mul: '*',
+        div: '/',
+        mod: '%'
+    })
 
 
     Tools.extend(ns, {
         id: "Vec2",
-        kind: "float2",
+        kind: KINDS.FLOAT2,
         object: {
-            constructor: null,
+            constructor: Tools.Vec.generateConstructor,
             static: {}
         },
         instance: Vec2Instance
