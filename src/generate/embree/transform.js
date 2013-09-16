@@ -230,6 +230,7 @@
     var handleIdentifier = function(node, parent, blockedNames, idNameMap){
         if(parent.type == Syntax.MemberExpression)
             return node;
+
         var name = node.name;
         if(idNameMap[name]) {
             node.name = idNameMap[name];
@@ -410,6 +411,31 @@
 
         var usedParameters = state.usedParameters;
         if(objectReference.isGlobal()) {
+
+            // Dmitri: Handle Embrees special vertex attributes
+            if (memberExpression.property.extra.source == Sources.VERTEX) {
+                if (memberExpression.object.name == "env")
+                {
+                    if (memberExpression.property.name == "texcoord")
+                        return {
+                            type: Syntax.MemberExpression,
+                            object: {
+                                type: Syntax.Identifier,
+                                name: "dg"
+                            },
+                            property: {
+                                type: Syntax.Identifier,
+                                name: "st"
+                            },
+                            extra: {
+                                type: "object",
+                                kind: "float2",
+                                source: "vertex"
+                            }
+                        };
+                }
+            }
+
             parameterName = Tools.getNameForGlobal(propertyName);
             if(!usedParameters.shader.hasOwnProperty(parameterName)) {
                 usedParameters.shader[parameterName] = state.globalParameters[propertyName];
