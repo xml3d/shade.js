@@ -272,26 +272,60 @@
                 type: Syntax.BlockStatement,
                 body: [
                     {
-                        type: Syntax.AssignmentExpression,
-                        operator: "=",
-                        left: {
-                            type: Syntax.Identifier,
-                            name: "gl_FragColor"
+                        type: Syntax.ExpressionStatement,
+                        expression: {
+                            type: Syntax.CallExpression,
+                            callee: {
+                                type: Syntax.Identifier,
+                                name: "addConstantColorToBRDFs",
+                                extra: {
+                                    type: "function"
+                                }
+                            },
+                            arguments: [
+                                {
+                                    type: Syntax.Identifier,
+                                    name: "brdfs",
+                                    extra: {
+                                        type: "object",
+                                        kind: "any",
+                                        global: "true"
+                                    }
+                                },
+                                castToColor(node.argument, context)
+                            ]
                         },
-                        right: castToVec4(node.argument, context)
+                        extra: {
+                            type: "void"
+                        }
                     },
                     {
                         type: Syntax.ReturnStatement
                     }
                 ]
             }
+/*
+            return {
+                type: Syntax.BlockStatement,
+                body: [
+                    {
+                        type: Syntax.AssignmentExpression,
+                        operator: "=",
+                        left: {
+                            type: Syntax.Identifier,
+                            name: "gl_FragColor"
+                        },
+                        right: castToColor(node.argument, context)
+                    },
+                    {
+                        type: Syntax.ReturnStatement
+                    }
+                ]
+            }
+            */
         } else {
             return {
-                type: Syntax.ExpressionStatement,
-                expression : {
-                    type: Syntax.Identifier,
-                    name: "discard"
-                }
+                type: Syntax.ReturnStatement,
             }
         }
     };
@@ -556,6 +590,25 @@
                     name: "vec4"
                 },
                 arguments: [ast, { type: Syntax.Literal, value: 1.0, extra: { type: Types.NUMBER} }]
+            }
+        }
+        Shade.throwError(ast, "Can't cast from '" + exp.getTypeString() + "' to vec4");
+    }
+
+    function castToColor(ast, context) {
+        var exp = TypeInfo.createForContext(ast, context);
+
+        if (exp.isOfKind(Kinds.FLOAT4) || exp.isOfKind(Kinds.COLOR_CLOSURE))
+            return ast;
+
+        if (exp.isOfKind(Kinds.FLOAT3)) {
+            return {
+                type: Syntax.CallExpression,
+                callee: {
+                    type: Syntax.Identifier,
+                    name: "toColor"
+                },
+                arguments: [ast]
             }
         }
         Shade.throwError(ast, "Can't cast from '" + exp.getTypeString() + "' to vec4");

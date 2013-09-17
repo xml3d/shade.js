@@ -24,6 +24,7 @@
 
             "#include \"../materials/material.h\"",
             "#include \"../brdfs/lambertian.h\"",
+            "#include \"../brdfs/shadejs.h\"",
             "#include \"../textures/texture.h\"",
             "",
             "namespace embree",
@@ -56,6 +57,16 @@
             "        if (a < 0)",
             "          a += b;",
             "        return a;",
+            "    }",
+            "",
+            "    static Color toColor(const Vector3f &vec)",
+            "    {",
+            "        return Color(vec.x, vec.y, vec.z);",
+            "    }",
+            "",
+            "    static void addConstantColorToBRDFs(CompositedBRDF& brdfs, Color color)",
+            "    {",
+            "        brdfs.add(NEW_BRDF(ConstantColor)(color));",
             "    }",
             ""
         ]
@@ -97,6 +108,7 @@
         }
         lines.changeIndention(-1);
         lines.appendLine("}");
+        lines.appendLine("");
         lines.changeIndention(-1);
     }
 

@@ -23,7 +23,7 @@ var argv = require('optimist').argv,
 
         var contextData = {};
         if (fs.existsSync(ctx)) {
-            console.log("Found context file: " + ctx);
+            console.error("Found context file: " + ctx);
             var contextData = JSON.parse(fs.readFileSync(ctx, "utf-8"));
         }
         var data = fs.readFileSync(filename, "utf-8");
