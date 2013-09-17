@@ -509,6 +509,23 @@
                                 source: "vertex"
                             }
                         };
+                    else if (memberExpression.property.name == "normal")
+                        return {
+                            type: Syntax.MemberExpression,
+                            object: {
+                                type: Syntax.Identifier,
+                                name: "dg"
+                            },
+                            property: {
+                                type: Syntax.Identifier,
+                                name: "Ns"
+                            },
+                            extra: {
+                                type: "object",
+                                kind: "float3",
+                                source: "vertex"
+                            }
+                        };
                 }
             }
 
