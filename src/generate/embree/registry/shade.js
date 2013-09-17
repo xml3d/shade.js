@@ -7,20 +7,7 @@
     var ShadeInstance = {
         diffuse: {
             callExp: function(node) {
-                return {
-                    type: Syntax.BinaryExpression,
-                    operator: "+",
-                    left: {
-                        type: Syntax.CallExpression,
-                        callee: node.callee.property,
-                        arguments: node.arguments
-                    },
-                    right: node.callee,
-                    extra: {
-                        type: Shade.TYPES.OBJECT,
-                        kind: Shade.OBJECT_KINDS.COLOR_CLOSURE
-                    }
-                }
+                return;
             }
         },
         phong: {
@@ -29,11 +16,31 @@
 
     }
 
+    function ShadeConstructor(node) {
+        return {
+            type: Syntax.CallExpression,
+            callee: {
+                type: Syntax.Identifier,
+                name: "setBRDFs"
+            },
+            arguments: [
+                {
+                    type: Syntax.Identifier,
+                    name: "brdfs"
+                }
+            ],
+            extra: {
+                type: Shade.TYPES.OBJECT,
+                kind: Shade.OBJECT_KINDS.COLOR_CLOSURE
+            }
+        }
+    }
+
     Tools.extend(ns, {
         id: "Shade",
         kind: Shade.OBJECT_KINDS.COLOR_CLOSURE,
         object: {
-            constructor: Tools.Vec.generateConstructor,
+            constructor: ShadeConstructor,
             static: {}
         },
         instance: ShadeInstance
