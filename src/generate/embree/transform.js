@@ -277,7 +277,7 @@
                             type: Syntax.CallExpression,
                             callee: {
                                 type: Syntax.Identifier,
-                                name: "addConstantColorToBRDFs",
+                                name: "addClosureToBRDFs",
                                 extra: {
                                     type: "function"
                                 }

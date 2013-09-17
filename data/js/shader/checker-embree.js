@@ -23,6 +23,6 @@ function shade(env) {
         env.blackColor;
 
     //return new Shade().diffuse(color, env.normal).phong(new Vec3(0.8), env.normal, env.shininess);
-    //return new Shade().diffuse(color, env.normal);
-    return color;
+    return new Shade().diffuse(color, env.normal);
+    //return color;
 }

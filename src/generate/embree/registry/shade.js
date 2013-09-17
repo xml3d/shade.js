@@ -21,7 +21,7 @@
             type: Syntax.CallExpression,
             callee: {
                 type: Syntax.Identifier,
-                name: "setBRDFs"
+                name: "BRDFClosure"
             },
             arguments: [
                 {
