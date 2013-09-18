@@ -329,6 +329,34 @@
         return info.type == Types.NUMBER || info.type == Types.INT || info.type == Types.BOOLEAN;
     }
 
+    var isConstructorRequireFloats = function(info) {
+        if (!info)
+            return false;
+        switch (info.type) {
+            case Types.OBJECT:
+                switch (info.kind) {
+                    case Kinds.FLOAT2:
+                    case Kinds.FLOAT3:
+                    case Kinds.FLOAT4:
+                    case Kinds.COLOR_CLOSURE:
+                        return true;
+                    default:
+                        return false;
+                }
+            case Types.ARRAY:
+                return isConstructorRequireFloats(info.elements);
+            case Types.NUMBER:
+                return true;
+            case Types.UNDEFINED:
+            case Types.INT:
+            case Types.BOOLEAN:
+                return false;
+            default:
+                //throw new Error("toEmbreeType: Unhandled type: " + info.type);
+                return false;
+        }
+    }
+
     var toEmbreeType = function (info, allowUndefined) {
         if (!info)
             return "?";
@@ -571,8 +599,9 @@
 
         switch(node.type) {
             case Syntax.NewExpression:
+                var convertToFloats = isConstructorRequireFloats(node.extra);
                 result = toEmbreeType(node.extra);
-                result += handleArguments(node.arguments, opt);
+                result += handleArguments(node.arguments, opt, convertToFloats);
                 break;
 
             case Syntax.Literal:
@@ -688,10 +717,16 @@
         return result;
     }
 
-    function handleArguments(container, opt) {
+    function handleArguments(container, opt, convertToFloats) {
         var result = "(";
         container.forEach(function (arg, index) {
-            result += handleExpression(arg, opt);
+            var expr = handleExpression(arg, opt);
+            if (convertToFloats && (arg.extra.type != Types.NUMBER)) {
+                expr.replace(/^\s+|\s+$/g, ''); // trim whitespace
+                if (expr == "0")
+                    expr = "0.0";
+            }
+            result += expr;
             if (index < container.length - 1) {
                 result += ", ";
             }
@@ -736,7 +771,7 @@
         if (extra.type == Types.NUMBER)
             return generateFloat(value);
         else
-            return value;
+            return value+'';
     }
 
     exports.generate = generate;
