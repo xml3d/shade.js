@@ -83,6 +83,100 @@
             "        return a;",
             "    }",
             "",
+            "    static float fract(float f)",
+            "    {",
+            "        // return modf(f, 0);",
+            "        return f - floor(f);",
+            "    }",
+            "",
+            "    static Vec2f fract(const Vec2f &v)",
+            "    {",
+            "        return Vec2f(fract(v.x), fract(v.y));",
+            "    }",
+            "",
+            "    static Vec4f fract(const Vec4f &v)",
+            "    {",
+            "        return Vec4f(fract(v.x), fract(v.y), fract(v.z), fract(v.w));",
+            "    }",
+            "",
+            "    static float floor(float f)",
+            "    {",
+            "        return floorf(f);",
+            "    }",
+            "",
+            "    static Vec2f floor(const Vec2f &v)",
+            "    {",
+            "        return Vec2f(floorf(v.x), floorf(v.y));",
+            "    }",
+            "",
+            "    static Vec2f st(const Vec2f &v)",
+            "    {",
+            "        return v;",
+            "    }",
+            "",
+            "    static Vec2f ts(const Vec2f &v)",
+            "    {",
+            "        return Vec2f(v.y, v.x);",
+            "    }",
+            "",
+            "    static float sin(float v)",
+            "    {",
+            "        return sinf(v);",
+            "    }",
+            "",
+            "    static Vec4f sin(const Vec4f &v)",
+            "    {",
+            "        return Vec4f(sin(v.x), sin(v.y), sin(v.z), sin(v.w));",
+            "    }",
+            "",
+            "    static float mix(float x, float y, float alpha) {",
+            "      return x*(1.0f - alpha) + y*alpha;",
+            "    }",
+            "",
+            "    static Vec2f mix(const Vec2f &x, const Vec2f &y, float alpha)",
+            "    {",
+            "      return x*(1.0f - alpha) + y*alpha;",
+            "    }",
+            "",
+            "    static Vector3f mix(const Vector3f &x, const Vector3f &y, float alpha)",
+            "    {",
+            "      return x*(1.0f - alpha) + y*alpha;",
+            "    }",
+            "",
+            "    static float pow(float x, float y)",
+            "    {",
+            "        return powf(x, y);",
+            "    }",
+            "",
+            "    static Vector3f pow(const Vector3f &x, const Vector3f &y)",
+            "    {",
+            "        return Vector3f(pow(x.x, y.x), pow(x.y, y.y), pow(x.z, y.z));",
+            "    }",
+            "",
+            "    static Vec4f pow(const Vec4f &x, const Vec4f &y)",
+            "    {",
+            "        return Vec4f(pow(x.x, y.x), pow(x.y, y.y), pow(x.z, y.z), pow(x.w, y.w));",
+            "    }",
+            "",
+            "    static float step(float min, float value)",
+            "    {",
+            "        return value < min ? 0.0f : 1.0f;",
+            "    }",
+            "",
+            "    /*",
+            "      SmoothStep returns 0 if value is less than min, 1 if value is greater than",
+            "      or equal to max, and performs a smooth Hermite interpolation between",
+            "      0 and 1 in the interval min to max.",
+            "    */",
+            "    static float smoothstep(float min, float max, float value)",
+            "    {",
+            "        if (value < min) return 0.0f;",
+            "        if (value >= max) return 1.0f;",
+            "",
+            "        float v = (value - min) / (max - min);",
+            "        return (-2.0f * v + 3.0f) * v * v;",
+            "    }",
+            "",
             "    static Color toColor(const Vector3f &vec)",
             "    {",
             "        return Color(vec.x, vec.y, vec.z);",
@@ -122,6 +216,12 @@
             "        BRDFClosure &diffuse(const Vector3f &color, const Vector3f &normal)",
             "        {",
             "            brdfs.add(NEW_BRDF(Lambertian)(toColor(color)));",
+            "            return *this;",
+            "        }",
+            "",
+            "        BRDFClosure &phong(const Vector3f &color, const Vector3f &normal, float shininess)",
+            "        {",
+            "            // TODO implement this",
             "            return *this;",
             "        }",
             "    };",
@@ -223,6 +323,12 @@
         }
     }
 
+    var isIntegralType = function(info) {
+        if (!info)
+            return false;
+        return info.type == Types.NUMBER || info.type == Types.INT || info.type == Types.BOOLEAN;
+    }
+
     var toEmbreeType = function (info, allowUndefined) {
         if (!info)
             return "?";
@@ -234,9 +340,11 @@
                     case Kinds.FLOAT3:
                         return "Vector3f";
                     case Kinds.FLOAT2:
-                        return "Vec2";
+                        return "Vec2f";
                     case Kinds.COLOR_CLOSURE:
-                        return "vec4";
+                        return "Vec4f";
+                    case Kinds.FLOAT4:
+                        return "Vec4f";
                     default:
                         return "<undefined>";
                 }
@@ -269,7 +377,7 @@
             return Embree.Storage.UNIFORM;
         if (info.source == Sources.CONSTANT)
             return Embree.Storage.CONST;
-        throw new Error("toGLSLSource: Unhandled type: " + info.source);
+        throw new Error("toEmbreeStorage: Unhandled type: " + info.source);
     }
 
     function createLineStack() {
@@ -324,8 +432,7 @@
     }
 
     function traverse(ast, lines, opt) {
-        var insideMain = false;
-
+        opt.insideFunction = opt.insideFunction || false;
 
         walk.traverse(ast, {
                 enter: function (node) {
@@ -344,8 +451,7 @@
                                 var func = new FunctionAnnotation(node);
                                 var methodStart = [toEmbreeType(func.getReturnInfo(), true)];
                                 methodStart.push(node.id.name, '(');
-                                if(node.id.name == "shade")
-                                    insideMain = true;
+                                opt.insideFunction = true;
 
                                 if (!(node.params && node.params.length)) {
 									methodStart.push("void");
@@ -356,11 +462,12 @@
                                     })
                                     methodStart.push(methodArgs.join(", "));
                                 }
-                                if (node.extra.cxxModifier) {
-                                    methodStart.push(') '+node.extra.cxxModifier+" {");
-                                }
-                                else
-                                    methodStart.push(') {');
+                                methodStart.push(") const {");
+                                //if (node.extra.cxxModifier) {
+                                //    methodStart.push(') '+node.extra.cxxModifier+" {");
+                                //}
+                                //else
+                                //    methodStart.push(') {');
                                 lines.appendLine(methodStart.join(" "));
                                 lines.changeIndention(1);
                                 return;
@@ -373,7 +480,7 @@
 
                             case Syntax.VariableDeclarator :
                                 // console.log("Meep!");
-                                var decl = handleVariableDeclaration(node, insideMain, opt);
+                                var decl = handleVariableDeclaration(node, !opt.insideFunction, opt);
                                 lines.appendLine(decl);
                                 return;
 
@@ -429,6 +536,7 @@
                             generateEpilog(ast, lines, opt);
                             break;
                         case Syntax.FunctionDeclaration:
+                            opt.insideFunction = false;
                             lines.changeIndention(-1);
                             lines.appendLine("}");
                             break;
@@ -529,14 +637,28 @@
     };
 
     function handleVariableDeclaration(node, writeStorageQualifier, opt) {
-        var storageQualifier = !writeStorageQualifier ? toEmbreeStorage(node.extra) : null;
+        //var storageQualifier = !writeStorageQualifier ? toEmbreeStorage(node.extra) : null;
+        var storageQualifier = "";
+        if (writeStorageQualifier) {
+            if (isIntegralType(node.extra)) {
+                storageQualifier = "static const";
+            } else {
+                var result = "#define "+node.id.name+" (";
+                if (node.init)
+                    result += handleExpression(node.init, opt);
+                else
+                    result += toEmbreeType(node.extra) + "()";
+                result +=")";
+                return result;
+            }
+        }
         var result = storageQualifier ? storageQualifier + " " : "";
         result += toEmbreeType(node.extra) + " " + node.id.name;
         if (node.extra.elements) {
             result += "[" + (node.extra.staticSize ? node.extra.staticSize : "0") + "]";
         }
         if (node.init) result += " = " + handleExpression(node.init, opt);
-        if (!node.init && storageQualifier == GLSL.Storage.CONST) {
+        if (!node.init && storageQualifier == Embree.Storage.CONST) {
             result += " = " + getStaticValue(node.extra);
         }
         return result + ";";
@@ -545,9 +667,9 @@
 
     function handleInlineDeclaration(node, opt) {
         if (node.type != Syntax.VariableDeclaration)
-            Shade.throwError(node, "Internal error in GLSL::handleInlineDeclaration");
+            Shade.throwError(node, "Internal error in Embree::handleInlineDeclaration");
         var result = node.declarations.reduce(function(declString, declaration){
-            var decl = toGLSLType(declaration.extra) + " " + declaration.id.name;
+            var decl = toEmbreeType(declaration.extra) + " " + declaration.id.name;
             if (declaration.init) {
                 decl += " = " + handleExpression(declaration.init, opt);
             }
@@ -599,11 +721,11 @@
                         result = "vec4(" + staticValue.r() + ", " + staticValue.g() + ", " + staticValue.b() + ", " + staticValue.a() + ")";
                         break;
                     default:
-                        Shade.throwError(node, "Internal: Can't generate static GLSL value for kind: " + node.extra.kind);
+                        Shade.throwError(node, "Internal: Can't generate static Embree value for kind: " + node.extra.kind);
                 }
                 break;
             default:
-                Shade.throwError(node, "Internal: Can't generate static GLSL value for type: " + node.extra.type);
+                Shade.throwError(node, "Internal: Can't generate static Embree value for type: " + node.extra.type);
 
         }
         return result;

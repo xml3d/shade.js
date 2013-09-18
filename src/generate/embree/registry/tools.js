@@ -134,9 +134,14 @@
                             val = Math.floor(val / vecCount);
                             key+= VecBase.swizzleSets[s][idx];
                         }
-                        instance[key] = {
-                            callExp: Vec.createSwizzle.bind(null, vecCount, key)
-                        };
+                        if (key.length > 1)
+                            instance[key] = {
+                                callExp: Vec.createFunctionCall.bind(null, key, null)
+                            };
+                        else
+                            instance[key] = {
+                                callExp: Vec.createSwizzle.bind(null, vecCount, key)
+                            };
                     }
                 }
             }
