@@ -60,7 +60,7 @@ function shade(env) {
     /*
      * Add the ring patterns
      */
-    var r = 0.0;
+    var r;
 
     var fade = Math.smoothstep(1 / env.ringscale, 8 / env.ringscale, fwidth);
     if (fade < 0.999) {
@@ -78,11 +78,11 @@ function shade(env) {
             r *= (1 - fade) * r2 + (0.75 * fade);
         }
         else {
-            r = r * 0.75;
+            r *= 0.75;
         }
     }
     else {
-        r = new Vec2(0.4875, r).x();
+        r = 0.4875;
     }
 
     /* Mix the light and dark wood according to the grain pattern */

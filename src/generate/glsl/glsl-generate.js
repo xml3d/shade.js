@@ -411,6 +411,12 @@
 
     function handleStaticValue(node) {
         var result = "unhandled static value: " + node.type;
+
+        // Even if the whole expression is static, we have to assign it
+        if (node.type == Syntax.AssignmentExpression) {
+            return handleExpression(node.left) + " " + node.operator + " " + handleStaticValue(node.right);
+        }
+
         switch(node.extra.type) {
             case Types.NUMBER:
             case Types.INT:
