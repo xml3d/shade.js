@@ -79,6 +79,7 @@
         createSwizzle: function(vecCount, swizzle, node, args, parent){
             if (args.length == 0) {
                 node.callee.extra = node.extra;
+                node.callee.property.name = swizzle; /* Is this allowed ? */
                 return node.callee;
             }
             var singular = swizzle.length == 1;
@@ -134,14 +135,27 @@
                             val = Math.floor(val / vecCount);
                             key+= VecBase.swizzleSets[s][idx];
                         }
+                        /* Note: there are no s and t components in Embree vectors */
                         if (key.length > 1)
                             instance[key] = {
                                 callExp: Vec.createFunctionCall.bind(null, key, null)
                             };
-                        else
+                        else {
+                            var embreeKey;
+                            switch (key) {
+                                case "s":
+                                    embreeKey = "x";
+                                    break;
+                                case "t":
+                                    embreeKey = "y";
+                                    break;
+                                default:
+                                    embreeKey = key;
+                            }
                             instance[key] = {
-                                callExp: Vec.createSwizzle.bind(null, vecCount, key)
+                                callExp: Vec.createSwizzle.bind(null, vecCount, embreeKey)
                             };
+                        }
                     }
                 }
             }
