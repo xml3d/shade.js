@@ -46,6 +46,7 @@
 
             "#include \"../materials/material.h\"",
             "#include \"../brdfs/lambertian.h\"",
+            "#include \"../brdfs/specular.h\"",
 //            "#include \"../brdfs/shadejs.h\"",
             "#include \"../textures/texture.h\"",
             "",
@@ -302,7 +303,7 @@
             "",
             "        BRDFClosure &phong(const Vector3f &color, const Vector3f &normal, float shininess)",
             "        {",
-            "            // TODO implement this",
+            "            brdfs.add(NEW_BRDF(Specular)(toColor(color), shininess));",
             "            return *this;",
             "        }",
             "    };",
