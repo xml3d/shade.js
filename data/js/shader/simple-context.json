@@ -65,9 +65,19 @@
                 "kind": "any",
                 "global": "true",
                 "info": {
+                    "texcoord": {
+                        "type": "object",
+                        "kind": "float2",
+                        "source": "vertex"
+                    },
                     "diffuseTexture": {
                         "type": "object",
                         "kind": "texture",
+                        "source": "vertex"
+                    },
+                    "position": {
+                        "type": "object",
+                        "kind": "float3",
                         "source": "vertex"
                     },
                     "normal": {
