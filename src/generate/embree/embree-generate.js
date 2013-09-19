@@ -73,6 +73,62 @@
             "{",
             "public:",
             "",
+            "    static Vec2f makeVec2f(float x)",
+            "    {",
+            "        return Vec2f(x, x);",
+            "    }",
+            "",
+            "    static Vec2f makeVec2f(float x, float y)",
+            "    {",
+            "        return Vec2f(x, y);",
+            "    }",
+            "",
+            "    static const Vec2f & makeVec2f(const Vec2f &v)",
+            "    {",
+            "        return v;",
+            "    }",
+            "",
+            "    static Vector3f makeVector3f(float x)",
+            "    {",
+            "        return Vector3f(x);",
+            "    }",
+            "",
+            "    static Vector3f makeVector3f(float x, float y, float z)",
+            "    {",
+            "        return Vector3f(x, y, z);",
+            "    }",
+            "",
+            "    static const Vector3f & makeVector3f(const Vector3f &v)",
+            "    {",
+            "        return v;",
+            "    }",
+            "",
+            "    static Vector3f makeVector3f(const Color4 &v)",
+            "    {",
+            "        return Vector3f(v.r, v.g, v.b);",
+            "    }",
+            "",
+            "    static Vec4f makeVec4f(float x)",
+            "    {",
+            "        return Vec4f(x, x, x, x);",
+            "    }",
+            "",
+            "    static Vec4f makeVec4f(float x, float y, float z, float w)",
+            "    {",
+            "        return Vec4f(x, y, z, w);",
+            "    }",
+            "",
+            "    static const Vec4f & makeVec4f(const Vec4f &v)",
+            "    {",
+            "        return v;",
+            "    }",
+            "",
+            "    static Vec4f makeVec4f(const Color4 &c)",
+            "    {",
+            "        return Vec4f(c.r, c.g, c.b, c.a);",
+            "    }",
+
+            "",
             "    static float mod(float a, float b)",
             "    {",
             "        // From Texturing & Modeling (a procedural approach) David S. Ebert",
@@ -192,6 +248,14 @@
             "        return Vector3f(clamp(val.x, low.x, high.x),",
             "            clamp(val.y, low.y, high.y),",
             "            clamp(val.z, low.z, high.z));",
+            "    }",
+            "",
+            "    static Color4 texture2D(Ref<Texture> texture, const Vec2f& p)",
+            "    {",
+            "        Color4 c(0.0f, 0.0f, 0.0f, 1.0f);",
+            "        if (texture)",
+            "            c = texture->get(p);",
+            "        return c;",
             "    }",
             "",
             "    static Color toColor(const Vector3f &vec)",
@@ -326,6 +390,8 @@
                         return "getVector3f";
                     case Kinds.FLOAT2:
                         return "getVec2f";
+                    case Kinds.TEXTURE:
+                        return "getTexture";
                     default:
                         return "<undefined>";
                 }
@@ -382,13 +448,15 @@
         switch (info.type) {
             case Types.OBJECT:
                 switch (info.kind) {
+                    case Kinds.FLOAT4:
+                        return "Vec4f";
                     case Kinds.FLOAT3:
                         return "Vector3f";
                     case Kinds.FLOAT2:
                         return "Vec2f";
+                    case Kinds.TEXTURE:
+                        return "Ref<Texture>";
                     case Kinds.COLOR_CLOSURE:
-                        return "Vec4f";
-                    case Kinds.FLOAT4:
                         return "Vec4f";
                     default:
                         return "<undefined>";
@@ -617,7 +685,7 @@
         switch(node.type) {
             case Syntax.NewExpression:
                 var convertToFloats = isConstructorRequireFloats(node.extra);
-                result = toEmbreeType(node.extra);
+                result = "make" + toEmbreeType(node.extra);
                 result += handleArguments(node.arguments, opt, convertToFloats);
                 break;
 
