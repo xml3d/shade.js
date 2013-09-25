@@ -252,7 +252,7 @@
             var aast = Shade.parseAndInferenceExpression(code, { inject: contextData, loc: true, implementation: "xml3d-glsl-forward" });
             var result = Shade.compileFragmentShader(aast, {useStatic : true });
 
-            this.codeViewer.setValue(result);
+            this.codeViewer.setValue(result.source);
             this.compileGL();
         },
         addConsoleText: function(text, error){

@@ -78,6 +78,31 @@
         },
 
 
+        createUniformSetterFunction: function (parameters) {
+
+            return function (envNames, sysNames, inputCollection, cb) {
+                var i, base, override;
+                if (envNames && inputCollection.envBase) {
+                    i = envNames.length;
+                    base = inputCollection.envBase;
+                    override = inputCollection.envOverride;
+                    while (i--) {
+                        var srcName = envNames[i], destName = Tools.getNameForGlobal(envNames[i]);
+                        cb(destName, override && override[srcName] !== undefined ? override[srcName] : base[srcName]);
+                    }
+                }
+                if (sysNames && inputCollection.sysBase) {
+                    i = sysNames.length;
+                    base = inputCollection.sysBase;
+                    while (i--) {
+                        var srcName = sysNames[i], destName = Tools.getNameForSystem(sysNames[i]);
+                        cb(destName, base[srcName]);
+                    }
+                }
+            }
+
+        },
+
         transformAAST: function (program, opt) {
             opt = opt || {};
             this.root = program;
@@ -121,12 +146,14 @@
                 decl && program.body.unshift(decl);
             }
 
+            var uniformSetter = this.createUniformSetterFunction(usedParameters);
+
 
             var userData = ANNO(this.root).getUserData();
             userData.internalFunctions = state.internalFunctions;
 
             opt.headers = state.headers;
-            return program;
+            return { program: program, uniformSetter: uniformSetter};
         },
         /**
          *

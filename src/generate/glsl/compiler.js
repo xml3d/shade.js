@@ -21,9 +21,9 @@
 
             //console.log(JSON.stringify(aast, 0, " "));
 
-            var code = generate(transformed, opt);
+            var code = generate(transformed.program, opt);
 
-            return code;
+            return {source: code, uniformSetter: transformed.uniformSetter};
         }
 
     });
