@@ -3,20 +3,18 @@
 ### Shading Language
 * Define use-cases, types, built-in functions etc
 * Define Color Closures
-    * diffuse
-    * phong
+    * diffuse ✔
+    * phong ✔
 
 * Define interfaces for:
     * Vec2 ✔
     * Vec3 ✔
     * Vec4 ✔
-    * Color ✔
-    * Normal
-    * Texture
-    * Matrix4
-    * Matrix3
-    * Shade
-    * this
+    * Texture ✔
+    * Matrix4 ✔
+    * Matrix3 ✔
+    * Shade ✔
+    * this ✔
 
 [__OSL Surface Closures__](https://github.com/imageworks/OpenShadingLanguage/blob/master/src/doc/osl-languagespec.pdf?raw=true):
 
@@ -65,14 +63,14 @@ microfacet_beckmann_refraction, microfacet_ggx_refraction, transparent, transluc
 ### Generator
 
 * Switch to own (simple) implementation (FK) ✔
-* Generate code for Forward Rendering (xml3d.js)
+* Generate code for Forward Rendering (xml3d.js)  ✔
 * Generate code for Deferred Rendering (xml3d.js)
 * Generate code for external RT/GI renderer
 
 ## Studio
 
 * Implement version independent from xml3d.js that allows users to define type of parameters (FK) ✔
-* Implement version that allows to write basic fragment shaders
+* Implement version that allows to write basic fragment shaders  ✔
 * Implement integrated version
 
 ## xml3d.js
@@ -85,5 +83,5 @@ microfacet_beckmann_refraction, microfacet_ggx_refraction, transparent, transluc
 ## Embree
 
 * Load geometry
-* Compile and load shader code
+* Compile and load shader code ✔
 
