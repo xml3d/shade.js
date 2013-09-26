@@ -13,7 +13,7 @@ var loadAndGenerate = function(filename) {
         }
         var data = fs.readFileSync(filename, "utf-8");
         var aast = Shade.parseAndInferenceExpression(data, { inject: contextData });
-        return new GLSLCompiler().compileFragmentShader(aast);
+        return new GLSLCompiler().compileFragmentShader(aast).source;
     }());
     return code;
 }
@@ -38,7 +38,7 @@ var generateExpression = function(exp, params, thisParams) {
         ]
     };
     var aast = Shade.parseAndInferenceExpression(exp, { inject: contextData });
-    return new GLSLCompiler().compileFragmentShader(aast, {omitHeader: true});
+    return new GLSLCompiler().compileFragmentShader(aast, {omitHeader: true}).source;
 }
 
 describe('GLSL Code generation,', function () {
