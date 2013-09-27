@@ -34,9 +34,9 @@ var argv = require('optimist').argv,
     }());
 
     if (args.p) {
-        console.log(code);
+        console.log(code.source);
     } else {
-        console.log(code);
+        console.log(code.source);
 
     }
 
