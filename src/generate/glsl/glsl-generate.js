@@ -436,6 +436,24 @@
                     case Kinds.FLOAT4:
                         result = "vec4(" + staticValue.r() + ", " + staticValue.g() + ", " + staticValue.b() + ", " + staticValue.a() + ")";
                         break;
+                    case Kinds.MATRIX3:
+                        result = "mat3(";
+                        for(var i = 0; i < 9; i++) {
+                            result += staticValue[i];
+                            if(i < 8)
+                                result += ",";
+                        }
+                        result +=")"
+                        break;
+                    case Kinds.MATRIX4:
+                        result = "mat4(";
+                        for(var i = 0; i < 16; i++) {
+                            result += staticValue[i];
+                            if(i < 15)
+                                result += ",";
+                        }
+                        result +=")"
+                        break;
                     default:
                         Shade.throwError(node, "Internal: Can't generate static GLSL value for kind: " + node.extra.kind);
                 }
