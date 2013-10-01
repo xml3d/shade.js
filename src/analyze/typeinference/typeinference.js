@@ -104,6 +104,11 @@
         }
         this.root.globalParameters = {};
 
+        var callNumber = 0;
+        this.getCallNumber = function() {
+            return callNumber++;
+        }
+
     };
 
     Base.extend(TypeInference.prototype, {
@@ -286,13 +291,19 @@
                 var aast = this.inferFunction(ast, params, globalContext);
 
                 // Put all functions that were used during analysis back into ast
+                // Use reverse call order, because some language require so (e.g. GLSL)
+                var funcs = [];
                 for(var func in this.functions.derived) {
                     var variations = this.functions.derived[func];
                     for (var signature in variations) {
-                        prg.body.push(variations[signature].ast);
+                        funcs.push(variations[signature]);
                     }
-
                 }
+                funcs.sort(function(a,b) { return a.order > b.order; });
+                for(var i = 0; i < funcs.length; i++) {
+                    prg.body.push(funcs[i].ast);
+                }
+
                 // Put main function back into ast
                 prg.body.push(aast);
             }
@@ -328,6 +339,7 @@
                 derived.info = derived.ast.extra.returnInfo;
                 derived.info.newName = name.replace(/\./g, '_') + Object.keys(variations).length;
                 derived.ast.id.name = derived.info.newName;
+                derived.order = this.getCallNumber();
                 return derived.info;
             }
             throw new Error("Could not resolve function " + name);
