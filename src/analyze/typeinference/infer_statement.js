@@ -13,8 +13,6 @@
 
     var enterHandler = {
         ForStatement: function(node, ctx, root) {
-            var ctx = root.createContext(node, ctx);
-            root.pushContext(ctx);
 
             root.traverse(node.init);
             root.traverse(node.test);
@@ -26,7 +24,6 @@
 
             root.traverse(node.update);
             root.traverse(node.body);
-            root.popContext();
             return walk.VisitorOption.Skip;
         },
 

@@ -376,16 +376,23 @@
 
 
     function handleInlineDeclaration(node, opt) {
-        if (node.type != Syntax.VariableDeclaration)
-            Shade.throwError(node, "Internal error in GLSL::handleInlineDeclaration");
-        var result = node.declarations.reduce(function(declString, declaration){
-            var decl = toGLSLType(declaration.extra) + " " + declaration.id.name;
-            if (declaration.init) {
-                decl += " = " + handleExpression(declaration.init, opt);
-            }
-            return declString + decl;
-        }, "");
-        return result;
+
+        if (node.type == Syntax.VariableDeclaration) {
+            var result = node.declarations.reduce(function (declString, declaration) {
+                var decl = toGLSLType(declaration.extra) + " " + declaration.id.name;
+                if (declaration.init) {
+                    decl += " = " + handleExpression(declaration.init, opt);
+                }
+                return declString + decl;
+            }, "");
+            return result;
+        }
+
+        // GLSL allows only declaration in init, but since this is a new scope, it should be fine
+        if (node.type == Syntax.AssignmentExpression) {
+            return toGLSLType(node.extra) + " " + handleExpression(node.left) + " = " + handleExpression(node.right, opt);
+        }
+        Shade.throwError(node, "Internal error in GLSL::handleInlineDeclaration, found " + node.type);
     }
 
     function handleBinaryArgument(node, opt){

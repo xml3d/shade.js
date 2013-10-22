@@ -11,20 +11,11 @@ var parseAndInferenceExpression = function (str, ctx) {
 
 describe('Inference of Statements:', function () {
     describe('ForLoops', function () {
-        it("should have it's own context", function() {
-            var program = parseAndInferenceExpression("for (var i = 0; i < 10; i++) {}");
-            var loop = program.body[0];
-            program.should.have.property("context");
-            loop.should.have.property("context");
-            program.context.name.should.not.equal(loop.context.name);
-            var bindings = loop.context.bindings;
-            bindings.should.have.property("i");
-        });
         it("annotation on initialized values", function() {
             var program = parseAndInferenceExpression("for (var i = 0, j = 1.5, k; i < 10; i++) {}");
             var loop = program.body[0];
-            loop.should.have.property("context");
-            var bindings = loop.context.bindings;
+            program.should.have.property("context");
+            var bindings = program.context.bindings;
 
             bindings.should.have.property("i");
             var i = bindings.i;
