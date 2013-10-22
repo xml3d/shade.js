@@ -37,6 +37,9 @@
      * @returns {TypeInfo|Array.<TypeInfo>}
      */
     ns.getTypeInfo = function (node, scope) {
+        if(!node)
+            return null;
+
         if(Array.isArray(node)) {
             return node.map(function (arg) {
                 return scope.getTypeInfo(arg);
@@ -54,6 +57,7 @@
 
     ns.Syntax = Syntax;
     ns.VisitorOption = estraverse.VisitorOption;
+
     ns.ANNO = ANNO;
     ns.getObjectReferenceFromNode = ns.getTypeInfo;
 

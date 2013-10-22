@@ -1,66 +1,56 @@
 (function (ns) {
 
-    var walk = require('estraverse'),
-        enterExpression = require('./infer_expression.js').enterExpression,
-        exitExpression = require('./infer_expression.js').exitExpression,
-        Syntax = require('estraverse').Syntax,
+    var common = require('../../base/common.js'),
         TYPES = require("../../interfaces.js").TYPES,
-        Annotation = require("./../../base/annotation.js").Annotation,
         FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
 
-    var log = function(str) {};
-    //var log = function() { console.log.apply(console, arguments); };
+    var VisitorOption = common.VisitorOption,
+        Syntax = common.Syntax,
+        ANNO = common.ANNO;
 
-    var enterHandler = {
-        ForStatement: function(node, ctx, root) {
+    var handler = {
 
-            root.traverse(node.init);
-            root.traverse(node.test);
+        enterForStatement: function (node, parent, context) {
+            context.traverse(node.init);
+            context.traverse(node.test);
 
-            var test = new Annotation(node.test);
+            var test = ANNO(node.test);
             if (test.hasStaticValue()) { // Great! We can evaluate it!
                 // TODO
             }
 
-            root.traverse(node.update);
-            root.traverse(node.body);
-            return walk.VisitorOption.Skip;
+            context.traverse(node.update);
+            context.traverse(node.body);
+            return VisitorOption.Skip;
         },
 
-        IfStatement: (function() {
+        enterIfStatement: function (node, parent, context) {
+            var result = ANNO(node);
+            context.traverse(node.test);
+            var test = ANNO(node.test);
+            if (test.getStaticTruthValue() != undefined) { // Great! We can evaluate it!
+                var testResult = test.getStaticTruthValue();
+                test.setType(TYPES.BOOLEAN);
+                test.setStaticValue(testResult);
+                if (!testResult) {
+                    if (node.alternate)
+                        context.traverse(node.alternate);
 
-            var c_evaluate = function(exp) {
-                return !!exp;
-            }
-
-            return function(node, ctx, root) {
-                var result = new Annotation(node);
-                root.traverse(node.test);
-                var test = new Annotation(node.test);
-                if (test.getStaticTruthValue() != undefined) { // Great! We can evaluate it!
-                    var testResult = test.getStaticTruthValue();
-                    test.setType(TYPES.BOOLEAN);
-                    test.setStaticValue(testResult);
-                    if(!testResult) {
-                        if (node.alternate)
-                            root.traverse(node.alternate);
-
-                        var consequent = new Annotation(node.consequent);
-                        consequent.eliminate();
-                    } else {
-                        root.traverse(node.consequent);
-                        if(node.alternate) {
-                            var alternate = new Annotation(node.alternate);
-                            alternate.eliminate();
-                        }
+                    var consequent = ANNO(node.consequent);
+                    consequent.eliminate();
+                } else {
+                    context.traverse(node.consequent);
+                    if (node.alternate) {
+                        var alternate = ANNO(node.alternate);
+                        alternate.eliminate();
                     }
-                    return walk.VisitorOption.Skip;
                 }
+                return VisitorOption.Skip;
             }
-        }()),
+        },
 
-        VariableDeclaration: function(node, ctx) {
-            ctx.inDeclaration = true;
+        enterVariableDeclaration: function (node, parent, context) {
+            context.currentScope.inDeclaration = true;
         },
 
 
@@ -69,169 +59,87 @@
          * @param {Context} parentContext
          * @param {TypeInference} root
          */
-        FunctionDeclaration: function(node, parentContext, root) {
+        enterFunctionDeclaration: function (node, parent, context) {
             var result = new FunctionAnnotation(node);
 
             if (node.id.type != Syntax.Identifier) {
                 throw new Error("Dynamic variable names are not yet supported");
             }
             var functionName = node.id.name;
-            var functionContext = root.createContext(node, parentContext, functionName);
+            var functionContext = context.createContext(node, context.currentScope, functionName);
             functionContext.declareParameters(node.params);
-            root.pushContext(functionContext);
-            if(functionContext.str() != root.entryPoint) {
-                return walk.VisitorOption.Skip;
+            context.pushContext(functionContext);
+            if (functionContext.str() != context.entryPoint) {
+                return VisitorOption.Skip;
             }
-        }
-    }
+        },
 
-    var exitHandler = {
         /**
          * @param node
          * @param {Context} ctx
          * @param {TypeInference} root
          */
-        FunctionDeclaration: function(node, ctx, root) {
+        exitFunctionDeclaration: function (node, parent, context) {
             var result = new FunctionAnnotation(node);
-            var returnInfo = ctx.getReturnInfo();
+            var returnInfo = context.currentScope.getReturnInfo();
             result.setReturnInfo(returnInfo || { type: TYPES.UNDEFINED });
-            root.popContext();
+            context.popContext();
         },
-        VariableDeclaration: function(node, ctx) {
-            ctx.inDeclaration = false;
+        exitVariableDeclaration: function (node, parent, context) {
+            context.currentScope.inDeclaration = false;
         },
-        VariableDeclarator: function(node, ctx) {
-            var result = new Annotation(node);
+        exitVariableDeclarator: function (node, parent, context) {
+            var result = ANNO(node),
+                scope = context.currentScope;
 
             if (node.id.type != Syntax.Identifier) {
                 throw new Error("Dynamic variable names are not yet supported");
             }
             var variableName = node.id.name;
-            ctx.declareVariable(variableName, true, result);
+            scope.declareVariable(variableName, true, result);
 
             if (node.init) {
-                var init = ctx.createTypeInfo(node.init);
+                var init = common.getTypeInfo(node.init, scope);
                 result.copy(init);
-                ctx.updateTypeInfo(variableName, init);
+                scope.updateTypeInfo(variableName, init);
             } else {
                 result.setType(TYPES.UNDEFINED);
             }
             // TODO: result.setType(init.getType());
         },
-        ReturnStatement: function(node, parent, ctx) {
-            var result = new Annotation(node),
-                argument = node.argument ? ctx.createTypeInfo(node.argument) : null;
+        exitReturnStatement: function (node, parent, context) {
+            var result = ANNO(node),
+                argument = context.getTypeInfo(node.argument);
 
             if (argument) {
                 result.copy(argument);
             } else {
                 result.setType(TYPES.UNDEFINED);
             }
-            ctx.updateReturnInfo(result);
+            context.currentScope.updateReturnInfo(result);
+        },
+        exitExpressionStatement: function (node, parent, context) {
+            var result = ANNO(node),
+                expression = ANNO(node.expression);
+
+            result.copy(expression);
         }
-
-    }
-
-
-
-
-    var enterStatement = function (node, parent, ctx) {
-        switch (node.type) {
-            case Syntax.ForStatement:
-                return enterHandler.ForStatement(node, ctx, this);
-            case Syntax.IfStatement:
-                return enterHandler.IfStatement(node, ctx, this);
-            case Syntax.VariableDeclaration:
-                return enterHandler.VariableDeclaration(node, ctx);
-            case Syntax.FunctionDeclaration:
-                return enterHandler.FunctionDeclaration(node, ctx, this);
-
-        }
-        return;
-
 
     };
 
-    var exitStatement = function (node, parent, ctx) {
 
-        switch (node.type) {
-            case Syntax.ExpressionStatement:
-                var result = new Annotation(node),
-                    expression = new Annotation(node.expression);
-
-                result.copy(expression);
-
-                break;
-            case Syntax.BlockStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.BreakStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.CatchClause:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.ContinueStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.DirectiveStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.DoWhileStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.DebuggerStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.EmptyStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.ForStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.ForInStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.FunctionDeclaration:
-                return exitHandler.FunctionDeclaration(node, ctx, this);
-                break;
-            case Syntax.IfStatement:
-                break;
-            case Syntax.LabeledStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.Program:
-                break;
-            case Syntax.ReturnStatement:
-                return exitHandler.ReturnStatement(node, parent, ctx);
-                break;
-            case Syntax.SwitchStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.SwitchCase:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.ThrowStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.TryStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.VariableDeclaration:
-                return exitHandler.VariableDeclaration(node, ctx);
-            case Syntax.VariableDeclarator:
-                exitHandler.VariableDeclarator(node, ctx);
-                break;
-            case Syntax.WhileStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.WithStatement:
-                log(node.type + " is not handle yet.");
-                break;
-            default:
-                throw new Error('Unknown node type: ' + node.type);
+    var enterStatement = function (node, parent) {
+        var handlerName = "enter" + node.type;
+        if (handler.hasOwnProperty(handlerName)) {
+            return handler[handlerName](node, parent, this);
         }
+    };
 
+    var exitStatement = function (node, parent) {
+        var handlerName = "exit" + node.type;
+        if (handler.hasOwnProperty(handlerName)) {
+            return handler[handlerName](node, parent, this);
+        }
     };
 
     ns.enterStatement = enterStatement;
