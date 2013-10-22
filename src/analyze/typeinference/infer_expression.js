@@ -5,36 +5,23 @@
         Shade = require("../../interfaces.js"),
         TYPES = Shade.TYPES,
         Annotation = require("./../../base/annotation.js").Annotation,
-        Base = require("./../../base/index.js");
+        ANNO = require("./../../base/annotation.js").ANNO,
+        evaluator = require("../evaluator.js");
 
 
-    var BinaryFunctions = {
-        "+" : function(a,b) { return a + b; },
-        "-" : function(a,b) { return a - b; },
-        "/" : function(a,b) { return a / b; },
-        "*" : function(a,b) { return a * b; },
-        "%" : function(a,b) { return a % b; },
-
-        "==" : function(a,b) { return a == b; },
-        "!=" : function(a,b) { return a != b; },
-        "===" : function(a,b) { return a === b; },
-        "!==" : function(a,b) { return a !== b; },
-        "<" : function(a,b) { return a < b; },
-        "<=" : function(a,b) { return a <= b; },
-        ">" : function(a,b) { return a > b; },
-        ">=" : function(a,b) { return a >= b; }
-        };
-
-    var UnaryFunctions = {
-                "!": function(a) { return !a; },
-                "-": function(a) { return -a; },
-                "+": function(a) { return +a; },
-                "typeof": function(a) { return typeof a; },
-                "void": function(a) { return void a; },
-                "delete": function(a) { return delete a; }
-
+    var enterExpression = function (node, parent, ctx) {
+        var handlerName = "enter" + node.type;
+        if (handlers.hasOwnProperty(handlerName)) {
+            return handlers[handlerName](node, parent, ctx, this);
+        }
     };
 
+    var exitExpression = function (node, parent, ctx) {
+        var handlerName = "exit" + node.type;
+        if (handlers.hasOwnProperty(handlerName)) {
+            return handlers[handlerName](node, parent, ctx, this);
+        }
+    };
 
     function getObjectReferenceFromNode(object, context) {
         switch (object.type) {
@@ -58,17 +45,13 @@
         return !!exp;
     }
 
-    var log = function(str) {};
-    //var log = function() { console.log.apply(console, arguments); };
+    var handlers = {
 
-
-    var enterHandlers = {
-        // On enter
-        LogicalExpression: function(node, parent, ctx, root) {
+        enterLogicalExpression: function(node, parent, scope, context) {
             var result = new Annotation(node);
-            root.traverse(node.left);
+            context.traverse(node.left);
 
-            var left = ctx.createTypeInfo(node.left);
+            var left = scope.createTypeInfo(node.left);
             var leftBool = left.getStaticTruthValue();
 
             if (leftBool == true && node.operator == "||") {
@@ -78,10 +61,13 @@
                 return VisitorOption.Skip; // Don't evaluate right expression
             }
             // In all other cases we also evaluate the right expression
-            root.traverse(node.right);
+            context.traverse(node.right);
             return VisitorOption.Skip;
         },
-        ConditionalExpression: function (node, parent, ctx, root) {
+
+
+
+        enterConditionalExpression: function (node, parent, ctx, root) {
             var result = new Annotation(node);
 
             root.traverse(node.test);
@@ -128,13 +114,13 @@
             return VisitorOption.Skip;
 
         },
-        Literal: function (literal) {
-            //console.log(literal);
+
+
+        enterLiteral: function (literal) {
             var value = literal.raw !== undefined ? literal.raw : literal.value,
                 result = new Annotation(literal);
 
             var number = parseFloat(value);
-
             if (!isNaN(number)) {
                 if (value.toString().indexOf(".") == -1) {
                     result.setType(TYPES.INT);
@@ -142,24 +128,19 @@
                 else {
                     result.setType(TYPES.NUMBER);
                 }
-                result.setStaticValue(number);
-            } else if (value === 'true') {
+            } else if (value === 'true' || value === 'false') {
                 result.setType(TYPES.BOOLEAN);
-                result.setStaticValue(true);
-            } else if (value === 'false') {
-                result.setType(TYPES.BOOLEAN);
-                result.setStaticValue(false);
             } else if (value === 'null') {
                 result.setType(TYPES.NULL);
             } else {
                 result.setType(TYPES.STRING);
-                result.setStaticValue(value);
             }
-        }
-    }
+            if (!result.isNull()) {
+                result.setStaticValue(evaluator.getStaticValue(literal));
+            }
+        },
 
-    var handlers = {
-        AssignmentExpression: function (node, ctx) {
+        exitAssignmentExpression: function (node, parent, ctx) {
             var right = ctx.createTypeInfo(node.right),
                 result = new Annotation(node);
 
@@ -176,7 +157,7 @@
         },
 
 
-        NewExpression: function(node, parent, ctx) {
+        exitNewExpression: function(node, parent, ctx) {
             var result = new Annotation(node);
 
             var entry = ctx.getBindingByName(node.callee.name);
@@ -192,11 +173,10 @@
             }
         },
 
-        UnaryExpression: function (node, ctx) {
+        exitUnaryExpression: function (node, parent, ctx) {
             var result = new Annotation(node),
                 argument = ctx.createTypeInfo(node.argument),
-                operator = node.operator,
-                func = UnaryFunctions[operator];
+                operator = node.operator;
 
             switch (operator) {
                 case "!":
@@ -224,7 +204,7 @@
                     throw new Error("Operator not yet supported: " + operator);
             }
             if (argument.hasStaticValue()) {
-                result.setStaticValue(func(argument.getStaticValue()));
+                result.setStaticValue(evaluator.getStaticValue(node));
             } else {
                 result.setDynamicValue();
             }
@@ -232,19 +212,15 @@
         },
 
 
-        Identifier: function (node, ctx) {
-            var result = new Annotation(node),
-                name = node.name;
-
-            if (name === "undefined") {
-                result.setType(TYPES.UNDEFINED);
-                return;
+        exitIdentifier: function (node) {
+            if (node.name === "undefined") {
+                ANNO(node).setType(TYPES.UNDEFINED);
             }
         },
 
 
 
-        LogicalExpression: function (node, ctx) {
+        exitLogicalExpression: function (node, parent, ctx) {
             var left = ctx.createTypeInfo(node.left),
                 right = ctx.createTypeInfo(node.right),
                 result = new Annotation(node),
@@ -312,13 +288,12 @@
         },
 
 
-        BinaryExpression: function (node, ctx) {
+        exitBinaryExpression: function (node, parent, ctx) {
             //console.log(node.left, node.right);
             var left = ctx.createTypeInfo(node.left),
                 right = ctx.createTypeInfo(node.right),
                 result = new Annotation(node),
-                operator = node.operator,
-                func = BinaryFunctions[operator];
+                operator = node.operator;
 
             switch (operator) {
                 case "+":
@@ -380,7 +355,7 @@
             }
             if (left.hasStaticValue() && right.hasStaticValue()) {
                 //console.log(left.getStaticValue(), operator, right.getStaticValue());
-                result.setStaticValue(func(left.getStaticValue(), right.getStaticValue()));
+                result.setStaticValue(evaluator.getStaticValue(node));
             } else {
                 result.setDynamicValue();
             }
@@ -388,7 +363,7 @@
         },
 
 
-        MemberExpression: function (node, parent, ctx, root) {
+        exitMemberExpression: function (node, parent, ctx, root) {
             var resultType = ctx.createTypeInfo(node),
                 objectAnnotation = new Annotation(node.object),
                 propertyAnnotation = new Annotation(node.property);
@@ -439,7 +414,7 @@
             resultType.setFromExtra(propertyTypeInfo);
         },
 
-        CallExpression: function (node, ctx, root) {
+        exitCallExpression: function (node, parent, ctx, root) {
             var result = new Annotation(node);
 
             // Call on an object, e.g. Math.cos()
@@ -501,81 +476,6 @@
 
         }
     };
-
-    var enterExpression = function (node, parent, ctx) {
-        if (enterHandlers.hasOwnProperty(node.type)) {
-            return enterHandlers[node.type](node, parent, ctx, this);
-        }
-    };
-
-    var exitExpression = function (node, parent, ctx) {
-
-        switch (node.type) {
-            case Syntax.AssignmentExpression:
-                handlers.AssignmentExpression(node, ctx);
-                break;
-            case Syntax.ArrayExpression:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.ArrayPattern:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.BinaryExpression:
-                handlers.BinaryExpression(node, ctx);
-                break;
-            case Syntax.CallExpression:
-                handlers.CallExpression(node, ctx, this);
-                break;
-            case Syntax.ConditionalExpression:
-                break;
-            case Syntax.FunctionExpression:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.Identifier:
-                handlers.Identifier(node, ctx);
-                break;
-            case Syntax.Literal:
-                break;
-            case Syntax.LogicalExpression:
-                handlers.LogicalExpression(node, ctx);
-                break;
-            case Syntax.MemberExpression:
-                handlers.MemberExpression(node, parent, ctx, this);
-                break;
-            case Syntax.NewExpression:
-                handlers.NewExpression(node, parent, ctx);
-                break;
-            case Syntax.ObjectExpression:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.ObjectPattern:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.Property:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.SequenceExpression:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.ThisExpression:
-                break;
-            case Syntax.UnaryExpression:
-                handlers.UnaryExpression(node, ctx);
-                break;
-            case Syntax.UpdateExpression:
-                log(node.type + " is not handle yet.");
-                break;
-            case Syntax.YieldExpression:
-                log(node.type + " is not handle yet.");
-                break;
-            default:
-                throw new Error('Unknown node type: ' + node.type);
-
-
-        }
-
-    };
-
 
     ns.enterExpression = enterExpression;
     ns.exitExpression = exitExpression;
