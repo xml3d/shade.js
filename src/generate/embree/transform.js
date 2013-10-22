@@ -397,35 +397,18 @@
         }
     };
 
-    function getObjectReferenceFromNode(object, context) {
-        switch (object.type) {
-            case Syntax.NewExpression:
-            case Syntax.CallExpression:
-            case Syntax.MemberExpression:
-            case Syntax.BinaryExpression:
-            case Syntax.Identifier:
-                return context.createTypeInfo(object);
-                break;
-            case Syntax.ThisExpression:
-                return context.getBindingByName("this");
-                break;
-            default:
-                throw new Error("Unhandled object type in Embree generation: " + object.type);
-        }
-    }
-
     var handleCallExpression = function (callExpression, parent, state) {
         var topDeclarations = state.topDeclarations, context = state.context;
         // Is this a call on an object?
         if (callExpression.callee.type == Syntax.MemberExpression) {
-            var calleeReference = getObjectReferenceFromNode(callExpression.callee, context);
+            var calleeReference = common.getTypeInfo(callExpression.callee, context);
             if(!(calleeReference && calleeReference.isFunction()))
                 Shade.throwError(callExpression, "Something went wrong in type inference, " + callExpression.callee.object.name);
 
             var object = callExpression.callee.object,
                 propertyName = callExpression.callee.property.name;
 
-            var objectReference = getObjectReferenceFromNode(object, context);
+            var objectReference = common.getTypeInfo(object, context);
             if(!objectReference)  {
                 Shade.throwError(callExpression, "Internal: No object info for: " + object);
             }
@@ -467,7 +450,7 @@
             return handleComputedMemberExpression(memberExpression, parent, state);
         }
 
-        var objectReference = getObjectReferenceFromNode(memberExpression.object, context);
+        var objectReference = common.getTypeInfo(memberExpression.object, context);
 
         if (!objectReference || !objectReference.isObject())
             Shade.throwError(memberExpression, "Internal Error: Object of Member expression is no object.");
@@ -552,7 +535,7 @@
     };
 
     var handleComputedMemberExpression = function(memberExpression, parent, state) {
-        var objectReference = getObjectReferenceFromNode(memberExpression.object, state.context);
+        var objectReference = common.getTypeInfo(memberExpression.object, state.context);
         if (!objectReference.isArray()) {
             Shade.throwError(memberExpression, "In shade.js, [] access is only allowed on arrays.");
         }

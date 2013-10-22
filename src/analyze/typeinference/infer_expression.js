@@ -25,23 +25,6 @@
         }
     };
 
-    function getObjectReferenceFromNode(object, context) {
-        switch (object.type) {
-            case Syntax.NewExpression:
-            case Syntax.CallExpression:
-            case Syntax.MemberExpression:
-                return context.createTypeInfo(object);
-                break;
-            case Syntax.Identifier:
-                return context.getBindingByName(object.name);
-                break;
-            case Syntax.ThisExpression:
-                return context.getBindingByName("this");
-                break;
-            default:
-                throw new Error("Unhandled object type in TypeInference: " + object.type);
-        }
-    }
 
     var evaluateTruth = function(exp) {
         return !!exp;
@@ -391,7 +374,7 @@
             }
             var propertyName = node.property.name;
 
-            var objectOfInterest = getObjectReferenceFromNode(node.object, scope);
+            var objectOfInterest = common.getObjectReferenceFromNode(node.object, scope);
 
             objectOfInterest || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + scope.str());
 
@@ -425,7 +408,7 @@
 
             // Call on an object, e.g. Math.cos()
             if (node.callee.type == Syntax.MemberExpression) {
-                var callingObject = getObjectReferenceFromNode(node.callee, scope);
+                var callingObject = context.getTypeInfo(node.callee);
 
                 if (!callingObject.isFunction()) { // e.g. Math.PI()
                     Shade.throwError(node, "TypeError: Object #<" + callingObject.getTypeString() + "> has no method '"+ node.callee.property.name + "'");
@@ -434,7 +417,7 @@
                 var object = node.callee.object,
                     propertyName = node.callee.property.name;
 
-                var objectReference = getObjectReferenceFromNode(object, scope);
+                var objectReference = context.getTypeInfo(object);
                 if(!objectReference)  {
                     Shade.throwError(node, "Internal: No object info for: " + object);
                 }

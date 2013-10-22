@@ -136,7 +136,7 @@
          * @returns {TypeInfo}
          */
         getTypeInfo: function(node) {
-            return common.createTypeInfo(node, this.currentScope);
+            return common.getTypeInfo(node, this.currentScope);
         },
 
         annotateParameters: function(arr) {

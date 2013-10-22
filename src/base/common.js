@@ -19,8 +19,8 @@
             });
         }
         var result = ANNO(node);
-        if (node.type == Syntax.Identifier) {
-            var name = node.name;
+        if (node.type == Syntax.Identifier || node.type == Syntax.ThisExpression) {
+            var name = node.type == Syntax.Identifier ? node.name : 'this';
             var binding = scope.getBindingByName(name);
             if (binding) {
                 result.copy(binding);
@@ -30,10 +30,32 @@
         return result;
     };
 
+    /**
+     *
+     * @param {object|Array.<object>} node
+     * @param scope
+     * @returns {TypeInfo|Array.<TypeInfo>}
+     */
+    ns.getTypeInfo = function (node, scope) {
+        if(Array.isArray(node)) {
+            return node.map(function (arg) {
+                return scope.getTypeInfo(arg);
+            });
+        }
+        if (node.type == Syntax.Identifier || node.type == Syntax.ThisExpression) {
+            var name = node.type == Syntax.Identifier ? node.name : 'this';
+            var binding = scope.getBindingByName(name);
+            if (binding) {
+                return binding;
+            }
+        }
+        return ANNO(node);
+    };
 
     ns.Syntax = Syntax;
     ns.VisitorOption = estraverse.VisitorOption;
     ns.ANNO = ANNO;
+    ns.getObjectReferenceFromNode = ns.getTypeInfo;
 
 
 }(exports));
