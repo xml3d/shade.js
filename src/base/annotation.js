@@ -43,17 +43,6 @@
 
     });
 
-    /**
-     * @param {Array.<object>} arr Array of nodes
-     * @param {Context} ctx
-     * @returns {Array.<Annotation>}
-     */
-    Annotation.createAnnotatedNodeArray = function(arr, ctx) {
-        return arr.map(function (arg) {
-            return ctx.createTypeInfo(arg);
-        });
-    }
-
 
     /**
      * @param {object} node

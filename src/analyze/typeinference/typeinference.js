@@ -16,6 +16,7 @@
         Base = require("../../base/index.js"),
         Shade = require("../../interfaces.js"),
         Annotation = require("./../../base/annotation.js").Annotation,
+        common = require("./../../base/common.js"),
         FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
 
 
@@ -114,10 +115,7 @@
     Base.extend(TypeInference.prototype, {
         pushContext: function (context) {
             this.context.push(context);
-            /*var injection = this.injections[context.str()];
-            if (injection) {
-                context.injectParameters(injection);
-            }*/
+            this.currentScope = context;
         },
         popContext: function () {
             this.context.pop();
@@ -128,6 +126,17 @@
         createContext: function (node, parentContext, name) {
            var result = new Context(node, parentContext, {name: name } );
            return result;
+        },
+
+        /**
+         * Get the TypeInfo for a node. Creates an empty one, if no
+         * TypeInfo is available
+         *
+         * @param node
+         * @returns {TypeInfo}
+         */
+        getTypeInfo: function(node) {
+            return common.createTypeInfo(node, this.currentScope);
         },
 
         annotateParameters: function(arr) {

@@ -1,7 +1,7 @@
 (function (ns) {
 
     var Base = require("../../base/index.js"),
-        ANNO = require("../../base/annotation.js").ANNO,
+        common = require("../../base/common.js"),
         Annotation = require("../../base/annotation.js").Annotation,
         FunctionAnnotation = require("../../base/annotation.js").FunctionAnnotation,
         TypeInfo = require("../../base/typeinfo.js").TypeInfo,
@@ -18,6 +18,7 @@
     var walk = require('estraverse');
     var Syntax = walk.Syntax;
     var VisitorOption = walk.VisitorOption;
+    var ANNO = common.ANNO;
 
 
     /**
@@ -378,7 +379,7 @@
             if (objectInfo.hasOwnProperty(propertyName)) {
                 var propertyHandler = objectInfo[propertyName];
                 if (typeof propertyHandler.callExp == "function") {
-                    var args = Annotation.createAnnotatedNodeArray(callExpression.arguments, context);
+                    var args = common.createTypeInfo(callExpression.arguments, context);
                     return propertyHandler.callExp(callExpression, args, parent, state);
                 }
             }

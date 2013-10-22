@@ -1,25 +1,27 @@
 (function (ns) {
 
-    var Syntax = require('estraverse').Syntax,
-        VisitorOption = require('estraverse').VisitorOption,
+    var common = require("./../../base/common.js"),
         Shade = require("../../interfaces.js"),
-        TYPES = Shade.TYPES,
-        Annotation = require("./../../base/annotation.js").Annotation,
-        ANNO = require("./../../base/annotation.js").ANNO,
         evaluator = require("../evaluator.js");
 
 
-    var enterExpression = function (node, parent, ctx) {
+    var Syntax = common.Syntax,
+        VisitorOption = common.VisitorOption,
+        TYPES = Shade.TYPES,
+        ANNO = common.ANNO;
+
+
+    var enterExpression = function (node, parent) {
         var handlerName = "enter" + node.type;
         if (handlers.hasOwnProperty(handlerName)) {
-            return handlers[handlerName](node, parent, ctx, this);
+            return handlers[handlerName](node, parent, this);
         }
     };
 
-    var exitExpression = function (node, parent, ctx) {
+    var exitExpression = function (node, parent) {
         var handlerName = "exit" + node.type;
         if (handlers.hasOwnProperty(handlerName)) {
-            return handlers[handlerName](node, parent, ctx, this);
+            return handlers[handlerName](node, parent, this);
         }
     };
 
@@ -47,11 +49,11 @@
 
     var handlers = {
 
-        enterLogicalExpression: function(node, parent, scope, context) {
-            var result = new Annotation(node);
+        enterLogicalExpression: function(node, parent, context) {
+            var result = ANNO(node);
             context.traverse(node.left);
 
-            var left = scope.createTypeInfo(node.left);
+            var left = context.getTypeInfo(node.left);
             var leftBool = left.getStaticTruthValue();
 
             if (leftBool == true && node.operator == "||") {
@@ -67,34 +69,34 @@
 
 
 
-        enterConditionalExpression: function (node, parent, ctx, root) {
-            var result = new Annotation(node);
+        enterConditionalExpression: function (node, parent, context) {
+            var result = ANNO(node);
 
-            root.traverse(node.test);
-            var test = ctx.createTypeInfo(node.test);
+            context.traverse(node.test);
+            var test = context.getTypeInfo(node.test);
 
             // console.log(node.test, node.consequent, node.alternate);
             if (test.hasStaticValue() || test.isObject()) {
                 var testResult = test.hasStaticValue() ? evaluateTruth(test.getStaticValue()) : true;
                 if (testResult === true) {
-                    root.traverse(node.consequent);
-                    consequent = ctx.createTypeInfo(node.consequent);
+                    context.traverse(node.consequent);
+                    consequent = context.getTypeInfo(node.consequent);
                     result.copy(consequent);
-                    var alternate = new Annotation(node.alternate);
+                    var alternate = ANNO(node.alternate);
                     alternate.eliminate();
                 } else {
-                    root.traverse(node.alternate);
-                    var alternate = ctx.createTypeInfo(node.alternate);
+                    context.traverse(node.alternate);
+                    var alternate = context.getTypeInfo(node.alternate);
                     result.copy(alternate);
-                    var consequent = new Annotation(node.consequent);
+                    var consequent = ANNO(node.consequent);
                     consequent.eliminate();
                 }
             } else {
                 // We can't decide, thus traverse both;
-                root.traverse(node.consequent);
-                root.traverse(node.alternate);
-                var consequent = ctx.createTypeInfo(node.consequent),
-                    alternate = ctx.createTypeInfo(node.alternate);
+                context.traverse(node.consequent);
+                context.traverse(node.alternate);
+                var consequent = context.getTypeInfo(node.consequent),
+                    alternate = context.getTypeInfo(node.alternate);
 
 
                 if (consequent.equals(alternate)) {
@@ -118,7 +120,7 @@
 
         enterLiteral: function (literal) {
             var value = literal.raw !== undefined ? literal.raw : literal.value,
-                result = new Annotation(literal);
+                result = ANNO(literal);
 
             var number = parseFloat(value);
             if (!isNaN(number)) {
@@ -140,32 +142,34 @@
             }
         },
 
-        exitAssignmentExpression: function (node, parent, ctx) {
-            var right = ctx.createTypeInfo(node.right),
-                result = new Annotation(node);
+        exitAssignmentExpression: function (node, parent, context) {
+            var right = context.getTypeInfo(node.right),
+                result = ANNO(node);
 
             result.copy(right);
             if (node.left.type == Syntax.Identifier) {
+                var scope = context.currentScope;
                 var name = node.left.name;
-                if (ctx.inDeclaration === true) {
-                    ctx.declareVariable(name, true, result)
+                if (scope.inDeclaration === true) {
+                    scope.declareVariable(name, true, result)
                 }
-                ctx.updateTypeInfo(name, right);
+                scope.updateTypeInfo(name, right);
             } else {
                 throw new Error("Assignment expression");
             }
         },
 
 
-        exitNewExpression: function(node, parent, ctx) {
-            var result = new Annotation(node);
+        exitNewExpression: function(node, parent, context) {
+            var result = ANNO(node);
 
-            var entry = ctx.getBindingByName(node.callee.name);
+            var scope = context.currentScope;
+            var entry = scope.getBindingByName(node.callee.name);
             //console.error(entry);
             if (entry && entry.hasConstructor()) {
                 var constructor = entry.getConstructor();
-                var args = Annotation.createAnnotatedNodeArray(node.arguments, ctx);
-                var extra = constructor.evaluate(result, args, ctx);
+                var args = common.createTypeInfo(node.arguments, scope);
+                var extra = constructor.evaluate(result, args, scope);
                 result.setFromExtra(extra);
             }
            else {
@@ -173,9 +177,9 @@
             }
         },
 
-        exitUnaryExpression: function (node, parent, ctx) {
-            var result = new Annotation(node),
-                argument = ctx.createTypeInfo(node.argument),
+        exitUnaryExpression: function (node, parent, context) {
+            var result = ANNO(node),
+                argument = context.getTypeInfo(node.argument),
                 operator = node.operator;
 
             switch (operator) {
@@ -220,10 +224,10 @@
 
 
 
-        exitLogicalExpression: function (node, parent, ctx) {
-            var left = ctx.createTypeInfo(node.left),
-                right = ctx.createTypeInfo(node.right),
-                result = new Annotation(node),
+        exitLogicalExpression: function (node, parent, context) {
+            var left = context.getTypeInfo(node.left),
+                right = context.getTypeInfo(node.right),
+                result = ANNO(node),
                 operator = node.operator;
 
             // static: true || false, dynamic: undefined
@@ -288,11 +292,11 @@
         },
 
 
-        exitBinaryExpression: function (node, parent, ctx) {
+        exitBinaryExpression: function (node, parent, context) {
             //console.log(node.left, node.right);
-            var left = ctx.createTypeInfo(node.left),
-                right = ctx.createTypeInfo(node.right),
-                result = new Annotation(node),
+            var left = context.getTypeInfo(node.left),
+                right = context.getTypeInfo(node.right),
+                result = ANNO(node),
                 operator = node.operator;
 
             switch (operator) {
@@ -363,16 +367,17 @@
         },
 
 
-        exitMemberExpression: function (node, parent, ctx, root) {
-            var resultType = ctx.createTypeInfo(node),
-                objectAnnotation = new Annotation(node.object),
-                propertyAnnotation = new Annotation(node.property);
+        exitMemberExpression: function (node, parent, context) {
+            var resultType = context.getTypeInfo(node),
+                objectAnnotation = ANNO(node.object),
+                propertyAnnotation = ANNO(node.property),
+                scope = context.currentScope;
 
             //console.log("Member", node.object.name, node.property.name);
             if (node.computed) {
                 if (objectAnnotation.isArray()) {
                     // Property is computed, thus it could be a variable
-                    var propertyType =  ctx.createTypeInfo(node.property);
+                    var propertyType =  context.getTypeInfo(node.property);
                     if (!propertyType.canInt()) {
                         Shade.throwError(node, "Expected 'int' type for array accessor");
                     }
@@ -386,9 +391,9 @@
             }
             var propertyName = node.property.name;
 
-            var objectOfInterest = getObjectReferenceFromNode(node.object, ctx);
+            var objectOfInterest = getObjectReferenceFromNode(node.object, scope);
 
-            objectOfInterest || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + ctx.str());
+            objectOfInterest || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + scope.str());
 
             if (objectOfInterest.getType() == TYPES.UNDEFINED) {  // e.g. var a = undefined; a.unknown;
                 Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName +"' of undefined")
@@ -398,7 +403,7 @@
                 return;
             }
 
-            var objectInfo = ctx.getObjectInfoFor(objectOfInterest);
+            var objectInfo = scope.getObjectInfoFor(objectOfInterest);
             if(!objectInfo)
                 Shade.throwError(node, "Internal: Incomplete registration for object: " + objectOfInterest.getTypeString() + ", " + JSON.stringify(node.object));
 
@@ -414,12 +419,13 @@
             resultType.setFromExtra(propertyTypeInfo);
         },
 
-        exitCallExpression: function (node, parent, ctx, root) {
-            var result = new Annotation(node);
+        exitCallExpression: function (node, parent, context) {
+            var result = ANNO(node),
+                scope = context.currentScope;
 
             // Call on an object, e.g. Math.cos()
             if (node.callee.type == Syntax.MemberExpression) {
-                var callingObject = getObjectReferenceFromNode(node.callee, ctx);
+                var callingObject = getObjectReferenceFromNode(node.callee, scope);
 
                 if (!callingObject.isFunction()) { // e.g. Math.PI()
                     Shade.throwError(node, "TypeError: Object #<" + callingObject.getTypeString() + "> has no method '"+ node.callee.property.name + "'");
@@ -428,20 +434,20 @@
                 var object = node.callee.object,
                     propertyName = node.callee.property.name;
 
-                var objectReference = getObjectReferenceFromNode(object, ctx);
+                var objectReference = getObjectReferenceFromNode(object, scope);
                 if(!objectReference)  {
                     Shade.throwError(node, "Internal: No object info for: " + object);
                 }
 
-                var objectInfo = ctx.getObjectInfoFor(objectReference);
+                var objectInfo = scope.getObjectInfoFor(objectReference);
                 if(!objectInfo) { // Every object needs an info, otherwise we did something wrong
                     Shade.throwError(node, "Internal Error: No object registered for: " + objectReference.getTypeString() + JSON.stringify(node.object));
                 }
                 if (objectInfo.hasOwnProperty(propertyName)) {
                     var propertyHandler = objectInfo[propertyName];
                     if (typeof propertyHandler.evaluate == "function") {
-                        var args = Annotation.createAnnotatedNodeArray(node.arguments, ctx);
-                        var extra = propertyHandler.evaluate(result, args, ctx, objectReference, root);
+                        var args = common.createTypeInfo(node.arguments, scope);
+                        var extra = propertyHandler.evaluate(result, args, scope, objectReference, context);
                         result.setFromExtra(extra);
                         return;
                     } else {
@@ -453,17 +459,17 @@
 
             }  else if (node.callee.type == Syntax.Identifier) {
                 var functionName = node.callee.name;
-                var func = ctx.getBindingByName(functionName);
+                var func = scope.getBindingByName(functionName);
                 if (!func) {
                     Shade.throwError(node, "ReferenceError: " + functionName + " is not defined");
                 }
                 if(!func.isFunction()) {
                     Shade.throwError(node, "TypeError: " + func.getTypeString() + " is not a function");
                 }
-                var args = Annotation.createAnnotatedNodeArray(node.arguments, ctx);
-                var definingContext = ctx.getContextForName(functionName);
+                var args = common.createTypeInfo(node.arguments, scope);
+                var definingContext = scope.getContextForName(functionName);
                 try {
-                var extra = root.getFunctionInformationFor(ctx.getVariableIdentifier(functionName), args, definingContext);
+                var extra = context.getFunctionInformationFor(scope.getVariableIdentifier(functionName), args, definingContext);
                 } catch(e) {
                     Shade.throwError(node, "Failure in function call: " + e.message);
                 }
