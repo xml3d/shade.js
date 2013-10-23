@@ -7,7 +7,7 @@
         TypeInfo = require("./typeinfo.js").TypeInfo,
         Syntax = require('estraverse').Syntax;
 
-    ns.getContext = function(registry) {
+    ns.getScope = function(registry) {
 
     /**
      *
@@ -79,14 +79,14 @@
 
 
     /**
-     * @param {Context|null} parent
+     * @param {Scope|null} parent
      * @param opt
      * @constructor
      */
-    var Context = function(node, parent, opt) {
+    var Scope = function(node, parent, opt) {
         opt = opt || {};
 
-        /** @type (Context|null) */
+        /** @type (Scope|null) */
         this.parent = parent || opt.parent || null;
         this.registery = parent ? parent.registery : {};
 
@@ -102,7 +102,7 @@
 
     };
 
-    Base.extend(Context.prototype, {
+    Base.extend(Scope.prototype, {
 
         getName: function() {
             return this.context.name;
@@ -140,7 +140,7 @@
 
         /**
          * @param {string} name
-         * @returns {Context|null}
+         * @returns {Scope|null}
          */
         getContextForName: function(name) {
             var bindings = this.getBindings();
@@ -294,7 +294,7 @@
     });
 
 
-        return Context;
+        return Scope;
 
     };
 

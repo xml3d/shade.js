@@ -12,7 +12,7 @@
         assert = require("assert"),
 
         ObjectRegistry = require("./registry/index.js").Registry,
-        Context = require("./../../base/context.js").getContext(ObjectRegistry),
+        Scope = require("./../../base/scope.js").getScope(ObjectRegistry),
         Base = require("../../base/index.js"),
         Shade = require("../../interfaces.js"),
         Annotation = require("./../../base/annotation.js").Annotation,
@@ -25,7 +25,7 @@
 
 
     var registerGlobalContext = function (program) {
-        var ctx = new Context(program, null, {name: "global"});
+        var ctx = new Scope(program, null, {name: "global"});
         ctx.registerObject("Math", ObjectRegistry.getByName("Math"));
         ctx.registerObject("Color", ObjectRegistry.getByName("Color"));
         ctx.registerObject("Vec2", ObjectRegistry.getByName("Vec2"));
@@ -125,7 +125,7 @@
             return this.context[this.context.length - 1];
         },
         createContext: function (node, parentContext, name) {
-           var result = new Context(node, parentContext, {name: name } );
+           var result = new Scope(node, parentContext, {name: name } );
            return result;
         },
 
@@ -251,7 +251,7 @@
          *
          * @param {Object} functionAST
          * @param {Array.<TypeInfo> params
-         * @param {Context} parentContext
+         * @param {Scope} parentContext
          * @returns {*}
          */
         inferFunction: function (functionAST, params, parentContext) {

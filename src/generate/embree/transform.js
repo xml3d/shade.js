@@ -11,7 +11,7 @@
         Tools = require('./registry/tools.js');
 
     var ObjectRegistry = require("./registry/index.js").Registry,
-        Context = require("../../base/context.js").getContext(ObjectRegistry);
+        Scope = require("../../base/scope.js").getScope(ObjectRegistry);
 
 
     var walk = require('estraverse');
@@ -31,7 +31,7 @@
 
     Base.extend(EmbreeASTTransformer.prototype, {
         registerGlobalContext : function (program) {
-            var ctx = new Context(program, null, {name: "global"});
+            var ctx = new Scope(program, null, {name: "global"});
             ctx.registerObject("Math", ObjectRegistry.getByName("Math"));
             //ctx.registerObject("this", ObjectRegistry.getByName("System"));
             ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
@@ -54,7 +54,7 @@
         },
         /**
          *
-         * @param {Context} context
+         * @param {Scope} context
          * @param {{blockedNames: Array, systemParameters: Object}} state
          */
         registerThisObject: function (context, state) {
@@ -160,7 +160,7 @@
                         case Syntax.FunctionDeclaration:
                             // No need to declare, this has been annotated already
                             var parentContext = state.contextStack[state.contextStack.length - 1];
-                            var context = new Context(node, parentContext, {name: node.id.name });
+                            var context = new Scope(node, parentContext, {name: node.id.name });
                             state.context = context;
                             state.contextStack.push(context);
                             state.inMain = this.mainId == context.str();

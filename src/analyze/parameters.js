@@ -1,7 +1,7 @@
 (function (ns) {
 
     var walk = require('estraverse'),
-        Context = require("./../base/context.js").getContext(null),
+        Scope = require("./../base/scope.js").getScope(null),
         resolver = require("../resolve/resolve.js"),
         Syntax = walk.Syntax;
 
@@ -52,7 +52,7 @@
      * @returns {{shaderParameters: Array, systemParameters: Array}}
      */
     var findParametersInFunction = function (functionName, program, environmentObjectPosition, analyzedCalls) {
-        var context = new Context(program, null, {name: "global"});
+        var context = new Scope(program, null, {name: "global"});
         var contextStack = [context];
 
         var result = { shaderParameters: [], systemParameters: [] };
@@ -68,7 +68,7 @@
                     case Syntax.FunctionDeclaration:
                         var parentContext = contextStack[contextStack.length - 1];
                         parentContext.declareVariable(node.id.name, false);
-                        context = new Context(node, parentContext, {name: node.id.name });
+                        context = new Scope(node, parentContext, {name: node.id.name });
                         contextStack.push(context);
                         if (context.str() == functionName) {
                             if (environmentObjectPosition != -1 && node.params.length > environmentObjectPosition) {
