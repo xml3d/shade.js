@@ -119,6 +119,7 @@
         },
         popContext: function () {
             this.context.pop();
+            this.currentScope = this.peekContext();
         },
         peekContext: function () {
             return this.context[this.context.length - 1];
