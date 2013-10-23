@@ -60,7 +60,7 @@ function shade(env) {
     /*
      * Add the ring patterns
      */
-    var r;
+    var r = 0.0;
 
     var fade = Math.smoothstep(1 / env.ringscale, 8 / env.ringscale, fwidth);
     if (fade < 0.999) {
@@ -97,14 +97,14 @@ function shade(env) {
     ct = linear_to_gamma(ct);
 
     /* Use the plastic illumination model */
-    return new Shade().diffuse(ct, env.normal).phong(ct.mul(specularcolor), env.normal, env.roughness);
+    return new Shade().diffuse(ct, env.normal).phong(ct.mul(specularcolor), env.normal, env.shininess !== undefined ? env.shininess : 0);
 }
 
 function hash(n) {
     return Math.fract(Math.sin(n)*43758.5453123);
 }
 
-var vGammaPower = new Vec3(0.454545);
+var vGammaPower = new Vec3(2.2);
 
 function linear_to_gamma(c)
 {
