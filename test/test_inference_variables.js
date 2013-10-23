@@ -18,8 +18,8 @@ describe('Inference:', function () {
             declaration.should.have.property("extra");
             declaration.extra.should.have.property("type", TYPES.UNDEFINED);
 
-            program.should.have.property("context").property("bindings").property("a");
-            var a = program.context.bindings.a;
+            program.should.have.property("scope").property("bindings").property("a");
+            var a = program.scope.bindings.a;
             a.should.have.property("initialized", false);
             a.extra.should.have.property("type", TYPES.UNDEFINED);
         });
@@ -31,8 +31,8 @@ describe('Inference:', function () {
             declaration.extra.should.have.property("type", TYPES.INT);
             declaration.extra.should.have.property("staticValue", 5);
 
-            program.should.have.property("context").property("bindings").property("a");
-            var a = program.context.bindings.a;
+            program.should.have.property("scope").property("bindings").property("a");
+            var a = program.scope.bindings.a;
             a.should.have.property("initialized", true);
             a.extra.should.have.property("type", TYPES.INT);
             a.extra.should.not.have.property("staticValue");
@@ -46,8 +46,8 @@ describe('Inference:', function () {
             declaration.extra.should.have.property("type", TYPES.NUMBER);
             declaration.extra.should.have.property("staticValue", 35);
 
-            program.should.have.property("context").property("bindings").property("a");
-            var a = program.context.bindings.a;
+            program.should.have.property("scope").property("bindings").property("a");
+            var a = program.scope.bindings.a;
             a.should.have.property("initialized", true);
             a.extra.should.have.property("type", TYPES.NUMBER);
             a.extra.should.not.have.property("staticValue");
@@ -59,8 +59,8 @@ describe('Inference:', function () {
             exp.extra.should.have.property("type", TYPES.NUMBER);
             exp.extra.should.have.property("staticValue", Math.PI);
 
-            program.should.have.property("context").property("bindings").property("a");
-            var a = program.context.bindings.a;
+            program.should.have.property("scope").property("bindings").property("a");
+            var a = program.scope.bindings.a;
             a.should.have.property("initialized", true);
             a.extra.should.have.property("type", TYPES.NUMBER);
             a.extra.should.not.have.property("staticValue");
@@ -74,18 +74,18 @@ describe('Inference:', function () {
             declaration.extra.should.have.property("type", TYPES.NUMBER);
             declaration.extra.should.have.property("staticValue", 5);
 
-            program.should.have.property("context").property("bindings").property("a");
-            var variable = program.context.bindings.a;
+            program.should.have.property("scope").property("bindings").property("a");
+            var variable = program.scope.bindings.a;
             variable.should.have.property("initialized", true);
             variable.extra.should.have.property("type", TYPES.NUMBER);
             variable.extra.should.not.have.property("staticValue");
-            program.should.have.property("context").property("bindings").property("b");
-            variable = program.context.bindings.b;
+            program.should.have.property("scope").property("bindings").property("b");
+            variable = program.scope.bindings.b;
             variable.should.have.property("initialized", true);
             variable.extra.should.have.property("type", TYPES.NUMBER);
             variable.extra.should.not.have.property("staticValue");
-            program.should.have.property("context").property("bindings").property("c");
-            variable = program.context.bindings.c;
+            program.should.have.property("scope").property("bindings").property("c");
+            variable = program.scope.bindings.c;
             variable.should.have.property("initialized", true);
             variable.extra.should.have.property("type", TYPES.NUMBER);
             variable.extra.should.not.have.property("staticValue");
@@ -112,8 +112,8 @@ describe('Inference:', function () {
             exp.extra.should.have.property("type", TYPES.INT);
             exp.extra.should.have.property("staticValue", 3);
 
-            program.should.have.property("context").property("bindings").property("a");
-            var a = program.context.bindings.a;
+            program.should.have.property("scope").property("bindings").property("a");
+            var a = program.scope.bindings.a;
             a.should.have.property("initialized", true);
             a.extra.should.have.property("type", TYPES.INT);
             a.extra.should.not.have.property("staticValue");
@@ -158,8 +158,8 @@ describe('Inference:', function () {
             init.extra.should.have.property("type", TYPES.NUMBER);
             init.extra.should.have.property("staticValue", Math.PI);
 
-            program.should.have.property("context").property("bindings").property("a");
-            var a = program.context.bindings.a;
+            program.should.have.property("scope").property("bindings").property("a");
+            var a = program.scope.bindings.a;
             a.should.have.property("initialized", true);
             a.extra.should.have.property("type", TYPES.NUMBER);
             a.extra.should.not.have.property("staticValue");
@@ -175,8 +175,8 @@ describe('Inference:', function () {
             init.extra.should.have.property("type", TYPES.BOOLEAN);
             init.extra.should.have.property("staticValue", true);
 
-            program.should.have.property("context").property("bindings").property("cond");
-            var cond = program.context.bindings.cond;
+            program.should.have.property("scope").property("bindings").property("cond");
+            var cond = program.scope.bindings.cond;
             cond.should.have.property("initialized", true);
             cond.extra.should.have.property("type", TYPES.NUMBER);
             cond.extra.should.not.have.property("staticValue");

@@ -14,8 +14,8 @@ describe('Inference of Statements:', function () {
         it("annotation on initialized values", function() {
             var program = parseAndInferenceExpression("for (var i = 0, j = 1.5, k; i < 10; i++) {}");
             var loop = program.body[0];
-            program.should.have.property("context");
-            var bindings = program.context.bindings;
+            program.should.have.property("scope");
+            var bindings = program.scope.bindings;
 
             bindings.should.have.property("i");
             var i = bindings.i;

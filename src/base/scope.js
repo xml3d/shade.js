@@ -90,22 +90,22 @@
         this.parent = parent || opt.parent || null;
         this.registery = parent ? parent.registery : {};
 
-        this.context = node.context = node.context || {};
+        this.scope = node.scope = node.scope || {};
 
         /** @type {Object.<string, {initialized: boolean, annotation: Annotation}>} */
-        this.context.bindings = this.context.bindings || {};
+        this.scope.bindings = this.scope.bindings || {};
         if(opt.bindings) {
-            Base.extend(this.context.bindings, opt.bindings);
+            Base.extend(this.scope.bindings, opt.bindings);
         }
 
-        this.context.name = opt.name || node.name || "<anonymous>";
+        this.scope.name = opt.name || node.name || "<anonymous>";
 
     };
 
     Base.extend(Scope.prototype, {
 
         getName: function() {
-            return this.context.name;
+            return this.scope.name;
         },
         getRootContext: function() {
             if (this.parent)
@@ -114,14 +114,14 @@
         },
 
         getBindings: function() {
-            return this.context.bindings;
+            return this.scope.bindings;
         },
 
         updateReturnInfo: function(annotation) {
-            this.context.returnInfo = annotation.getExtra();
+            this.scope.returnInfo = annotation.getExtra();
         },
         getReturnInfo: function() {
-            return this.context.returnInfo;
+            return this.scope.returnInfo;
         },
 
         /**
@@ -152,10 +152,10 @@
         },
 
         getVariableIdentifier: function(name) {
-            var context = this.getContextForName(name);
-            if(!context)
+            var scope = this.getContextForName(name);
+            if(!scope)
                 return null;
-            return context.str() + "." + name;
+            return scope.str() + "." + name;
         },
 
         declareVariable: function(name, fail, position) {

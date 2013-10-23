@@ -17,17 +17,17 @@ describe('Inference:', function () {
             var program = parseAndInferenceExpression("function a(){};", { entry: "global.a" });
             var func = program.body[0];
 
-            program.should.have.property("context");
-            program.context.should.have.property("name", "global");
-            program.context.should.have.property("bindings").property("a").property("extra").property("type", TYPES.FUNCTION);
+            program.should.have.property("scope");
+            program.scope.should.have.property("name", "global");
+            program.scope.should.have.property("bindings").property("a").property("extra").property("type", TYPES.FUNCTION);
 
             func.should.have.property("extra");
             func.extra.should.have.property("type", TYPES.FUNCTION);
             func.extra.should.have.property("returnInfo").property("type", TYPES.UNDEFINED);
-            func.should.have.property("context");
-            func.context.should.have.property("name", "a");
+            func.should.have.property("scope");
+            func.scope.should.have.property("name", "a");
 
-            func.context.should.not.equal(program.context);
+            func.scope.should.not.equal(program.scope);
 
         });
 
@@ -35,19 +35,19 @@ describe('Inference:', function () {
             var program = parseAndInferenceExpression("function a(){ var b = 5;};", { entry: "global.a" });
             var func = program.body[0];
 
-            program.should.have.property("context");
-            program.context.should.have.property("name", "global");
-            program.context.bindings.should.have.property("a").property("extra").property("type", TYPES.FUNCTION);
-            program.context.bindings.should.not.have.property("b");
+            program.should.have.property("scope");
+            program.scope.should.have.property("name", "global");
+            program.scope.bindings.should.have.property("a").property("extra").property("type", TYPES.FUNCTION);
+            program.scope.bindings.should.not.have.property("b");
 
             func.should.have.property("extra");
             func.extra.should.have.property("type", TYPES.FUNCTION);
             func.extra.should.have.property("returnInfo").property("type", TYPES.UNDEFINED);
-            func.should.have.property("context");
-            func.context.should.have.property("name", "a");
+            func.should.have.property("scope");
+            func.scope.should.have.property("name", "a");
 
-            func.context.bindings.should.have.property("b").property("extra").property("type", TYPES.INT);
-            func.context.bindings.should.not.have.property("a");
+            func.scope.bindings.should.have.property("b").property("extra").property("type", TYPES.INT);
+            func.scope.bindings.should.not.have.property("a");
 
 
         });
