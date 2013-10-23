@@ -2,7 +2,6 @@
 
     var Base = require("../../base/index.js"),
         common = require("../../base/common.js"),
-        Annotation = require("../../base/annotation.js").Annotation,
         FunctionAnnotation = require("../../base/annotation.js").FunctionAnnotation,
         TypeInfo = require("../../base/typeinfo.js").TypeInfo,
         Shade = require("./../../interfaces.js"),
@@ -210,7 +209,7 @@
                             }
                             break;
                         case Syntax.BinaryExpression:
-                            return handleBinaryExpression(node, parent);
+                            return handleBinaryExpression(node, parent, state.context);
 
                     }
                 }.bind(this)
@@ -442,22 +441,22 @@
 
     }
 
-    var handleBinaryExpression = function (binaryExpression, parent, cb) {
-        // In GL, we can't mix up floats, ints and boold for binary expressions
-        var left = ANNO(binaryExpression.left),
-            right = ANNO(binaryExpression.right);
+    var handleBinaryExpression = function (node, parent, scope) {
+        // In GL, we can't mix up floats, ints and bool for binary expressions
+        var left = common.getTypeInfo(node.left, scope),
+            right = common.getTypeInfo(node.right, scope);
 
         if (left.isNumber() && right.isInt()) {
-            binaryExpression.right = Tools.castToFloat(binaryExpression.right);
+            node.right = Tools.castToFloat(node.right);
         }
         else if (right.isNumber() && left.isInt()) {
-            binaryExpression.left = Tools.castToFloat(binaryExpression.left);
+            node.left = Tools.castToFloat(node.left);
         }
 
-        if (binaryExpression.operator == "%") {
-            return handleModulo(binaryExpression);
+        if (node.operator == "%") {
+            return handleModulo(node);
         }
-        return binaryExpression;
+        return node;
     }
 
     function castToInt(ast, force) {
