@@ -7,7 +7,10 @@
         "eswalker": "*",
         "escodegen": "*",
         "estraverse": "~0.0.4",
-        "optimist": "*"
+        "walkes": "*",
+        "optimist": "*",
+        "esgraph": "https://github.com/ksons/esgraph/tarball/master",
+        "analyses": "*"
     },
     "devDependencies": {
         "mocha": "*",
