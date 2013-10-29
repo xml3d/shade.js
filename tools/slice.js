@@ -17,10 +17,10 @@ var slice = require("../src/analyze/slice.js")
 var Set = analyses.Set;
 var Syntax = common.Syntax;
 
-function doAnalysis(cfg, variable) {
+function doAnalysis(cfg, startNode, variable) {
     var count = 1;
     cfg[2].forEach(function(n) {!n.type && (n.label = count++)});
-    var output = slice(cfg, cfg[1].prev[0], variable);
+    var output = slice(cfg, startNode, variable);
     output.add(cfg[1].prev[0]);
     return output;
 }
@@ -53,7 +53,8 @@ function doAnalysis(cfg, variable) {
     ast = shadeFunction[0];
     var cfg = esgraph(ast.body, { omitExceptions: true });
 
-    var relevantStatements = doAnalysis(cfg, variable); // ~17ms
+    var startNode = cfg[1].prev[0]; // Start at the node before the implicit end node for now
+    var relevantStatements = doAnalysis(cfg, startNode,variable); // ~17ms
 
     var getCFGNode = function(cfg, ast) {
         for(var i = 0; i< cfg[2].length; i++) {
@@ -67,6 +68,16 @@ function doAnalysis(cfg, variable) {
     ast = estraverse.replace(ast, {
         enter: function(node) {
             var cfgNode = null;
+
+            if(node == startNode.astNode) {
+                return {
+                    type: Syntax.ReturnStatement,
+                    argument: {
+                        type:Syntax.Identifier,
+                        name: variable
+                    }
+                }
+            }
 
             if (node.type == estraverse.Syntax.ExpressionStatement) {
                 cfgNode = getCFGNode(cfg, node.expression);

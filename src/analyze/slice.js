@@ -11,10 +11,10 @@ var Syntax = common.Syntax;
 
 
 
-function slice(cfg, node, variable) {
+function slice(cfg, startNode, variable) {
 
-    if (!findVariableReferences(node.astNode).has(variable)) {
-        throw new Error("Illegal criterion for slicing: Variable '" + variable + "' not contained in " + codegen.generate(node.astNode));
+    if (!findVariableReferences(startNode.astNode).has(variable)) {
+        throw new Error("Illegal criterion for slicing: Variable '" + variable + "' not contained in " + codegen.generate(startNode.astNode));
     }
 
     var dominatorMap = computeInverseDominators(cfg);
@@ -23,7 +23,7 @@ function slice(cfg, node, variable) {
     initialSet.add(variable);
 
     var oldS = new Set(),
-        R = directRelevantVariables(cfg, node, initialSet, dominatorMap),
+        R = directRelevantVariables(cfg, startNode, initialSet, dominatorMap),
         S = getRelevantStatements(cfg),
         B = getRelevantBranchStatements(cfg, S);
 
