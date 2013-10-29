@@ -11,6 +11,7 @@
         Shade = require("../../interfaces.js");
 
     var Syntax = walk.Syntax;
+    var VisitorOption = walk.VisitorOption;
 
 
     var DeclarationSimplifier = function (opt) {
@@ -119,9 +120,6 @@
          */
         this.statementIdentifierInfo = {};
         this.scopes = [];
-        this.currentScopeTmpDeclared = [];
-        this.currentStatementTmpUsed = [];
-        this.assignmentsToBePrepended = [];
     };
 
     Base.extend(StatementSimplifier.prototype, {
@@ -132,6 +130,17 @@
                 leave: this.exitNode.bind(this)
             });
             return root;
+        },
+
+
+        gatherStatmentSplitInfo: function(node){
+            this.statementIdentifierInfo = {};
+            this.currentStatementTmpUsed = [];
+            this.assignmentsToBePrepended = [];
+            return walk.replace(node, {
+                enter: this.statementSplitEnter.bind(this),
+                leave: this.statementSplitExit.bind(this)
+            });
         },
 
         pushScope: function(){
@@ -164,13 +173,10 @@
                 case Syntax.VariableDeclarator:
                     this.addDeclaredIdentifier(node.id.name);
                     break;
-                case Syntax.Identifier:
-                    return this.identifierEnter(node, parent);
                 case Syntax.ExpressionStatement:
-                    return this.expressionStatementEnter(node);
-                case Syntax.AssignmentExpression:
-                case Syntax.UpdateExpression:
-                    return this.assignmentEnter(node, parent);
+                    return this.performStatementSplit(node, null);
+                case Syntax.IfStatement:
+                    return this.performStatementSplit(node, "test");
             }
         },
 
@@ -182,19 +188,35 @@
                 case Syntax.Program:
                     this.removeRedundantBlocks(node, "body");
                     return this.addTmpDeclaration(node);
-                case Syntax.ExpressionStatement:
-                    return this.expressionStatementExit(node);
-                    break;
-                case Syntax.AssignmentExpression:
-                case Syntax.UpdateExpression:
-                    return this.assignmentExit(node, parent);
-                    break;
                 case Syntax.BlockStatement:
                     return this.removeRedundantBlocks(node, "body");
                 case Syntax.SwitchCase:
                     return this.removeRedundantBlocks(node, "consequent");
             }
         },
+
+
+        statementSplitEnter: function(node, parent){
+            switch(node.type){
+                case Syntax.FunctionExpression:
+                    return VisitorOption.Skip;
+                case Syntax.Identifier:
+                    return this.identifierEnter(node, parent);
+                case Syntax.AssignmentExpression:
+                case Syntax.UpdateExpression:
+                    return this.assignmentEnter(node, parent);
+            }
+        },
+
+        statementSplitExit: function (node, parent) {
+            switch(node.type){
+                case Syntax.AssignmentExpression:
+                case Syntax.UpdateExpression:
+                    return this.assignmentExit(node, parent);
+                    break;
+            }
+        },
+
 
         addDeclaredIdentifier: function(name){
             var declared = this.getScope().declared;
@@ -256,9 +278,9 @@
                         loc: node.loc,
                         _usePrevValue: usePrevValue
                 };
-                return node;
-            };
-            if(node.type == Syntax.AssignmentExpression && node.operator != "="){
+
+            }
+            else if(node.type == Syntax.AssignmentExpression && node.operator != "="){
                 var binaryOperator = node.operator.substr(0, node.operator.length-1);
                 node.operator = "=";
                 node.right = { type: Syntax.BinaryExpression,
@@ -266,8 +288,13 @@
                                left: {type: Syntax.Identifier, name: node.left.name, loc: node.right.loc },
                                right: node.right,
                                loc: node.right.loc};
-                return node;
             }
+            var name = node.left.name;
+            var entry = this.statementIdentifierInfo[name];
+            if(entry && entry.reads.length > 0)
+                node._preIdentifierWriter = entry.lastWrite;
+
+            return node;
         },
 
         assignmentExit: function(node, parent){
@@ -277,14 +304,19 @@
             var readOldValue = node._usePrevValue;
             delete node._usePrevValue;
 
-            var oldName = node.left.name,
-                entry = this.statementIdentifierInfo[oldName];
+            var oldName = node.left.name;
+            if(!this.statementIdentifierInfo[oldName]){
+                this.statementIdentifierInfo[oldName] = { reads: [], lastWrite: null };
+            }
+
+            var entry = this.statementIdentifierInfo[oldName];
+
             var readReplace = {
                 type: Syntax.Identifier,
                 name: oldName,
                 loc: node.loc
             };
-            if(entry){
+            if(readOldValue || (node._preIdentifierWriter !== undefined && node._preIdentifierWriter == entry.lastWrite)){
                 var newName = this.getFreeName();
                 if(!entry.lastWrite){
                     var copyAssignment = {
@@ -300,12 +332,11 @@
                 for(var i = 0; i < entry.reads.length; ++i){
                     entry.reads[i].name = newName;
                 }
-                entry.reads = [];
-                entry.lastWrite = node;
             }
-            else{
-                this.statementIdentifierInfo[oldName] = { reads: [], lastWrite: node }
-            }
+            entry.reads = [];
+            delete node._preIdentifierWriter;
+            entry.lastWrite = node;
+
             if(readOldValue)
                 readReplace.name = newName;
             else
@@ -315,31 +346,32 @@
             return readReplace;
         },
 
-        expressionStatementEnter: function(node){
-            this.statementIdentifierInfo = {};
+        performStatementSplit: function(node, property){
+            var target = node;
+            if(property) target = node[property];
+            target = this.gatherStatmentSplitInfo(target);
+            if(property) node[property] = target;
+            if(this.assignmentsToBePrepended.length > 0){
+                return this.getSplittetStatementBlock(this.assignmentsToBePrepended, node);
+            }
+            return node;
         },
 
-        expressionStatementExit: function(node){
-            var result = node;
-            if(this.assignmentsToBePrepended.length > 0){
-                result = {
-                    type: Syntax.BlockStatement,
-                    body: [],
-                    loc: node.loc
-                };
-                for(var i = 0; i < this.assignmentsToBePrepended.length; ++i){
-                    var assignment = this.assignmentsToBePrepended[i];
-                    result.body.push({
-                       type: Syntax.ExpressionStatement,
-                       expression: assignment,
-                       loc: assignment.loc
-                    });
-                }
-                result.body.push(node);
+        getSplittetStatementBlock: function(statements, node){
+            var result = {
+                type: Syntax.BlockStatement,
+                body: [],
+                loc: node.loc
+            };
+            for(var i = 0; i < this.assignmentsToBePrepended.length; ++i){
+                var assignment = this.assignmentsToBePrepended[i];
+                result.body.push({
+                   type: Syntax.ExpressionStatement,
+                   expression: assignment,
+                   loc: assignment.loc
+                });
             }
-            this.currentStatementTmpUsed = [];
-            this.assignmentsToBePrepended = [];
-            this.statementIdentifierInfo = {};
+            result.body.push(node);
             return result;
         },
 
