@@ -9,13 +9,13 @@ var estraverse = require('estraverse');
 var escodegen = require('escodegen');
 var analyses = require('analyses');
 var map = require('es6-map-shim');
-var Shade = require("..");
+var common = require("../src/base/common.js");
+
 var fs = require('fs');
+
 var slice = require("../src/analyze/slice.js")
-
-
-var slice = require("../src/analyze/slice.js");
 var Set = analyses.Set;
+var Syntax = common.Syntax;
 
 function doAnalysis(cfg, variable) {
     var count = 1;
@@ -29,21 +29,31 @@ function doAnalysis(cfg, variable) {
 (function (args) {
 
     var filename = args._[0];
+    var variable = args._[1];
 
 
-    if (!filename) {
+    if (!filename || !variable) {
         console.log(usage);
         process.exit(0);
     }
 
-    var data = fs.readFileSync("./data/js/fragments/slice-example.js", "utf-8");
+    var data = fs.readFileSync(filename, "utf-8");
 
     var start = Date.now();
 
     var ast = esprima.parse(data);
-    var cfg = esgraph(ast, { omitExceptions: true });
 
-    var relevantStatements = doAnalysis(cfg, "product"); // ~17ms
+    var shadeFunction = ast.body.filter(function(node) { return node.type == Syntax.FunctionDeclaration && node.id.name == "shade"});
+
+    if(!shadeFunction.length) {
+        console.log("No shade function found");
+        process.exit(0);
+    }
+
+    ast = shadeFunction[0];
+    var cfg = esgraph(ast.body, { omitExceptions: true });
+
+    var relevantStatements = doAnalysis(cfg, variable); // ~17ms
 
     var getCFGNode = function(cfg, ast) {
         for(var i = 0; i< cfg[2].length; i++) {
@@ -60,6 +70,9 @@ function doAnalysis(cfg, variable) {
 
             if (node.type == estraverse.Syntax.ExpressionStatement) {
                 cfgNode = getCFGNode(cfg, node.expression);
+            }
+            else if (node.type == estraverse.Syntax.IfStatement) {
+                cfgNode = getCFGNode(cfg, node.test);
             } else {
                 cfgNode = getCFGNode(cfg, node);
             }

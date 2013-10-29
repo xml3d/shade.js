@@ -14,15 +14,15 @@ function shade(env) {
         transparency *= (1 - texDiffuse.a());
     }
 
+    //if (transparency > 0.95)
+    //    return;
+
     if(env.useVertexColor && env.color) {
         diffuseColor = diffuseColor.mul(env.color);
     }
 
-    if (transparency > 0.95)
-        return;
-
     if(env.emissiveTexture && env.texcoord) {
-        emissiveColor = emissiveColor.mul(emissiveTexture.sample(env.texcoord).rgb());
+        emissiveColor = emissiveColor.mul(env.emissiveTexture.sample(env.texcoord).rgb());
     }
 
     return new Shade().emission(emissiveColor).diffuse(diffuseColor, env.normal).transparent(transparency);

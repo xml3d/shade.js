@@ -8,14 +8,51 @@ module.exports = slice;
 
 var Syntax = common.Syntax;
 
+
+
+
+function slice(cfg, node, variable) {
+
+    if (!findVariableReferences(node.astNode).has(variable)) {
+        throw new Error("Illegal criterion for slicing: Variable '" + variable + "' not contained in " + codegen.generate(node.astNode));
+    }
+
+    var dominatorMap = computeInverseDominators(cfg);
+
+    var initialSet = new Set();
+    initialSet.add(variable);
+
+    var oldS = new Set(),
+        R = directRelevantVariables(cfg, node, initialSet, dominatorMap),
+        S = getRelevantStatements(cfg),
+        B = getRelevantBranchStatements(cfg, S);
+
+    while(!Set.equals(S, oldS)) {
+        oldS = S;
+
+        var newR = B.values().reduce(function(input, node) {
+            var sR = directRelevantVariables(cfg, node, findVariableReferences(node.astNode));
+            return mergeMap(input, sR );
+        }, R);
+
+        S =  Set.union(B, getRelevantStatements(cfg));
+        B =  getRelevantBranchStatements(cfg, S);
+        R = newR;
+        //Tools.printMap(cfg, newR);
+    }
+    //console.log("Statements final:", Tools.getSetLabels(S));
+    return S;
+}
+
 /**
  *
  * @param {} cfg
  * @param {FlowNode} startNode
  * @param {Set} variables
+ * @param {Map} dominatorMap
  * @returns {Map.<FlowNode, Set>}
  */
-function directRelevantVariables(cfg, startNode, variables) {
+function directRelevantVariables(cfg, startNode, variables, dominatorMap) {
 
     var oldStart = cfg[1];
     var oldNext = startNode.next;
@@ -29,10 +66,11 @@ function directRelevantVariables(cfg, startNode, variables) {
         if (this.type || !this.astNode)
             return input;
 
+
         // Local
         var ref = this.ref = this.ref || findVariableReferences(this.astNode);
         var def = this.def = this.def || findVariableDefinitions(this.astNode);
-        this.infl = this.infl || computeInfluence(this);
+        this.infl = this.infl || computeInfluence(this, dominatorMap.get(this));
 
         var result = null;
         if (Set.intersect(def, input).size) {
@@ -63,38 +101,6 @@ function getRelevantBranchStatements(cfg, S) {
     }));
 }
 
-
-function slice(cfg, node, variable) {
-
-    if (!findVariableReferences(node.astNode).has(variable)) {
-        throw new Error("Illegal criterion for slicing: Variable '" + variable + "' not contained in " + codegen.generate(node.astNode));
-    }
-
-    var initialSet = new Set();
-    initialSet.add(variable);
-
-    var oldS = new Set(),
-        R = directRelevantVariables(cfg, node, initialSet),
-        S = getRelevantStatements(cfg),
-        B = getRelevantBranchStatements(cfg, S);
-
-    while(!Set.equals(S, oldS)) {
-        oldS = S;
-
-        var newR = B.values().reduce(function(input, node) {
-            var sR = directRelevantVariables(cfg, node, findVariableReferences(node.astNode));
-            return mergeMap(input, sR );
-        }, R);
-
-        S =  Set.union(B, getRelevantStatements(cfg));
-        B =  getRelevantBranchStatements(cfg, S);
-        R = newR;
-        //Tools.printMap(cfg, newR);
-    }
-    //console.log("Statements final:", Tools.getSetLabels(S));
-    return S;
-}
-
 /**
  *
  * @param {Map.<FlowNode, Set>} A
@@ -119,6 +125,18 @@ function isVariableReference(node, parent) {
         !(parent.type == Syntax.MemberExpression || parent.type == Syntax.FunctionDeclaration || parent.type == Syntax.NewExpression || parent.type == Syntax.VariableDeclarator || (parent.type == Syntax.CallExpression && parent.callee == node));
 }
 
+function isMemberReference(node, parent) {
+    return node.type == Syntax.MemberExpression && node.object.type == Syntax.Identifier && node.property.type == Syntax.Identifier && !(parent.type === Syntax.CallExpression && parent.callee == node);
+
+}
+
+function getMemberName(node) {
+    if(node.object.type == Syntax.Identifier && node.property.type == Syntax.Identifier) {
+        return node.object.name + "." + node.property.name;
+    }
+    throw new Error("Could not determine member name: " + codegen.generate(node) + node.object.type);
+}
+
 function findVariableReferences(ast) {
     var references = new Set();
     walk.traverse(ast, {
@@ -133,6 +151,13 @@ function findVariableReferences(ast) {
                         references.add(node.name);
                     }
                     break;
+                case Syntax.MemberExpression:
+                    if (isMemberReference(node, parent)) {
+                        //console.log(parent);
+                        references.add(getMemberName(node));
+                    }
+                    break;
+
             }
         }
     })
@@ -162,28 +187,15 @@ function findVariableDefinitions(ast) {
 
 var Tools = {
 
-    findSetOfNodesOnPath: function(from, to, includeToNode) {
-        // Reached start or end node and this is not a valid path
-        if (from.type) {
-            return null;
-        }
-
-        // Found destination
-        if (from == to)  {
-            return includeToNode == true ? new Set([from]) : new Set();
-        }
-
-        var result = null;
-        for(var i = 0; i < from.prev.length; i++) {
-            var predecessor = from.prev[i];
-            var path = Tools.findSetOfNodesOnPath(predecessor, to, !!includeToNode);
-            if (path) {
-                result = result ||  new Set([from]);
-                result = Set.union(result, path);
+    findSetOfNodesOnPath: function(fromArr, endSet, result) {
+        //console.log("Testing: ",  from.label || from.type);
+        for(var i = 0; i < fromArr.length; i++) {
+            var node = fromArr[i];
+            if(!(result.has(node) || endSet.has(node))) {
+                result.add(node);
+                Tools.findSetOfNodesOnPath(node.next, endSet, result);
             }
         }
-        //console.log("findSetOfNodesOnPath from", from.label, "to", to.label, Tools.getSetLabels(result) );
-        return result;
     },
 
     getSetLabels: function(s) {
@@ -199,25 +211,39 @@ var Tools = {
     printMap: function(cfg, map) {
     for (var node in cfg[2]) {
         var n = cfg[2][node];
-        console.log(n.label, map.get(cfg[2][node]));
+        console.log(n.label, Tools.getSetLabels(map.get(cfg[2][node])));
     }
 }
 
 }
 
 
-function computeInfluence(node) {
+function computeInfluence(node, inverseDominators) {
+
+    var result = new Set();
 
     // INFL(node) will be empty unless b has more than one immediate
     // successor (i.e., is a branch statement).
-    if (node.prev.length < 2)
-        return new Set();
+    if (node.next.length < 2)
+        return result;
 
-    var result = new Set();
-    for(var i = 0; i < node.prev.length; i++) {
-        var predecessor = node.prev[i];
-        var path = Tools.findSetOfNodesOnPath(predecessor, node);
-        result = Set.union(result, path);
-    }
+    Tools.findSetOfNodesOnPath(node.next, inverseDominators, result);
+
+    //console.log("INFL(", node.label, "):", Tools.getSetLabels(result))
+
+    return result;
+}
+
+function computeInverseDominators(cfg) {
+    var result = worklist(cfg, function (input) {
+
+        if (this.type || !this.astNode)
+            return input;
+
+        return Set.union(input, new Set([this]));
+
+    }, {direction: 'backward', start: new Set(), merge:  worklist.merge(Set.intersect)});
+
+    //Tools.printMap(cfg, result);
     return result;
 }
