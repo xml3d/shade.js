@@ -2,6 +2,7 @@ var walk = require('estraverse');
 var worklist = require('analyses');
 var common = require("../base/common.js");
 var codegen = require('escodegen');
+var SetTools = require("./settools.js");
 var Set = worklist.Set;
 
 module.exports = slice;
@@ -66,10 +67,9 @@ function directRelevantVariables(cfg, startNode, variables, dominatorMap) {
         if (this.type || !this.astNode)
             return input;
 
-
         // Local
         var ref = this.ref = this.ref || findVariableReferences(this.astNode);
-        var def = this.def = this.def || findVariableDefinitions(this.astNode);
+        var def = this.def = this.def || SetTools.findVariableDefinitions(this.astNode);
         this.infl = this.infl || computeInfluence(this, dominatorMap.get(this));
 
         var result = null;
@@ -153,9 +153,20 @@ function findVariableReferences(ast) {
                     break;
                 case Syntax.MemberExpression:
                     if (isMemberReference(node, parent)) {
-                        //console.log(parent);
+                        if (isVariableReference(node.object, node)) {
+                            references.add(node.name);
+                        }
                         references.add(getMemberName(node));
                     }
+                    break;
+                case Syntax.CallExpression:
+                    if(node.callee.type == Syntax.MemberExpression && parent && parent.type !== Syntax.MemberExpression) {
+                        var object = node.callee.object;
+                        if (object.type == Syntax.Identifier) {
+                            references.add(object.name)
+                        }
+                    }
+
                     break;
 
             }
@@ -164,26 +175,6 @@ function findVariableReferences(ast) {
     return references;
 }
 
-function findVariableDefinitions(ast) {
-    var definitions = new Set();
-    walk.traverse(ast, {
-        leave: function(node, parent) {
-            switch(node.type) {
-                case Syntax.AssignmentExpression:
-                    if (node.left.type == Syntax.Identifier) {
-                        definitions.add(node.left.name);
-                    }
-                    break;
-                case Syntax.VariableDeclarator:
-                    if (node.id.type == Syntax.Identifier) {
-                        definitions.add(node.id.name);
-                    }
-                    break;
-            }
-        }
-    })
-    return definitions;
-}
 
 var Tools = {
 
@@ -196,25 +187,7 @@ var Tools = {
                 Tools.findSetOfNodesOnPath(node.next, endSet, result);
             }
         }
-    },
-
-    getSetLabels: function(s) {
-        if(!s)
-            return "Set: null";
-
-        if(!s.size)
-            return "Set: {}";
-
-        return "Set: {" + s.values().map(function(n) { return n.label; }).join(", ") + "}";
-    },
-
-    printMap: function(cfg, map) {
-    for (var node in cfg[2]) {
-        var n = cfg[2][node];
-        console.log(n.label, Tools.getSetLabels(map.get(cfg[2][node])));
     }
-}
-
 }
 
 
