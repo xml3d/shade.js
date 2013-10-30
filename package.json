@@ -6,7 +6,7 @@
         "esprima": "*",
         "eswalker": "*",
         "escodegen": "*",
-        "estraverse": "~0.0.4",
+        "estraverse": "1.3.2",
         "walkes": "*",
         "optimist": "*",
         "esgraph": "https://github.com/ksons/esgraph/tarball/master",

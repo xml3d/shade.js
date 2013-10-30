@@ -60,7 +60,9 @@
         // console.log("Looking for: ", functionName, environmentObjectPosition);
 
         var activeParam = null;
-        walk.traverse(program, {
+
+        var controller = new walk.Controller();
+        controller.traverse(program, {
             enter: function (node) {
                 var type = node.type,
                     context, retVal = null;
@@ -75,7 +77,7 @@
                                 activeParam = node.params[environmentObjectPosition].name;
                             }
                         } else {
-                            retVal = walk.VisitorOption.Skip;
+                            controller.skip();
                         }
                         break;
                     case Syntax.CallExpression:
@@ -93,7 +95,6 @@
                         break;
                     default:
                 }
-                return retVal;
             },
             leave: function (node) {
                 var type = node.type;

@@ -139,12 +139,14 @@ function getMemberName(node) {
 
 function findVariableReferences(ast) {
     var references = new Set();
+
+    var controller = new walk.Controller();
     walk.traverse(ast, {
         leave: function(node, parent) {
             switch(node.type) {
                 case Syntax.AssignmentExpression:
                     references = Set.union(references, findVariableReferences(node.right));
-                    return walk.VisitorOption.Break;
+                    controller.break();
                     break;
                 case Syntax.Identifier:
                     if (isVariableReference(node, parent)) {

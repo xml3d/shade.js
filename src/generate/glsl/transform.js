@@ -16,7 +16,6 @@
 
     var walk = require('estraverse');
     var Syntax = walk.Syntax;
-    var VisitorOption = walk.VisitorOption;
     var ANNO = common.ANNO;
 
 
@@ -162,17 +161,18 @@
          * @returns {*}
          */
         replace: function(ast, state) {
-            ast = walk.replace(ast, {
+            var controller = new walk.Controller();
+            ast = controller.replace(ast, {
 
-                enter: function (node, parent, cb) {
+                enter: function (node, parent) {
                     //console.log("Enter:", node.type);
                     switch (node.type) {
                         case Syntax.Identifier:
                             return handleIdentifier(node, parent, state.blockedNames, state.idNameMap);
                         case Syntax.IfStatement:
-                            return handleIfStatement(node, state, this, cb);
+                            return handleIfStatement(node, state, this, controller);
                         case Syntax.ConditionalExpression:
-                            return handleConditionalExpression(node, state, this, cb);
+                            return handleConditionalExpression(node, state, this, controller);
                         case Syntax.LogicalExpression:
                             return handleEnterLogicalExpression(node, this, state);
                         case Syntax.FunctionDeclaration:
@@ -513,31 +513,31 @@
         }
     }
 
-    var handleConditionalExpression = function(node, state, root, cb) {
+    var handleConditionalExpression = function(node, state, root, controller) {
         var consequent = ANNO(node.consequent);
         var alternate = ANNO(node.alternate);
         if (consequent.canEliminate() || alternate.canEliminate()) {
             // In this case, we replace the whole conditional expression by the
             // resulting expression. We have to do the traversal manually and skip the
             // subtree for the parent traversal.
-            cb(VisitorOption.Skip);
+            controller.skip();
             return root.replace(consequent.canEliminate() ? node.alternate : node.consequent , state);
         }
     }
 
-    var handleIfStatement = function (node, state, root, cb) {
+    var handleIfStatement = function (node, state, root, controller) {
         var test = ANNO(node.test);
         var consequent = ANNO(node.consequent);
         var alternate = node.alternate ? ANNO(node.alternate) : null;
         if (test.hasStaticValue()) {
             var staticValue = test.getStaticValue();
             if (staticValue === true) {
-                cb(VisitorOption.Skip);
+                controller.skip();
                 return root.replace(node.consequent, state);
             }
             if (staticValue === false) {
                 if (alternate) {
-                    cb(VisitorOption.Skip);
+                    controller.skip();
                     return root.replace(node.alternate, state);
                 }
                 return {
