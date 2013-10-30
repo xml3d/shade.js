@@ -174,7 +174,7 @@
                         case Syntax.ConditionalExpression:
                             return handleConditionalExpression(node, state, this, controller);
                         case Syntax.LogicalExpression:
-                            return handleEnterLogicalExpression(node, this, state);
+                            return handleEnterLogicalExpression(node, state, this, controller);
                         case Syntax.FunctionDeclaration:
                             // No need to declare, this has been annotated already
                             var parentContext = state.contextStack[state.contextStack.length - 1];
@@ -217,6 +217,11 @@
             return ast;
         }
     });
+
+    var traverseSubTree = function(ast, state, root, controller) {
+        controller.skip();
+        return root.replace(ast, state);
+    }
 
     var handleTopDeclaration = function(name, typeInfo){
         var propertyLiteral =  { type: Syntax.Identifier, name: name};
@@ -520,8 +525,7 @@
             // In this case, we replace the whole conditional expression by the
             // resulting expression. We have to do the traversal manually and skip the
             // subtree for the parent traversal.
-            controller.skip();
-            return root.replace(consequent.canEliminate() ? node.alternate : node.consequent , state);
+            return traverseSubTree(consequent.canEliminate() ? node.alternate : node.consequent, state, root, controller);
         }
     }
 
@@ -532,13 +536,11 @@
         if (test.hasStaticValue()) {
             var staticValue = test.getStaticValue();
             if (staticValue === true) {
-                controller.skip();
-                return root.replace(node.consequent, state);
+                return traverseSubTree(node.consequent, state, root, controller);
             }
             if (staticValue === false) {
                 if (alternate) {
-                    controller.skip();
-                    return root.replace(node.alternate, state);
+                    return traverseSubTree(node.alternate, state, root, controller);
                 }
                 return {
                     type: Syntax.EmptyStatement
@@ -570,14 +572,18 @@
 
     };
 
-    var handleEnterLogicalExpression = function (node, root, state) {
+    var handleEnterLogicalExpression = function (node, state, root, controller) {
         var left = ANNO(node.left);
         var right = ANNO(node.right);
-        if (left.canEliminate())
-            return root.replace(node.right, state);
-        if (right.canEliminate())
-            return root.replace(node.left, state);
+        if (left.canEliminate()) {
+            return traverseSubTree(node.right, state, root, controller);
+        }
+        if (right.canEliminate()) {
+            controller.skip();
+            return traverseSubTree(node.left, state, root, controller);
+        }
     }
+
 
     var handleExitLogicalExpression = function(node, root, state) {
         var left = ANNO(node.left);
