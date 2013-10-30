@@ -53,27 +53,44 @@
         },
 
         removeMidCodeDeclaration: function(node, parent){
-            var newNode = {
-                type: Syntax.BlockStatement,
-                body: [],
-                loc: node.loc
-            };
+            var newNode;
+            var isForInit = (parent.type == Syntax.ForStatement && parent.init == node);
+            if(isForInit){
+                newNode = {
+                    type: Syntax.SequenceExpression,
+                    expressions: [],
+                    loc: node.loc
+                }
+            }
+            else{
+                newNode = {
+                    type: Syntax.BlockStatement,
+                    body: [],
+                    loc: node.loc
+                }
+            }
+
             var declarations = node.declarations;
             for(var i = 0; i < declarations.length; ++i){
                 var declaration = declarations[i];
                 if(declaration.init){
-                    var statement = {
-                        type: Syntax.ExpressionStatement,
-                        expression: {
-                            type: Syntax.AssignmentExpression,
-                            operator: "=",
-                            left: declaration.id,
-                            right: declaration.init,
-                            loc: declaration.loc
-                        },
+                    var expression = {
+                        type: Syntax.AssignmentExpression,
+                        operator: "=",
+                        left: declaration.id,
+                        right: declaration.init,
                         loc: declaration.loc
+                    };
+                    if(isForInit)
+                        newNode.expressions.push(expression);
+                    else{
+                        var statement = {
+                            type: Syntax.ExpressionStatement,
+                            expression: expression,
+                            loc: declaration.loc
+                        }
+                        newNode.body.push(statement);
                     }
-                    newNode.body.push(statement);
                 }
             }
             return newNode;
@@ -120,6 +137,7 @@
          */
         this.statementIdentifierInfo = {};
         this.scopes = [];
+        this.preContinueStatements = [];
     };
 
     Base.extend(StatementSimplifier.prototype, {
@@ -143,6 +161,24 @@
             });
         },
 
+        isRedundant: function(node){
+            var result = true;
+            walk.traverse(node, {
+                enter: function(node){
+                    switch(node.type){
+                        case Syntax.AssignmentExpression:
+                        case Syntax.UpdateExpression:
+                        case Syntax.FunctionExpression:
+                        case Syntax.FunctionDeclaration:
+                        case Syntax.CallExpression:
+                            result = false;
+                            this.break();
+                    }
+                }
+            });
+            return result;
+        },
+
         pushScope: function(){
             var newScope = {
                 declared: [],
@@ -156,6 +192,13 @@
         },
         getScope: function(){
             return this.scopes[this.scopes.length - 1];
+        },
+        addPreContinueStatements: function(statements){
+            var last = this.preContinueStatements[this.preContinueStatements.length - 1];
+            last.push.apply(last, statements);
+        },
+        getPreContinueStatements: function(){
+            return this.preContinueStatements[this.preContinueStatements.length - 1];
         },
 
         enterNode: function (node, parent) {
@@ -173,10 +216,20 @@
                 case Syntax.VariableDeclarator:
                     this.addDeclaredIdentifier(node.id.name);
                     break;
+                case Syntax.ContinueStatement:
+                    return this.extendContinueStatement(node);
                 case Syntax.ExpressionStatement:
-                    return this.performStatementSplit(node, null);
+                    return this.performStatementSplit(node, [{pre: true}]);
                 case Syntax.IfStatement:
-                    return this.performStatementSplit(node, "test");
+                    return this.performStatementSplit(node, [{prop: "test", pre: true}]);
+                case Syntax.WhileStatement:
+                    return this.performStatementSplit(node, [{prop: "test", pre: true, post: true}], "body");
+                case Syntax.ForStatement:
+                    return this.performStatementSplit(node, [{prop: "init", pre: true, extract: true},
+                                                             {prop: "update", post: true, extract: true},
+                                                             {prop: "test", pre: true, post: true}], "body");
+                case Syntax.DoWhileStatement:
+                    return this.performStatementSplit(node, [{prop: "test", post: true}], "body");
             }
         },
 
@@ -192,6 +245,17 @@
                     return this.removeRedundantBlocks(node, "body");
                 case Syntax.SwitchCase:
                     return this.removeRedundantBlocks(node, "consequent");
+                case Syntax.ContinueStatement:
+                    delete node._extended;
+                    break;
+                case Syntax.WhileStatement:
+                case Syntax.ForStatement:
+                case Syntax.DoWhileStatement:
+                    if(node._preContinueStacked){
+                        delete node._preContinueStacked;
+                        this.preContinueStatements.pop();
+                    }
+                    break;
             }
         },
 
@@ -293,7 +357,6 @@
             var entry = this.statementIdentifierInfo[name];
             if(entry && entry.reads.length > 0)
                 node._preIdentifierWriter = entry.lastWrite;
-
             return node;
         },
 
@@ -342,38 +405,88 @@
             else
                 this.statementIdentifierInfo[oldName].reads.push(readReplace);
 
+
             this.assignmentsToBePrepended.push(node);
             return readReplace;
         },
 
-        performStatementSplit: function(node, property){
-            var target = node;
-            if(property) target = node[property];
-            target = this.gatherStatmentSplitInfo(target);
-            if(property) node[property] = target;
-            if(this.assignmentsToBePrepended.length > 0){
-                return this.getSplittetStatementBlock(this.assignmentsToBePrepended, node);
+        performStatementSplit: function(node, subProperties, bodyProperty){
+            if(bodyProperty && !node._preContinueStacked){
+                this.preContinueStatements.push([]);
+                node._preContinueStacked = true;
             }
-            return node;
+
+            var originalNode = node, returnNode = node;
+            for(var i = 0; i < subProperties.length; ++i){
+                var property = subProperties[i].prop;
+                var target = originalNode;
+                if(property) target = originalNode[property];
+                if(property && subProperties[i].extract){
+                    this.statementIdentifierInfo = {};
+                    this.currentStatementTmpUsed = [];
+                    this.assignmentsToBePrepended = target ? [target] : [];
+                    originalNode[property] = null;
+                }
+                else{
+                    target = this.gatherStatmentSplitInfo(target);
+                    if(property)
+                        originalNode[property] = target;
+                    else
+                        returnNode = target;
+                }
+                if(this.assignmentsToBePrepended.length > 0){
+                    if(subProperties[i].pre){
+                        returnNode = this.getSplittedStatementBlock(this.assignmentsToBePrepended, returnNode);
+                    }
+                    if(subProperties[i].post){
+                        var body = originalNode[bodyProperty];
+                        var statements = this.getSplittedStatementBlock(this.assignmentsToBePrepended);
+                        if(body && body.type == Syntax.BlockStatement){
+
+                            body.body.push(statements);
+                        }
+                        else{
+                            if(body) statements.body.unshift(body);
+                            originalNode[bodyProperty] = statements;
+                        }
+                        this.addPreContinueStatements(this.assignmentsToBePrepended);
+                    }
+                }
+            }
+            return returnNode;
         },
 
-        getSplittetStatementBlock: function(statements, node){
+        extendContinueStatement: function(node){
+            if(node._extended)
+                return;
+            node._extended = true;
+            var statements = this.getPreContinueStatements();
+            if(statements.length == 0 )
+                return node;
+            return this.getSplittedStatementBlock(statements,node);
+        },
+
+        getSplittedStatementBlock: function(statements, node){
             var result = {
                 type: Syntax.BlockStatement,
                 body: [],
-                loc: node.loc
+                loc: node && node.loc
             };
-            for(var i = 0; i < this.assignmentsToBePrepended.length; ++i){
-                var assignment = this.assignmentsToBePrepended[i];
+            for(var i = 0; i < statements.length; ++i){
+                var assignment = Base.deepExtend({}, statements[i]);
                 result.body.push({
                    type: Syntax.ExpressionStatement,
                    expression: assignment,
                    loc: assignment.loc
                 });
             }
-            result.body.push(node);
+            if(node && (node.type != Syntax.ExpressionStatement || !this.isRedundant(node))){
+                result.body.push(node);
+            }
             return result;
         },
+
+
 
         removeRedundantBlocks: function(node, propertyName){
             var list = node[propertyName];

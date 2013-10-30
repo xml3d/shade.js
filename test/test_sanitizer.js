@@ -70,7 +70,9 @@ describe('Sanitizing:', function () {
     describe('Statement simplifier', function () {
         describe('for assigments', function () {
             it("should separate assignments into single expressions ", function () {
-                checkSanitized("var a, b; a = b = 5;","var a,b;b=5;a=b;", "a");
+                checkSanitized( "var a, b; a = b = 5;",
+                                "var a,b;b=5;a=b;",
+                                "a");
             });
             it("should introduce temporary identifier for complicated nesting of assignments", function () {
                 checkSanitized( "var a = 5; var a = a + (a=25);",
@@ -149,7 +151,49 @@ describe('Sanitizing:', function () {
             });
         });
 
+        describe('for while-statements', function () {
+            it("should handle assignments inside the test", function () {
+                checkSanitized( "var a=5;var b=0;while(a--){b++}",
+                                "var a,b,_tmp0;a=5;b=0;_tmp0=a;a=_tmp0-1;while(_tmp0){b++;_tmp0=a;a=_tmp0-1;}",
+                                "a", "b");
+            });
+            it("should handle assignments inside nested while statements", function () {
+                checkSanitized( "var a=5,b=0,c=0;while(--a) { b=a;while(--b) c++; }",
+                                "var a,b,c;a=5;b=0;c=0;a=a-1;while(a){b=a;b=b-1;while(b){c++;b=b-1;}a=a-1;}",
+                                "a","b");
+            });
+            it("should handle assignments inside while conditions with continue", function () {
+                checkSanitized( "var a=5,b=0;while(--a){if(a%2)continue; b++;}",
+                                "var a,b;a=5;b=0;a=a-1;while(a){if(a%2){a=a-1;continue;}b++;a=a-1;}",
+                                "a", "b");
+            });
+        });
 
+        describe('for do-while-statements', function () {
+            it("should handle assignments inside the test", function () {
+                checkSanitized( "var a=5;var b=0;do{b++}while(a--)",
+                                "var a,b,_tmp0;a=5;b=0;do{b++;_tmp0=a;a=_tmp0-1;}while(_tmp0);",
+                                "a", "b");
+            });
+            it("should handle assignments inside nested do-while statements", function () {
+                checkSanitized( "var a=5,b=0,c=0;do{ b=a;do{c++;}while(--b); }while(--a);",
+                                "var a,b,c;a=5;b=0;c=0;do{b=a;do{c++;b=b-1;}while(b);a=a-1;}while(a);",
+                                "a","b");
+            });
+            it("should handle assignments inside do-while conditions with continue", function () {
+                checkSanitized( "var a=5,b=0;do{if(a%2)continue; b++;}while(--a);",
+                                "var a,b;a=5;b=0;do{if(a%2){a=a-1;continue;}b++;a=a-1;}while(a);",
+                                "a", "b");
+            });
+        });
+
+        describe('for for-statements', function () {
+            it("should extract updates inside the update.", function () {
+                checkSanitized( "var b =0; for(var i=0; i<20; i++){b+=i;}",
+                                "var b,i;b=0;i=0;for(;i<20;){b+=i;i++;}",
+                                "b");
+            });
+        });
 
 
     });
