@@ -10,7 +10,8 @@
         "walkes": "*",
         "optimist": "*",
         "esgraph": "https://github.com/ksons/esgraph/tarball/master",
-        "analyses": "*"
+        "analyses": "*",
+        "es6-map-shim": "*"
     },
     "devDependencies": {
         "mocha": "*",

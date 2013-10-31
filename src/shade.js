@@ -3,6 +3,7 @@
         parameters = require("./analyze/parameters.js"),
         interfaces = require("./interfaces.js"),
         inference = require("./analyze/typeinference/typeinference.js"),
+        sanitizer = require("./analyze/sanitizer/sanitizer.js"),
         Base = require("./base/index.js"),
         GLSLCompiler = require("./generate/glsl/compiler.js").GLSLCompiler,
         resolver = require("./resolve/resolve.js");
@@ -24,8 +25,12 @@
                 input = input.toString();
             }
             var ast = parser.parse(input);
-
             return parameters.extractParameters(ast, opt);
+        },
+
+        getSanitizedAst: function(str, opt){
+            var ast = parser.parse(str, {raw: true, loc: opt.loc || false });
+            return sanitizer.sanitize(ast, opt);
         },
 
         parseAndInferenceExpression: function (str, opt) {
