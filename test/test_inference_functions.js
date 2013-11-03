@@ -11,7 +11,7 @@ var parseAndInferenceExpression = function (str, opt) {
 }
 
 describe('Inference:', function () {
-    describe('Functions', function () {
+    describe.only('Functions', function () {
 
         it("are annotated", function () {
             var program = parseAndInferenceExpression("function a(){};", { entry: "global.a" });

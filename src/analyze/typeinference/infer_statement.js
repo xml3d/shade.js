@@ -10,19 +10,6 @@
 
     var handler = {
 
-        enterForStatement: function (node, parent, context) {
-            context.traverse(node.init);
-            context.traverse(node.test);
-
-            var test = ANNO(node.test);
-            if (test.hasStaticValue()) { // Great! We can evaluate it!
-                // TODO
-            }
-
-            context.traverse(node.update);
-            context.traverse(node.body);
-            return VisitorOption.Skip;
-        },
 
         enterIfStatement: function (node, parent, context) {
             var result = ANNO(node);
@@ -49,9 +36,6 @@
             }
         },
 
-        enterVariableDeclaration: function (node, parent, context) {
-            context.currentScope.inDeclaration = true;
-        },
 
 
         /**
@@ -85,28 +69,7 @@
             result.setReturnInfo(returnInfo || { type: TYPES.UNDEFINED });
             context.popContext();
         },
-        exitVariableDeclaration: function (node, parent, context) {
-            context.currentScope.inDeclaration = false;
-        },
-        exitVariableDeclarator: function (node, parent, context) {
-            var result = ANNO(node),
-                scope = context.currentScope;
 
-            if (node.id.type != Syntax.Identifier) {
-                throw new Error("Dynamic variable names are not yet supported");
-            }
-            var variableName = node.id.name;
-            scope.declareVariable(variableName, true, result);
-
-            if (node.init) {
-                var init = common.getTypeInfo(node.init, scope);
-                result.copy(init);
-                scope.updateTypeInfo(variableName, init);
-            } else {
-                result.setType(TYPES.UNDEFINED);
-            }
-            // TODO: result.setType(init.getType());
-        },
         exitReturnStatement: function (node, parent, context) {
             var result = ANNO(node),
                 argument = context.getTypeInfo(node.argument);

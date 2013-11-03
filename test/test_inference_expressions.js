@@ -5,7 +5,7 @@ var Shade = require(".."),
 
 var parseAndInferenceExpression = function (str, ctx) {
     var aast = Shade.parseAndInferenceExpression(str, ctx || {});
-    return aast.body[0];
+    return aast.body[0].expression;
 }
 
 describe('Expression Inference:', function () {
@@ -94,7 +94,7 @@ describe('Expression Inference:', function () {
         });
     });
 
-    describe('of BinaryExpressions', function () {
+    describe('BinaryExpressions', function () {
         describe('with arithmetic operators', function () {
             it("should annotate int + int => int", function () {
                 var exp = parseAndInferenceExpression("8 + 8");
@@ -166,7 +166,7 @@ describe('Expression Inference:', function () {
             var exp = parseAndInferenceExpression("undefined || 8");
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.INT);
-            exp.expression.left.extra.should.have.property("eliminate", true);
+            exp.left.extra.should.have.property("eliminate", true);
         });
         it("should annotate T(a) == undefined: a && b ⇒ undefined", function () {
             var exp = parseAndInferenceExpression("undefined && true");

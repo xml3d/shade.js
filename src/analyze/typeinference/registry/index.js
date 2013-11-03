@@ -1,5 +1,9 @@
 (function (ns) {
 
+    var Scope = require("../../../base/scope.js"),
+        Base = require("../../../base/index.js");
+
+
     var objects = {
         Shade : require("./shade.js"),
         //Matrix4 : require("./matrix.js"),
@@ -15,7 +19,7 @@
         ColorClosure: require("./colorclosure.js")
     };
 
-    exports.Registry = {
+    var Registry = {
         name: "TypeInference",
         getByName: function(name) {
             var result = objects[name];
@@ -29,6 +33,37 @@
             }
             return null;
         }
+    };
+
+
+    /**
+     * @constructor
+     * @extends {Scope}
+     */
+    var InferenceScope = function(node, parentScope, opt) {
+        opt = opt || {};
+        Base.extend(opt, { registry: Registry });
+        Scope.call(this, node, parentScope, opt);
     }
+
+    Base.createClass(InferenceScope, Scope, {
+
+        registerGlobals: function() {
+            this.registerObject("Math", objects.Math);
+            this.registerObject("Color",  objects.Color);
+            this.registerObject("Vec2", objects.Vec2);
+            this.registerObject("Vec3", objects.Vec3);
+            this.registerObject("Vec4", objects.Vec4);
+            this.registerObject("Texture", objects.Texture);
+            this.registerObject("Shade", objects.Shade);
+            this.registerObject("Mat3", objects.Mat3);
+            this.registerObject("Mat4", objects.Mat4);
+            this.declareVariable("this");
+            this.declareVariable("_env");
+        }
+
+    });
+
+    exports.InferenceScope = InferenceScope;
 
 }(exports));

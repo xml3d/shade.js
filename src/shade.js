@@ -2,7 +2,7 @@
     var parser = require('esprima'),
         parameters = require("./analyze/parameters.js"),
         interfaces = require("./interfaces.js"),
-        inference = require("./analyze/typeinference/typeinference.js"),
+        inference = require("./analyze/typeinference/typeinference2.js"),
         sanitizer = require("./analyze/sanitizer/sanitizer.js"),
         Base = require("./base/index.js"),
         GLSLCompiler = require("./generate/glsl/compiler.js").GLSLCompiler,

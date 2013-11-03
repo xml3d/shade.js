@@ -11,7 +11,7 @@
         Tools = require('./registry/tools.js');
 
     var ObjectRegistry = require("./registry/index.js").Registry,
-        Scope = require("../../base/scope.js").getScope(ObjectRegistry);
+        Scope = require("../../base/scope.js");// TODO: getScope(ObjectRegistry);
 
 
     var walk = require('estraverse');

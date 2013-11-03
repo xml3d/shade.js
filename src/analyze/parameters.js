@@ -1,7 +1,7 @@
 (function (ns) {
 
     var walk = require('estraverse'),
-        Scope = require("./../base/scope.js").getScope(null),
+        Scope = require("./../base/scope.js"),
         resolver = require("../resolve/resolve.js"),
         Syntax = walk.Syntax;
 

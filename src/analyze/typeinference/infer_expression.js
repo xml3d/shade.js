@@ -2,8 +2,10 @@
 
     var common = require("./../../base/common.js"),
         Shade = require("../../interfaces.js"),
-        evaluator = require("../evaluator.js");
+        evaluator = require("../evaluator.js"),
+        estraverse = require('estraverse');
 
+    var codegen = require('escodegen');
 
     var Syntax = common.Syntax,
         VisitorOption = common.VisitorOption,
@@ -11,17 +13,17 @@
         ANNO = common.ANNO;
 
 
-    var enterExpression = function (node, parent) {
+    var enterExpression = function (context, node, parent) {
         var handlerName = "enter" + node.type;
         if (handlers.hasOwnProperty(handlerName)) {
-            return handlers[handlerName](node, parent, this);
+            return handlers[handlerName].call(this, node, parent, context);
         }
     };
 
-    var exitExpression = function (node, parent) {
+    var exitExpression = function (context, node, parent) {
         var handlerName = "exit" + node.type;
         if (handlers.hasOwnProperty(handlerName)) {
-            return handlers[handlerName](node, parent, this);
+            return handlers[handlerName].call(this, node, parent, context);
         }
     };
 
@@ -32,9 +34,26 @@
 
     var handlers = {
 
+        enterVariableDeclaration: function (node, parent, context) {
+            context.setInDeclaration(true);
+        },
+
+        exitVariableDeclaration: function (node, parent, context) {
+            context.setInDeclaration(false);
+        },
+
+
+        exitExpressionStatement: function (node, parent, context) {
+            var result = ANNO(node),
+                expression = ANNO(node.expression);
+
+            result.copy(expression);
+        },
+
         enterLogicalExpression: function(node, parent, context) {
             var result = ANNO(node);
-            context.traverse(node.left);
+
+            context.analyze(node.left);
 
             var left = context.getTypeInfo(node.left);
             var leftBool = left.getStaticTruthValue();
@@ -47,7 +66,7 @@
             }
             // In all other cases we also evaluate the right expression
             context.traverse(node.right);
-            return VisitorOption.Skip;
+            this.skip();
         },
 
 
@@ -131,9 +150,9 @@
 
             result.copy(right);
             if (node.left.type == Syntax.Identifier) {
-                var scope = context.currentScope;
+                var scope = context.getScope();
                 var name = node.left.name;
-                if (scope.inDeclaration === true) {
+                if(context.inDeclaration()) {
                     scope.declareVariable(name, true, result)
                 }
                 scope.updateTypeInfo(name, right);
@@ -142,11 +161,22 @@
             }
         },
 
+        exitReturnStatement: function (node, parent, context) {
+            var result = ANNO(node),
+                argument = context.getTypeInfo(node.argument);
+
+            if (argument) {
+                result.copy(argument);
+            } else {
+                result.setType(TYPES.UNDEFINED);
+            }
+            context.currentScope.updateReturnInfo(result);
+        },
 
         exitNewExpression: function(node, parent, context) {
             var result = ANNO(node);
 
-            var scope = context.currentScope;
+            var scope = context.getScope();
             var entry = scope.getBindingByName(node.callee.name);
             //console.error(entry);
             if (entry && entry.hasConstructor()) {
@@ -354,7 +384,7 @@
             var resultType = context.getTypeInfo(node),
                 objectAnnotation = ANNO(node.object),
                 propertyAnnotation = ANNO(node.property),
-                scope = context.currentScope;
+                scope = context.getScope();
 
             //console.log("Member", node.object.name, node.property.name);
             if (node.computed) {
@@ -404,7 +434,7 @@
 
         exitCallExpression: function (node, parent, context) {
             var result = ANNO(node),
-                scope = context.currentScope;
+                scope = context.getScope();
 
             // Call on an object, e.g. Math.cos()
             if (node.callee.type == Syntax.MemberExpression) {
@@ -463,9 +493,40 @@
 
             throw new Error("Unhandled CallExpression:" + node.callee.type);
 
+        },
+
+        exitVariableDeclarator: function (node, parent, context) {
+            var result = ANNO(node),
+                scope = context.getScope();
+
+            if (node.id.type != Syntax.Identifier) {
+                throw new Error("Dynamic variable names are not yet supported");
+            }
+            var variableName = node.id.name;
+            scope.declareVariable(variableName, true, result);
+
+            if (node.init) {
+                var init = common.getTypeInfo(node.init, scope);
+                result.copy(init);
+                scope.updateTypeInfo(variableName, init);
+            } else {
+                result.setType(TYPES.UNDEFINED);
+            }
+            // TODO: result.setType(init.getType());
         }
+
     };
 
     ns.enterExpression = enterExpression;
     ns.exitExpression = exitExpression;
+
+    ns.annotateRight  = function(ast) {
+        var controller = new estraverse.Controller();
+
+        //console.log("Annotate Right", codegen.generate(ast))
+        controller.traverse(ast, {
+            enter: enterExpression.bind(controller, this),
+            leave: exitExpression.bind(controller, this)
+        })
+    }
 }(exports));
