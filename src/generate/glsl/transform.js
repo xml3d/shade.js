@@ -112,7 +112,7 @@
                  context: context,
                  contextStack: [context],
                  inMain:  this.mainId == context.str(),
-                 globalParameters : program.globalParameters[this.mainId] && program.globalParameters[this.mainId][0] ? program.globalParameters[this.mainId][0].node.extra.info : {},
+                 globalParameters : program.globalParameters && program.globalParameters[this.mainId] && program.globalParameters[this.mainId][0] ? program.globalParameters[this.mainId][0].node.extra.info : {},
                  usedParameters: {
                      shader: {},
                      system: {}

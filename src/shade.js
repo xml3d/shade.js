@@ -33,11 +33,16 @@
             return sanitizer.sanitize(ast, opt);
         },
 
-        parseAndInferenceExpression: function (str, opt) {
+        parseAndInferenceExpression: function (ast, opt) {
             opt = opt || {};
-            var ast = parser.parse(str, {raw: true, loc: opt.loc || false });
-            if (opt.implementation)
+
+            if (typeof ast == 'string') {
+                ast = parser.parse(ast, {raw: true, loc: opt.loc || false });
+            }
+
+            if (opt.implementation) {
                 ast = this.resolveClosures(ast, opt.implementation, opt);
+            }
 
             return inference.infer(ast, opt);
         },

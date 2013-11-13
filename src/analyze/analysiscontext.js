@@ -21,14 +21,17 @@
         this.analysis = analysis;
 
         /**
-         * @type {Scope}
+         * @type {Array.<Scope>}
          */
-        this.scope = opt.scope || new Scope(ast);
+        this.scopeStack = opt.scope ? [opt.scope] : [ new Scope(ast) ];
 
+        // We monitor if we are in a declaration, otherwise we can't decide between
+        // multiple declaration
         var inDeclaration = false;
         this.inDeclaration = function() {
             return inDeclaration;
-        }
+        };
+
         this.setInDeclaration = function(v) {
             inDeclaration = v;
         }
@@ -38,7 +41,7 @@
 
     AnalysisContext.prototype = {
         getTypeInfo: function (node) {
-            return common.getTypeInfo(node, this.scope);
+            return common.getTypeInfo(node, this.getScope());
         },
         analyze: function (node) {
             if (this.analysis) {
@@ -46,9 +49,17 @@
             }
         },
         getScope: function () {
-            return this.scope;
+            return this.scopeStack[this.scopeStack.length - 1];
         },
-    }
+        pushScope: function (scope) {
+            return this.scopeStack.push(scope);
+        },
+        popScope: function () {
+            return this.scopeStack.pop();
+        }
+
+
+    };
 
     // TODO: remove
     AnalysisContext.prototype.traverse = AnalysisContext.prototype.analyze;
