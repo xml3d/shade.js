@@ -170,7 +170,7 @@
             } else {
                 result.setType(TYPES.UNDEFINED);
             }
-            context.currentScope.updateReturnInfo(result);
+            context.getScope().updateReturnInfo(result);
         },
 
         exitNewExpression: function(node, parent, context) {

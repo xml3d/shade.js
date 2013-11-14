@@ -9,7 +9,7 @@ var parseAndInferenceExpression = function (str, ctx) {
     return aast.body[0].expression;
 }
 
-describe.only('Inference', function () {
+describe('Inference', function () {
     describe('Math extensions', function () {
         it("Math.clamp", function () {
             var exp = parseAndInferenceExpression("Math.clamp(1.5, 0.0, 1.0);");

@@ -5,7 +5,7 @@
     var esgraph = require('esgraph');
     var worklist = require('analyses');
     var common = require("../../base/common.js");
-    // var codegen = require('escodegen');
+    var codegen = require('escodegen');
     var AnalysisContext = require("../analysiscontext.js").AnalysisContext;
     var annotateRight = require("./infer_expression.js").annotateRight;
     var InferenceScope = require("./registry/").InferenceScope;
@@ -19,6 +19,11 @@
     var ANNO = Annotations.ANNO;
 
 
+    function createGlobalScope(ast) {
+        var globalScope = new InferenceScope(ast, null, {name: "global"});
+        globalScope.registerGlobals();
+        return globalScope;
+    }
 
     /**
      * @param {*} ast
@@ -27,14 +32,10 @@
      */
     function inferProgram(ast, opt) {
         opt = opt || {};
-
-
-        var globalScope = new InferenceScope(ast, null, {name: "global"});
-        globalScope.registerGlobals();
-
-        var functionMap = extractFunctions(ast, globalScope);
-
+        var globalScope = createGlobalScope(ast);
         var context = new AnalysisContext(ast, annotateRight, { scope: globalScope });
+
+        var functionMap = extractAllFunctions(ast, context);
 
         ast = inferBody(ast, context);
 
@@ -45,7 +46,7 @@
             }
             console.error(entry);
             var entryNode = functionMap.get(entry);
-            var functionAST = inferFunction(entryNode, context);
+            var functionAST = inferFunction(entryNode, context, []);
             ast.body.push(functionAST);
         }
 
@@ -54,6 +55,7 @@
 
     function inferFunction(ast, context, params) {
         var functionScope = new InferenceScope(ast, context.getScope(), {name: ast.id.name });
+        console.log("inferFunction", functionScope.str());
 
         setParameterTypes(ast.params, params);
 
@@ -66,20 +68,22 @@
 
     function inferBody(ast, context) {
 
-        var cfg = esgraph(ast, { omitExceptions: true });
+        var cfg = esgraph(ast.body, { omitExceptions: true });
         worklist(cfg,
             /**
              * @param {Set} input
              * @this {FlowNode}
              * @returns {*}
              */
-                function (input) {
+             function (input) {
+                console.log("IN")
                 if (!this.astNode || this.type) // Start and end node do not influence the result
                     return input;
+                console.log("AFTER")
 
                 // Local
                 if (!this.analyzed) {
-                    //console.log("Analyze", codegen.generate(this.astNode), this.astNode.type);
+                    console.log("Analyze", codegen.generate(this.astNode), this.astNode.type);
                     context.analyze(this.astNode);
                     this.analyzed = true;
                 }
@@ -91,31 +95,35 @@
         return ast;
     }
 
-    var extractFunctions = function (prg, scope) {
+    /**
+     *
+     * @param prg
+     * @param {AnalysisContext} context
+     * @returns {Map}
+     */
+    var extractAllFunctions = function (prg, context) {
         var result = new Map();
-        var context = [];
 
         result.set("global", prg);
-        context.push("global");
 
         walk.replace(prg, {
             enter: function (node) {
                 if (node.type == Syntax.FunctionDeclaration) {
-                    var anno = new FunctionAnnotation(node);
                     var localName = node.id.name;
-                    scope.declareVariable(localName);
-                    scope.updateTypeInfo(localName, anno);
+                    var parentScope = context.getScope();
+                    var anno = new FunctionAnnotation(node);
+                    parentScope.declareVariable(localName);
+                    parentScope.updateTypeInfo(localName, anno);
 
-                    var parentName = context[context.length - 1];
-                    var globalName = parentName + "." + localName;
-                    result.set(globalName, node);
-                    context.push(globalName);
+                    var newScope = new InferenceScope(node, parentScope, {name: localName });
+                    result.set(newScope.str(), node);
+                    context.pushScope(newScope);
                 }
             },
             leave: function (node) {
                 var result;
                 if (node.type == Syntax.FunctionDeclaration) {
-                    context.pop();
+                    context.popScope();
                     result = { type: Syntax.EmptyStatement };
                 }
                 return result;
