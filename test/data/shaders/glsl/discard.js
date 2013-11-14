@@ -1,4 +1,4 @@
-// Simple shader
+// Shader that returns undefined should map to discard
 /*
 void main ( void ) {
     discard;

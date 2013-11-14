@@ -120,7 +120,7 @@
             this.scope.returnInfo = annotation.getExtra();
         },
         getReturnInfo: function() {
-            return this.scope.returnInfo;
+            return this.scope.returnInfo || { type: TYPES.UNDEFINED };
         },
 
         /**

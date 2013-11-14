@@ -8,7 +8,7 @@ var parseAndInferenceExpression = function (str, ctx) {
     return aast.body[0].expression;
 }
 
-describe('Inference', function () {
+describe('Inference:', function () {
     describe('Object Registry', function () {
         describe('for Math object', function () {
             it("constant Math.PI ? number", function () {

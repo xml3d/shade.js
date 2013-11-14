@@ -65,7 +65,7 @@
                 return VisitorOption.Skip; // Don't evaluate right expression
             }
             // In all other cases we also evaluate the right expression
-            context.traverse(node.right);
+            context.analyze(node.right);
             this.skip();
         },
 
@@ -74,20 +74,20 @@
         enterConditionalExpression: function (node, parent, context) {
             var result = ANNO(node);
 
-            context.traverse(node.test);
+            context.analyze(node.test);
             var test = context.getTypeInfo(node.test);
 
             // console.log(node.test, node.consequent, node.alternate);
             if (test.hasStaticValue() || test.isObject()) {
                 var testResult = test.hasStaticValue() ? evaluateTruth(test.getStaticValue()) : true;
                 if (testResult === true) {
-                    context.traverse(node.consequent);
+                    context.analyze(node.consequent);
                     consequent = context.getTypeInfo(node.consequent);
                     result.copy(consequent);
                     var alternate = ANNO(node.alternate);
                     alternate.eliminate();
                 } else {
-                    context.traverse(node.alternate);
+                    context.analyze(node.alternate);
                     var alternate = context.getTypeInfo(node.alternate);
                     result.copy(alternate);
                     var consequent = ANNO(node.consequent);
@@ -95,8 +95,8 @@
                 }
             } else {
                 // We can't decide, thus traverse both;
-                context.traverse(node.consequent);
-                context.traverse(node.alternate);
+                context.analyze(node.consequent);
+                context.analyze(node.alternate);
                 var consequent = context.getTypeInfo(node.consequent),
                     alternate = context.getTypeInfo(node.alternate);
 

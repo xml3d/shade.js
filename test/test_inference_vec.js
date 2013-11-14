@@ -9,7 +9,7 @@ var parseAndInferenceExpression = function (str, ctx) {
     return aast.body;
 }
 
-describe('Inference', function () {
+describe('Inference:', function () {
     describe('Object Registry', function () {
        describe('for Vec2', function () {
 

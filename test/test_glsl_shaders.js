@@ -8,7 +8,7 @@ var GLSLCompiler = require("../src/generate/glsl/compiler").GLSLCompiler;
 
 function createTest(dir, file) {
     var contents = fs.readFileSync(dir + file, 'utf8');
-    var ast = esprima.parse(contents, {comment: true, range: true});
+    var ast = esprima.parse(contents, {comment: true, range: true, raw: true});
     var comments = ast.comments;
     delete ast.comments;
     it(comments[0].value.trim() + ' (' + file + ')', function () {
@@ -16,12 +16,12 @@ function createTest(dir, file) {
         var result = new GLSLCompiler().compileFragmentShader(aast, {useStatic: true, omitHeader: true});
         var actual = result.source.trim();
         var expected = comments[1].value.trim();
-        console.log(actual);
+        //console.log(actual);
         actual.should.eql(expected);
     });
 }
 
-describe.only('GLSL Shader Code:', function () {
+describe('GLSL Shader Code:', function () {
     var dir = __dirname + '/data/shaders/glsl/';
     var files = fs.readdirSync(dir);
     files.forEach(function (file) {

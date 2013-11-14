@@ -9,8 +9,9 @@ var parseAndInferenceExpression = function (str, ctx) {
     return aast;
 }
 
-describe('Inference of Statements:', function () {
-    describe('ForLoops', function () {
+describe('Inference:', function () {
+    describe('Statements', function () {
+        describe('ForLoops', function () {
         it("annotation on initialized values", function() {
             var program = parseAndInferenceExpression("for (var i = 0, j = 1.5, k; i < 10; i++) {}");
             var loop = program.body[0];
@@ -34,4 +35,5 @@ describe('Inference of Statements:', function () {
             k.should.have.property("initialized", false);
         });
     });
+});
 });
