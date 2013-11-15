@@ -511,8 +511,8 @@
         var test = ANNO(node.test);
         var consequent = ANNO(node.consequent);
         var alternate = node.alternate ? ANNO(node.alternate) : null;
-        if (test.hasStaticValue()) {
-            var staticValue = test.getStaticValue();
+        if (test.hasStaticValue() || test.isObject()) {
+            var staticValue = test.getStaticTruthValue();
             if (staticValue === true) {
                 return traverseSubTree(node.consequent, state, root, controller);
             }
