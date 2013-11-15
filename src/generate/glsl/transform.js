@@ -10,8 +10,7 @@
         Sources = require("./../../interfaces.js").SOURCES,
         Tools = require('./registry/tools.js');
 
-    var ObjectRegistry = require("./registry/index.js").Registry,
-        Scope = require("../../base/scope.js");// TODO: getScope(ObjectRegistry);
+    var Scope = require("./registry/").GLTransformScope;
 
 
     var walk = require('estraverse');
@@ -29,28 +28,6 @@
     };
 
     Base.extend(GLASTTransformer.prototype, {
-        registerGlobalContext : function (program) {
-            var ctx = new Scope(program, null, {name: "global"});
-            ctx.registerObject("Math", ObjectRegistry.getByName("Math"));
-            //ctx.registerObject("this", ObjectRegistry.getByName("System"));
-            ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
-            ctx.registerObject("Vec2", ObjectRegistry.getByName("Vec2"));
-            ctx.registerObject("Vec3", ObjectRegistry.getByName("Vec3"));
-            ctx.registerObject("Vec4", ObjectRegistry.getByName("Vec4"));
-            ctx.registerObject("Color", ObjectRegistry.getByName("Vec3"));
-            ctx.registerObject("Texture", ObjectRegistry.getByName("Texture"));
-            ctx.registerObject("Mat3", ObjectRegistry.getByName("Mat3"));
-            ctx.registerObject("Mat4", ObjectRegistry.getByName("Mat4"));
-            ctx.declareVariable("gl_FragCoord", false);
-            ctx.updateTypeInfo("gl_FragCoord", new TypeInfo({
-                extra: {
-                    type: Types.OBJECT,
-                    kind: Kinds.FLOAT3
-                }
-            }));
-
-            return ctx;
-        },
         /**
          *
          * @param {Scope} context
@@ -105,14 +82,15 @@
         transformAAST: function (program, opt) {
             opt = opt || {};
             this.root = program;
-            var context = this.registerGlobalContext(program),
+            var context = new Scope(program, null, {name: "global"}),
                 name, decl;
+            context.registerGlobals();
 
             var state = {
                  context: context,
                  contextStack: [context],
                  inMain:  this.mainId == context.str(),
-                 globalParameters : program.globalParameters && program.globalParameters[this.mainId] && program.globalParameters[this.mainId][0] ? program.globalParameters[this.mainId][0].node.extra.info : {},
+                 globalParameters : program.globalParameters && program.globalParameters[this.mainId] && program.globalParameters[this.mainId][0] ? program.globalParameters[this.mainId][0].extra.info : {},
                  usedParameters: {
                      shader: {},
                      system: {}

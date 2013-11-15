@@ -1,5 +1,14 @@
 (function(ns) {
 
+    var Scope = require("../../../base/scope.js"),
+        Base = require("../../../base/index.js"),
+        Shade = require("../../../interfaces.js"),
+        TypeInfo = require("../../../base/typeinfo.js").TypeInfo;
+
+
+    var Types = Shade.TYPES,
+        Kinds = Shade.OBJECT_KINDS;
+
     var objects = {
         Shade : require("./shade.js"),
         Math : require("./math.js"),
@@ -13,7 +22,7 @@
         Texture : require("./texture.js")
     };
 
-    ns.Registry = {
+    var Registry = {
         name: "GLSLTransformRegistry",
         getByName: function(name) {
             var result = objects[name];
@@ -29,5 +38,39 @@
         }
     }
 
+    /**
+     * @constructor
+     * @extends {Scope}
+     */
+    var GLTransformScope = function(node, parentScope, opt) {
+        Scope.call(this, node, parentScope, opt);
+        this.setRegistry(Registry);
+    }
+
+    Base.createClass(GLTransformScope, Scope, {
+
+        registerGlobals: function() {
+            this.registerObject("Math", objects.Math);
+            this.registerObject("Color",  objects.Color);
+            this.registerObject("Vec2", objects.Vec2);
+            this.registerObject("Vec3", objects.Vec3);
+            this.registerObject("Vec4", objects.Vec4);
+            this.registerObject("Texture", objects.Texture);
+            this.registerObject("Shade", objects.Shade);
+            this.registerObject("Mat3", objects.Mat3);
+            this.registerObject("Mat4", objects.Mat4);
+
+            this.declareVariable("gl_FragCoord", false);
+            this.updateTypeInfo("gl_FragCoord", new TypeInfo({
+                extra: {
+                    type: Types.OBJECT,
+                    kind: Kinds.FLOAT3
+                }
+            }));
+        }
+
+    });
+
+    ns.GLTransformScope = GLTransformScope;
 
 }(exports));

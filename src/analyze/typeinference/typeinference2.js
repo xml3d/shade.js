@@ -45,7 +45,7 @@
 
                 // Local
                 if (!this.analyzed) {
-                    console.log("Analyze", codegen.generate(this.astNode), this.astNode.type);
+                    //console.log("Analyze", codegen.generate(this.astNode), this.astNode.type);
                     context.analyze(this.astNode);
                     this.analyzed = true;
                 }
@@ -82,6 +82,13 @@
      */
     var AnalysisContext = function (ast, analysis, opt) {
         opt = opt || {};
+
+        /**
+         * The root of the program to analyze
+         * @type {*}
+         */
+        this.root = ast;
+        this.root.globalParameters = {};
 
         /**
          * Callback that continues analysis in the same context
@@ -238,43 +245,57 @@
             this.popScope();
             return funcDecl;
         },
-        /**
+        handleInjections: function (opt, ast) {
+            var entry = opt.entry;
+            if (entry && this.availableFunctions.has(entry)) {
+                var entryParams = (opt.inject && opt.inject[entry]) || [];
+
+                // First parameter is set as global _env object to be accessible form BRDFs
+                // This is a big hack, need better injection mechanism
+                var envObject = entryParams[0];
+                if (envObject && envObject.extra) {
+                    var envAnnotation = new Annotations.Annotation({}, envObject.extra);
+                    this.getScope().updateTypeInfo("_env", envAnnotation);
+                }
+
+                this.root.globalParameters[entry] = entryParams;
+
+                var entryNode = this.availableFunctions.get(entry);
+                var functionAST = this.inferFunction(entryNode, entryParams.map(function (param) {
+                    return ANNO(param);
+                }));
+                ast.body.push(functionAST);
+            }
+        }, /**
          * @param {*} ast
          * @param {*} opt
          * @returns {*}
          */
         inferProgram: function (ast, opt) {
             opt = opt || {};
-
             ast = inferBody(ast, this);
-
-            var entry = opt.entry;
-            if (entry) {
-                if (!this.availableFunctions.has(entry)) {
-                    throw new Error("Could not find entry point: " + entry);
-                }
-                var entryNode = this.availableFunctions.get(entry);
-                var functionAST = this.inferFunction(entryNode, []);
-                ast.body.push(functionAST);
-            }
-
+            this.handleInjections(opt, ast);
             return ast;
         }
 
     };
 
 
-    ns.infer = function (ast, opt) {
+
+
+
+    var inferProgram = function (ast, opt) {
         var globalScope = createGlobalScope(ast);
         var context = new AnalysisContext(ast, annotateRight, { scope: globalScope });
         var result = context.inferProgram(ast, opt);
 
         context.derivedFunctions.values().sort(function(a,b) { return a.order > b.order; }).forEach(function(funcDecl) {
-            console.log("Entry: ", funcDecl.ast.type);
             result.body.unshift(funcDecl.ast);
         });
 
         return result;
     };
+
+    ns.infer = inferProgram;
 
 }(exports));

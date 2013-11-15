@@ -435,6 +435,7 @@ describe('GLSL Code generation,', function () {
     describe("IfStatement with", function() {
         it("dynamic test", function(){
             var code = generateExpression("function shade(env) { if(env.a < 5.0) { return new Vec3(1) }}", { "a": { "type": "number" }});
+            console.log("Code",code);
             code.should.not.match(/else/);
             var lines = code.split(/\r\n|\r|\n/g);
             lines[2].should.match(/\s*if\(_env_a < 5\.0\) {/);

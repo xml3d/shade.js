@@ -35,6 +35,7 @@
 
         parseAndInferenceExpression: function (ast, opt) {
             opt = opt || {};
+            opt.entry = opt.entry || "global.shade";
 
             if (typeof ast == 'string') {
                 ast = parser.parse(ast, {raw: true, loc: opt.loc || false });

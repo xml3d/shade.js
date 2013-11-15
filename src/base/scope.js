@@ -102,7 +102,9 @@
     };
 
     Base.extend(Scope.prototype, {
-
+        setRegistry: function(registry) {
+            this.registry = registry;
+        },
         getName: function() {
             return this.scope.name;
         },
