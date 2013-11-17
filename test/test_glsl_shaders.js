@@ -7,12 +7,21 @@ var GLSLCompiler = require("../src/generate/glsl/compiler").GLSLCompiler;
 
 
 function createTest(dir, file) {
-    var contents = fs.readFileSync(dir + file, 'utf8');
+    var filename = dir + file;
+    var contents = fs.readFileSync(filename, 'utf8');
     var ast = esprima.parse(contents, {comment: true, range: true, raw: true});
     var comments = ast.comments;
     delete ast.comments;
+
+    var ctx = filename.replace(/\.[^/.]+$/, "") + "-context.json";
+    var contextData = {};
+    if (fs.existsSync(ctx)) {
+        contextData = JSON.parse(fs.readFileSync(ctx, "utf-8"));
+    }
+
+
     it(comments[0].value.trim() + ' (' + file + ')', function () {
-        var aast = Shade.parseAndInferenceExpression(ast, {entry: "global.shade"});
+        var aast = Shade.parseAndInferenceExpression(ast, {inject: contextData, entry: "global.shade"});
         var result = new GLSLCompiler().compileFragmentShader(aast, {useStatic: true, omitHeader: true});
         var actual = result.source.trim();
         var expected = comments[1].value.trim();
@@ -24,7 +33,7 @@ function createTest(dir, file) {
 describe('GLSL Shader Code:', function () {
     var dir = __dirname + '/data/shaders/glsl/';
     var files = fs.readdirSync(dir);
-    files.forEach(function (file) {
+    files.filter(function(filename) { return filename.split('.').pop() == "js" }).forEach(function (file) {
         createTest(dir, file);
     });
 });

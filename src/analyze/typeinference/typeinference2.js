@@ -5,9 +5,11 @@
     var esgraph = require('esgraph');
     var worklist = require('analyses');
     var common = require("../../base/common.js");
+    var Base = require("../../base/index.js");
     var codegen = require('escodegen');
     var annotateRight = require("./infer_expression.js").annotateRight;
     var InferenceScope = require("./registry/").InferenceScope;
+    var System = require("./registry/system.js");
     var Annotations = require("./../../base/annotation.js");
     var walk = require('estraverse');
 
@@ -23,6 +25,12 @@
         var globalScope = new InferenceScope(ast, null, {name: "global"});
         globalScope.registerGlobals();
         return globalScope;
+    };
+
+    function registerSystemInformation(scope, opt) {
+        var thisInfo = (opt.inject && opt.inject.this) || {};
+        scope.declareVariable("this");
+        scope.updateTypeInfo("this", System.getThisTypeInfo(thisInfo));
     }
 
 
@@ -169,7 +177,7 @@
         getFunctionInformationBySignature: function (signature) {
             if (this.derivedFunctions.has(signature)) {
                 var derivedFunction = this.derivedFunctions.get(signature);
-                console.log("Reuse", signature);
+                //console.log("Reuse", signature);
                 return derivedFunction.info;
             }
             return null;
@@ -286,6 +294,7 @@
 
     var inferProgram = function (ast, opt) {
         var globalScope = createGlobalScope(ast);
+        registerSystemInformation(globalScope, opt);
         var context = new AnalysisContext(ast, annotateRight, { scope: globalScope });
         var result = context.inferProgram(ast, opt);
 

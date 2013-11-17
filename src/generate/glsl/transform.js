@@ -8,7 +8,8 @@
         Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS,
         Sources = require("./../../interfaces.js").SOURCES,
-        Tools = require('./registry/tools.js');
+        Tools = require('./registry/tools.js'),
+        System = require('./registry/system.js');
 
     var Scope = require("./registry/").GLTransformScope;
 
@@ -30,11 +31,11 @@
     Base.extend(GLASTTransformer.prototype, {
         /**
          *
-         * @param {Scope} context
+         * @param {Scope} scope
          * @param {{blockedNames: Array, systemParameters: Object}} state
          */
-        registerThisObject: function (context, state) {
-            var thisObject = context.getBindingByName("this");
+        registerThisObject: function (scope, state) {
+            var thisObject = scope.getBindingByName("this");
             if (thisObject && thisObject.isObject()) {
                 var properties = thisObject.getNodeInfo();
                 for (var name in properties) {
@@ -42,11 +43,9 @@
                     if (!prop.isDerived())
                         state.blockedNames.push(Tools.getNameForSystem(name));
                 }
-                var system = ObjectRegistry.getByName("System");
-                //console.log(properties, system);
-                for (var property in system.derivedParameters) {
+                for (var property in System.derivedParameters) {
                     if(properties[property]) {
-                        Base.deepExtend(properties[property], system.derivedParameters[property]);
+                        Base.deepExtend(properties[property], System.derivedParameters[property]);
                     }
                 }
                 Base.extend(state.systemParameters, properties);
@@ -82,14 +81,14 @@
         transformAAST: function (program, opt) {
             opt = opt || {};
             this.root = program;
-            var context = new Scope(program, null, {name: "global"}),
+            var scope = new Scope(program, null, {name: "global"}),
                 name, decl;
-            context.registerGlobals();
+            scope.registerGlobals();
 
             var state = {
-                 context: context,
-                 contextStack: [context],
-                 inMain:  this.mainId == context.str(),
+                 context: scope,
+                 contextStack: [scope],
+                 inMain:  this.mainId == scope.str(),
                  globalParameters : program.globalParameters && program.globalParameters[this.mainId] && program.globalParameters[this.mainId][0] ? program.globalParameters[this.mainId][0].extra.info : {},
                  usedParameters: {
                      shader: {},
@@ -100,10 +99,10 @@
                  topDeclarations : [],
                  internalFunctions: {},
                  idNameMap : {},
-                 headers: [] // Collection of headerlines to define
+                 headers: [] // Collection of header lines to define
             }
 
-            this.registerThisObject(context, state);
+            this.registerThisObject(scope, state);
 
             // TODO: We should also block systemParameters here. We can block all system names, even if not used.
             for(name in state.globalParameters){
