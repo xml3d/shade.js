@@ -523,7 +523,6 @@
     ns.annotateRight  = function(ast) {
         var controller = new estraverse.Controller();
 
-        //console.log("Annotate Right", codegen.generate(ast))
         controller.traverse(ast, {
             enter: enterExpression.bind(controller, this),
             leave: exitExpression.bind(controller, this)

@@ -508,27 +508,12 @@
 
     var handleIfStatement = function (node, state, root, controller) {
         var test = ANNO(node.test);
-        var consequent = ANNO(node.consequent);
-        var alternate = node.alternate ? ANNO(node.alternate) : null;
         if (test.hasStaticValue() || test.isObject()) {
-            var staticValue = test.getStaticTruthValue();
-            if (staticValue === true) {
-                return traverseSubTree(node.consequent, state, root, controller);
-            }
-            if (staticValue === false) {
-                if (alternate) {
-                    return traverseSubTree(node.alternate, state, root, controller);
-                }
-                return {
-                    type: Syntax.EmptyStatement
-                }
-            }
-            Shade.throwError(node, "Internal error: Unknown static value: " + test.getStaticValue());
+            Shade.throwError(node, "Internal error: Static value or object in IfStatement: " + test.getStaticValue());
         }
 
-        // We still have a real if statement
-       var test = ANNO(node.test);
        switch(test.getType()) {
+           // Transform 'if(number)' into 'if(number != 0)'
            case Types.INT:
            case Types.NUMBER:
                node.test = {

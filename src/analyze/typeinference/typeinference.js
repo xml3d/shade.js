@@ -297,23 +297,42 @@
     };
 
 
-    function validateProgram(program) {
-        walk.replace(program, {
+    function transformProgram(program) {
+        return walk.replace(program, {
             enter: function(node) {
                 var annotation = ANNO(node);
+                if(annotation.hasError()) {
+                    throw annotation.getError();
+                }
+
+                if(node.type == Syntax.IfStatement) {
+                    var test = ANNO(node.test);
+
+                    if (test.hasStaticValue() || test.isObject()) {
+                        this.skip();
+                        var staticValue = test.getStaticTruthValue();
+                        if (staticValue === true) {
+                            return transformProgram(node.consequent);
+                        }
+                        if (staticValue === false) {
+                            if (node.alternate) {
+                                return transformProgram(node.alternate);
+                            }
+                            return {
+                                type: Syntax.EmptyStatement
+                            }
+                        }
+                    }
+                }
 
                 if(annotation.canEliminate()) {
                     this.skip();
                     return { type: Syntax.EmptyStatement, extra: { eliminate: true } };
                 }
-                if(annotation.hasError()) {
-                    throw annotation.getError();
-                }
-
-
 
             }
         })
+
     }
 
 
@@ -325,7 +344,7 @@
         var context = new AnalysisContext(ast, annotateRight, { scope: globalScope });
         var result = context.inferProgram(ast, opt);
 
-        //validateProgram(result);
+        result = transformProgram(result);
 
         context.derivedFunctions.values().sort(function(a,b) { return a.order > b.order; }).forEach(function(funcDecl) {
             result.body.unshift(funcDecl.ast);
