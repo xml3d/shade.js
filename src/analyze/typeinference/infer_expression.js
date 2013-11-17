@@ -439,11 +439,6 @@
             // Call on an object, e.g. Math.cos()
             if (node.callee.type == Syntax.MemberExpression) {
                 var callingObject = context.getTypeInfo(node.callee);
-
-                if (!callingObject.isFunction()) { // e.g. Math.PI()
-                    Shade.throwError(node, "TypeError: Object #<" + callingObject.getTypeString() + "> has no method '"+ node.callee.property.name + "'");
-                }
-
                 var object = node.callee.object,
                     propertyName = node.callee.property.name;
 
@@ -451,6 +446,11 @@
                 if(!objectReference)  {
                     Shade.throwError(node, "Internal: No object info for: " + object);
                 }
+
+                if (!callingObject.isFunction()) { // e.g. Math.PI()
+                    Shade.throwError(node, "TypeError: " + (object.type == Syntax.ThisExpression ? "'this'" : objectReference.getTypeString())+ " has no method '"+ node.callee.property.name + "'");
+                }
+
 
                 var objectInfo = scope.getObjectInfoFor(objectReference);
                 if(!objectInfo) { // Every object needs an info, otherwise we did something wrong
