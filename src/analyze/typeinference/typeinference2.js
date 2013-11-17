@@ -54,7 +54,15 @@
                 // Local
                 if (!this.analyzed) {
                     //console.log("Analyze", codegen.generate(this.astNode), this.astNode.type);
-                    context.analyze(this.astNode);
+                    var anno = ANNO(this.astNode);
+                    anno.clearError();
+
+                    try {
+                        context.analyze(this.astNode);
+                    } catch(e) {
+                        //console.log(e);
+                        anno.setError(e);
+                    }
                     this.analyzed = true;
                 }
                 return input;
@@ -289,6 +297,25 @@
     };
 
 
+    function validateProgram(program) {
+        walk.replace(program, {
+            enter: function(node) {
+                var annotation = ANNO(node);
+
+                if(annotation.canEliminate()) {
+                    this.skip();
+                    return { type: Syntax.EmptyStatement, extra: { eliminate: true } };
+                }
+                if(annotation.hasError()) {
+                    throw annotation.getError();
+                }
+
+
+
+            }
+        })
+    }
+
 
 
 
@@ -297,6 +324,8 @@
         registerSystemInformation(globalScope, opt);
         var context = new AnalysisContext(ast, annotateRight, { scope: globalScope });
         var result = context.inferProgram(ast, opt);
+
+        validateProgram(result);
 
         context.derivedFunctions.values().sort(function(a,b) { return a.order > b.order; }).forEach(function(funcDecl) {
             result.body.unshift(funcDecl.ast);
