@@ -12,11 +12,12 @@
     var System = require("./registry/system.js");
     var Annotations = require("./../../base/annotation.js");
     var walk = require('estraverse');
+    var Tools = require("../settools.js");
 
     // shortcuts
     var Syntax = common.Syntax;
     var Map = common.Map;
-    //var Set = worklist.Set;
+    var Set = worklist.Set;
     var FunctionAnnotation = Annotations.FunctionAnnotation;
     var ANNO = Annotations.ANNO;
 
@@ -41,36 +42,79 @@
 
         //console.log("infer body", cfg)
 
-        worklist(cfg,
+        var result = worklist(cfg,
             /**
              * @param {Set} input
              * @this {FlowNode}
              * @returns {*}
              */
                 function (input) {
+
                 if (!this.astNode || this.type) // Start and end node do not influence the result
                     return input;
 
-                // Local
-                if (!this.analyzed) {
-                    //console.log("Analyze", codegen.generate(this.astNode), this.astNode.type);
-                    var anno = ANNO(this.astNode);
-                    anno.clearError();
+                //console.log("Analyze", codegen.generate(this.astNode), this.astNode.type);
 
-                    try {
-                        context.analyze(this.astNode);
-                    } catch(e) {
-                        //console.log(e);
-                        anno.setError(e);
-                    }
-                    this.analyzed = true;
+                if(context.propagateConstants) {
+                    // Local
+                    this.kill = this.kill || Tools.findVariableDefinitions(this.astNode);
+                    if (this.kill.size > 1)
+                        throw new Error("Code not sanitized");
                 }
-                return input;
+
+                var anno = ANNO(this.astNode);
+                anno.clearError();
+
+                try {
+                        context.analyze(this.astNode, input);
+                } catch(e) {
+                        anno.setError(e);
+                }
+
+                if(!context.propagateConstants) {
+                    return input;
+                }
+
+                var killed = new Set(), assignment = this.kill.values()[0];
+                if (assignment) {
+                    // Only if there's an assignment, we need to generate
+                    this.generate = findConstantFor(this.astNode, assignment);
+                    //console.log("Generate: ", this.generate);
+                    killed = new Set(input.filter(function (elem) {
+                            return elem.name == assignment;
+                    }));
+                    //console.log("killed:", killed);
+                }
+                //return mergeSemantics(Set.minus(input, killed), mergeSemantics(dependencies, generatedSemantics));
+                return Set.union(Set.minus(input, killed), this.generate);
             }
             , {
-                direction: 'forward'
+                direction: 'forward',
+                merge: worklist.merge(function(a,b) {
+                    //console.log("Merge",a,b);
+                    return Set.intersect(a, b);
+                })
             });
+        //Tools.printMap(result, cfg);
         return ast;
+    }
+
+
+    function findConstantFor(ast, name) {
+        var annotation;
+        switch(ast.type) {
+            case Syntax.AssignmentExpression:
+                annotation = ANNO(ast.right);
+                break;
+            case Syntax.VariableDeclaration:
+                annotation = ANNO(ast.declarations[0].init);
+                break;
+        }
+        if(annotation && annotation.hasStaticValue()) {
+            return new Set([{ name: name, constant: annotation.getStaticValue()}]);
+
+        }
+        return null;
     }
 
 
@@ -148,12 +192,23 @@
             inDeclaration = v;
         }
 
+        /**
+         * Additional set of propagated constants
+         * @type {null|Set}
+         */
+        this.constants = null;
+
+        /**
+         * Should we perform constant propagation
+         * @type {boolean}
+         */
+        this.propagateConstants = opt.propagateConstants || false;
 
     };
 
     AnalysisContext.prototype = {
         getTypeInfo: function (node) {
-            return common.getTypeInfo(node, this.getScope());
+            return common.getTypeInfo(node, this.getScope(), this.constants);
         },
         analyze: function (node) {
             if (this.analysis) {
@@ -168,6 +223,13 @@
         },
         popScope: function () {
             return this.scopeStack.pop();
+        },
+        /**
+         *
+         * @param {null|Set}
+         */
+        setConstants: function(c) {
+            this.constants = c;
         },
         callFunction: function (name, args, opt) {
             var signature = this.createSignatureFromNameAndArguments(name, args);
@@ -337,9 +399,10 @@
 
 
     var inferProgram = function (ast, opt) {
+        opt = opt || {};
         var globalScope = createGlobalScope(ast);
         registerSystemInformation(globalScope, opt);
-        var context = new AnalysisContext(ast, annotateRight, { scope: globalScope });
+        var context = new AnalysisContext(ast, annotateRight, { scope: globalScope, propagateConstants: opt.propagateConstants });
         var result = context.inferProgram(ast, opt);
 
         // (Re-)add derived function to the program

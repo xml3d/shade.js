@@ -599,11 +599,22 @@
 
     Math.fract = function(x) {
         return x - Math.floor(x);
+    };
+
+    Math.mix = function(x,y,a) {
+        var simple = typeof x == 'number';
+        var asimple = typeof a == 'number';
+        if(simple && asimple)
+            return x*(1-a) + y*a;
+        if (asimple)
+            return x.mul(1-a).add(y.mul(a));
+        return x.mul(a.mul(-1).add(1)).add(y.mul(a));
     }
 
     Math.saturate = function (x) {
         return Math.clamp(x, 0.0, 1.0);
     }
+
 
 
     /**

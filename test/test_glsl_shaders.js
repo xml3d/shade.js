@@ -21,7 +21,7 @@ function createTest(dir, file) {
 
 
     it(comments[0].value.trim() + ' (' + file + ')', function () {
-        var aast = Shade.parseAndInferenceExpression(ast, {inject: contextData, entry: "global.shade"});
+        var aast = Shade.parseAndInferenceExpression(ast, {inject: contextData, entry: "global.shade", propagateConstants: true});
         var result = new GLSLCompiler().compileFragmentShader(aast, {useStatic: true, omitHeader: true});
         var actual = result.source.trim();
         var expected = comments[1].value.trim();

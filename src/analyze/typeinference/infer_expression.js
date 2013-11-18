@@ -181,7 +181,7 @@
             //console.error(entry);
             if (entry && entry.hasConstructor()) {
                 var constructor = entry.getConstructor();
-                var args = common.createTypeInfo(node.arguments, scope);
+                var args = context.getTypeInfo(node.arguments);
                 var extra = constructor.evaluate(result, args, scope);
                 result.setFromExtra(extra);
             }
@@ -461,7 +461,7 @@
                 if (objectInfo.hasOwnProperty(propertyName)) {
                     var propertyHandler = objectInfo[propertyName];
                     if (typeof propertyHandler.evaluate == "function") {
-                        var args = common.createTypeInfo(node.arguments, scope);
+                        var args = context.getTypeInfo(node.arguments);
                         var extra = propertyHandler.evaluate(result, args, scope, objectReference, context);
                         result.setFromExtra(extra);
                         return;
@@ -507,7 +507,7 @@
             scope.declareVariable(variableName, true, result);
 
             if (node.init) {
-                var init = common.getTypeInfo(node.init, scope);
+                var init = context.getTypeInfo(node.init);
                 result.copy(init);
                 scope.updateTypeInfo(variableName, init);
             } else {
@@ -521,12 +521,16 @@
     ns.enterExpression = enterExpression;
     ns.exitExpression = exitExpression;
 
-    ns.annotateRight  = function(ast) {
+    ns.annotateRight  = function(ast, propagatedConstants) {
         var controller = new estraverse.Controller();
+
+        this.setConstants(propagatedConstants);
 
         controller.traverse(ast, {
             enter: enterExpression.bind(controller, this),
             leave: exitExpression.bind(controller, this)
         })
+        this.setConstants(null);
+
     }
 }(exports));

@@ -1,6 +1,7 @@
 
 var Set = require('analyses').Set;
 var walk = require('estraverse');
+var codegen = require('escodegen');
 
 var Syntax = walk.Syntax;
 
@@ -22,7 +23,10 @@ var Tools = {
         cb = cb || JSON.stringify;
         for (var node in cfg[2]) {
             var n = cfg[2][node];
-            console.log(n.label, cb(map.get(n)));
+            if (n.label || n.type || !n.astNode)
+                console.log(n.label || n.type, cb(map.get(n)));
+            else
+                console.log(codegen.generate(n.astNode), cb(map.get(n)));
         }
     },
 

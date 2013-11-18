@@ -34,26 +34,34 @@
      *
      * @param {object|Array.<object>} node
      * @param scope
+     * @param constants Additional array of constants
      * @returns {TypeInfo|Array.<TypeInfo>}
      */
-    ns.getTypeInfo = function (node, scope) {
+    ns.getTypeInfo = function getTypeInfo(node, scope, constants) {
         if(!node)
             return null;
 
         if(Array.isArray(node)) {
             return node.map(function (arg) {
-                return scope.getTypeInfo(arg);
+                return getTypeInfo(arg, scope, constants);
             });
         }
-        if (node.type == Syntax.Identifier || node.type == Syntax.ThisExpression) {
-            var name = node.type == Syntax.Identifier ? node.name : 'this';
-            var binding = scope.getBindingByName(name);
-            if (binding) {
-                ANNO(node, binding.getExtra());
-                return binding;
+        var binding;
+        if (node.type == Syntax.Identifier) {
+            var name = node.name;
+            binding = scope.getBindingByName(name);
+            if(binding && constants) {
+                var propagatedConstant =  constants.filter(function(constant) { return constant.name == name; });
+                if (propagatedConstant.length) {
+                    var result = ANNO(node, binding.getExtra());
+                    result.setStaticValue(propagatedConstant[0].constant);
+                    return result;
+                }
             }
+        } else if (node.type == Syntax.ThisExpression) {
+            binding = scope.getBindingByName('this');
         }
-        return ANNO(node);
+        return binding || ANNO(node);
     };
 
     ns.Syntax = Syntax;

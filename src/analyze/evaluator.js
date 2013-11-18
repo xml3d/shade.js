@@ -50,7 +50,7 @@
                 default: return value;
             }
         }
-        if (node.type == Syntax.MemberExpression || node.type == Syntax.CallExpression) {
+        if (node.type == Syntax.MemberExpression || node.type == Syntax.CallExpression  || node.type == Syntax.Identifier) {
             return ANNO(node).getStaticValue();
         }
         if (node.type === Syntax.UnaryExpression) {

@@ -166,20 +166,26 @@
         mix: {
             type: TYPES.FUNCTION,
             evaluate: function (result, args, ctx) {
-                Tools.checkParamCount(result.node, "Shade.mix", [3], args.length);
+                Tools.checkParamCount(result.node, "Math.mix", [3], args.length);
 
                 var arg = args[0];
 
                 var typeInfo = {};
-                var cnt = Tools.Vec.checkAnyVecArgument("Shade.mix", args[0]);
+                var cnt = Tools.Vec.checkAnyVecArgument("Math.mix", args[0]);
                 Base.extend(typeInfo, Tools.Vec.getType(cnt));
 
                 if (!args[1].equals(args[0]))
-                    Shade.throwError(result.node, "Shade.mix types of first two arguments do no match: got " + arg[0].getTypeString() +
+                    Shade.throwError(result.node, "Math.mix types of first two arguments do no match: got " + arg[0].getTypeString() +
                         " and " + arg[1].getTypeString());
                 if (!args[2].canNumber())
-                    Shade.throwError(result.node, "Shade.mix third argument is not a number.");
+                    Shade.throwError(result.node, "Math.mix third argument is not a number.");
 
+                if (Tools.allArgumentsAreStatic(args)) {
+                    var callArgs = args.map(function (a) {
+                        return a.getStaticValue();
+                    });
+                    typeInfo.staticValue = Math.mix.apply(null, callArgs);
+                }
                 return typeInfo;
             }
         },
