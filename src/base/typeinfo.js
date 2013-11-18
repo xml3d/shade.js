@@ -30,7 +30,9 @@
         if (node.type == Syntax.Identifier) {
             var name = node.name;
             var variable = ctx.getBindingByName(name);
-            return new TypeInfo(node, variable);
+            if (variable) {
+                result.copy(variable);
+            }
         }
         return result;
     }
