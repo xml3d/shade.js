@@ -7,10 +7,10 @@
         "eswalker": "*",
         "escodegen": "*",
         "estraverse": "1.3.2",
-        "walkes": "*",
+        "walkes": "https://github.com/ksons/walkes/tarball/master",
         "optimist": "*",
         "esgraph": "https://github.com/ksons/esgraph/tarball/master",
-        "analyses": "*",
+        "analyses": "https://github.com/ksons/analyses/tarball/master",
         "es6-map-shim": "*"
     },
     "devDependencies": {

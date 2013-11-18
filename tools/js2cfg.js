@@ -60,13 +60,8 @@ function findFunctions(ast) {
                     cfg = esgraph(ast, {omitExceptions: true});
 
                 var count = 1;
-                cfg[2].forEach(function(n) {!n.type && (n.label = count++)});
+                //cfg[2].forEach(function(n) {!n.type && (n.label = count++)});
 
-                cfg[1].prev.forEach(function(node) {
-                    if(node.normal === cfg[1]) {
-                        //console.log("Hallo");
-                    }
-                });
                 //slice.slice(cfg[1].prev[0], "product");
 
                 result += '  subgraph cluster_' + i + '{\n';

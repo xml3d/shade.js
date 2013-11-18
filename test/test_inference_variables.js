@@ -10,7 +10,8 @@ var parseAndInferenceExpression = function (str, ctx) {
 }
 
 describe('Inference:', function () {
-    describe('Variable initialization', function () {
+    describe('Variables', function () {
+        describe('initialization', function () {
 
         it("is annotated for no init expression", function () {
             var program = parseAndInferenceExpression("var a;");
@@ -98,7 +99,7 @@ describe('Inference:', function () {
 
     });
 
-    describe('Variable reassignment', function () {
+    describe('reassignment', function () {
 
         it("of same type is okay", function () {
             var program = parseAndInferenceExpression("var a = 5; a = 3;");
@@ -107,7 +108,7 @@ describe('Inference:', function () {
             declaration.extra.should.have.property("type", TYPES.INT);
             declaration.extra.should.have.property("staticValue", 5);
 
-            var exp = program.body[1];
+            var exp = program.body[1].expression;
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.INT);
             exp.extra.should.have.property("staticValue", 3);
@@ -125,7 +126,7 @@ describe('Inference:', function () {
             declaration.should.have.property("extra");
             declaration.extra.should.have.property("type", TYPES.INT);
 
-            var exp = program.body[1];
+            var exp = program.body[1].expression;
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.INT);
             exp.extra.should.have.property("staticValue", 3);
@@ -188,11 +189,13 @@ describe('Inference:', function () {
 
         it("Custom expression", function () {
             var program = parseAndInferenceExpression("var a = 1, b = 0.5; new Color(a, 0, b);");
-            var newExpression = program.body[1];
+            var newExpression = program.body[1].expression;
+
             newExpression.extra.should.have.property("type", TYPES.OBJECT);
             newExpression.extra.should.have.property("kind", KINDS.FLOAT3);
         });
 
+    });
     });
 
 

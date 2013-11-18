@@ -1,379 +1,355 @@
 (function (ns) {
-    /**
-     * Shade.js specific type inference that is also inferring
-     * virtual types {@link Shade.TYPES }
-     */
 
-    var walk = require('estraverse'),
-        enterExpression = require('./infer_expression.js').enterExpression,
-        exitExpression = require('./infer_expression.js').exitExpression,
-        enterStatement = require('./infer_statement.js').enterStatement,
-        exitStatement = require('./infer_statement.js').exitStatement,
-        assert = require("assert"),
+    // dependencies
+    var assert = require('assert');
+    var esgraph = require('esgraph');
+    var worklist = require('analyses');
+    var common = require("../../base/common.js");
+    var Base = require("../../base/index.js");
+    var codegen = require('escodegen');
+    var annotateRight = require("./infer_expression.js").annotateRight;
+    var InferenceScope = require("./registry/").InferenceScope;
+    var System = require("./registry/system.js");
+    var Annotations = require("./../../base/annotation.js");
+    var walk = require('estraverse');
 
-        ObjectRegistry = require("./registry/index.js").Registry,
-        Scope = require("./../../base/scope.js").getScope(ObjectRegistry),
-        Base = require("../../base/index.js"),
-        Shade = require("../../interfaces.js"),
-        Annotation = require("./../../base/annotation.js").Annotation,
-        common = require("./../../base/common.js"),
-        FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
-
-
-
-    var Syntax = walk.Syntax;
+    // shortcuts
+    var Syntax = common.Syntax;
+    var Map = common.Map;
+    //var Set = worklist.Set;
+    var FunctionAnnotation = Annotations.FunctionAnnotation;
+    var ANNO = Annotations.ANNO;
 
 
-    var registerGlobalContext = function (program) {
-        var ctx = new Scope(program, null, {name: "global"});
-        ctx.registerObject("Math", ObjectRegistry.getByName("Math"));
-        ctx.registerObject("Color", ObjectRegistry.getByName("Color"));
-        ctx.registerObject("Vec2", ObjectRegistry.getByName("Vec2"));
-        ctx.registerObject("Vec3", ObjectRegistry.getByName("Vec3"));
-        ctx.registerObject("Vec4", ObjectRegistry.getByName("Vec4"));
-        ctx.registerObject("Texture", ObjectRegistry.getByName("Texture"));
-        ctx.registerObject("Shade", ObjectRegistry.getByName("Shade"));
-        //ctx.registerObject("this", ObjectRegistry.getByName("System"));
-        ctx.registerObject("Mat3", ObjectRegistry.getByName("Mat3"));
-        ctx.registerObject("Mat4", ObjectRegistry.getByName("Mat4"));
-        ctx.declareVariable("this");
-        ctx.declareVariable("_env");
-        return ctx;
+    function createGlobalScope(ast) {
+        var globalScope = new InferenceScope(ast, null, {name: "global"});
+        globalScope.registerGlobals();
+        return globalScope;
     };
 
-    var addDerivedParameters = function(propertyInfo) {
-        var system = ObjectRegistry.getByName("System");
-        for(var name in system.optionalMethods) {
-            if(propertyInfo.hasOwnProperty(name)) {
-                var method = propertyInfo[name];
-                if (method.type == Shade.TYPES.FUNCTION) {
-                    propertyInfo[name] = system.optionalMethods[name];
+    function registerSystemInformation(scope, opt) {
+        var thisInfo = (opt.inject && opt.inject.this) || null;
+        scope.declareVariable("this");
+        scope.updateTypeInfo("this", System.getThisTypeInfo(thisInfo));
+    }
+
+
+    function inferBody(ast, context) {
+
+
+        var cfg = esgraph(ast, { omitExceptions: true });
+
+        //console.log("infer body", cfg)
+
+        worklist(cfg,
+            /**
+             * @param {Set} input
+             * @this {FlowNode}
+             * @returns {*}
+             */
+                function (input) {
+                if (!this.astNode || this.type) // Start and end node do not influence the result
+                    return input;
+
+                // Local
+                if (!this.analyzed) {
+                    //console.log("Analyze", codegen.generate(this.astNode), this.astNode.type);
+                    var anno = ANNO(this.astNode);
+                    anno.clearError();
+
+                    try {
+                        context.analyze(this.astNode);
+                    } catch(e) {
+                        //console.log(e);
+                        anno.setError(e);
+                    }
+                    this.analyzed = true;
                 }
+                return input;
+            }
+            , {
+                direction: 'forward'
+            });
+        return ast;
+    }
+
+
+    /**
+     *
+     * @param {Array.<Object>} params
+     * @param {Array.<Object>} types
+     */
+    function setParameterTypes(params, types) {
+        for (var i = 0; i < params.length; i++) {
+            var funcParam = ANNO(params[i]);
+            if (i < types.length) {
+                funcParam.setFromExtra(types[i].getExtra());
+                funcParam.setDynamicValue();
             }
         }
-        Base.extend(propertyInfo, system.derivedParameters);
+    }
 
-    };
-
-    var registerGlobalObjects = function(context, thisObject, envObject) {
-        if(thisObject) {
-            var thisAnnotation = new Annotation({}, thisObject);
-            addDerivedParameters(thisAnnotation.getNodeInfo());
-            context.updateTypeInfo("this", thisAnnotation);
-        }
-        if (envObject) {
-            var envAnnotation = new Annotation({}, envObject);
-            context.updateTypeInfo("_env", envAnnotation);
-        }
-    };
-
-    var getFirstParameterOfEntryFunction = function(parameter, entryPoint) {
-        if (!entryPoint || !parameter[entryPoint])
-            return null;
-        var entryPointParameters = parameter[entryPoint];
-        if (!Array.isArray(entryPointParameters) || !entryPointParameters.length)
-            return null;
-        return entryPointParameters[0].extra || null;
-    };
-
-    var TypeInference = function (root, opt) {
+    /**
+     *
+     * @param ast
+     * @param {Function} analysis
+     * @param {*} opt
+     * @constructor
+     */
+    var AnalysisContext = function (ast, analysis, opt) {
         opt = opt || {};
 
         /**
-         * The root of the program AST
+         * The root of the program to analyze
          * @type {*}
          */
-        this.root = root;
-
-        /**
-         * The context stack
-         * @type {Array}
-         */
-        this.context = [];
-
-        /** @type {string} **/
-        this.entryPoint = opt.entry || "global.shade";
-
-        /**
-         * Struct that stores the ASTs of functions in the
-         * original state and annotated for a specific signature
-         * @type {{orig: {}, derived: {}}}
-         */
-        this.functions = {
-            orig: {},
-            derived: {}
-        }
+        this.root = ast;
         this.root.globalParameters = {};
+
+        /**
+         * Callback that continues analysis in the same context
+         * @see {AnalysisContext.analyze}
+         * @type {Function}
+         */
+        this.analysis = analysis;
+
+        /**
+         * @type {Array.<Scope>}
+         */
+        this.scopeStack = opt.scope ? [opt.scope] : [ new Scope(ast) ];
+
+        /**
+         * Map of (global) function name to untyped functions that
+         * serve as a template for calls that might come with
+         * different signatures
+         * @type {Map}
+         */
+        this.availableFunctions = this.extractAllFunctions(ast);
 
         var callNumber = 0;
         this.getCallNumber = function() {
             return callNumber++;
         }
+        /**
+         * Cache of functions that types has already been derived.
+         * Maps from signature to annotated ast
+         * @type {Map}
+         */
+        this.derivedFunctions = new Map();
+
+        // We monitor if we are in a declaration, otherwise we can't decide between
+        // multiple declaration
+        var inDeclaration = false;
+        this.inDeclaration = function () {
+            return inDeclaration;
+        };
+
+        this.setInDeclaration = function (v) {
+            inDeclaration = v;
+        }
+
 
     };
 
-    Base.extend(TypeInference.prototype, {
-        pushContext: function (context) {
-            this.context.push(context);
-            this.currentScope = context;
+    AnalysisContext.prototype = {
+        getTypeInfo: function (node) {
+            return common.getTypeInfo(node, this.getScope());
         },
-        popContext: function () {
-            this.context.pop();
-            this.currentScope = this.peekContext();
-        },
-        peekContext: function () {
-            return this.context[this.context.length - 1];
-        },
-        createContext: function (node, parentContext, name) {
-           var result = new Scope(node, parentContext, {name: name } );
-           return result;
-        },
-
-        /**
-         * Get the TypeInfo for a node. Creates an empty one, if no
-         * TypeInfo is available
-         *
-         * @param node
-         * @returns {TypeInfo}
-         */
-        getTypeInfo: function(node) {
-            return common.getTypeInfo(node, this.currentScope);
-        },
-
-        annotateParameters: function(arr) {
-            return arr ? arr.map(function(param) {
-                var annotated =  new Annotation(param);
-                return annotated;
-            }) : [];
-        },
-
-
-        buildFunctionMap: function(prg) {
-            var that = this;
-            walk.replace(prg, {
-                enter: function(node) {
-                    if (node.type == Syntax.FunctionDeclaration) {
-                        var result = new FunctionAnnotation(node);
-                        var functionName = node.id.name;
-                        var parentContext = that.peekContext();
-                        var functionContext = that.createContext(node, parentContext, functionName);
-                        functionContext.declareParameters(node.params);
-                        parentContext.declareVariable(functionName);
-                        parentContext.updateTypeInfo(functionName, result);
-                        that.pushContext(functionContext);
-                        that.functions.orig[functionContext.str()] = node;
-                    }
-                },
-                leave: function(node) {
-                    if (node.type == Syntax.FunctionDeclaration) {
-                        that.popContext();
-                        return { type: Syntax.EmptyStatement };
-                    }
-                }
-            });
-           prg.body = prg.body.filter(function(a) { return a.type != Syntax.EmptyStatement; });
-        },
-
-        traverse: function (node) {
-            walk.traverse(node, {
-                enter: this.enterNode.bind(this),
-                leave: this.exitNode.bind(this)
-            });
-            return node;
-        },
-
-        enterNode: function (node, parent) {
-            var context = this.context[this.context.length - 1];
-            return this.switchKind(node, parent, context, enterStatement, enterExpression);
-        },
-
-        exitNode: function (node, parent) {
-            var context = this.context[this.context.length - 1];
-            return this.switchKind(node, parent, context, exitStatement, exitExpression);
-        },
-
-        switchKind: function (node, parent, ctx, statement, expression) {
-            switch (node.type) {
-                case Syntax.BlockStatement:
-                case Syntax.BreakStatement:
-                case Syntax.CatchClause:
-                case Syntax.ContinueStatement:
-                case Syntax.DirectiveStatement:
-                case Syntax.DoWhileStatement:
-                case Syntax.DebuggerStatement:
-                case Syntax.EmptyStatement:
-                case Syntax.ExpressionStatement:
-                case Syntax.ForStatement:
-                case Syntax.ForInStatement:
-                case Syntax.FunctionDeclaration:
-                case Syntax.IfStatement:
-                case Syntax.LabeledStatement:
-                case Syntax.Program:
-                case Syntax.ReturnStatement:
-                case Syntax.SwitchStatement:
-                case Syntax.SwitchCase:
-                case Syntax.ThrowStatement:
-                case Syntax.TryStatement:
-                case Syntax.VariableDeclaration:
-                case Syntax.VariableDeclarator:
-                case Syntax.WhileStatement:
-                case Syntax.WithStatement:
-                    return statement.call(this, node, parent, ctx);
-
-                case Syntax.AssignmentExpression:
-                case Syntax.ArrayExpression:
-                case Syntax.ArrayPattern:
-                case Syntax.BinaryExpression:
-                case Syntax.CallExpression:
-                case Syntax.ConditionalExpression:
-                case Syntax.FunctionExpression:
-                case Syntax.Identifier:
-                case Syntax.Literal:
-                case Syntax.LogicalExpression:
-                case Syntax.MemberExpression:
-                case Syntax.NewExpression:
-                case Syntax.ObjectExpression:
-                case Syntax.ObjectPattern:
-                case Syntax.Property:
-                case Syntax.SequenceExpression:
-                case Syntax.ThisExpression:
-                case Syntax.UnaryExpression:
-                case Syntax.UpdateExpression:
-                case Syntax.YieldExpression:
-                    return expression.call(this, node, parent, ctx);
-
-                default:
-                    throw new Error('Unknown node type: ' + node.type);
+        analyze: function (node) {
+            if (this.analysis) {
+                this.analysis.apply(this, arguments);
             }
         },
-
-        /**
-         *
-         * @param {Object} functionAST
-         * @param {Array.<TypeInfo> params
-         * @param {Scope} parentContext
-         * @returns {*}
-         */
-        inferFunction: function (functionAST, params, parentContext) {
-            var functionName = functionAST.id.name;
-            var targetContextName = parentContext.getVariableIdentifier(functionName);
-            //this.injections[targetContextName] = params;
-
-            // We have a specifc type set in params that we annotate to the
-            // function AST
-            for(var i = 0; i < params.length; i++) {
-                if (i == functionAST.params.length)
-                    break;
-                var funcParam = new Annotation(functionAST.params[i]);
-                funcParam.setFromExtra(params[i].getExtra());
-                funcParam.setDynamicValue();
-            }
-
-            var oldEntryPoint = this.entryPoint;
-            this.entryPoint = targetContextName;
-            this.pushContext(parentContext);
-            // console.error("Starting to traverse: " + functionName + " in context " + parentContext.str())
-            var ast = this.traverse(functionAST);
-            this.popContext();
-            this.entryPoint = oldEntryPoint;
-
-            return ast;
+        getScope: function () {
+            return this.scopeStack[this.scopeStack.length - 1];
         },
-
-        inferProgram: function(prg, globalParameters) {
-            var params = globalParameters || {};
-            var globalContext = registerGlobalContext(prg);
-            registerGlobalObjects(globalContext, params.this, getFirstParameterOfEntryFunction(params, this.entryPoint));
-
-            this.pushContext(globalContext);
-            // Removes all functions from AST and puts them into a map
-            this.buildFunctionMap(prg);
-            // Traverse code outside of any function
-            this.traverse(prg);
-            this.popContext();
-
-            var entryPoint = this.entryPoint;
-            if (this.functions.orig.hasOwnProperty(entryPoint)) {
-                var ast = this.functions.orig[entryPoint];
-                var params = this.annotateParameters(params[entryPoint]);
-                this.root.globalParameters[entryPoint] = params;
-                // Analyse the main function
-                var aast = this.inferFunction(ast, params, globalContext);
-
-                // Put all functions that were used during analysis back into ast
-                // Use reverse call order, because some language require so (e.g. GLSL)
-                var funcs = [];
-                for(var func in this.functions.derived) {
-                    var variations = this.functions.derived[func];
-                    for (var signature in variations) {
-                        funcs.push(variations[signature]);
-                    }
-                }
-                funcs.sort(function(a,b) { return a.order > b.order; });
-                for(var i = 0; i < funcs.length; i++) {
-                    prg.body.push(funcs[i].ast);
-                }
-
-                // Put main function back into ast
-                prg.body.push(aast);
-            }
-
-            if (this.context.length)
-                throw Error("Something went wrong");
-            return prg;
+        pushScope: function (scope) {
+            return this.scopeStack.push(scope);
         },
-        getFunctionInformationByNameAndSignature: function(name, signature) {
-            if (this.functions.derived.hasOwnProperty(name)) {
-                var derivedFunction = this.functions.derived[name];
-                if (derivedFunction.hasOwnProperty(signature)) {
-                    return derivedFunction[signature].info;
-                }
-            }
-            return null;
+        popScope: function () {
+            return this.scopeStack.pop();
         },
-        getFunctionInformationFor: function(name, args, definingContext) {
-            var signature = args.reduce(function(str, arg) { return str + arg.getTypeString()}, "");
-            var info = this.getFunctionInformationByNameAndSignature(name, signature);
+        callFunction: function (name, args, opt) {
+            var signature = this.createSignatureFromNameAndArguments(name, args);
+            var info = this.getFunctionInformationBySignature(signature);
             if (info)
                 return info;
 
-            return this.createFunctionInformationFor(name, args, definingContext);
+            return this.createFunctionInformationFor(name, args, opt);
         },
-        createFunctionInformationFor: function(name, args, definingContext) {
-            var signature = args.reduce(function(str, arg) { return str + arg.getTypeString()}, "");
-            if (this.functions.orig.hasOwnProperty(name)) {
-                var ast = this.functions.orig[name];
-                var variations = this.functions.derived[name] = this.functions.derived[name] || {};
-                var derived = variations[signature] = {};
-                derived.ast = this.inferFunction(JSON.parse(JSON.stringify(ast)), args, definingContext);
-                derived.info = derived.ast.extra.returnInfo;
-                derived.info.newName = name.replace(/\./g, '_') + Object.keys(variations).length;
-                derived.ast.id.name = derived.info.newName;
+        createSignatureFromNameAndArguments: function (name, args) {
+            return args.reduce(function (str, arg) {
+                return str + arg.getTypeString()
+            }, name);
+        },
+        getFunctionInformationBySignature: function (signature) {
+            if (this.derivedFunctions.has(signature)) {
+                var derivedFunction = this.derivedFunctions.get(signature);
+                //console.log("Reuse", signature);
+                return derivedFunction.info;
+            }
+            return null;
+        },
+        createFunctionInformationFor: function (name, args, opt) {
+            opt = opt || {};
+            if (this.availableFunctions.has(name)) {
+                var ast = this.availableFunctions.get(name);
+
+                var derived = {};
                 derived.order = this.getCallNumber();
+                derived.ast = this.inferFunction(JSON.parse(JSON.stringify(ast)), args);
+                derived.info = derived.ast.extra.returnInfo;
+                derived.info.newName = opt.name || name.replace(/\./g, '_') + derived.order;
+                derived.ast.id.name = derived.info.newName;
+                this.derivedFunctions.set(this.createSignatureFromNameAndArguments(name, args), derived);
                 return derived.info;
             }
             throw new Error("Could not resolve function " + name);
         },
-        callGlobalFunction: function (name, args, context) {
-            // context.declareVariable(func.name);
-            var globalName = context.getVariableIdentifier(name),
-                signature = args.reduce(function (str, arg) {
-                    return str + arg.getTypeString()
-                }, "");
+        /**
+         *
+         * @param prg
+         * @returns {Map}
+         */
+        extractAllFunctions: function (prg) {
+            var result = new Map();
 
-            var info = this.getFunctionInformationByNameAndSignature(globalName, signature);
-            if (info)
-                return info;
+            result.set("global", prg);
+            var context = this;
 
-            return this.createFunctionInformationFor(globalName, args, context);
+            walk.replace(prg, {
+                enter: function (node) {
+                    if (node.type == Syntax.FunctionDeclaration) {
+                        var localName = node.id.name;
+                        var parentScope = context.getScope();
+                        var anno = new FunctionAnnotation(node);
+                        parentScope.declareVariable(localName);
+                        parentScope.updateTypeInfo(localName, anno);
+
+                        var newScope = new InferenceScope(node, parentScope, {name: localName });
+                        result.set(newScope.str(), node);
+                        context.pushScope(newScope);
+                    }
+                },
+                leave: function (node) {
+                    var result;
+                    if (node.type == Syntax.FunctionDeclaration) {
+                        context.popScope();
+                        result = { type: Syntax.EmptyStatement };
+                    }
+                    return result;
+                }
+            });
+            prg.body = prg.body.filter(function (a) {
+                return a.type != Syntax.EmptyStatement;
+            });
+            return result;
+        },
+        inferFunction: function (funcDecl, params) {
+            var functionScope = new InferenceScope(funcDecl, this.getScope(), {name: funcDecl.id.name });
+            var functionAnnotation = new FunctionAnnotation(funcDecl);
+
+            //console.log("inferFunction", functionScope.str());
+
+            setParameterTypes(funcDecl.params, params);
+            functionScope.declareParameters(funcDecl.params);
+
+            this.pushScope(functionScope);
+            funcDecl.body = inferBody(funcDecl.body, this);
+
+            // Annotate Function Return type from Scope
+            functionAnnotation.setReturnInfo(functionScope.getReturnInfo());
+            this.popScope();
+            return funcDecl;
+        },
+        injectCall: function (opt, ast) {
+            var entry = opt.entry;
+            if (entry && this.availableFunctions.has(entry)) {
+                var entryParams = (opt.inject && opt.inject[entry]) || [];
+
+                // First parameter is set as global _env object to be accessible form BRDFs
+                // This is a big hack, need better injection mechanism
+                var envObject = entryParams[0];
+                if (envObject && envObject.extra) {
+                    var envAnnotation = new Annotations.Annotation({}, envObject.extra);
+                    this.getScope().updateTypeInfo("_env", envAnnotation);
+                }
+
+                this.root.globalParameters[entry] = entryParams;
+                this.callFunction(entry, entryParams.map(function (param) {
+                    return ANNO(param);
+                }), { name: "shade"});
+            }
+        }, /**
+         * @param {*} ast
+         * @param {*} opt
+         * @returns {*}
+         */
+        inferProgram: function (ast, opt) {
+            opt = opt || {};
+            ast = inferBody(ast, this);
+            this.injectCall(opt, ast);
+            return ast;
         }
-    });
 
-
-    ns.infer = function (ast, opt) {
-        var ti = new TypeInference(ast, opt);
-        return ti.inferProgram(ti.root, opt.inject);
     };
 
+
+    function transformProgram(program) {
+        return walk.replace(program, {
+            enter: function(node) {
+                var annotation = ANNO(node);
+                if(annotation.hasError()) {
+                    throw annotation.getError();
+                }
+
+                if(node.type == Syntax.IfStatement) {
+                    var test = ANNO(node.test);
+
+                    if (test.hasStaticValue() || test.canObject()) {
+                        this.skip();
+                        var staticValue = test.getStaticTruthValue();
+                        if (staticValue === true) {
+                            return transformProgram(node.consequent);
+                        }
+                        if (staticValue === false) {
+                            if (node.alternate) {
+                                return transformProgram(node.alternate);
+                            }
+                            return {
+                                type: Syntax.EmptyStatement
+                            }
+                        }
+                    }
+                }
+
+                if(annotation.canEliminate()) {
+                    this.skip();
+                    return { type: Syntax.EmptyStatement, extra: { eliminate: true } };
+                }
+
+            }
+        })
+
+    }
+
+
+
+
+    var inferProgram = function (ast, opt) {
+        var globalScope = createGlobalScope(ast);
+        registerSystemInformation(globalScope, opt);
+        var context = new AnalysisContext(ast, annotateRight, { scope: globalScope });
+        var result = context.inferProgram(ast, opt);
+
+        // (Re-)add derived function to the program
+        result.body = result.body.concat(context.derivedFunctions.values().sort(function(a,b) { return b.order - a.order; }).map(function(derived) {return derived.ast}));
+
+        result = transformProgram(result);
+
+        return result;
+    };
+
+    ns.infer = inferProgram;
 
 }(exports));

@@ -5,10 +5,10 @@ var Shade = require(".."),
 
 var parseAndInferenceExpression = function (str, ctx) {
     var aast = Shade.parseAndInferenceExpression(str, ctx || {});
-    return aast.body[0];
+    return aast.body[0].expression;
 }
 
-describe('Inference', function () {
+describe('Inference:', function () {
     describe('Object Registry', function () {
         describe('for Math object', function () {
             it("constant Math.PI ? number", function () {

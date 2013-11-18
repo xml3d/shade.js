@@ -141,6 +141,9 @@
         canInt: function () {
             return this.isInt() || this.isBool();
         },
+        canObject: function () {
+            return this.isObject() || this.isArray() || this.isFunction();
+        },
         hasStaticValue : function() {
             var extra = this.getExtra();
             if (this.isNullOrUndefined())
@@ -198,6 +201,21 @@
             var extra = this.getExtra();
             return extra.eliminate == true;
         },
+        hasError : function() {
+            return this.getError() != null;
+        },
+        getError : function() {
+            var extra = this.getExtra();
+            return extra.error;
+        },
+        setError : function(err) {
+            var extra = this.getExtra();
+            extra.error = err;
+        },
+        clearError : function() {
+            var extra = this.getExtra();
+            extra.error = null;
+        },
         setFromExtra: function(extra){
             Base.deepExtend(this.node.extra, extra);
             // Set static object extra: This might be an object
@@ -209,8 +227,9 @@
                 return this.getExtra().info;
         },
         getTypeString: function() {
-            if (this.isObject())
+            if (this.isObject()) {
                 return "Object #<" + this.getKind() + ">";
+            }
             return this.getType();
         },
         setSource: function(source) {
@@ -232,7 +251,7 @@
             if (this.isNullOrUndefined())
                 return false;
             // !!{} == true
-            if (this.isObject() || this.isFunction())
+            if (this.canObject())
                 return true;
             // In all other cases, it depends on the value,
             // thus we can only evaluate this for static objects

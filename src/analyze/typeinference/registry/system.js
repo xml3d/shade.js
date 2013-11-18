@@ -1,16 +1,20 @@
 (function(ns){
 
     var Shade = require("../../../interfaces.js"),
-        TYPES = Shade.TYPES,
-        KINDS = Shade.OBJECT_KINDS,
         Base = require("../../../base/index.js"),
+        Annotations = require("../../../base/annotation.js"),
         Tools = require("./tools.js");
+
+    var TYPES = Shade.TYPES,
+        KINDS = Shade.OBJECT_KINDS,
+        ANNO = Annotations.ANNO;
+
 
     /**
      * Derived parameters: These exist in the system for convenience,
      * but can be derived from other system parameters
      */
-    var DerivedParameterInformation = {
+    var DerivedCanvasProperties = {
         normalizedCoords: {
             type: TYPES.OBJECT,
             kind: KINDS.FLOAT3,
@@ -49,17 +53,26 @@
         }
     };
 
+    ns.getThisTypeInfo = function(systemInfo) {
+        systemInfo = systemInfo || { type: TYPES.OBJECT, kind: KINDS.ANY, info: {}};
+        var thisAnnotation = ANNO({}, systemInfo);
+        // Add those parameters that can be calculated from system inputs
+        var objectInfo = thisAnnotation.getNodeInfo();
+        if (!objectInfo)
+            return thisAnnotation;
+
+        if(objectInfo.hasOwnProperty("coords")) {
+            Base.extend(objectInfo, DerivedCanvasProperties);
+        }
+        for(var entry in OptionalMethods) {
+            if(objectInfo.hasOwnProperty(entry)) {
+                Base.extend(objectInfo[entry], OptionalMethods[entry])
+            }
+        }
+
+        return thisAnnotation;
+    }
 
 
-    Base.extend(ns, {
-        id: "System",
-        object: {
-            constructor: null,
-            static: DerivedParameterInformation
-        },
-        instance: null,
-        derivedParameters: DerivedParameterInformation,
-        optionalMethods: OptionalMethods
-    });
 
 }(exports));

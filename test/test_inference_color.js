@@ -9,14 +9,14 @@ var parseAndInferenceExpression = function (str, ctx) {
     return aast.body;
 }
 
-describe('Inference', function () {
+describe('Inference:', function () {
     describe('Object Registry', function () {
        describe('for Color::', function () {
 
 
             it("constructor, 3 args", function () {
                 var exp = parseAndInferenceExpression("new Color(1.0, 0, 0)");
-                exp = exp[0];
+                exp = exp[0].expression;
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.OBJECT);
                 exp.extra.should.have.property("kind", KINDS.FLOAT3);
@@ -29,7 +29,7 @@ describe('Inference', function () {
 
             it("color instance object<color> one arg", function () {
                 var exp = parseAndInferenceExpression("new Color(128)");
-                exp = exp[0];
+                exp = exp[0].expression;
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.OBJECT);
                 exp.extra.should.have.property("kind", KINDS.FLOAT3);

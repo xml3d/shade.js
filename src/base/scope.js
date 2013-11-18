@@ -7,7 +7,6 @@
         TypeInfo = require("./typeinfo.js").TypeInfo,
         Syntax = require('estraverse').Syntax;
 
-    ns.getScope = function(registry) {
 
     /**
      *
@@ -15,12 +14,12 @@
      * @extends TypeInfo
      * @constructor
      */
-    var Binding = function(binding, registery) {
+    var Binding = function(binding, registry) {
         TypeInfo.call(this, binding);
         if(this.node.ref) {
-            if (!registery[this.node.ref])
+            if (!registry[this.node.ref])
                 throw Error("No object has been registered for: " + this.node.ref);
-            this.globalObject = registery[this.node.ref].object;
+            this.globalObject = registry[this.node.ref].object;
             if (this.globalObject) {
                 this.setType(TYPES.OBJECT);
             }
@@ -88,7 +87,7 @@
 
         /** @type (Scope|null) */
         this.parent = parent || opt.parent || null;
-        this.registery = parent ? parent.registery : {};
+        this.registry = opt.registry || (parent ? parent.registery : {});
 
         this.scope = node.scope = node.scope || {};
 
@@ -103,7 +102,9 @@
     };
 
     Base.extend(Scope.prototype, {
-
+        setRegistry: function(registry) {
+            this.registry = registry;
+        },
         getName: function() {
             return this.scope.name;
         },
@@ -121,7 +122,7 @@
             this.scope.returnInfo = annotation.getExtra();
         },
         getReturnInfo: function() {
-            return this.scope.returnInfo;
+            return this.scope.returnInfo || { type: TYPES.UNDEFINED };
         },
 
         /**
@@ -132,7 +133,7 @@
             var bindings = this.getBindings();
             var binding = bindings[name];
             if(binding !== undefined)
-                return new Binding(binding, this.registery);
+                return new Binding(binding, this.registry);
             if (this.parent)
                 return this.parent.getBindingByName(name);
             return undefined;
@@ -205,7 +206,7 @@
         },
 
         registerObject: function(name, obj) {
-            this.registery[obj.id] = obj;
+            this.registry[obj.id] = obj;
             var bindings = this.getBindings();
             bindings[name] = {
                 extra: {
@@ -288,16 +289,15 @@
 
             // 3. Last chance: The object is an instance of a registered type,
             // then we get the information from it's kind
-            return registry.getInstanceForKind(obj.getKind())
+            return this.registry && this.registry.getInstanceForKind(obj.getKind()) || null;
         }
 
     });
 
 
-        return Scope;
-
-    };
+    ns.exports = Scope;
 
 
 
-}(exports));
+
+}(module));

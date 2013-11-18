@@ -25,7 +25,11 @@
         normalizedCoords: {
             property: function (node, parent, context, state) {
                 var parameterName = Tools.getNameForSystem(SystemDefines.CANVAS_DIMENSIONS);
-                state.usedParameters.system[parameterName] = state.systemParameters[SystemDefines.CANVAS_DIMENSIONS];
+                var canvasDimensions = state.systemParameters[SystemDefines.CANVAS_DIMENSIONS];
+                if(!canvasDimensions)
+                   Shade.throwError(node, "Internal Error: No canavas dimensions defined" );
+
+                state.usedParameters.system[parameterName] = canvasDimensions;
 
                 return {
                     type: Syntax.NewExpression,
@@ -98,7 +102,7 @@
         id: "System",
         object: {
             constructor: null,
-            static: null
+            static: DerivedParameters
         },
         instance: null,
         derivedParameters: DerivedParameters
