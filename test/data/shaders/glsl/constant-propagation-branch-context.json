@@ -1,0 +1,27 @@
+{
+    "this": {
+        "type": "object",
+        "kind": "any",
+        "info": {
+            "fwidth": {
+                "type": "function"
+            }
+        }
+    },
+    "global.shade": [
+        {
+            "extra": {
+                "type": "object",
+                "kind": "any",
+                "global": "true",
+                "info": {
+                    "ubool": {
+                        "type": "boolean",
+                        "source": "uniform"
+                    }
+                }
+            }
+        }
+    ]
+}
+

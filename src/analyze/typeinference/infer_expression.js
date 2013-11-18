@@ -494,26 +494,6 @@
 
             throw new Error("Unhandled CallExpression:" + node.callee.type);
 
-        },
-
-        exitVariableDeclarator: function (node, parent, context) {
-            var result = ANNO(node),
-                scope = context.getScope();
-
-            if (node.id.type != Syntax.Identifier) {
-                throw new Error("Dynamic variable names are not yet supported");
-            }
-            var variableName = node.id.name;
-            scope.declareVariable(variableName, true, result);
-
-            if (node.init) {
-                var init = context.getTypeInfo(node.init);
-                result.copy(init);
-                scope.updateTypeInfo(variableName, init);
-            } else {
-                result.setType(TYPES.UNDEFINED);
-            }
-            // TODO: result.setType(init.getType());
         }
 
     };

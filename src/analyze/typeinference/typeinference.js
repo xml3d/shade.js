@@ -13,6 +13,7 @@
     var Annotations = require("./../../base/annotation.js");
     var walk = require('estraverse');
     var Tools = require("../settools.js");
+    var Shade = require("../../interfaces.js");
 
     // shortcuts
     var Syntax = common.Syntax;
@@ -55,8 +56,8 @@
 
                 //console.log("Analyze", codegen.generate(this.astNode), this.astNode.type);
 
+                // Local
                 if(context.propagateConstants) {
-                    // Local
                     this.kill = this.kill || Tools.findVariableDefinitions(this.astNode);
                     if (this.kill.size > 1)
                         throw new Error("Code not sanitized");
@@ -67,7 +68,8 @@
 
                 try {
                         context.analyze(this.astNode, input);
-                } catch(e) {
+                        this.decl = this.decl || context.declareVariables(this.astNode);
+            } catch(e) {
                         anno.setError(e);
                 }
 
@@ -91,7 +93,8 @@
             , {
                 direction: 'forward',
                 merge: worklist.merge(function(a,b) {
-                    //console.log("Merge",a,b);
+                    if (!a && !b)
+                        return null;
                     return Set.intersect(a, b);
                 })
             });
@@ -107,7 +110,8 @@
                 annotation = ANNO(ast.right);
                 break;
             case Syntax.VariableDeclaration:
-                annotation = ANNO(ast.declarations[0].init);
+                if (ast.declarations[0].init)
+                    annotation = ANNO(ast.declarations[0].init);
                 break;
         }
         if(annotation && annotation.hasStaticValue()) {
@@ -267,6 +271,31 @@
                 return derived.info;
             }
             throw new Error("Could not resolve function " + name);
+        },
+        declareVariables: function(ast) {
+            var scope = this.getScope(),
+                context = this;
+            if (ast.type == Syntax.VariableDeclaration) {
+                var declarations = ast.declarations;
+                declarations.forEach(function(declaration) {
+                    var result = ANNO(declaration);
+
+                    if (declaration.id.type != Syntax.Identifier) {
+                        throw new Error("Dynamic variable names are not yet supported");
+                    }
+                    var variableName = declaration.id.name;
+                    scope.declareVariable(variableName, true, result);
+
+                    if (declaration.init) {
+                        var init = context.getTypeInfo(declaration.init);
+                        result.copy(init);
+                        scope.updateTypeInfo(variableName, init);
+                    } else {
+                        result.setType(Shade.TYPES.UNDEFINED);
+                    }
+                })
+            }
+            return true;
         },
         /**
          *
