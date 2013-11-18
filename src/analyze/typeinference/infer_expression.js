@@ -320,19 +320,21 @@
                 case "%":
                     // int 'op' int => int
                     // int / int => number
-                    if (left.isInt() && right.isInt()) {
+                    if (left.canInt() && right.canInt()) {
                         if (operator == "/")
                             result.setType(TYPES.NUMBER);
                         else
                             result.setType(TYPES.INT);
                     }
                     // int 'op' number => number
-                    else if (left.isInt() && right.isNumber() || right.isInt() && left.isNumber())
+                    else if (left.canInt() && right.isNumber() || right.canInt() && left.isNumber()) {
                         result.setType(TYPES.NUMBER);
+                    }
                     // number 'op' number => number
-                    else if (left.isNumber() && right.isNumber())
+                    else if (left.isNumber() && right.isNumber()) {
                         result.setType(TYPES.NUMBER);
                     // int 'op' null => int
+                    }
                     else if (left.isInt() && right.isNullOrUndefined() || right.isInt() && left.isNullOrUndefined()) {
                         result.setType(TYPES.INT);
                     }
