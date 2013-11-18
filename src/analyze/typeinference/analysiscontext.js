@@ -78,7 +78,7 @@
         popScope: function () {
             return this.scopeStack.pop();
         },
-        getFunctionInformationFor: function(name, args, definingContext) {
+        callFunction: function(name, args, definingContext) {
             var signature = this.createSignatureFromNameAndArguments(name, args);
             var info = this.getFunctionInformationBySignature(signature);
             if (info)

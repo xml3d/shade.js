@@ -169,7 +169,7 @@
         popScope: function () {
             return this.scopeStack.pop();
         },
-        getFunctionInformationFor: function (name, args, opt) {
+        callFunction: function (name, args, opt) {
             var signature = this.createSignatureFromNameAndArguments(name, args);
             var info = this.getFunctionInformationBySignature(signature);
             if (info)
@@ -262,7 +262,7 @@
             this.popScope();
             return funcDecl;
         },
-        handleInjections: function (opt, ast) {
+        injectCall: function (opt, ast) {
             var entry = opt.entry;
             if (entry && this.availableFunctions.has(entry)) {
                 var entryParams = (opt.inject && opt.inject[entry]) || [];
@@ -276,7 +276,7 @@
                 }
 
                 this.root.globalParameters[entry] = entryParams;
-                this.getFunctionInformationFor(entry, entryParams.map(function (param) {
+                this.callFunction(entry, entryParams.map(function (param) {
                     return ANNO(param);
                 }), { name: "shade"});
             }
@@ -288,7 +288,7 @@
         inferProgram: function (ast, opt) {
             opt = opt || {};
             ast = inferBody(ast, this);
-            this.handleInjections(opt, ast);
+            this.injectCall(opt, ast);
             return ast;
         }
 

@@ -480,9 +480,8 @@
                     Shade.throwError(node, "TypeError: " + func.getTypeString() + " is not a function");
                 }
                 var args = common.createTypeInfo(node.arguments, scope);
-                var definingContext = scope.getContextForName(functionName);
                 try {
-                var extra = context.getFunctionInformationFor(scope.getVariableIdentifier(functionName), args, definingContext);
+                var extra = context.callFunction(scope.getVariableIdentifier(functionName), args);
                 } catch(e) {
                     Shade.throwError(node, "Failure in function call: " + e.message);
                 }
