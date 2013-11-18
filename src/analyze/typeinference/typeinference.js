@@ -28,7 +28,7 @@
     };
 
     function registerSystemInformation(scope, opt) {
-        var thisInfo = (opt.inject && opt.inject.this) || {};
+        var thisInfo = (opt.inject && opt.inject.this) || null;
         scope.declareVariable("this");
         scope.updateTypeInfo("this", System.getThisTypeInfo(thisInfo));
     }
@@ -169,13 +169,13 @@
         popScope: function () {
             return this.scopeStack.pop();
         },
-        getFunctionInformationFor: function (name, args, definingContext) {
+        getFunctionInformationFor: function (name, args, opt) {
             var signature = this.createSignatureFromNameAndArguments(name, args);
             var info = this.getFunctionInformationBySignature(signature);
             if (info)
                 return info;
 
-            return this.createFunctionInformationFor(name, args, definingContext);
+            return this.createFunctionInformationFor(name, args, opt);
         },
         createSignatureFromNameAndArguments: function (name, args) {
             return args.reduce(function (str, arg) {
@@ -190,7 +190,8 @@
             }
             return null;
         },
-        createFunctionInformationFor: function (name, args, definingContext) {
+        createFunctionInformationFor: function (name, args, opt) {
+            opt = opt || {};
             if (this.availableFunctions.has(name)) {
                 var ast = this.availableFunctions.get(name);
 
@@ -198,7 +199,7 @@
                 derived.order = this.getCallNumber();
                 derived.ast = this.inferFunction(JSON.parse(JSON.stringify(ast)), args);
                 derived.info = derived.ast.extra.returnInfo;
-                derived.info.newName = name.replace(/\./g, '_') + derived.order;
+                derived.info.newName = opt.name || name.replace(/\./g, '_') + derived.order;
                 derived.ast.id.name = derived.info.newName;
                 this.derivedFunctions.set(this.createSignatureFromNameAndArguments(name, args), derived);
                 return derived.info;
@@ -275,12 +276,9 @@
                 }
 
                 this.root.globalParameters[entry] = entryParams;
-
-                var entryNode = this.availableFunctions.get(entry);
-                var functionAST = this.inferFunction(entryNode, entryParams.map(function (param) {
+                this.getFunctionInformationFor(entry, entryParams.map(function (param) {
                     return ANNO(param);
-                }));
-                ast.body.push(functionAST);
+                }), { name: "shade"});
             }
         }, /**
          * @param {*} ast
@@ -308,7 +306,7 @@
                 if(node.type == Syntax.IfStatement) {
                     var test = ANNO(node.test);
 
-                    if (test.hasStaticValue() || test.isObject()) {
+                    if (test.hasStaticValue() || test.canObject()) {
                         this.skip();
                         var staticValue = test.getStaticTruthValue();
                         if (staticValue === true) {
@@ -344,11 +342,10 @@
         var context = new AnalysisContext(ast, annotateRight, { scope: globalScope });
         var result = context.inferProgram(ast, opt);
 
-        result = transformProgram(result);
+        // (Re-)add derived function to the program
+        result.body = result.body.concat(context.derivedFunctions.values().sort(function(a,b) { return b.order - a.order; }).map(function(derived) {return derived.ast}));
 
-        context.derivedFunctions.values().sort(function(a,b) { return a.order > b.order; }).forEach(function(funcDecl) {
-            result.body.unshift(funcDecl.ast);
-        });
+        result = transformProgram(result);
 
         return result;
     };

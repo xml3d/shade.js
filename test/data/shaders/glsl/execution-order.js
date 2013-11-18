@@ -1,16 +1,16 @@
 // Need to order function in execution order for GLSL
 /*
-float global_after2 ( int a ) {
+float global_after3 ( int a ) {
     return a / 10;
 }
-float global_after1 ( float a ) {
+float global_after2 ( float a ) {
     return a / float(10);
 }
-float global_before0 ( int a ) {
-    return global_after1(a / 3);
+float global_before1 ( int a ) {
+    return global_after2(a / 3);
 }
 void main ( void ) {
-    gl_FragColor = vec4(vec3(global_before0(5), global_after2(2), global_before0(1)), 1.0);
+    gl_FragColor = vec4(vec3(global_before1(5), global_after3(2), global_before1(1)), 1.0);
     return;
 }
 */

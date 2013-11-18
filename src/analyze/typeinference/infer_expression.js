@@ -78,7 +78,7 @@
             var test = context.getTypeInfo(node.test);
 
             // console.log(node.test, node.consequent, node.alternate);
-            if (test.hasStaticValue() || test.isObject()) {
+            if (test.hasStaticValue() || test.canObject()) {
                 var testResult = test.hasStaticValue() ? evaluateTruth(test.getStaticValue()) : true;
                 if (testResult === true) {
                     context.analyze(node.consequent);
@@ -198,7 +198,7 @@
             switch (operator) {
                 case "!":
                     result.setType(TYPES.BOOLEAN);
-                    if (argument.isObject()) {
+                    if (argument.canObject()) {
                         result.setStaticValue(false); // !obj == false
                         return;
                     }

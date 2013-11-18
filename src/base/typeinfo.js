@@ -141,6 +141,9 @@
         canInt: function () {
             return this.isInt() || this.isBool();
         },
+        canObject: function () {
+            return this.isObject() || this.isArray() || this.isFunction();
+        },
         hasStaticValue : function() {
             var extra = this.getExtra();
             if (this.isNullOrUndefined())
@@ -248,7 +251,7 @@
             if (this.isNullOrUndefined())
                 return false;
             // !!{} == true
-            if (this.isObject() || this.isFunction())
+            if (this.canObject())
                 return true;
             // In all other cases, it depends on the value,
             // thus we can only evaluate this for static objects

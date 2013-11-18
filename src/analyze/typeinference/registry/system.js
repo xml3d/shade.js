@@ -54,12 +54,20 @@
     };
 
     ns.getThisTypeInfo = function(systemInfo) {
+        systemInfo = systemInfo || { type: TYPES.OBJECT, kind: KINDS.ANY, info: {}};
         var thisAnnotation = ANNO({}, systemInfo);
         // Add those parameters that can be calculated from system inputs
         var objectInfo = thisAnnotation.getNodeInfo();
+        if (!objectInfo)
+            return thisAnnotation;
 
-        if(objectInfo && objectInfo.hasOwnProperty("coords")) {
+        if(objectInfo.hasOwnProperty("coords")) {
             Base.extend(objectInfo, DerivedCanvasProperties);
+        }
+        for(var entry in OptionalMethods) {
+            if(objectInfo.hasOwnProperty(entry)) {
+                Base.extend(objectInfo[entry], OptionalMethods[entry])
+            }
         }
 
         return thisAnnotation;
