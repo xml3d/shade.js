@@ -37,7 +37,7 @@ function createTest(dir, file) {
     var ctx = {
         "global.shade": attributes
     }
-    it.only(description, function () {
+    it(description, function () {
         var aast = Shade.parseAndInferenceExpression(contents, { inject: ctx });
         if (aast.body[0].type === 'FunctionDeclaration')
             aast = aast.body[0].body;

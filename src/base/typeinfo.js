@@ -228,6 +228,11 @@
             if (this.isObject())
                 return this.getExtra().info;
         },
+        setNodeInfo: function(info) {
+            if (!this.isObject())
+                throw new Error("Only objects may have a node info");
+            this.getExtra().info = info;
+        },
         getTypeString: function() {
             if (this.isObject()) {
                 return "Object #<" + this.getKind() + ">";
