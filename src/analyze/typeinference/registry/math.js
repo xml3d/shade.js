@@ -171,7 +171,7 @@
                 var arg = args[0];
 
                 var typeInfo = {};
-                var cnt = Tools.Vec.checkAnyVecArgument("Math.mix", args[0]);
+                var cnt = Tools.Vec.checkAnyVecArgument(result.node, "Math.mix", args[0]);
                 Base.extend(typeInfo, Tools.Vec.getType(cnt));
 
                 if (!args[1].equals(args[0]))

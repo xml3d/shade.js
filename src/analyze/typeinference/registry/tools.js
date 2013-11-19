@@ -53,14 +53,14 @@
                     typeInfo.staticValue = method.apply(object, callArgs);
             }
         },
-        checkAnyVecArgument: function(methodName, arg){
+        checkAnyVecArgument: function(astNode, methodName, arg){
             var cnt;
 
             if(arg.canNumber()) cnt = 1;
             else if(arg.isOfKind(KINDS.FLOAT2)) cnt = 2;
             else if(arg.isOfKind(KINDS.FLOAT3)) cnt = 3;
             else if(arg.isOfKind(KINDS.FLOAT4)) cnt = 4;
-            else Shade.throwError(result.node, "Invalid parameter for " + methodName + ", type '" +
+            else Shade.throwError(astNode, "Invalid parameter for " + methodName + ", type '" +
                     arg.getTypeString() + "' is not supported");
             return cnt;
         },
@@ -110,7 +110,7 @@
             var arg = args[0];
 
             var typeInfo = {};
-            var cnt = Vec.checkAnyVecArgument(methodName, arg);
+            var cnt = Vec.checkAnyVecArgument(result.node, methodName, arg);
             Base.extend(typeInfo, Vec.getType(cnt));
 
             Vec.getStaticValue(typeInfo, methodName, args, callObject);
