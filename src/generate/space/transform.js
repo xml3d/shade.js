@@ -35,14 +35,14 @@
     }
 
     Base.extend(SpaceTransformer.prototype, {
-        transformProgram: function (program, opt) {
+        transformAast: function (aast, opt) {
             opt = opt || {};
-            this.root = program;
+            this.root = aast;
             this.functionSpaceInfo = {};
             this.envSpaces = {};
 
-            this.transformFunctions(program);
-            return program;
+            this.transformFunctions(aast);
+            return this.envSpaces;
         },
         /**
          *
@@ -68,7 +68,7 @@
         },
         replaceFunctionInvocations: function(functionBodyAast){
             var self = this;
-            functionBodyAast.body = walk.replace(functionBodyAast.body, {
+            walk.replace(functionBodyAast, {
                 enter: function (node, parent) {
                     if(node.type == Syntax.CallExpression){
                         if(node.callee.type == Syntax.Identifier && self.functionSpaceInfo[node.callee.name]){
@@ -88,11 +88,6 @@
                                 }
                             }
                             node.arguments = newArgs;
-                        }
-                        var newStatement = self.duplicateSpaceStatement(node);
-                        if(newStatement){
-                            this.skip();
-                            return newStatement;
                         }
                     }
                 }
@@ -131,14 +126,14 @@
             var self = this;
             var analyzeResult = spaceAnalyzer.analyze(functionAast.body);
             var nameMap = {};
-            this.extractEnvSpaces(analyzeResult);
+            this.extractEnvSpaces(analyzeResult, nameMap);
             this.initFunctionHeader(functionAast, analyzeResult, nameMap);
 
             functionAast.body = walk.replace(functionAast.body, {
                 enter: function (node, parent) {
                     //console.log("Enter:", node.type);
                     if(node.type == Syntax.ExpressionStatement){
-                        var newStatement = self.duplicateSpaceStatement(node);
+                        var newStatement = self.duplicateSpaceStatement(node, nameMap);
                         if(newStatement){
                             this.skip();
                             return newStatement;
@@ -152,15 +147,19 @@
             });
         },
 
-        extractEnvSpaces: function(analyzeResult){
+        extractEnvSpaces: function(analyzeResult, nameMap){
             for(var name in analyzeResult){
                 if(name.indexOf("env.") == 0){
                     var property = name.substr(4);
                     var j = analyzeResult[name].length;
                     while(j--){
                         var space = analyzeResult[name][j];
+                        var spaceName = this.getSpaceName(name, space);
                         if(!this.envSpaces[property]) this.envSpaces[property] = [];
-                        if(this.envSpaces[property].indexOf(space) == -1) this.envSpaces[property].push(space);
+                        if(this.envSpaces[property].indexOf(space) == -1) this.envSpaces[property].push(
+                            { name: spaceName.split(".")[1], space: space } );
+                        if(!nameMap[name]) nameMap[name] = {};
+                        nameMap[name][space] = this.getSpaceName(name, space);
                     }
                 }
             }
@@ -176,6 +175,7 @@
                     while(j--){
                         var space = analyzeResult[paramName][j];
                         if(space != SpaceVectorType.OBJECT){
+                            if(!nameMap[paramName]) nameMap[paramName] = {};
                             nameMap[paramName][space] = this.getSpaceName(paramName, space);
                             var newParam = {
                                 type: Syntax.Identifier,
@@ -222,7 +222,7 @@
             }
         },
 
-        duplicateSpaceStatement: function(statementAast, nameMap, analyzeResult){
+        duplicateSpaceStatement: function(statementAast, nameMap){
             var duplicatedStatements = [];
             var child = statementAast.expression;
             var sInfo = spaceInfo(child);
@@ -239,7 +239,7 @@
 
                 var expressionCopy = Base.deepExtend({}, child);
                 this.resolveSpaceUsage(expressionCopy, space, nameMap);
-                duplicatedStatements.push(expressionCopy);
+                duplicatedStatements.push({ type: Syntax.ExpressionStatement, expression: expressionCopy });
 
                 if(space != SpaceVectorType.OBJECT){
                     newSpaceNameEntries[space] = this.getSpaceName(sInfo.def, space);
@@ -263,7 +263,7 @@
 
         isSpacePropagrationPossible: function(sInfo, targetSpace, nameMap){
             return !sInfo.propagateSet.some(function(identifier){
-                return !nameMap[identifier][targetSpace];
+                return !(nameMap[identifier] && nameMap[identifier][targetSpace]);
             });
         },
 
@@ -280,7 +280,8 @@
                             break;
                         case Syntax.MemberExpression:
                             if(targetSpace != SpaceVectorType.OBJECT && spaceInfo(node).propagate){
-                                var name = nameMap[node.name][targetSpace],
+                                var nameKey = "env." + node.property.name;
+                                var name = nameMap[nameKey][targetSpace],
                                     token = name.split(".");
                                 node.property.name = token[1];
                             }
@@ -290,8 +291,9 @@
                             if(sInfo.spaceOverride &&
                                 self.isSpacePropagrationPossible(sInfo, sInfo.spaceOverride, nameMap))
                             {
+                                var result = self.resolveSpaceUsage(node.arguments[1], sInfo.spaceOverride, nameMap);
                                 this.skip();
-                                return self.resolveSpaceUsage(node, sInfo.spaceOverride, nameMap);
+                                return result;
                             }
                     }
                 }
@@ -302,6 +304,7 @@
         getSpaceName: function(name, space){
             // TODO: Avoid name collisions
             switch(space){
+                case SpaceVectorType.OBJECT: return name;
                 case SpaceVectorType.VIEW_POINT : return name + "_vps";
                 case SpaceVectorType.WORLD_POINT : return name + "_wps";
                 case SpaceVectorType.VIEW_NORMAL : return name + "_vns";
@@ -312,7 +315,7 @@
     });
 
     // Exports
-    ns.SpaceTransformer = SpaceTransformer;
+    ns.SpaceTransformer = new SpaceTransformer();
 
 
 }(exports));

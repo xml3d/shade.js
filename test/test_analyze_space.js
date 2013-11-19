@@ -10,17 +10,6 @@ var spaceAnalyzer = require("../src/analyze/space_analyzer.js"),
 
 var Set = analyses.Set;
 
-function doAnalysis(cfg) {
-    var output = space(cfg, null);
-    var startNodeResult = output.get(cfg[0]);
-    var result = {};
-    startNodeResult.forEach(function(elem) {
-        if(!result[elem.name]) result[elem.name] = [];
-        result[elem.name].push(elem.space);
-    });
-    return result;
-}
-
 function createTest(dir, file) {
     if(fs.lstatSync(dir + file).isDirectory())
         return;
@@ -41,13 +30,12 @@ function createTest(dir, file) {
         var aast = Shade.parseAndInferenceExpression(contents, { inject: ctx });
         if (aast.body[0].type === 'FunctionDeclaration')
             aast = aast.body[0].body;
-        //console.log(expected);
         var actual = spaceAnalyzer.analyze(aast);
-        actual.should.eql(expected);
+        actual.should.eql(expected)
     });
 }
 
-describe('Semantic analysis:', function () {
+describe('Space analysis:', function () {
     var dir = __dirname + '/data/space/';
     //createTest(dir, "dualspace.js");
 
