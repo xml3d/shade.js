@@ -1,4 +1,4 @@
-// Semantic of basic BRDF parameters
+// Dual Space Propagations
 /*
 [
     { "extra": { "type": "object", "kind": "float3" } },
@@ -8,10 +8,11 @@
 /*
 {
     "color" : ["OBJECT"],
-    "n"     : ["OBJECT"]
+    "n" : ["OBJECT","VIEW_NORMAL"]
 }
  */
 function shade(color, n) {
-    return color.mul(n.dot(1,0,0));
+    var normal;
+    normal = this.transformNormal(Space.VIEW, n);
+    return color.mul(n).mul(normal.dot(1,0,0));
 }
-

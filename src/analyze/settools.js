@@ -37,7 +37,7 @@ var Tools = {
                     }
                     break;
                 case Syntax.VariableDeclarator:
-                    if (node.id.type == Syntax.Identifier) {
+                    if (node.id.type == Syntax.Identifier && node.init) {
                         definitions.add(node.id.name);
                     }
                     break;

@@ -5,8 +5,8 @@ var map = require('es6-map-shim');
 var Shade = require("..");
 var fs = require('fs');
 var should = require('should');
-var space = require("../src/analyze/space.js"),
-    SpaceTypes = space.SpaceTypes;
+var spaceAnalyzer = require("../src/analyze/space_analyzer.js"),
+    SpaceVectorType = spaceAnalyzer.SpaceVectorType;
 
 var Set = analyses.Set;
 
@@ -22,6 +22,8 @@ function doAnalysis(cfg) {
 }
 
 function createTest(dir, file) {
+    if(fs.lstatSync(dir + file).isDirectory())
+        return;
     var contents = fs.readFileSync(dir + file, 'utf8');
     var ast = esprima.parse(contents, {comment: true, range: true});
     var comments = ast.comments;
@@ -30,7 +32,7 @@ function createTest(dir, file) {
     var attributes = JSON.parse(comments[1].value);
     var expected = JSON.parse(comments[2].value);
     for(var name in expected){
-        expected[name] = expected[name].map(function(elem){ return SpaceTypes[elem]});
+        expected[name] = expected[name].map(function(elem){ return SpaceVectorType[elem]});
     }
     var ctx = {
         "global.shade": attributes
@@ -39,20 +41,18 @@ function createTest(dir, file) {
         var aast = Shade.parseAndInferenceExpression(contents, { inject: ctx });
         if (aast.body[0].type === 'FunctionDeclaration')
             aast = aast.body[0].body;
-        var cfg = esgraph(aast);
         //console.log(expected);
-        var actual = doAnalysis(cfg);
+        var actual = spaceAnalyzer.analyze(aast);
         actual.should.eql(expected);
     });
 }
 
 describe('Semantic analysis:', function () {
     var dir = __dirname + '/data/space/';
-    createTest(dir, "nospace.js");
-    /*
+    //createTest(dir, "dualspace.js");
+
     var files = fs.readdirSync(dir);
     files.forEach(function (file) {
         createTest(dir, file);
     });
-    */
 });

@@ -4,6 +4,7 @@
     var walker = require('walkes');
     var worklist = require('analyses');
     var common = require("../base/common.js");
+    var esgraph = require('esgraph');
     var codegen = require('escodegen');
     var Tools = require("./settools.js");
     var Shade = require("./../interfaces.js");
@@ -20,27 +21,27 @@
      * Possible Spaces
      * @enum
      */
-    var SpaceFlags = {
+    var SpaceType = {
         OBJECT: 0,
         VIEW: 1,
         WORLD: 2
     };
-    var TypeFlags = {
+    var VectorType = {
         NONE: 0,
         POINT: 1,
         NORMAL: 2
     };
-    var SpaceTypes = {
-        OBJECT: SpaceFlags.OBJECT,
-        VIEW_POINT : SpaceFlags.VIEW + (TypeFlags.POINT << 3),
-        WORLD_POINT : SpaceFlags.WORLD + (TypeFlags.POINT << 3),
-        VIEW_NORMAL : SpaceFlags.VIEW + (TypeFlags.NORMAL << 3),
-        WORLD_NORMAL : SpaceFlags.WORLD + (TypeFlags.NORMAL << 3)
+    var SpaceVectorType = {
+        OBJECT: SpaceType.OBJECT,
+        VIEW_POINT : SpaceType.VIEW + (VectorType.POINT << 3),
+        WORLD_POINT : SpaceType.WORLD + (VectorType.POINT << 3),
+        VIEW_NORMAL : SpaceType.VIEW + (VectorType.NORMAL << 3),
+        WORLD_NORMAL : SpaceType.WORLD + (VectorType.NORMAL << 3)
     };
-    function getTypeFromSpaceType(spaceType){
+    function getVectorFromSpaceVector(spaceType){
         return spaceType >> 3;
     }
-    function getSpaceFromSpaceType(spaceType){
+    function getSpaceFromSpaceVector(spaceType){
         return spaceType % 8;
     }
 
@@ -49,12 +50,27 @@
      * @param {FlowNode} start
      * @returns {Map}
      */
-    function space(cfg, start) {
-        return worklist(cfg, transferSpaceInfo, {
+    function analyze(aast) {
+        var cfg = esgraph(aast, { omitExceptions: true });
+
+        var output = worklist(cfg, transferSpaceInfo, {
             direction: 'backward',
-            start: start,
+            start: null,
             merge: worklist.merge(mergeSpaceInfo)
         });
+        var startNodeResult = output.get(cfg[0]);
+        var result = {};
+        startNodeResult.forEach(function(elem) {
+            if(!result[elem.name]) result[elem.name] = [];
+            result[elem.name].push(elem.space);
+        });
+        return result;
+    }
+
+    function setSpaceInfo(ast, key, value){
+        if(!ast.spaceInfo)
+            ast.spaceInfo = {};
+        ast.spaceInfo[key] = value;
     }
 
     /**
@@ -72,19 +88,22 @@
         //generate && console.log(this.label, generate);
 
         // Depends on input
-        this.transferSpaces = null;
-        var depSpaceInfo = new Set();
+        var depSpaceInfo = new Set(), finalSpaces = null;
+        setSpaceInfo(this.astNode, "transferSpaces", null);
+        setSpaceInfo(this.astNode, "hasSpaceOverrides", generatedDependencies.dependencies.spaceOverrides.length > 0);
         if(generatedDependencies.def){
             var def = generatedDependencies.def;
-            var spaceTypes = getSpaceTypesFromInfo(input, def);
-            if(spaceTypes.length > 1){
-                this.transferSpaces = spaceTypes;
-                createSpaceInfoFromDependencies(depSpaceInfo, generatedDependencies.dependencies, spaceTypes);
+            setSpaceInfo(this.astNode, "def", def);
+            var spaceTypes = getSpaceVectorTypesFromInfo(input, def);
+            if(spaceTypes.size >= 1){
+                setSpaceInfo(this.astNode, "transferSpaces", spaceTypes);
+                finalSpaces = createSpaceInfoFromDependencies(depSpaceInfo, generatedDependencies.dependencies, spaceTypes);
             }
         }
         else{
-            createSpaceInfoFromDependencies(depSpaceInfo, generatedDependencies.dependencies, new Set([SpaceTypes.OBJECT]));
+            finalSpaces = createSpaceInfoFromDependencies(depSpaceInfo, generatedDependencies.dependencies, new Set([SpaceVectorType.OBJECT]));
         }
+        setSpaceInfo(this.astNode, "finalSpaces", finalSpaces.size > 0 ? finalSpaces : null);
 
         input = new Set(input.filter(function (elem) {
             return !kill.has(elem.name);
@@ -92,24 +111,28 @@
         return mergeSpaceInfo(input, depSpaceInfo);
     }
 
-    function getSpaceTypesFromInfo(spaceInfo, identifier){
+    function getSpaceVectorTypesFromInfo(spaceInfo, identifier){
         return new Set(spaceInfo.filter(function(elem){return elem.name == identifier}).map(function(elem){ return elem.space}));
     }
     function isSpaceTypeValid(spaceType, dependencies){
-        var type = getTypeFromSpaceType(spaceType);
-        return type == TypeFlags.NONE || (type == TypeFlags.NORMAL && !dependencies.normalSpaceViolation)
-           || (type == TypeFlags.POINT && !dependencies.pointSpaceViolation);
+        var type = getVectorFromSpaceVector(spaceType);
+        return type == VectorType.NONE || (type == VectorType.NORMAL && !dependencies.normalSpaceViolation)
+           || (type == VectorType.POINT && !dependencies.pointSpaceViolation);
     }
 
     function createSpaceInfoFromDependencies(depSpaceInfo, dependencies, spaces){
+        var finalSpaces = new Set();
         dependencies.toObjectSet.forEach(function(name){
-            depSpaceInfo.add({name: name, space: SpaceTypes.OBJECT});
+            depSpaceInfo.add({name: name, space: SpaceVectorType.OBJECT});
         })
         spaces.forEach(function(spaceType){
-            if(getSpaceFromSpaceType(spaceType) != SpaceFlags.OBJECT && dependencies.hasDirectVec3SpaceOverride())
+            if(getSpaceFromSpaceVector(spaceType) != SpaceType.OBJECT && dependencies.hasDirectVec3SpaceOverride())
                 throw new Error("Detection of repeated space conversion. Not supported!");
+            if(isSpaceTypeValid(spaceType, dependencies)){
+                finalSpaces.add(spaceType);
+            }
+            spaceType = isSpaceTypeValid(spaceType, dependencies) ?  spaceType : SpaceVectorType.OBJECT;
 
-            spaceType = isSpaceTypeValid(spaceType, dependencies) ?  spaceType : SpaceTypes.OBJECT;
             dependencies.propagateSet.forEach(function(name){
                 depSpaceInfo.add({name: name, space: spaceType});
             });
@@ -118,6 +141,7 @@
         for(var i = 0; i < overrides.length; ++i){
             createSpaceInfoFromDependencies(depSpaceInfo, overrides[i].dependencies, new Set( [overrides[i].space] ));
         }
+        return finalSpaces;
     }
 
 
@@ -155,9 +179,8 @@
         this.spaceOverrides = [];
     }
 
-    SpaceDependencies.prototype.addSpaceOverride = function(space, fromObjectSpace, dependencies, ast){
-        this.spaceOverrides.push({ space: space, fromObjectSpace: fromObjectSpace,
-            dependencies: dependencies, ast: ast})
+    SpaceDependencies.prototype.addSpaceOverride = function(space, fromObjectSpace, dependencies){
+        this.spaceOverrides.push({ space: space, fromObjectSpace: fromObjectSpace, dependencies: dependencies})
     }
     SpaceDependencies.prototype.hasDirectVec3SpaceOverride = function(){
         var i = this.spaceOverrides.length;
@@ -179,10 +202,12 @@
         if(defCount == 1)
             result.def = defs.values()[0];
         // TODO: Properly determine FLOAT3 statements
-        var isFloat3Statement = (ast.extra.kind == Kinds.FLOAT3);
+        var isFloat3Statement = (ast.extra && ast.extra.kind == Kinds.FLOAT3);
 
-        if(isFloat3Statement)
+        if(isFloat3Statement){
             gatherSpaceDependencies(ast, result.dependencies);
+            setSpaceInfo(ast, "propagateSet", result.dependencies.propagateSet);
+        }
         else
             gatherObjectDependencies(ast, result.dependencies);
 
@@ -193,9 +218,9 @@
         var callee = callAst.callee;
         if(callee.type == Syntax.MemberExpression && callee.object.type == Syntax.ThisExpression){
             var spaceType = 0;
-            switch(callee.property){
-                case "transformPoint": spaceType = TypeFlags.POINT; break;
-                case "transformNormal": spaceType = TypeFlags.NORMAL; break;
+            switch(callee.property.name){
+                case "transformPoint": spaceType = VectorType.POINT; break;
+                case "transformNormal": spaceType = VectorType.NORMAL; break;
             }
             spaceType = spaceType << 3;
             if(spaceType){
@@ -205,8 +230,8 @@
                     || firstArg.object.name != "Space" || firstArg.property.type != Syntax.Identifier)
                     throw new Error("The first argument of '" + callee.property + "' must be a Space enum value.");
                 switch(firstArg.property.name){
-                    case "View" : spaceType += SpaceFlags.VIEW; break;
-                    case "World": spaceType += SpaceFlags.WORLD; break;
+                    case "VIEW" : spaceType += SpaceType.VIEW; break;
+                    case "WORLD": spaceType += SpaceType.WORLD; break;
                 }
                 return spaceType;
             }
@@ -218,8 +243,10 @@
         var space = getSpaceConversion(callAst);
         if(space){
             var subResult = new SpaceDependencies();
-            gatherSpaceDependencies(callAst, subResult);
+            gatherSpaceDependencies(callAst.arguments[1], subResult);
             result.addSpaceOverride(space, fromObjectSpace, subResult, callAst);
+            setSpaceInfo(callAst, "spaceOverride", space);
+            setSpaceInfo(callAst, "propagateSet", subResult.propagateSet);
             return true;
         }
         return false;
@@ -227,14 +254,21 @@
 
     function gatherObjectDependencies(ast, result){
         walker(ast, {
+            VariableDeclaration: function(){},
             Identifier: function(){
-                if(this.extra.kind == Kinds.FLOAT3)
+                if(this.extra.kind == Kinds.FLOAT3){
                     result.toObjectSet.add(this.name);
+                }
+
             },
             MemberExpression: function (recurse) {
                 if(this.extra.kind == Kinds.FLOAT3){
                     if (this.object.type == Syntax.Identifier && this.property.type == Syntax.Identifier) {
-                        result.toObjectSet.add(this.object.name + "." + this.property.name);
+                        if(this.object.extra.global)
+                            result.propagateSet.add("env." + this.property.name);
+                        else{
+                            throw new Error("Member Access of non 'env' object in space equation - not supported.");
+                        }
                     }
                 }
                 else{
@@ -253,12 +287,14 @@
 
     function gatherSpaceDependencies(ast, result) {
         walker(ast, {
+            VariableDeclaration: function(){},
             AssignmentExpression: function (recurse) {
                 recurse(this.right);
             },
             Identifier: function () {
                 if(this.extra.kind == Kinds.FLOAT3){
                     result.propagateSet.add(this.name);
+                    setSpaceInfo(this, "propagate", true);
                 }
              },
             NewExpression: function (recurse) {
@@ -269,7 +305,12 @@
             MemberExpression: function (recurse) {
                 if(this.extra.kind == Kinds.FLOAT3){
                     if (this.object.type == Syntax.Identifier && this.property.type == Syntax.Identifier) {
-                        result.propagateSet.add(this.object.name + "." + this.property.name);
+                        if(this.object.extra.global)
+                            result.propagateSet.add("env." + this.property.name);
+                        else{
+                            throw new Error("Member Access of non 'env' object in space equation - not supported.")
+                        }
+                        setSpaceInfo(this, "propagate", true);
                     }
                 }
                 else{
@@ -340,8 +381,13 @@
             "normalize" : handleScaleOperator
         }
     }
-
-    space.SpaceTypes = SpaceTypes;
-    module.exports = space;
+    module.exports = {
+        SpaceVectorType: SpaceVectorType,
+        SpaceType: SpaceType,
+        VectorType: VectorType,
+        getVectorFromSpaceVector: getVectorFromSpaceVector,
+        getSpaceFromSpaceVector: getSpaceFromSpaceVector,
+        analyze: analyze
+    };
 
 }(module));
