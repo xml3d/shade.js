@@ -30,26 +30,33 @@ var Tools = {
         }
     },
 
-    findVariableDefinitions: function(ast) {
-    var definitions = new Set();
-    walk.traverse(ast, {
-        leave: function(node, parent) {
-            switch(node.type) {
-                case Syntax.AssignmentExpression:
-                    if (node.left.type == Syntax.Identifier) {
-                        definitions.add(node.left.name);
-                    }
-                    break;
-                case Syntax.VariableDeclarator:
-                    if (node.id.type == Syntax.Identifier && node.init) {
-                        definitions.add(node.id.name);
-                    }
-                    break;
+    findVariableAssignments: function (ast) {
+        var definitions = new Set();
+        walk.traverse(ast, {
+            leave: function (node, parent) {
+                switch (node.type) {
+                    case Syntax.AssignmentExpression:
+                        if (node.left.type == Syntax.Identifier) {
+                            definitions.add(node.left.name);
+                        }
+                        break;
+                    case Syntax.VariableDeclarator:
+                        if (node.id.type == Syntax.Identifier && node.init) {
+                            definitions.add(node.id.name);
+                        }
+                        break;
+                    case Syntax.UpdateExpression:
+                        if (node.argument.type == Syntax.Identifier) {
+                            console.log("found update on", node.argument.name)
+                            definitions.add(node.argument.name);
+                        }
+                        break;
+                }
             }
-        }
-    })
-    return definitions;
-}
+        })
+        return definitions;
+    }
+
 }
 
 module.exports = Tools;
