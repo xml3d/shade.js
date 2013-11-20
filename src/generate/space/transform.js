@@ -124,16 +124,18 @@
 
         extractSpaceTransforms: function(functionAast){
             var self = this;
+            this.usedIdentifiers = this.getUsedIdentifiers(functionAast);
+
             var analyzeResult = spaceAnalyzer.analyze(functionAast.body);
-            var nameMap = {};
+            var nameMap = {}, addDeclarations = [];
             this.extractEnvSpaces(analyzeResult, nameMap);
-            this.initFunctionHeader(functionAast, analyzeResult, nameMap);
+            this.initFunctionHeader(functionAast, analyzeResult, nameMap, addDeclarations);
 
             functionAast.body = walk.replace(functionAast.body, {
                 enter: function (node, parent) {
                     //console.log("Enter:", node.type);
                     if(node.type == Syntax.ExpressionStatement){
-                        var newStatement = self.duplicateSpaceStatement(node, nameMap);
+                        var newStatement = self.duplicateSpaceStatement(node, nameMap, addDeclarations);
                         if(newStatement){
                             this.skip();
                             return newStatement;
@@ -145,6 +147,8 @@
                     }
                 }
             });
+            this.addDeclarations(functionAast, addDeclarations);
+            this.cleanUpDeclarations(functionAast);
         },
 
         extractEnvSpaces: function(analyzeResult, nameMap){
@@ -165,8 +169,8 @@
             }
         },
 
-        initFunctionHeader: function(functionAast, analyzeResult, nameMap){
-            var newParams = [], startDeclarations = [];
+        initFunctionHeader: function(functionAast, analyzeResult, nameMap, addDeclarations){
+            var newParams = [];
             var paramTransitions = [];
             for(var i = 0; i < functionAast.params.length; ++i){
                 var param = functionAast.params[i], paramName = param.name;
@@ -192,7 +196,7 @@
                         }
                     }
                     if(!hasObjectSpace){
-                        startDeclarations.push(param);
+                        addDeclarations.push(paramName);
                     }
                 }
                 else{
@@ -202,27 +206,9 @@
             }
             functionAast.params = newParams;
             this.functionSpaceInfo[functionAast.id.name] = paramTransitions;
-            if(startDeclarations.length > 0){
-                var declaration = {
-                    type: Syntax.VariableDeclaration,
-                    kind: "var",
-                    declarations: []
-                };
-                var i = startDeclarations.length;
-                while(i--){
-                    var declarator = {
-                        type: Syntax.VariableDeclarator,
-                        id: startDeclarations[i],
-                        init: null
-                    };
-                    ANNO(declarator).copy(ANNO(startDeclarations));
-                    declaration.declarations.push(declarator);
-                }
-                functionAast.body.body.unshift(declaration);
-            }
         },
 
-        duplicateSpaceStatement: function(statementAast, nameMap){
+        duplicateSpaceStatement: function(statementAast, nameMap, addedDeclarations){
             var duplicatedStatements = [];
             var child = statementAast.expression;
             var sInfo = spaceInfo(child);
@@ -234,15 +220,18 @@
             }
 
             sInfo.finalSpaces.forEach(function(space){
-                if(space != SpaceVectorType.OBJECT && this.isSpacePropagrationPossible(sInfo, space, nameMap))
+                if(space != SpaceVectorType.OBJECT && !this.isSpacePropagrationPossible(sInfo, space, nameMap))
                     return;
 
                 var expressionCopy = Base.deepExtend({}, child);
                 this.resolveSpaceUsage(expressionCopy, space, nameMap);
                 duplicatedStatements.push({ type: Syntax.ExpressionStatement, expression: expressionCopy });
-
                 if(space != SpaceVectorType.OBJECT){
-                    newSpaceNameEntries[space] = this.getSpaceName(sInfo.def, space);
+                    var spaceName = this.getSpaceName(sInfo.def, space);
+                    if(addedDeclarations.indexOf(spaceName) == -1)
+                        addedDeclarations.push(spaceName);
+                    newSpaceNameEntries[space] = spaceName;
+                    expressionCopy.left.name = spaceName;
                 }
 
             }.bind(this));
@@ -261,10 +250,31 @@
 
         },
 
+        addDeclarations: function(functionAast, addDeclarations){
+            var i = functionAast.params.length;
+            while(i--) {
+                var idx = addDeclarations.indexOf(functionAast.params[i].name);
+                if(idx != -1)
+                    addDeclarations.splice(idx, 1);
+            }
+            if(addDeclarations.length > 0){
+                var declarations = { type: Syntax.VariableDeclaration, kind: "var", declarations: []};
+                var i = addDeclarations.length;
+                while(i--){
+                    name = addDeclarations[i];
+                    var decl = {type: Syntax.VariableDeclarator, id: {type: Syntax.Identifier, name: name}, init: null};
+                    ANNO(decl).setType(Types.OBJECT, Kinds.FLOAT3);
+                    declarations.declarations.push(decl);
+                }
+                functionAast.body.body.unshift(declarations);
+            }
+        },
+
         isSpacePropagrationPossible: function(sInfo, targetSpace, nameMap){
-            return !sInfo.propagateSet.some(function(identifier){
+            var spaceForNameNotFound = sInfo.propagateSet.some(function(identifier){
                 return !(nameMap[identifier] && nameMap[identifier][targetSpace]);
             });
+            return !spaceForNameNotFound;
         },
 
         resolveSpaceUsage: function(aast, targetSpace, nameMap){
@@ -310,7 +320,43 @@
                 case SpaceVectorType.VIEW_NORMAL : return name + "_vns";
                 case SpaceVectorType.WORLD_NORMAL : return name + "_wns";
             }
+        },
+
+        getUsedIdentifiers : function(functionAast){
+            var result = [];
+            walk.traverse(functionAast, {
+                enter: function (node, parent) {
+                    //console.log("Enter:", node.type);
+                    if(node.type == Syntax.Identifier && parent.type != Syntax.MemberExpression){
+                        if(result.indexOf(node.name) == -1)
+                            result.push(node.name);
+                    }
+                }
+            });
+            return result;
+        },
+        cleanUpDeclarations: function(functionAast){
+            var declarators = [];
+            var body = functionAast.body.body;
+            var i = body.length;
+            while(i--){
+                if(body[i].type == Syntax.VariableDeclaration){
+                    declarators.push.apply(declarators, body[i].declarations);
+                    body.splice(i,1);
+                }
+            }
+            var usedIdentifiers = this.getUsedIdentifiers(functionAast.body);
+            var declaration = { type: Syntax.VariableDeclaration, kind: "var", declarations: []};
+            i = declarators.length;
+            while(i--){
+                if(usedIdentifiers.indexOf(declarators[i].id.name) != -1){
+                    declaration.declarations.push(declarators[i]);
+                }
+            }
+            if(declaration.declarations.length > 0)
+                body.unshift(declaration);
         }
+
 
     });
 

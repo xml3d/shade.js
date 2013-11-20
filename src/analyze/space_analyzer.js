@@ -103,7 +103,7 @@
         else{
             finalSpaces = createSpaceInfoFromDependencies(depSpaceInfo, generatedDependencies.dependencies, new Set([SpaceVectorType.OBJECT]));
         }
-        setSpaceInfo(this.astNode, "finalSpaces", finalSpaces.size > 0 ? finalSpaces : null);
+        setSpaceInfo(this.astNode, "finalSpaces", (finalSpaces && finalSpaces.size > 0) ? finalSpaces : null);
 
         input = new Set(input.filter(function (elem) {
             return !kill.has(elem.name);

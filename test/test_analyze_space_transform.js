@@ -14,6 +14,21 @@ var spaceAnalyzer = require("../src/analyze/space_analyzer.js"),
 
 var Set = analyses.Set;
 
+
+function sortSpaceResult(input){
+    var result = {};
+    var resultNames = [];
+    for(var name in input){
+        resultNames.push(name);
+        input[name].sort(function(a,b){ return a.name < b.name});
+    }
+    resultNames.sort();
+    for(var i = 0; i < resultNames.length; ++i){
+        result[resultNames[i]] = input[resultNames[i]];
+    }
+    return result;
+}
+
 function createTest(dir, file) {
     if(fs.lstatSync(dir + file).isDirectory())
         return;
@@ -30,6 +45,7 @@ function createTest(dir, file) {
             return elem;
         });
     }
+    expected = sortSpaceResult(expected);
     var ctx = {
         "global.shade": [{
             "extra": {
@@ -51,6 +67,7 @@ function createTest(dir, file) {
 
         var aast = Shade.parseAndInferenceExpression(input, { inject: ctx });
         var transformResult = SpaceTransformer.transformAast(aast);
+        transformResult = sortSpaceResult(transformResult);
         var outputCode = codegen.generate(output);
         var transformedCode = codegen.generate(aast);
         transformedCode.should.eql(outputCode);
@@ -58,13 +75,14 @@ function createTest(dir, file) {
     });
 }
 
-describe.only('Space Transform:', function () {
+describe('Space Transform:', function () {
 
     var dir = __dirname + '/data/spacetransform/';
-    //createTest(dir, "dualspace.js");
+    //createTest(dir, "multifunction.js");
     var files = fs.readdirSync(dir);
     files.forEach(function (file) {
         createTest(dir, file);
     });
+
 
 });
