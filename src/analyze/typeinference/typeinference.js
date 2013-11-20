@@ -14,6 +14,7 @@
     var walk = require('estraverse');
     var Tools = require("../settools.js");
     var Shade = require("../../interfaces.js");
+    var walkes = require('walkes');
 
     // shortcuts
     var Syntax = common.Syntax;
@@ -58,44 +59,52 @@
 
                 // Local
                 if(context.propagateConstants) {
-                    this.kill = this.kill || Tools.findVariableDefinitions(this.astNode);
+                    this.kill = this.kill || Tools.findVariableAssignments(this.astNode);
                     if (this.kill.size > 1)
-                        throw new Error("Code not sanitized");
+                        console.warn("Multiple Assignments found")
                 }
 
                 var anno = ANNO(this.astNode);
                 anno.clearError();
 
                 try {
-                        context.analyze(this.astNode, input);
-                        this.decl = this.decl || context.declareVariables(this.astNode);
-            } catch(e) {
-                        anno.setError(e);
+                    context.analyze(this.astNode, input);
+                    this.decl = this.decl || context.declareVariables(this.astNode);
+                } catch (e) {
+                    anno.setError(e);
                 }
 
                 if(!context.propagateConstants) {
                     return input;
                 }
 
-                var killed = new Set(), assignment = this.kill.values()[0];
-                if (assignment) {
+                var filteredInput = null, generate = null;
+                if (this.kill.size) {
                     // Only if there's an assignment, we need to generate
-                    this.generate = findConstantFor(this.astNode, assignment);
-                    //console.log("Generate: ", this.generate);
-                    killed = new Set(input.filter(function (elem) {
-                            return elem.name == assignment;
+                    generate = findConstantsFor(this.astNode, this.kill);
+                    var that = this;
+                    filteredInput = new Set(input.filter(function (elem) {
+                            return !that.kill.some(function(tokill) { return elem.name == tokill });
                     }));
-                    //console.log("killed:", killed);
                 }
-                //return mergeSemantics(Set.minus(input, killed), mergeSemantics(dependencies, generatedSemantics));
-                return Set.union(Set.minus(input, killed), this.generate);
+
+                var result = Set.union(filteredInput || input, generate);
+                /*console.log("input:", input);
+                console.log("kill:", this.kill);
+                console.log("generate:", generate);
+                console.log("filteredInput:", filteredInput);*/
+                //console.log("result:", result);
+                return result;
             }
             , {
                 direction: 'forward',
                 merge: worklist.merge(function(a,b) {
                     if (!a && !b)
                         return null;
-                    return Set.intersect(a, b);
+                    //console.log("Merge", a && a.values(), b && b.values())
+                    var result = Set.intersect(a, b);
+                    //console.log("Result", result && result.values())
+                    return result;
                 })
             });
         //Tools.printMap(result, cfg);
@@ -103,22 +112,39 @@
     }
 
 
-    function findConstantFor(ast, name) {
-        var annotation;
-        switch(ast.type) {
-            case Syntax.AssignmentExpression:
-                annotation = ANNO(ast.right);
-                break;
-            case Syntax.VariableDeclaration:
-                if (ast.declarations[0].init)
-                    annotation = ANNO(ast.declarations[0].init);
-                break;
-        }
-        if(annotation && annotation.hasStaticValue()) {
-            return new Set([{ name: name, constant: annotation.getStaticValue()}]);
+    function findConstantsFor(ast, names) {
+        var result = new Set(), annotation, name;
+        walkes(ast, {
+            AssignmentExpression: function(recurse) {
 
-        }
-        return null;
+                if (this.left.type != Syntax.Identifier) {
+                    Shade.throwError(ast, "Can't find constant for computed left expression");
+                }
+                name = this.left.name;
+                if(names.has(name)) {
+                    annotation = ANNO(this.right);
+                    if(annotation.hasStaticValue()) {
+                        result.add({ name: name, constant: annotation.getStaticValue()});
+                    }
+                }
+                recurse(this.right);
+            },
+
+            VariableDeclarator: function(recurse) {
+                var name = this.id.name;
+                if (this.init && names.has(name)) {
+                    annotation = ANNO(this.init);
+                    if(annotation.hasStaticValue()) {
+                        result.add({ name: name, constant: annotation.getStaticValue()});
+                    }
+                }
+                recurse(this.init);
+            }
+
+
+        });
+
+        return result;
     }
 
 
