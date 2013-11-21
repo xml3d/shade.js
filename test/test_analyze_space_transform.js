@@ -77,11 +77,11 @@ function createTest(dir, file) {
 describe('Space Transform:', function () {
 
     var dir = __dirname + '/data/spacetransform/';
-    //createTest(dir, "name_conflict.js");
+    //createTest(dir, "functioncall.js");
+
     var files = fs.readdirSync(dir);
     files.forEach(function (file) {
         createTest(dir, file);
     });
-
 
 });

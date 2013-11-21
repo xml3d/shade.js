@@ -39,6 +39,7 @@
             opt = opt || {};
             this.root = aast;
             this.functionSpaceInfo = {};
+            this.functionTranfserInfo = {};
             this.globalIdentifiers = this.getGlobalIdentifiers(aast);
             this.envSpaces = {};
 
@@ -127,7 +128,7 @@
             var self = this;
             this.usedIdentifiers = this.getUsedIdentifiers(functionAast);
 
-            var analyzeResult = spaceAnalyzer.analyze(functionAast.body);
+            var analyzeResult = spaceAnalyzer.analyze(functionAast, this.functionTranfserInfo);
             var nameMap = {}, addDeclarations = [];
             this.extractEnvSpaces(analyzeResult, nameMap);
             this.initFunctionHeader(functionAast, analyzeResult, nameMap, addDeclarations);

@@ -24,7 +24,8 @@
     var SpaceType = {
         OBJECT: 0,
         VIEW: 1,
-        WORLD: 2
+        WORLD: 2,
+        RESULT: 5
     };
     var VectorType = {
         NONE: 0,
@@ -36,7 +37,9 @@
         VIEW_POINT : SpaceType.VIEW + (VectorType.POINT << 3),
         WORLD_POINT : SpaceType.WORLD + (VectorType.POINT << 3),
         VIEW_NORMAL : SpaceType.VIEW + (VectorType.NORMAL << 3),
-        WORLD_NORMAL : SpaceType.WORLD + (VectorType.NORMAL << 3)
+        WORLD_NORMAL : SpaceType.WORLD + (VectorType.NORMAL << 3),
+        RESULT_POINT : SpaceType.RESULT + (VectorType.POINT << 3),
+        RESULT_NORMAL : SpaceType.RESULT + (VectorType.NORMAL << 3)
     };
     function getVectorFromSpaceVector(spaceType){
         return spaceType >> 3;
@@ -45,14 +48,13 @@
         return spaceType % 8;
     }
 
-    /**
-     * @param cfg
-     * @param {FlowNode} start
-     * @returns {Map}
-     */
-    function analyze(aast) {
-        var cfg = esgraph(aast, { omitExceptions: true });
+    var c_resultPointOk = true, c_resultNormalOk = true,
+        c_customFunctionPropagations = null;
 
+    function analyze(functionAast, customFunctionPropagations) {
+        var cfg = esgraph(functionAast.body, { omitExceptions: true });
+        c_resultPointOk = true; c_resultNormalOk = true;
+        c_customFunctionPropagations = customFunctionPropagations || {};
         var output = worklist(cfg, transferSpaceInfo, {
             direction: 'backward',
             start: null,
@@ -60,10 +62,25 @@
         });
         var startNodeResult = output.get(cfg[0]);
         var result = {};
+        var tranferEntry = {
+            transferPointOk: c_resultPointOk,
+            transferNormalOk: c_resultNormalOk,
+            transferArgs: []
+        };
+        var transferSpaces = {};
         startNodeResult.forEach(function(elem) {
+            if(getSpaceFromSpaceVector(elem.space) == SpaceType.RESULT){
+                transferSpaces[elem.name] = true;
+                return;
+            }
             if(!result[elem.name]) result[elem.name] = [];
             result[elem.name].push(elem.space);
         });
+        for(var i = 0; i < functionAast.params.length; ++i){
+            var name = functionAast.params[i].name;
+            tranferEntry.transferArgs.push( transferSpaces[name]);
+        }
+        c_customFunctionPropagations[functionAast.id.name] = tranferEntry;
         return result;
     }
 
@@ -71,6 +88,10 @@
         if(!ast.spaceInfo)
             ast.spaceInfo = {};
         ast.spaceInfo[key] = value;
+    }
+    function setSpaceInfoSpaces(ast, key, spaces){
+        var values = spaces && spaces.filter(function(space){ return getSpaceFromSpaceVector(space) != SpaceType.RESULT });
+        setSpaceInfo(ast, key, values);
     }
 
     /**
@@ -88,22 +109,26 @@
         //generate && console.log(this.label, generate);
 
         // Depends on input
-        var depSpaceInfo = new Set(), finalSpaces = null;
+        var depSpaceInfo = new Set(), finalSpaces = null, spaceTypes = null;
         setSpaceInfo(this.astNode, "transferSpaces", null);
         setSpaceInfo(this.astNode, "hasSpaceOverrides", generatedDependencies.dependencies.spaceOverrides.length > 0);
         if(generatedDependencies.def){
             var def = generatedDependencies.def;
             setSpaceInfo(this.astNode, "def", def);
-            var spaceTypes = getSpaceVectorTypesFromInfo(input, def);
-            if(spaceTypes.size >= 1){
-                setSpaceInfo(this.astNode, "transferSpaces", spaceTypes);
-                finalSpaces = createSpaceInfoFromDependencies(depSpaceInfo, generatedDependencies.dependencies, spaceTypes);
-            }
+            spaceTypes = getSpaceVectorTypesFromInfo(input, def);
         }
         else{
-            finalSpaces = createSpaceInfoFromDependencies(depSpaceInfo, generatedDependencies.dependencies, new Set([SpaceVectorType.OBJECT]));
+            spaceTypes = new Set([SpaceVectorType.OBJECT])
+            if(this.astNode.type == Syntax.ReturnStatement){
+                spaceTypes.add(SpaceVectorType.RESULT_NORMAL);
+                spaceTypes.add(SpaceVectorType.RESULT_POINT);
+            }
         }
-        setSpaceInfo(this.astNode, "finalSpaces", (finalSpaces && finalSpaces.size > 0) ? finalSpaces : null);
+        setSpaceInfoSpaces(this.astNode, "transferSpaces", spaceTypes);
+        if(spaceTypes.size >= 1){
+            finalSpaces = createSpaceInfoFromDependencies(depSpaceInfo, generatedDependencies.dependencies, spaceTypes);
+        }
+        setSpaceInfoSpaces(this.astNode, "finalSpaces", (finalSpaces && finalSpaces.size > 0) ? finalSpaces : null);
 
         input = new Set(input.filter(function (elem) {
             return !kill.has(elem.name);
@@ -125,16 +150,30 @@
         dependencies.toObjectSet.forEach(function(name){
             depSpaceInfo.add({name: name, space: SpaceVectorType.OBJECT});
         })
-        spaces.forEach(function(spaceType){
-            if(getSpaceFromSpaceVector(spaceType) != SpaceType.OBJECT && dependencies.hasDirectVec3SpaceOverride())
-                throw new Error("Detection of repeated space conversion. Not supported!");
-            if(isSpaceTypeValid(spaceType, dependencies)){
-                finalSpaces.add(spaceType);
+        spaces.forEach(function(spaceVector){
+            var space = getSpaceFromSpaceVector(spaceVector);
+            var isValid = isSpaceTypeValid(spaceVector, dependencies);
+
+            if(space != SpaceType.OBJECT && dependencies.hasDirectVec3SpaceOverride()){
+                if(space == SpaceType.RESULT)
+                    isValid = false;
+                else
+                    throw new Error("Detection of repeated space conversion. Not supported!");
             }
-            spaceType = isSpaceTypeValid(spaceType, dependencies) ?  spaceType : SpaceVectorType.OBJECT;
+
+            if(isValid){
+                finalSpaces.add(spaceVector);
+            }
+            if(!isValid && space == SpaceType.RESULT){
+                if(getVectorFromSpaceVector(spaceVector) == VectorType.NORMAL)
+                    c_resultNormalOk = false;
+                else
+                    c_resultPointOk = false;
+            }
+            spaceVector = isValid ?  spaceVector : SpaceVectorType.OBJECT;
 
             dependencies.propagateSet.forEach(function(name){
-                depSpaceInfo.add({name: name, space: spaceType});
+                depSpaceInfo.add({name: name, space: spaceVector});
             });
         });
         var overrides = dependencies.spaceOverrides;
@@ -153,14 +192,12 @@
      * @returns {Set}
      */
     function mergeSpaceInfo(a, b) {
-        if (!a && b)
-            return new Set(b);
-        var s = new Set(a);
+        var s = a ? new Set(a) : new Set();
         if (b)
             b.forEach(
                 function (elem) {
                     var name = elem.name, space = elem.space;
-                    var resultA = a.filter(function (other) {
+                    var resultA = s.filter(function (other) {
                         return other.name == name && other.space == space;
                     });
                     if (!resultA.length) {
@@ -206,7 +243,7 @@
 
         if(isFloat3Statement){
             gatherSpaceDependencies(ast, result.dependencies);
-            setSpaceInfo(ast, "propagateSet", result.dependencies.propagateSet);
+            setSpaceInfo(ast, "propagateSet", result.dependencies.propagateSet.values());
         }
         else
             gatherObjectDependencies(ast, result.dependencies);
@@ -246,7 +283,7 @@
             gatherSpaceDependencies(callAst.arguments[1], subResult);
             result.addSpaceOverride(space, fromObjectSpace, subResult, callAst);
             setSpaceInfo(callAst, "spaceOverride", space);
-            setSpaceInfo(callAst, "propagateSet", subResult.propagateSet);
+            setSpaceInfo(callAst, "propagateSet", subResult.propagateSet.values());
             return true;
         }
         return false;
@@ -321,8 +358,8 @@
             CallExpression: function (recurse) {
                 if(handleSpaceOverride(this, result, false))
                     return;
-                result.pointSpaceViolation = true;
                 if (this.callee.type == Syntax.MemberExpression) {
+                    result.pointSpaceViolation = true;
                     var callObject = this.callee.object;
                     var objectKind = callObject.extra.kind,
                         method = this.callee.property.name,
@@ -332,10 +369,25 @@
                         return;
                     }
                     console.log("Unhandled: ", codegen.generate(this))
+                }else if(this.callee.type == Syntax.Identifier){
+                    var id = this.callee.name;
+                    var customEntry = c_customFunctionPropagations && c_customFunctionPropagations[id];
+                    if(customEntry){
+                        if(!customEntry.transferPointOk) result.pointSpaceViolation = true;
+                        if(!customEntry.transferNormalOk) result.normalSpaceViolation = true;
+                        var i = customEntry.transferArgs.length;
+                        while(i--){
+                            if(customEntry.transferArgs[i])
+                                recurse(this.arguments[i]);
+                            else
+                                gatherObjectDependencies(this.arguments[i], result);
+                        }
+                        return;
+                    }
                 }
-                else{
-                    gatherObjectDependencies(this.arguments, result);
-                }
+                result.pointSpaceViolation = true;
+                result.normalSpaceViolation = true;
+                gatherObjectDependencies(this.arguments, result);
             }
         });
     }
