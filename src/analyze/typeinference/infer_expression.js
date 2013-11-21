@@ -149,16 +149,14 @@
                 result = ANNO(node);
 
             result.copy(right);
-            if (node.left.type == Syntax.Identifier) {
-                var scope = context.getScope();
+
+            // Check, if a assigned variable still has the same type as
+            // before and update type of uninitialized variables.
+            if (node.left.type == Syntax.Identifier && !context.inDeclaration()) {
                 var name = node.left.name;
-                if(context.inDeclaration()) {
-                    scope.declareVariable(name, true, result)
-                }
+                var scope = context.getScope();
                 scope.updateTypeInfo(name, right);
-            } else {
-                throw new Error("Assignment expression");
-            }
+             }
         },
 
         exitReturnStatement: function (node, parent, context) {

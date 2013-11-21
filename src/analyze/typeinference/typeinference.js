@@ -298,7 +298,7 @@
             }
             throw new Error("Could not resolve function " + name);
         },
-        declareVariables: function(ast) {
+        declareVariables: function(ast, inDeclaration) {
             var scope = this.getScope(),
                 context = this;
             if (ast.type == Syntax.VariableDeclaration) {
@@ -314,12 +314,26 @@
 
                     if (declaration.init) {
                         var init = context.getTypeInfo(declaration.init);
-                        result.copy(init);
                         scope.updateTypeInfo(variableName, init);
+                        if (declaration.init.type == Syntax.AssignmentExpression) {
+                            context.declareVariables(declaration.init, true);
+                        }
                     } else {
                         result.setType(Shade.TYPES.UNDEFINED);
                     }
                 })
+            } else if (ast.type == Syntax.AssignmentExpression && inDeclaration) {
+                var typeInfo = context.getTypeInfo(ast.right);
+
+                if (ast.left.type != Syntax.Identifier) {
+                    throw new Error("Dynamic variable names are not yet supported");
+                }
+                var variableName = ast.left.name;
+                scope.declareVariable(variableName, true, ANNO(ast));
+                scope.updateTypeInfo(variableName, typeInfo);
+                if (ast.right.type == Syntax.AssignmentExpression) {
+                    context.declareVariables(ast.right, true);
+                }
             }
             return true;
         },
