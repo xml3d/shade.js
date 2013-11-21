@@ -39,6 +39,7 @@
             opt = opt || {};
             this.root = aast;
             this.functionSpaceInfo = {};
+            this.globalIdentifiers = this.getGlobalIdentifiers(aast);
             this.envSpaces = {};
 
             this.transformFunctions(aast);
@@ -312,14 +313,28 @@
         },
 
         getSpaceName: function(name, space){
-            // TODO: Avoid name collisions
-            switch(space){
-                case SpaceVectorType.OBJECT: return name;
-                case SpaceVectorType.VIEW_POINT : return name + "_vps";
-                case SpaceVectorType.WORLD_POINT : return name + "_wps";
-                case SpaceVectorType.VIEW_NORMAL : return name + "_vns";
-                case SpaceVectorType.WORLD_NORMAL : return name + "_wns";
+            if(space == SpaceVectorType.OBJECT)
+                return name;
+
+            var checkGlobal = false;
+            if(name.indexOf("env.") == 0){
+                checkGlobal = true;
+                name = name.substr(4);
             }
+            switch(space){
+                case SpaceVectorType.VIEW_POINT : name += "_vps"; break;
+                case SpaceVectorType.WORLD_POINT : name += "_wps"; break;
+                case SpaceVectorType.VIEW_NORMAL : name += "_vns"; break;
+                case SpaceVectorType.WORLD_NORMAL : name += "_wns"; break;
+            }
+            var result = name;
+            var i = 2;
+            while( (checkGlobal ? this.globalIdentifiers : this.usedIdentifiers ).indexOf(result) != -1){
+                result = name + i++;
+            }
+            if(checkGlobal)
+                result = "env." + result;
+            return result;
         },
 
         getUsedIdentifiers : function(functionAast){
@@ -327,9 +342,24 @@
             walk.traverse(functionAast, {
                 enter: function (node, parent) {
                     //console.log("Enter:", node.type);
-                    if(node.type == Syntax.Identifier && parent.type != Syntax.MemberExpression){
+                    if(node.type == Syntax.Identifier){
+                        if( parent.type == Syntax.MemberExpression && parent.property == node)
+                            return;
                         if(result.indexOf(node.name) == -1)
                             result.push(node.name);
+                    }
+                }
+            });
+            return result;
+        },
+        getGlobalIdentifiers : function(programAast){
+            var result = [];
+            walk.traverse(programAast, {
+                enter: function (node, parent) {
+                    //console.log("Enter:", node.type);
+                    if(node.type == Syntax.MemberExpression && node.object.extra.global){
+                        if(result.indexOf(node.property) == -1)
+                            result.push(node.property.name);
                     }
                 }
             });

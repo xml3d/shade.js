@@ -55,7 +55,6 @@ function createTest(dir, file) {
         }]
     }
     it(description, function () {
-        console.log(dir + file);
         var input = {
                 type: Syntax.Program,
                 body: ast.body[0].body
@@ -78,7 +77,7 @@ function createTest(dir, file) {
 describe('Space Transform:', function () {
 
     var dir = __dirname + '/data/spacetransform/';
-    //createTest(dir, "multifunction.js");
+    //createTest(dir, "name_conflict.js");
     var files = fs.readdirSync(dir);
     files.forEach(function (file) {
         createTest(dir, file);
