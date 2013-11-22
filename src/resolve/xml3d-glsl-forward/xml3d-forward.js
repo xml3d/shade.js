@@ -5,11 +5,32 @@
          * @param env Parameters from the current environment
          * @param {Vec3} normal
          */
-        ns.diffuse = function diffuse(color, n) {
-            var N = n.normalize(), L, kd, dist, atten, i;
+        ns.diffuse = function diffuse(color, n, roughness) {
+            var N = n.normalize();
+            var V = _env.position.flip().normalize();
             var intensity = new Vec3();
-            if(this.MAX_POINTLIGHTS)
-                for (i = 0; i < this.MAX_POINTLIGHTS; i++) {
+
+            // If a roughness is defined we use Oren Nayar brdf.
+            var a, b, NdotV, thetaOut, phiOut;
+            var cosPhiDiff, alpha, beta;
+
+            if (roughness > 0) {
+                a = 1.0 - (roughness * roughness) / (2 * (roughness * roughness + 0.33));
+                b = 0.45 * (roughness * roughness) / (roughness * roughness + 0.09);
+                NdotV = Math.max(0, N.dot(V));
+                thetaOut = Math.acos(NdotV);
+                phiOut = V.sub(N.mul(NdotV)).normalize();
+            }
+
+            // Lambertian reflection is constant over the hemisphere.
+            var brdf = 1 / Math.PI;
+
+            var L, dist, kd, atten;
+            var thetaIn;
+            var NdotL;
+
+            if (this.MAX_POINTLIGHTS)
+                for (var i = 0; i < this.MAX_POINTLIGHTS; i++) {
                     if (!this.pointLightOn[i])
                         continue;
 
@@ -18,22 +39,43 @@
                     dist = L.length();
                     L = L.normalize();
 
-                    atten = 1.0 / (this.pointLightAttenuation[i].x() + this.pointLightAttenuation[i].y() * dist + this.pointLightAttenuation[i].z() * dist * dist);
+                    NdotL = Math.max(0, N.dot(L));
 
-                    kd = this.pointLightIntensity[i].mul(Math.max(N.dot(L), 0.0) * atten);
+                    if (roughness > 0) {
+                        thetaIn = Math.acos(NdotL);
+                        cosPhiDiff = phiOut.dot(L.sub(N.mul(NdotL)).normalize());
+                        alpha = Math.max(thetaOut, thetaIn);
+                        beta = Math.min(thetaOut, thetaIn);
+                        brdf = 1 / Math.PI * (a + b * Math.max(0, cosPhiDiff) * Math.sin(alpha) * Math.tan(beta));
+                    }
+
+                    atten = 1.0 / (this.pointLightAttenuation[i].x() + this.pointLightAttenuation[i].y() * dist + this.pointLightAttenuation[i].z() * dist * dist);
+                    kd = this.pointLightIntensity[i].mul(brdf * NdotL * atten);
                     intensity = intensity.add(kd);
                 }
-            if(this.MAX_DIRECTIONALLIGHTS)
+            if (this.MAX_DIRECTIONALLIGHTS)
                 for (i = 0; i < this.MAX_DIRECTIONALLIGHTS; i++) {
                     if (!this.directionalLightOn[i])
                         continue;
 
                     L = this.viewMatrix.mulVec(this.directionalLightDirection[i], 0).xyz();
                     L = L.flip().normalize();
-                    kd = this.directionalLightIntensity[i].mul(Math.max(N.dot(L), 0.0));
+
+                    NdotL = Math.max(0, N.dot(L));
+
+                    if (roughness > 0) {
+                        thetaIn = Math.acos(NdotL);
+                        cosPhiDiff = phiOut.dot(L.sub(N.mul(NdotL)).normalize());
+                        alpha = Math.max(thetaOut, thetaIn);
+                        beta = Math.min(thetaOut, thetaIn);
+                        brdf = 1 / Math.PI * (a + b * Math.max(0, cosPhiDiff) * Math.sin(alpha) * Math.tan(beta));
+                    }
+
+                    kd = this.directionalLightIntensity[i].mul(brdf * NdotL);
                     intensity = intensity.add(kd);
+
                 }
-            if(this.MAX_SPOTLIGHTS)
+            if (this.MAX_SPOTLIGHTS)
                 for (i = 0; i < this.MAX_SPOTLIGHTS; i++) {
                     if (!this.spotLightOn[i])
                         continue;
@@ -42,6 +84,16 @@
                     L = L.sub(_env.position);
                     dist = L.length();
                     L = L.normalize();
+
+                    NdotL = Math.max(0, N.dot(L));
+
+                    if (roughness > 0) {
+                        thetaIn = Math.acos(NdotL);
+                        cosPhiDiff = phiOut.dot(L.sub(N.mul(NdotL)).normalize());
+                        alpha = Math.max(thetaOut, thetaIn);
+                        beta = Math.min(thetaOut, thetaIn);
+                        brdf = 1 / Math.PI * (a + b * Math.max(0, cosPhiDiff) * Math.sin(alpha) * Math.tan(beta));
+                    }
 
                     var lDirection = this.viewMatrix.mulVec(this.spotLightDirection[i].flip(), 0).xyz().normalize();
                     var angle = L.dot(lDirection);
@@ -52,12 +104,14 @@
                                 (this.spotLightCosSoftFalloffAngle[i] -  this.spotLightCosFalloffAngle[i]);
 
                         atten = 1.0 / (this.spotLightAttenuation[i].x() + this.spotLightAttenuation[i].y() * dist + this.spotLightAttenuation[i].z() * dist * dist);
-                        kd = this.spotLightIntensity[i].mul(Math.max(N.dot(L), 0.0) * atten * softness);
+                        kd = this.spotLightIntensity[i].mul(brdf * NdotL * atten * softness);
                         intensity = intensity.add(kd);
                     }
                 }
+
             if(_env.ambientIntensity !== undefined)
                 intensity = intensity.add(_env.ambientIntensity);
+
             return new Vec4(intensity.mul(color), 1.0);
         },
 
