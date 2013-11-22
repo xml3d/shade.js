@@ -11,6 +11,12 @@
         });
     }
 
+    ns.allArgumentsCanNumber = function(args) {
+        return args.every(function (arg) {
+            return arg.canNumber();
+        });
+    }
+
     ns.checkParamCount = function(node, name, allowed, is) {
         if (allowed.indexOf(is) == -1) {
             Shade.throwError(node, "Invalid number of parameters for " + name + ", expected " + allowed.join(" or ") + ", found: " + is);
@@ -44,13 +50,13 @@
         getType: function(destVector){
             return Vec.TYPES[destVector];
         },
-        getStaticValue: function(typeInfo, methodName, args, callObject){
+        getStaticValue: function(methodName, result, args, ctx, callObject){
             if(callObject.hasStaticValue() && allArgumentsAreStatic(args)){
                 var object = callObject.getStaticValue();
                 var callArgs = args.map(function(a) {return a.getStaticValue(); });
                 var method = object[methodName];
                 if(method)
-                    typeInfo.staticValue = method.apply(object, callArgs);
+                    return method.apply(object, callArgs);
             }
         },
         checkAnyVecArgument: function(astNode, methodName, arg){
@@ -102,7 +108,6 @@
             var typeInfo = {};
             Base.extend(typeInfo, Vec.getType(destVecSize));
 
-            Vec.getStaticValue(typeInfo, methodName, args, callObject);
             return typeInfo;
         },
         anyVecArgumentEvaluate: function(methodName, result, args, ctx, callObject){
@@ -113,7 +118,6 @@
             var cnt = Vec.checkAnyVecArgument(result.node, methodName, arg);
             Base.extend(typeInfo, Vec.getType(cnt));
 
-            Vec.getStaticValue(typeInfo, methodName, args, callObject);
             return typeInfo;
         },
 
@@ -128,7 +132,6 @@
                 Vec.checkVecArguments(qualifiedName, srcVecSize, true, 0, result, args);
                 Base.extend(typeInfo, Vec.getType(destVecSize));
             }
-            Vec.getStaticValue(typeInfo, methodName, args, callObject);
 
             return typeInfo;
         },
@@ -153,8 +156,9 @@
             }
             return  {
                 type: TYPES.FUNCTION,
-                evaluate: Vec.swizzleEvaluate.bind(null, objectName, vecSize, swizzle, withSetter)
-            }
+                evaluate: Vec.swizzleEvaluate.bind(null, objectName, vecSize, swizzle, withSetter),
+                computeStaticValue: Vec.getStaticValue.bind(null, swizzle)
+        }
         },
         attachSwizzles: function (instance, objectName, vecCount){
             for(var s = 0; s < VecBase.swizzleSets.length; ++s){
@@ -183,6 +187,23 @@
             }
         },
 
+        getStaticValueFromConstructor: function(objectName, args){
+            var argArray = [];
+            var isStatic = true;
+            args.forEach(function (param) {
+                isStatic = isStatic && param.hasStaticValue();
+                if (isStatic)
+                    argArray.push(param.getStaticValue());
+            });
+
+            if (isStatic) {
+                var v = new Shade[objectName]();
+                Shade[objectName].apply(v, argArray);
+                return v;
+            }
+            return null;
+        },
+
         getConstructorTypeInfo: function(objectName, vecSize, type, result, args){
             var argArray = [];
             var isStatic = true;
@@ -205,6 +226,9 @@
         constructorEvaluate: function(objectName, vecSize, result, args, ctx) {
             Vec.checkVecArguments(objectName, vecSize, true, 0, result, args);
             return Vec.getConstructorTypeInfo(objectName, vecSize, Vec.getType(vecSize), result, args);
+        },
+        constructorComputeStaticValue: function(objectName, result, args, ctx) {
+            return Vec.getStaticValueFromConstructor(objectName, args);
         }
 
     };
@@ -237,7 +261,6 @@
             var typeInfo = {};
             Base.extend(typeInfo, Mat.getType(matName));
 
-            Vec.getStaticValue(typeInfo, methodName, args, callObject);
             return typeInfo;
         },
 
@@ -273,7 +296,7 @@
                 Shade.throwError(result.node, "Invalid parameter for " + qualifiedName + ", first parameter must be a number.");
             }
 
-            Vec.getStaticValue(typeInfo, "col", args, callObject);
+            // TODO: Vec.getStaticValue(typeInfo, "col", args, callObject);
 
             return typeInfo;
         }

@@ -13,7 +13,9 @@
          * @param {Array.<Annotation>} args
          * @param {Context} ctx
          */
-        evaluate: Tools.Vec.constructorEvaluate.bind(null, "Vec3", 3)
+        evaluate: Tools.Vec.constructorEvaluate.bind(null, "Vec3", 3),
+        computeStaticValue: Tools.Vec.constructorComputeStaticValue.bind(null, "Vec3")
+
     };
 
     var Vector3StaticObject = {

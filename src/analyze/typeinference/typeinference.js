@@ -15,6 +15,8 @@
     var Tools = require("../settools.js");
     var Shade = require("../../interfaces.js");
     var walkes = require('walkes');
+    var validator = require('../validator');
+    var constantEvaluation = require('../constants/computeConstants.js');
 
     // shortcuts
     var Syntax = common.Syntax;
@@ -55,7 +57,7 @@
                 if (!this.astNode || this.type) // Start and end node do not influence the result
                     return input;
 
-                //console.log("Analyze", codegen.generate(this.astNode), this.astNode.type);
+                // console.log("Analyze", codegen.generate(this.astNode), this.astNode.type);
 
                 // Local
                 if(context.propagateConstants) {
@@ -63,20 +65,16 @@
                     if (this.kill.size > 1)
                         console.warn("Multiple Assignments found")
                 }
+                this.inference = this.inference || context.inference(this.astNode);
+                this.decl = this.decl || context.declareVariables(this.astNode);
 
-                var anno = ANNO(this.astNode);
-                anno.clearError();
-
-                try {
-                    context.analyze(this.astNode, input);
-                    this.decl = this.decl || context.declareVariables(this.astNode);
-                } catch (e) {
-                    anno.setError(e);
-                }
+                context.computeConstants(this.astNode, input);
 
                 if(!context.propagateConstants) {
                     return input;
                 }
+
+
 
                 var filteredInput = null, generate = null;
                 if (this.kill.size) {
@@ -240,10 +238,13 @@
         getTypeInfo: function (node) {
             return common.getTypeInfo(node, this.getScope(), this.constants);
         },
-        analyze: function (node) {
+        inference: function (node) {
             if (this.analysis) {
-                this.analysis.apply(this, arguments);
+                return this.analysis.call(this, node);
             }
+        },
+        computeConstants: function (node) {
+            return constantEvaluation.evaluate.call(this, node);
         },
         getScope: function () {
             return this.scopeStack[this.scopeStack.length - 1];
@@ -426,43 +427,7 @@
     };
 
 
-    function transformProgram(program) {
-        return walk.replace(program, {
-            enter: function(node) {
-                var annotation = ANNO(node);
-                if(annotation.hasError()) {
-                    throw annotation.getError();
-                }
 
-                if(node.type == Syntax.IfStatement) {
-                    var test = ANNO(node.test);
-
-                    if (test.hasStaticValue() || test.canObject()) {
-                        this.skip();
-                        var staticValue = test.getStaticTruthValue();
-                        if (staticValue === true) {
-                            return transformProgram(node.consequent);
-                        }
-                        if (staticValue === false) {
-                            if (node.alternate) {
-                                return transformProgram(node.alternate);
-                            }
-                            return {
-                                type: Syntax.EmptyStatement
-                            }
-                        }
-                    }
-                }
-
-                if(annotation.canEliminate()) {
-                    this.skip();
-                    return { type: Syntax.EmptyStatement, extra: { eliminate: true } };
-                }
-
-            }
-        })
-
-    }
 
 
 
@@ -477,7 +442,8 @@
         // (Re-)add derived function to the program
         result.body = result.body.concat(context.derivedFunctions.values().sort(function(a,b) { return b.order - a.order; }).map(function(derived) {return derived.ast}));
 
-        result = transformProgram(result);
+        // Validate and transform program based on analysis
+        result = validator.validate(result);
 
         return result;
     };

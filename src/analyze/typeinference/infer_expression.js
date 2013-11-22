@@ -2,7 +2,7 @@
 
     var common = require("./../../base/common.js"),
         Shade = require("../../interfaces.js"),
-        evaluator = require("../evaluator.js"),
+        evaluator = require("../constants/evaluator.js"),
         estraverse = require('estraverse');
 
     var codegen = require('escodegen');
@@ -55,9 +55,6 @@
                 result.setType(TYPES.NULL);
             } else {
                 result.setType(TYPES.STRING);
-            }
-            if (!result.isNull()) {
-                result.setStaticValue(evaluator.getStaticValue(node));
             }
         },
 
@@ -120,10 +117,6 @@
             switch (operator) {
                 case "!":
                     result.setType(TYPES.BOOLEAN);
-                    if (argument.canObject()) {
-                        result.setStaticValue(false); // !obj == false
-                        return;
-                    }
                     break;
                 case "+":
                 case "-":
@@ -142,12 +135,6 @@
                 default:
                     throw new Error("Operator not yet supported: " + operator);
             }
-            if (argument.hasStaticValue()) {
-                result.setStaticValue(evaluator.getStaticValue(node));
-            } else {
-                result.setDynamicValue();
-            }
-
         },
 
         /**
@@ -208,13 +195,6 @@
                     break;
                 case "===":
                 case "!==":
-                    result.setType(TYPES.BOOLEAN);
-                    if (left.isUndefined() || right.isUndefined()) {
-                        var value = left.isUndefined() && right.isUndefined();
-                        result.setStaticValue(operator == "===" ? value : !value);
-                        return;
-                    }
-                    break;
                 case "==": // comparison
                 case "!=":
                 case ">":
@@ -222,22 +202,10 @@
                 case ">=":
                 case "<=":
                     result.setType(TYPES.BOOLEAN);
-                    if (left.isUndefined() || right.isUndefined()) {
-                        var value = left.isUndefined() && right.isUndefined();
-                        result.setStaticValue(operator == "!=" ? !value : value);
-                        return;
-                    }
                     break;
                 default:
                     throw new Error("Operator not supported: " + operator);
             }
-            if (left.hasStaticValue() && right.hasStaticValue()) {
-                //console.log(left.getStaticValue(), operator, right.getStaticValue());
-                result.setStaticValue(evaluator.getStaticValue(node));
-            } else {
-                result.setDynamicValue();
-            }
-
         },
 
         exitAssignmentExpression: function (node, parent, context) {
@@ -370,8 +338,6 @@
 
         },
 
-
-
         enterVariableDeclaration: function (node, parent, context) {
             context.setInDeclaration(true);
         },
@@ -380,162 +346,46 @@
             context.setInDeclaration(false);
         },
 
-
-
-        enterLogicalExpression: function(node, parent, context) {
-            var result = ANNO(node);
-
-            context.inference(node.left);
-
-            var left = context.getTypeInfo(node.left);
-            var leftBool = left.getStaticTruthValue();
-
-            if (leftBool == true && node.operator == "||") {
-                return VisitorOption.Skip; // Don't evaluate right expression
-            }
-            if (leftBool == false && node.operator == "&&") {
-                return VisitorOption.Skip; // Don't evaluate right expression
-            }
-            // In all other cases we also evaluate the right expression
-            context.inference(node.right);
-            this.skip();
-        },
-
-
-
-
-        enterConditionalExpression: function (node, parent, context) {
-            var result = ANNO(node);
-
-            context.inference(node.test);
-            var test = context.getTypeInfo(node.test);
-
-            // console.log(node.test, node.consequent, node.alternate);
-            if (test.hasStaticValue() || test.canObject()) {
-                var testResult = test.hasStaticValue() ? evaluateTruth(test.getStaticValue()) : true;
-                if (testResult === true) {
-                    context.inference(node.consequent);
-                    consequent = context.getTypeInfo(node.consequent);
-                    result.copy(consequent);
-                    var alternate = ANNO(node.alternate);
-                    alternate.eliminate();
-                } else {
-                    context.inference(node.alternate);
-                    var alternate = context.getTypeInfo(node.alternate);
-                    result.copy(alternate);
-                    var consequent = ANNO(node.consequent);
-                    consequent.eliminate();
-                }
-            } else {
-                // We can't decide, thus traverse both;
-                context.inference(node.consequent);
-                context.inference(node.alternate);
-                var consequent = context.getTypeInfo(node.consequent),
-                    alternate = context.getTypeInfo(node.alternate);
-
-
-                if (consequent.equals(alternate)) {
-                    result.copy(consequent);
-                    result.setDynamicValue();
-                } else if (consequent.canNumber() && alternate.canNumber()) {
-                    result.setType(TYPES.NUMBER);
-                }
-                else if (test.isNullOrUndefined()) {
-                    result.setType(alternate.getType())
-                } else {
-                    // We don't allow dynamic types (the type of the result depends on the value of it's operands).
-                    // At this point, the expression needs to evaluate to a result, otherwise it's an error
-                    throw Shade.throwError(node, "Static evaluation not implemented yet");
-                }
-            }
-            return VisitorOption.Skip;
-
-        },
-
-
-
-
-
-
         exitLogicalExpression: function (node, parent, context) {
             var left = context.getTypeInfo(node.left),
                 right = context.getTypeInfo(node.right),
                 result = ANNO(node),
                 operator = node.operator;
 
-            // static: true || false, dynamic: undefined
-            var leftBool = left.getStaticTruthValue();
-            var rightBool = right.getStaticTruthValue();
-
-            if (operator === "||") {
-                if (leftBool === false) {
-                    result.copy(right);
-                    left.eliminate();
-                    return;
-                }
-                if (leftBool === true) {
-                    result.copy(left);
-                    right.eliminate();
-                    return;
-                }
-                // Left is dynamic, let's check right
-                if (rightBool === false) {
-                    // Now the result type is always the one of the left value
-                    result.copy(left);
-                    right.eliminate();
-                    return;
-                }
-            } else if (operator === "&&") {
-                if (leftBool === false) {
-                    // T(x) == false => x && y == x
-                    result.copy(left);
-                    right.eliminate();
-                    return;
-                }
-                if (leftBool === true) {
-                    result.copy(right);
-                    left.eliminate();
-                    return;
-                }
-                // Left is dynamic, let's check right
-                if (rightBool === true) {
-                    // Now the result type is always the one of the left value
-                    result.copy(left);
-                    right.eliminate();
-                    return;
-                }
-                if (rightBool === false) {
-                    // Now the result must be false
-                    result.setType(TYPES.BOOLEAN);
-                    result.setStaticValue(false);
-                    return;
-                }
-            }
-
-            if (left.getType() == right.getType()) {
+            if (left.equals(right)) {
                 result.copy(left);
             }
-            else {
-                // We don't allow dynamic types (the type of the result depends on the value of it's operands).
-                // At this point, the expression needs to evaluate to a result, otherwise it's an error
-                Shade.throwError(node, "Type of Logical expression depends on values of its arguments. This is not supported in shade.js.");
+        },
+
+        exitConditionalExpression: function (node, parent, context) {
+            var consequent = context.getTypeInfo(node.consequent),
+                alternate = context.getTypeInfo(node.alternate),
+                test = context.getTypeInfo(node.test),
+                result = ANNO(node);
+
+            if (consequent.equals(alternate)) {
+                result.copy(consequent);
+            } else if (consequent.canNumber() && alternate.canNumber()) {
+                result.setType(TYPES.NUMBER);
+            } else if(test.isNullOrUndefined()) {
+                result.copy(alternate);
             }
-            //throw new Error("Operator not supported: " + node.operator);
 
         }
 
     };
 
     ns.annotateRight  = function(ast, propagatedConstants) {
-        var controller = new estraverse.Controller();
 
-        this.setConstants(propagatedConstants);
+        if(!ast)
+            throw Error("No node to analyze");
+
+        var controller = new estraverse.Controller();
 
         controller.traverse(ast, {
             enter: enterExpression.bind(controller, this),
             leave: exitExpression.bind(controller, this)
         })
-        this.setConstants(null);
 
     }
 }(exports));

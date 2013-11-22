@@ -1,8 +1,8 @@
 (function(ns){
 
     var Syntax = require('estraverse').Syntax,
-        ANNO = require("../base/annotation.js").ANNO,
-        Shade = require("../interfaces.js");
+        ANNO = require("../../base/annotation.js").ANNO,
+        Shade = require("../../interfaces.js");
 
 
     var UnaryFunctions = {
