@@ -21,8 +21,8 @@
         }
     };
 
-    function copyIfStatic (from, to) {
-        var fromAnno = ANNO(from), toAnno = ANNO(to);
+    function copyIfStatic (from, to, context) {
+        var fromAnno = context.getTypeInfo(from), toAnno = context.getTypeInfo(to);
         if(fromAnno.hasStaticValue()) {
             toAnno.setStaticValue(fromAnno.getStaticValue())
         }
@@ -45,7 +45,7 @@
          * ExpressionStatement: Just copy the result from the actual expression
          */
         exitExpressionStatement: function (node, parent, context) {
-            copyIfStatic(node.expression, node);
+            copyIfStatic(node.expression, node, context);
         },
 
 
@@ -54,7 +54,7 @@
          */
         exitReturnStatement: function (node, parent, context) {
             if(node.argument) {
-                var result = copyIfStatic(node.argument, node);
+                var result = copyIfStatic(node.argument, node, context);
                 context.getScope().updateReturnInfo(result);
             }
         },
@@ -63,7 +63,7 @@
          * NewExpression: Find the type of the Callee from
          * the scope and evaluate based on annotated parameters
          */
-        exitNewExpression: function(node, parent, context) {
+        exitNewExpression: function (node, parent, context) {
             var result = ANNO(node);
 
             var scope = context.getScope();
@@ -72,12 +72,13 @@
                 var staticValue,
                     constructor = entry.getConstructor();
 
-                if(constructor.computeStaticValue) {
+                if (constructor.computeStaticValue) {
                     staticValue = constructor.computeStaticValue(result, context.getTypeInfo(node.arguments), scope);
-                    result.setStaticValue(staticValue);
-                    console.log("Static", staticValue)
+                    if (staticValue !== undefined) {
+                        result.setStaticValue(staticValue);
+                    }
                 } else {
-                  console.warn("No static evaluation exists for new ", node.callee.name);
+                    console.warn("No static evaluation exists for new ", node.callee.name);
                 }
             }
             else {
@@ -173,12 +174,12 @@
         },
 
         exitAssignmentExpression: function (node, parent, context) {
-            copyIfStatic(node.right, node);
+            copyIfStatic(node.right, node, context);
         },
 
 
         exitMemberExpression: function (node, parent, context) {
-            console.warn("No static evaluation for member expressions yet", codegen.generate(node));
+            // console.warn("No static evaluation for member expressions yet", codegen.generate(node));
         },
 
         exitCallExpression: function (node, parent, context) {
@@ -222,7 +223,7 @@
 
         exitVariableDeclarator: function (node, parent, context) {
             if(node.init) {
-                copyIfStatic(node.init, node);
+                copyIfStatic(node.init, node, context);
             }
         },
 
@@ -390,6 +391,7 @@
     ns.evaluate  = function(ast, propagatedConstants) {
         var controller = new estraverse.Controller();
 
+        // console.log("Compute constants for", codegen.generate(ast), propagatedConstants)
         this.setConstants(propagatedConstants);
 
         controller.traverse(ast, {
