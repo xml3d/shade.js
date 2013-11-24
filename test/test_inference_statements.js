@@ -13,7 +13,7 @@ describe('Inference:', function () {
     describe('Statements', function () {
         describe('ForLoops', function () {
         it("annotation on initialized values", function() {
-            var program = parseAndInferenceExpression("for (var i = 0, j = 1.5, k; i < 10; i++) {}");
+            var program = parseAndInferenceExpression("for (var i = 0, j = 1.5; i < 10; i++) {}");
             var loop = program.body[0];
             program.should.have.property("scope");
             var bindings = program.scope.bindings;
@@ -29,10 +29,6 @@ describe('Inference:', function () {
             j.extra.should.not.have.property("staticValue");
             j.should.have.property("initialized", true);
 
-            bindings.should.have.property("k");
-            var k = bindings.k;
-            k.extra.should.have.property("type", TYPES.UNDEFINED);
-            k.should.have.property("initialized", false);
         });
     });
 });

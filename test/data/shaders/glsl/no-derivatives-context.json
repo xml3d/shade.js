@@ -1,0 +1,14 @@
+{
+    "global.shade": [
+        {
+            "extra": {
+                "type": "object",
+                "kind": "any",
+                "global": "true",
+                "info": {
+                }
+            }
+        }
+    ]
+}
+

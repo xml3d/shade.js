@@ -7,6 +7,6 @@ void main ( void ) {
 }
  */
 function shade(env) {
-    var n = 1.0;
+    var n = -Math.cos(Math.PI);
     return new Vec3(n);
 }
