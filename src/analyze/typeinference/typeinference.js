@@ -243,8 +243,8 @@
                 return this.analysis.call(this, node);
             }
         },
-        computeConstants: function (node) {
-            return constantEvaluation.evaluate.call(this, node);
+        computeConstants: function (node, constants) {
+            return constantEvaluation.evaluate.call(this, node, constants);
         },
         getScope: function () {
             return this.scopeStack[this.scopeStack.length - 1];

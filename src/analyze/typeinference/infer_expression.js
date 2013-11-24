@@ -292,7 +292,9 @@
                 }
 
                 if (!callingObject.isFunction()) { // e.g. Math.PI()
-                    Shade.throwError(node, "TypeError: " + (object.type == Syntax.ThisExpression ? "'this'" : objectReference.getTypeString())+ " has no method '"+ node.callee.property.name + "'");
+                    result.setType(TYPES.UNDEFINED);
+                    return;
+                    //Shade.throwError(node, "TypeError: " + (object.type == Syntax.ThisExpression ? "'this'" : objectReference.getTypeString())+ " has no method '"+ node.callee.property.name + "'");
                 }
 
 
@@ -311,7 +313,9 @@
                         Shade.throwError(node, "Internal: no handler registered for '" + propertyName + "'");
                     }
                 } else {
-                    Shade.throwError(node, "TypeError: " + objectReference.getTypeString() + " has no method '" + propertyName + "')");
+                    result.setType(TYPES.UNDEFINED);
+                    return;
+                    //Shade.throwError(node, "TypeError: " + objectReference.getTypeString() + " has no method '" + propertyName + "')");
                 }
 
             }  else if (node.callee.type == Syntax.Identifier) {
