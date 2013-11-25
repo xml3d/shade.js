@@ -17,7 +17,7 @@
             if (roughness > 0) {
                 a = 1.0 - (roughness * roughness) / (2 * (roughness * roughness + 0.33));
                 b = 0.45 * (roughness * roughness) / (roughness * roughness + 0.09);
-                NdotV = Math.max(0, N.dot(V));
+                NdotV = N.dot(V);
                 thetaOut = Math.acos(NdotV);
                 phiOut = V.sub(N.mul(NdotV)).normalize();
             }
@@ -238,8 +238,7 @@
             var V = _env.position.flip().normalize();
             var intensity = new Vec3();
 
-            var NdotV = Math.max(0, N.dot(V));
-
+            var NdotV = N.dot(V);
 
             // This is the so called Schlick's Approximation of the fresnel reflection coefficient.
             // R0 = n1 - n2 / n2 + n1 where n1 and n2 are the indices of refraction of the two media.
@@ -262,11 +261,11 @@
                     L = L.normalize();
                     H = V.add(L).normalize();
 
-                    NdotH = Math.max(0, N.dot(H));
+                    NdotH = N.dot(H);
                     NdotL = Math.max(0, N.dot(L));
-                    HdotN = Math.max(0, H.dot(N));
-                    HdotL = Math.max(0, H.dot(L));
-                    HdotV = Math.max(0, H.dot(V));
+                    HdotN = H.dot(N);
+                    HdotL = H.dot(L);
+                    HdotV = H.dot(V);
 
                     // Beckmann distribution
                     alpha = Math.acos(NdotH);
@@ -294,11 +293,11 @@
                     L = L.flip().normalize();
                     H = V.add(L).normalize();
 
-                    NdotH = Math.max(0, N.dot(H));
+                    NdotH = N.dot(H);
                     NdotL = Math.max(0, N.dot(L));
-                    HdotN = Math.max(0, H.dot(N));
-                    HdotL = Math.max(0, H.dot(L));
-                    HdotV = Math.max(0, H.dot(V));
+                    HdotN = H.dot(N);
+                    HdotL = H.dot(L);
+                    HdotV = H.dot(V);
 
                     // Beckmann distribution
                     alpha = Math.acos(NdotH);
@@ -328,11 +327,11 @@
                     L = L.normalize();
                     H = V.add(L).normalize();
 
-                    NdotH = Math.max(0, N.dot(H));
+                    NdotH = N.dot(H);
                     NdotL = Math.max(0, N.dot(L));
-                    HdotN = Math.max(0, H.dot(N));
-                    HdotL = Math.max(0, H.dot(L));
-                    HdotV = Math.max(0, H.dot(V));
+                    HdotN = H.dot(N);
+                    HdotL = H.dot(L);
+                    HdotV = H.dot(V);
 
                     // Beckmann distribution
                     alpha = Math.acos(NdotH);
