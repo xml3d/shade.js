@@ -294,7 +294,6 @@
                 if (!callingObject.isFunction()) { // e.g. Math.PI()
                     result.setType(TYPES.UNDEFINED);
                     return;
-                    //Shade.throwError(node, "TypeError: " + (object.type == Syntax.ThisExpression ? "'this'" : objectReference.getTypeString())+ " has no method '"+ node.callee.property.name + "'");
                 }
 
 

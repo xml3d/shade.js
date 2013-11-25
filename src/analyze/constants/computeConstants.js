@@ -192,7 +192,10 @@
                 var object = node.callee.object,
                     propertyName = node.callee.property.name;
 
-                assert(callingObject.isFunction());
+                // Call a unknown function, we can't compute anything static
+                if(!callingObject.isFunction()) {
+                    return;
+                }
                 var objectReference = context.getTypeInfo(object);
                 assert(objectReference);
                 var objectInfo = scope.getObjectInfoFor(objectReference);

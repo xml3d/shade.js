@@ -77,6 +77,17 @@
                     return validate(node.alternate);
                 }
             }
+        } else if (node.type == Syntax.CallExpression) {
+            if (node.callee.type == Syntax.MemberExpression) {
+                var callingObject = ANNO(node.callee);
+                var object = node.callee.object,
+                    propertyName = node.callee.property.name;
+
+                // Call a unknown function, we can't compute anything static
+                if(!callingObject.isFunction()) {
+                    Shade.throwError(node, "TypeError: " + (object.type == Syntax.ThisExpression ? "'this'" : callingObject.getTypeString())+ " has no method '"+ propertyName + "'");
+                }
+            }
         }
     };
 
