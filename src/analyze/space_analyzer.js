@@ -387,7 +387,7 @@
                 }
                 result.pointSpaceViolation = true;
                 result.normalSpaceViolation = true;
-                gatherObjectDependencies(this.arguments, result);
+                this.arguments.forEach(function(arg){ gatherObjectDependencies(arg, result)});
             }
         });
     }
