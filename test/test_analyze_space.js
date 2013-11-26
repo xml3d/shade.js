@@ -29,7 +29,9 @@ function createTest(dir, file) {
     it(description, function () {
         var aast = Shade.parseAndInferenceExpression(contents, { inject: ctx });
         if (aast.body[0].type === 'FunctionDeclaration')
-            aast = aast.body[0].body;
+            aast = aast.body[0];
+        else
+            throw new Error("Test Code must be a function");
         var actual = spaceAnalyzer.analyze(aast);
         actual.should.eql(expected)
     });
