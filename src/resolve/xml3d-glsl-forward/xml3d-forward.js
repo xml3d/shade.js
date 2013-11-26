@@ -570,4 +570,80 @@
             return new Vec4(color.mul(intensity), 1.0);
         }
 
+        ns.scatter = function scatter(color, n, wrap, scatterWidth) {
+            var N = n.normalize();
+            var V = _env.position.flip().normalize();
+            var intensity = new Vec3();
+
+            var L, dist, kd, atten;
+            var NdotL;
+            var NdotLWrap, scatter;
+
+            if (this.MAX_POINTLIGHTS)
+                for (var i = 0; i < this.MAX_POINTLIGHTS; i++) {
+                    if (!this.pointLightOn[i])
+                        continue;
+
+                    L = this.viewMatrix.mulVec(this.pointLightPosition[i], 1.0).xyz();
+                    L = L.sub(_env.position);
+                    dist = L.length();
+                    L = L.normalize();
+
+                    NdotL = N.dot(L);
+
+                    NdotLWrap = (NdotL + wrap) / (1 + wrap);
+                    scatter = Math.smoothstep(0.0, scatterWidth, NdotLWrap) * Math.smoothstep(scatterWidth * 2.0, scatterWidth, NdotLWrap);
+
+                    atten = 1.0 / (this.pointLightAttenuation[i].x() + this.pointLightAttenuation[i].y() * dist + this.pointLightAttenuation[i].z() * dist * dist);
+                    kd = this.pointLightIntensity[i].mul(scatter * atten);
+                    intensity = intensity.add(kd);
+                }
+            if (this.MAX_DIRECTIONALLIGHTS)
+                for (i = 0; i < this.MAX_DIRECTIONALLIGHTS; i++) {
+                    if (!this.directionalLightOn[i])
+                        continue;
+
+                    L = this.viewMatrix.mulVec(this.directionalLightDirection[i], 0).xyz();
+                    L = L.flip().normalize();
+
+                    NdotL = N.dot(L);
+
+                    NdotLWrap = (NdotL + wrap) / (1 + wrap);
+                    scatter = Math.smoothstep(0.0, scatterWidth, NdotLWrap) * Math.smoothstep(scatterWidth * 2.0, scatterWidth, NdotLWrap);
+
+                    kd = this.directionalLightIntensity[i].mul(scatter);
+                    intensity = intensity.add(kd);
+
+                }
+            if (this.MAX_SPOTLIGHTS)
+                for (i = 0; i < this.MAX_SPOTLIGHTS; i++) {
+                    if (!this.spotLightOn[i])
+                        continue;
+
+                    L = this.viewMatrix.mulVec(this.spotLightPosition[i], 1.0).xyz();
+                    L = L.sub(_env.position);
+                    dist = L.length();
+                    L = L.normalize();
+
+                    NdotL = Math.max(0, N.dot(L));
+
+                    NdotLWrap = (NdotL + wrap) / (1 + wrap);
+                    scatter = Math.smoothstep(0.0, scatterWidth, NdotLWrap) * Math.smoothstep(scatterWidth * 2.0, scatterWidth, NdotLWrap);
+
+                    var lDirection = this.viewMatrix.mulVec(this.spotLightDirection[i].flip(), 0).xyz().normalize();
+                    var angle = L.dot(lDirection);
+                    if(angle > this.spotLightCosFalloffAngle[i]){
+                        var softness = 1.0;
+                        if(angle < this.spotLightCosSoftFalloffAngle[i])
+                            softness = (angle - this.spotLightCosFalloffAngle[i]) /
+                                (this.spotLightCosSoftFalloffAngle[i] -  this.spotLightCosFalloffAngle[i]);
+
+                        atten = 1.0 / (this.spotLightAttenuation[i].x() + this.spotLightAttenuation[i].y() * dist + this.spotLightAttenuation[i].z() * dist * dist);
+                        kd = this.spotLightIntensity[i].mul(scatter * atten * softness);
+                        intensity = intensity.add(kd);
+                    }
+                }
+            return new Vec4(color.mul(intensity), 1.0);
+        }
+
 }(exports));
