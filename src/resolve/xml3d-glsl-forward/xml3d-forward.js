@@ -233,7 +233,7 @@
             return new Vec4(diffuseIntensity.mul(diffuseColor).add(phongIntensity.mul(phongColor)), 1.0);
         };
 
-        ns.cookTorrance = function cookTorrance(color, n, ior, roughness) {
+        ns.cookTorrance = function cookTorrance(color, n, R0, roughness) {
             var N = n.normalize();
             var V = _env.position.flip().normalize();
             var intensity = new Vec3();
@@ -243,7 +243,7 @@
             // This is the so called Schlick's Approximation of the fresnel reflection coefficient.
             // R0 = n1 - n2 / n2 + n1 where n1 and n2 are the indices of refraction of the two media.
             // We set n1 = 1 the ior of air.
-            var R0 = Math.pow((1 - ior) / (1 + ior), 2)
+            //var R0 = Math.pow((1 - ior) / (1 + ior), 2)
             var f = Math.max(0, R0 + (1 - R0) * Math.pow(1 - NdotV, 5));
 
             var L, H, dist, kd, atten;
@@ -363,104 +363,211 @@
         };
 
         ns.ward = function ward(color, n, t, ax, ay) {
-        var N = n.normalize();
-        var T = t.normalize();
-        var B = N.cross(T).normalize();
+            var N = n.normalize();
+            var T = t.normalize();
+            var B = N.cross(T).normalize();
 
-        var V = _env.position.flip().normalize();
-        var intensity = new Vec3();
-        var NdotV = N.dot(V);
-            //bias to prevent division through zero
-        ax += 1e-5;
-        ay += 1e-5;
+            var V = _env.position.flip().normalize();
+            var intensity = new Vec3();
+            var NdotV = N.dot(V);
+                //bias to prevent division through zero
+            ax += 1e-5;
+            ay += 1e-5;
 
-        var L, H, dist, kd, atten;
-        var NdotH, NdotL, HdotT, HdotB;
-        var brdf, first, beta, second;
+            var L, H, dist, kd, atten;
+            var NdotH, NdotL, HdotT, HdotB;
+            var brdf, first, beta, second;
 
-        if (this.MAX_POINTLIGHTS)
-            for (var i = 0; i < this.MAX_POINTLIGHTS; i++) {
-                if (!this.pointLightOn[i])
-                    continue;
+            if (this.MAX_POINTLIGHTS)
+                for (var i = 0; i < this.MAX_POINTLIGHTS; i++) {
+                    if (!this.pointLightOn[i])
+                        continue;
 
-                L = this.viewMatrix.mulVec(this.pointLightPosition[i], 1.0).xyz();
-                L = L.sub(_env.position);
-                dist = L.length();
-                L = L.normalize();
-                H = V.add(L).normalize();
+                    L = this.viewMatrix.mulVec(this.pointLightPosition[i], 1.0).xyz();
+                    L = L.sub(_env.position);
+                    dist = L.length();
+                    L = L.normalize();
+                    H = V.add(L).normalize();
 
-                NdotL = Math.max(0, N.dot(L));
-                NdotH = N.dot(H);
-                HdotT = H.dot(T);
-                HdotB = H.dot(B);
+                    NdotL = Math.max(0, N.dot(L));
+                    NdotH = N.dot(H);
+                    HdotT = H.dot(T);
+                    HdotB = H.dot(B);
 
-                first = 1 / (4 * Math.PI * ax * ay * Math.sqrt(NdotL * NdotV));
-                beta = -(Math.pow(HdotT / ax, 2) + Math.pow(HdotB / ay, 2)) / (NdotH * NdotH);
-                second = Math.exp(beta);
-                brdf = Math.max(0, first * second);
+                    first = 1 / (4 * Math.PI * ax * ay * Math.sqrt(NdotL * NdotV));
+                    beta = -(Math.pow(HdotT / ax, 2) + Math.pow(HdotB / ay, 2)) / (NdotH * NdotH);
+                    second = Math.exp(beta);
+                    brdf = Math.max(0, first * second);
 
-                atten = 1.0 / (this.pointLightAttenuation[i].x() + this.pointLightAttenuation[i].y() * dist + this.pointLightAttenuation[i].z() * dist * dist);
-                kd = this.pointLightIntensity[i].mul(brdf * NdotL * atten);
-                intensity = intensity.add(kd);
-            }
-        if (this.MAX_DIRECTIONALLIGHTS)
-            for (i = 0; i < this.MAX_DIRECTIONALLIGHTS; i++) {
-                if (!this.directionalLightOn[i])
-                    continue;
-
-                L = this.viewMatrix.mulVec(this.directionalLightDirection[i], 0).xyz();
-                L = L.flip().normalize();
-                H = V.add(L).normalize();
-
-                NdotL = Math.max(0, N.dot(L));
-                NdotH = N.dot(H);
-                HdotT = H.dot(T);
-                HdotB = H.dot(B);
-
-                first = 1 / (4 * Math.PI * ax * ay * Math.sqrt(NdotL * NdotV));
-                beta = -(Math.pow(HdotT / ax, 2) + Math.pow(HdotB / ay, 2)) / (NdotH * NdotH);
-                second = Math.exp(beta);
-                brdf = first * second;
-
-                kd = this.directionalLightIntensity[i].mul(brdf * NdotL);
-                intensity = intensity.add(kd);
-
-            }
-        if (this.MAX_SPOTLIGHTS)
-            for (i = 0; i < this.MAX_SPOTLIGHTS; i++) {
-                if (!this.spotLightOn[i])
-                    continue;
-
-                L = this.viewMatrix.mulVec(this.spotLightPosition[i], 1.0).xyz();
-                L = L.sub(_env.position);
-                dist = L.length();
-                L = L.normalize();
-                H = V.add(L).normalize();
-
-                NdotL = Math.max(0, N.dot(L));
-                NdotH = N.dot(H);
-                HdotT = H.dot(T);
-                HdotB = H.dot(B);
-
-                first = 1 / (4 * Math.PI * ax * ay * Math.sqrt(NdotL * NdotV));
-                beta = -(Math.pow(HdotT / ax, 2) + Math.pow(HdotB / ay, 2)) / (NdotH * NdotH);
-                second = Math.exp(beta);
-                brdf = first * second;
-
-                var lDirection = this.viewMatrix.mulVec(this.spotLightDirection[i].flip(), 0).xyz().normalize();
-                var angle = L.dot(lDirection);
-                if(angle > this.spotLightCosFalloffAngle[i]){
-                    var softness = 1.0;
-                    if(angle < this.spotLightCosSoftFalloffAngle[i])
-                        softness = (angle - this.spotLightCosFalloffAngle[i]) /
-                            (this.spotLightCosSoftFalloffAngle[i] -  this.spotLightCosFalloffAngle[i]);
-
-                    atten = 1.0 / (this.spotLightAttenuation[i].x() + this.spotLightAttenuation[i].y() * dist + this.spotLightAttenuation[i].z() * dist * dist);
-                    kd = this.spotLightIntensity[i].mul(brdf * NdotL * atten * softness);
+                    atten = 1.0 / (this.pointLightAttenuation[i].x() + this.pointLightAttenuation[i].y() * dist + this.pointLightAttenuation[i].z() * dist * dist);
+                    kd = this.pointLightIntensity[i].mul(brdf * NdotL * atten);
                     intensity = intensity.add(kd);
                 }
-            }
-        return new Vec4(color.mul(intensity), 1.0);
-    }
+            if (this.MAX_DIRECTIONALLIGHTS)
+                for (i = 0; i < this.MAX_DIRECTIONALLIGHTS; i++) {
+                    if (!this.directionalLightOn[i])
+                        continue;
+
+                    L = this.viewMatrix.mulVec(this.directionalLightDirection[i], 0).xyz();
+                    L = L.flip().normalize();
+                    H = V.add(L).normalize();
+
+                    NdotL = Math.max(0, N.dot(L));
+                    NdotH = N.dot(H);
+                    HdotT = H.dot(T);
+                    HdotB = H.dot(B);
+
+                    first = 1 / (4 * Math.PI * ax * ay * Math.sqrt(NdotL * NdotV));
+                    beta = -(Math.pow(HdotT / ax, 2) + Math.pow(HdotB / ay, 2)) / (NdotH * NdotH);
+                    second = Math.exp(beta);
+                    brdf = first * second;
+
+                    kd = this.directionalLightIntensity[i].mul(brdf * NdotL);
+                    intensity = intensity.add(kd);
+
+                }
+            if (this.MAX_SPOTLIGHTS)
+                for (i = 0; i < this.MAX_SPOTLIGHTS; i++) {
+                    if (!this.spotLightOn[i])
+                        continue;
+
+                    L = this.viewMatrix.mulVec(this.spotLightPosition[i], 1.0).xyz();
+                    L = L.sub(_env.position);
+                    dist = L.length();
+                    L = L.normalize();
+                    H = V.add(L).normalize();
+
+                    NdotL = Math.max(0, N.dot(L));
+                    NdotH = N.dot(H);
+                    HdotT = H.dot(T);
+                    HdotB = H.dot(B);
+
+                    first = 1 / (4 * Math.PI * ax * ay * Math.sqrt(NdotL * NdotV));
+                    beta = -(Math.pow(HdotT / ax, 2) + Math.pow(HdotB / ay, 2)) / (NdotH * NdotH);
+                    second = Math.exp(beta);
+                    brdf = first * second;
+
+                    var lDirection = this.viewMatrix.mulVec(this.spotLightDirection[i].flip(), 0).xyz().normalize();
+                    var angle = L.dot(lDirection);
+                    if(angle > this.spotLightCosFalloffAngle[i]){
+                        var softness = 1.0;
+                        if(angle < this.spotLightCosSoftFalloffAngle[i])
+                            softness = (angle - this.spotLightCosFalloffAngle[i]) /
+                                (this.spotLightCosSoftFalloffAngle[i] -  this.spotLightCosFalloffAngle[i]);
+
+                        atten = 1.0 / (this.spotLightAttenuation[i].x() + this.spotLightAttenuation[i].y() * dist + this.spotLightAttenuation[i].z() * dist * dist);
+                        kd = this.spotLightIntensity[i].mul(brdf * NdotL * atten * softness);
+                        intensity = intensity.add(kd);
+                    }
+                }
+            return new Vec4(color.mul(intensity), 1.0);
+        }
+
+        ns.ashikhminShirley = function ashikhminShirley(color, n, t, R0, nv, nu) {
+            var N = n.normalize();
+            var T = t.normalize();
+            var B = N.cross(T).normalize();
+
+            var V = _env.position.flip().normalize();
+            var intensity = new Vec3();
+            var NdotV = N.dot(V);
+
+//            var R0 = Math.pow((1 - ior) / (1 + ior), 2)
+            var f = Math.max(0, R0 + (1 - R0) * Math.pow(1 - NdotV, 5));
+
+            var L, H, dist, kd, atten;
+            var NdotH, NdotL, HdotT, HdotB, HdotL;
+            var brdf, exponent, numerator, denominator;
+
+            if (this.MAX_POINTLIGHTS)
+                for (var i = 0; i < this.MAX_POINTLIGHTS; i++) {
+                    if (!this.pointLightOn[i])
+                        continue;
+
+                    L = this.viewMatrix.mulVec(this.pointLightPosition[i], 1.0).xyz();
+                    L = L.sub(_env.position);
+                    dist = L.length();
+                    L = L.normalize();
+                    H = V.add(L).normalize();
+
+                    NdotL = Math.max(0, N.dot(L));
+                    NdotH = N.dot(H);
+                    HdotL = H.dot(L);
+                    HdotT = H.dot(T);
+                    HdotB = H.dot(B);
+
+                    exponent = (nu * HdotT * HdotT + nv * HdotB * HdotB) / (1 - NdotH * NdotH);
+                    numerator = Math.sqrt((nu + 1) * (nv + 1)) * Math.pow(NdotH, exponent) * f;
+                    denominator = 8 * Math.PI * HdotL * Math.max(NdotV, NdotL);
+                    // diffuse term mentioned in the paper 28  / (23 * Math.PI) * (1 - Math.pow(1 - NdotV / 2, 5)) * (1 - Math.pow(1 - NdotL / 2, 5))
+                    brdf = numerator / denominator;
+
+                    atten = 1.0 / (this.pointLightAttenuation[i].x() + this.pointLightAttenuation[i].y() * dist + this.pointLightAttenuation[i].z() * dist * dist);
+                    kd = this.pointLightIntensity[i].mul(brdf * NdotL * atten);
+                    intensity = intensity.add(kd);
+                }
+            if (this.MAX_DIRECTIONALLIGHTS)
+                for (i = 0; i < this.MAX_DIRECTIONALLIGHTS; i++) {
+                    if (!this.directionalLightOn[i])
+                        continue;
+
+                    L = this.viewMatrix.mulVec(this.directionalLightDirection[i], 0).xyz();
+                    L = L.flip().normalize();
+                    H = V.add(L).normalize();
+
+                    NdotL = Math.max(0, N.dot(L));
+                    NdotH = N.dot(H);
+                    HdotL = H.dot(L);
+                    HdotT = H.dot(T);
+                    HdotB = H.dot(B);
+
+                    exponent = (nu * HdotT * HdotT + nv * HdotB * HdotB) / (1 - NdotH * NdotH);
+                    numerator = Math.sqrt((nu + 1) * (nv + 1)) * Math.pow(NdotH, exponent) * f;
+                    denominator = 8 * Math.PI * HdotL * Math.max(NdotV, NdotL);
+                    // diffuse term mentioned in the paper 28  / (23 * Math.PI) * (1 - Math.pow(1 - NdotV / 2, 5)) * (1 - Math.pow(1 - NdotL / 2, 5))
+                    brdf = numerator / denominator;
+
+                    kd = this.directionalLightIntensity[i].mul(brdf * NdotL);
+                    intensity = intensity.add(kd);
+
+                }
+            if (this.MAX_SPOTLIGHTS)
+                for (i = 0; i < this.MAX_SPOTLIGHTS; i++) {
+                    if (!this.spotLightOn[i])
+                        continue;
+
+                    L = this.viewMatrix.mulVec(this.spotLightPosition[i], 1.0).xyz();
+                    L = L.sub(_env.position);
+                    dist = L.length();
+                    L = L.normalize();
+                    H = V.add(L).normalize();
+
+                    NdotL = Math.max(0, N.dot(L));
+                    NdotH = N.dot(H);
+                    HdotL = H.dot(L);
+                    HdotT = H.dot(T);
+                    HdotB = H.dot(B);
+
+                    exponent = (nu * HdotT * HdotT + nv * HdotB * HdotB) / (1 - NdotH * NdotH);
+                    numerator = Math.sqrt((nu + 1) * (nv + 1)) * Math.pow(NdotH, exponent) * f;
+                    denominator = 8 * Math.PI * HdotL * Math.max(NdotV, NdotL);
+                    // diffuse term mentioned in the paper 28  / (23 * Math.PI) * (1 - Math.pow(1 - NdotV / 2, 5)) * (1 - Math.pow(1 - NdotL / 2, 5))
+                    brdf = numerator / denominator;
+
+                    var lDirection = this.viewMatrix.mulVec(this.spotLightDirection[i].flip(), 0).xyz().normalize();
+                    var angle = L.dot(lDirection);
+                    if(angle > this.spotLightCosFalloffAngle[i]){
+                        var softness = 1.0;
+                        if(angle < this.spotLightCosSoftFalloffAngle[i])
+                            softness = (angle - this.spotLightCosFalloffAngle[i]) /
+                                (this.spotLightCosSoftFalloffAngle[i] -  this.spotLightCosFalloffAngle[i]);
+
+                        atten = 1.0 / (this.spotLightAttenuation[i].x() + this.spotLightAttenuation[i].y() * dist + this.spotLightAttenuation[i].z() * dist * dist);
+                        kd = this.spotLightIntensity[i].mul(brdf * NdotL * atten * softness);
+                        intensity = intensity.add(kd);
+                    }
+                }
+            return new Vec4(color.mul(intensity), 1.0);
+        }
 
 }(exports));
