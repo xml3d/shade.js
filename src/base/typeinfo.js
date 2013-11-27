@@ -103,6 +103,9 @@
         isNumber: function () {
             return this.isOfType(TYPES.NUMBER);
         },
+        isValid: function () {
+            return !this.isOfType(TYPES.INVALID);
+        },
         isNullOrUndefined: function () {
             return this.isNull() || this.isUndefined();
         },

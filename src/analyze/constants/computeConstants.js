@@ -14,6 +14,9 @@
         ANNO = common.ANNO;
 
 
+    var debug = false;
+
+
     var exitExpression = function (context, node, parent) {
         var handlerName = "exit" + node.type;
         if (handlers.hasOwnProperty(handlerName)) {
@@ -23,7 +26,7 @@
 
     function copyIfStatic (from, to, context) {
         var fromAnno = context.getTypeInfo(from), toAnno = context.getTypeInfo(to);
-        if(fromAnno.hasStaticValue()) {
+        if(!toAnno.isNullOrUndefined() && fromAnno.hasStaticValue()) {
             toAnno.setStaticValue(fromAnno.getStaticValue())
         }
         return toAnno;
@@ -66,6 +69,10 @@
         exitNewExpression: function (node, parent, context) {
             var result = ANNO(node);
 
+            if(!result.isValid()) {
+                return;
+            }
+
             var scope = context.getScope();
             var entry = scope.getBindingByName(node.callee.name);
             if (entry && entry.hasConstructor()) {
@@ -73,12 +80,16 @@
                     constructor = entry.getConstructor();
 
                 if (constructor.computeStaticValue) {
-                    staticValue = constructor.computeStaticValue(result, context.getTypeInfo(node.arguments), scope);
-                    if (staticValue !== undefined) {
-                        result.setStaticValue(staticValue);
+                    try {
+                        staticValue = constructor.computeStaticValue(result, context.getTypeInfo(node.arguments), scope);
+                        if (staticValue !== undefined) {
+                            result.setStaticValue(staticValue);
+                        }
+                    } catch (e) {
+                        result.setDynamicValue();
                     }
                 } else {
-                    console.warn("No static evaluation exists for new ", node.callee.name);
+                    debug && console.warn("No static evaluation exists for new ", node.callee.name);
                 }
             }
             else {
@@ -211,12 +222,12 @@
                         }
                         return;
                     }
-                    console.warn("No static evaluation exists for function", codegen.generate(node));
+                    debug && console.warn("No static evaluation exists for function", codegen.generate(node));
                 }
                 return;
 
             }  else if (node.callee.type == Syntax.Identifier) {
-                console.warn("No static evaluation for function call yet", node.callee.name);
+                debug && console.warn("No static evaluation for function call yet", node.callee.name);
                 return;
             }
 

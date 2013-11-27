@@ -16,7 +16,8 @@
         NULL: "null",
         UNDEFINED: "undefined",
         FUNCTION: "function",
-        STRING: "string"
+        STRING: "string",
+        INVALID: "invalid"
     }
 
     ns.OBJECT_KINDS = {

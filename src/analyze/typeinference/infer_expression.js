@@ -97,8 +97,12 @@
             if (entry && entry.hasConstructor()) {
                 var constructor = entry.getConstructor();
                 var args = context.getTypeInfo(node.arguments);
-                var extra = constructor.evaluate(result, args, scope);
-                result.setFromExtra(extra);
+                try {
+                    var extra = constructor.evaluate(result, args, scope);
+                    result.setFromExtra(extra);
+                } catch (e) {
+                    result.setType(TYPES.INVALID);
+                }
             }
             else {
                 throw new Error("ReferenceError: " + node.callee.name + " is not defined");
@@ -253,7 +257,8 @@
             objectOfInterest || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + scope.str());
 
             if (objectOfInterest.getType() == TYPES.UNDEFINED) {  // e.g. var a = undefined; a.unknown;
-                Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName +"' of undefined")
+                resultType.setType(TYPES.INVALID); // TypeError: Cannot read property 'x' of undefined
+                return;
             }
             if (objectOfInterest.getType() != TYPES.OBJECT) { // e.g. var a = 5; a.unknown;
                 resultType.setType(TYPES.UNDEFINED);
