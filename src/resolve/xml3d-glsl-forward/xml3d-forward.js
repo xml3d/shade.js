@@ -39,14 +39,14 @@
                     dist = L.length();
                     L = L.normalize();
 
-                    NdotL = Math.max(0, N.dot(L));
+                    NdotL = Math.saturate(N.dot(L));
 
                     if (roughness > 0) {
                         thetaIn = Math.acos(NdotL);
                         cosPhiDiff = phiOut.dot(L.sub(N.mul(NdotL)).normalize());
                         alpha = Math.max(thetaOut, thetaIn);
                         beta = Math.min(thetaOut, thetaIn);
-                        brdf = (a + b * Math.max(0, cosPhiDiff) * Math.sin(alpha) * Math.tan(beta));
+                        brdf = (a + b * Math.saturate(cosPhiDiff) * Math.sin(alpha) * Math.tan(beta));
                     }
 
                     atten = 1.0 / (this.pointLightAttenuation[i].x() + this.pointLightAttenuation[i].y() * dist + this.pointLightAttenuation[i].z() * dist * dist);
@@ -61,14 +61,14 @@
                     L = this.viewMatrix.mulVec(this.directionalLightDirection[i], 0).xyz();
                     L = L.flip().normalize();
 
-                    NdotL = Math.max(0, N.dot(L));
+                    NdotL = Math.saturate(N.dot(L));
 
                     if (roughness > 0) {
                         thetaIn = Math.acos(NdotL);
                         cosPhiDiff = phiOut.dot(L.sub(N.mul(NdotL)).normalize());
                         alpha = Math.max(thetaOut, thetaIn);
                         beta = Math.min(thetaOut, thetaIn);
-                        brdf = (a + b * Math.max(0, cosPhiDiff) * Math.sin(alpha) * Math.tan(beta));
+                        brdf = (a + b * Math.saturate(cosPhiDiff) * Math.sin(alpha) * Math.tan(beta));
                     }
 
                     kd = this.directionalLightIntensity[i].mul(brdf * NdotL);
@@ -85,14 +85,14 @@
                     dist = L.length();
                     L = L.normalize();
 
-                    NdotL = Math.max(0, N.dot(L));
+                    NdotL = Math.saturate(N.dot(L));
 
                     if (roughness > 0) {
                         thetaIn = Math.acos(NdotL);
                         cosPhiDiff = phiOut.dot(L.sub(N.mul(NdotL)).normalize());
                         alpha = Math.max(thetaOut, thetaIn);
                         beta = Math.min(thetaOut, thetaIn);
-                        brdf = (a + b * Math.max(0, cosPhiDiff) * Math.sin(alpha) * Math.tan(beta));
+                        brdf = (a + b * Math.saturate(cosPhiDiff) * Math.sin(alpha) * Math.tan(beta));
                     }
 
                     var lDirection = this.viewMatrix.mulVec(this.spotLightDirection[i].flip(), 0).xyz().normalize();
@@ -262,7 +262,7 @@
                     H = V.add(L).normalize();
 
                     NdotH = N.dot(H);
-                    NdotL = Math.max(0, N.dot(L));
+                    NdotL = Math.saturate(N.dot(L));
                     HdotN = H.dot(N);
                     HdotL = H.dot(L);
                     HdotV = H.dot(V);
@@ -294,7 +294,7 @@
                     H = V.add(L).normalize();
 
                     NdotH = N.dot(H);
-                    NdotL = Math.max(0, N.dot(L));
+                    NdotL = Math.saturate(N.dot(L));
                     HdotN = H.dot(N);
                     HdotL = H.dot(L);
                     HdotV = H.dot(V);
@@ -328,7 +328,7 @@
                     H = V.add(L).normalize();
 
                     NdotH = N.dot(H);
-                    NdotL = Math.max(0, N.dot(L));
+                    NdotL = Math.saturate(N.dot(L));
                     HdotN = H.dot(N);
                     HdotL = H.dot(L);
                     HdotV = H.dot(V);
@@ -337,7 +337,7 @@
                     alpha = Math.acos(NdotH);
                     numerator = Math.exp(-Math.pow(Math.tan(alpha) / roughness, 2));
                     denominator = Math.pow(roughness, 2) * Math.pow(NdotH, 4);
-                    d =  Math.max(0, numerator / denominator);
+                    d =  Math.saturate(numerator / denominator);
 
                     // Geometric attenuation
                     G1 = 2 * HdotN * NdotV / HdotV;
@@ -389,7 +389,7 @@
                     L = L.normalize();
                     H = V.add(L).normalize();
 
-                    NdotL = Math.max(0, N.dot(L));
+                    NdotL = Math.saturate(N.dot(L));
                     NdotH = N.dot(H);
                     HdotT = H.dot(T);
                     HdotB = H.dot(B);
@@ -412,7 +412,7 @@
                     L = L.flip().normalize();
                     H = V.add(L).normalize();
 
-                    NdotL = Math.max(0, N.dot(L));
+                    NdotL = Math.saturate(N.dot(L));
                     NdotH = N.dot(H);
                     HdotT = H.dot(T);
                     HdotB = H.dot(B);
@@ -437,7 +437,7 @@
                     L = L.normalize();
                     H = V.add(L).normalize();
 
-                    NdotL = Math.max(0, N.dot(L));
+                    NdotL = Math.saturate(N.dot(L));
                     NdotH = N.dot(H);
                     HdotT = H.dot(T);
                     HdotB = H.dot(B);
@@ -490,7 +490,7 @@
                     L = L.normalize();
                     H = V.add(L).normalize();
 
-                    NdotL = Math.max(0, N.dot(L));
+                    NdotL = Math.saturate(N.dot(L));
                     NdotH = N.dot(H);
                     HdotL = H.dot(L);
                     HdotT = H.dot(T);
@@ -515,7 +515,7 @@
                     L = L.flip().normalize();
                     H = V.add(L).normalize();
 
-                    NdotL = Math.max(0, N.dot(L));
+                    NdotL = Math.saturate(N.dot(L));
                     NdotH = N.dot(H);
                     HdotL = H.dot(L);
                     HdotT = H.dot(T);
@@ -542,7 +542,7 @@
                     L = L.normalize();
                     H = V.add(L).normalize();
 
-                    NdotL = Math.max(0, N.dot(L));
+                    NdotL = Math.saturate(N.dot(L));
                     NdotH = N.dot(H);
                     HdotL = H.dot(L);
                     HdotT = H.dot(T);
@@ -625,7 +625,7 @@
                     dist = L.length();
                     L = L.normalize();
 
-                    NdotL = Math.max(0, N.dot(L));
+                    NdotL = Math.saturate(N.dot(L));
 
                     NdotLWrap = (NdotL + wrap) / (1 + wrap);
                     scatter = Math.smoothstep(0.0, scatterWidth, NdotLWrap) * Math.smoothstep(scatterWidth * 2.0, scatterWidth, NdotLWrap);
