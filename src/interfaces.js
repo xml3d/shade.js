@@ -601,6 +601,10 @@
         return x - Math.floor(x);
     }
 
+    Math.saturate = function (x) {
+        return Math.clamp(x, 0.0, 1.0);
+    }
+
 
     /**
      * @param {object} node

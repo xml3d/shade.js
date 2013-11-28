@@ -182,6 +182,25 @@
 
                 return typeInfo;
             }
+        },
+        saturate: {
+            type: TYPES.FUNCTION,
+            evaluate: function (result, args, ctx) {
+                Tools.checkParamCount(result.node, "Shade.saturate", [1], args.length);
+
+                var typeInfo = {
+                    type: TYPES.NUMBER
+                }
+                var arg = args[0];
+                if (arg.canNumber()) {
+                    if (Tools.allArgumentsAreStatic([arg]))
+                        typeInfo.staticValue = Math.saturate(arg.getStaticValue());
+                }
+                else
+                    Shade.throwError(result.node, "Math.saturate not supported with argument type: " + arg.getTypeString());
+
+                return typeInfo;
+            }
         }
     };
 
