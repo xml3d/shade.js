@@ -44,6 +44,7 @@
             this.envSpaces = {};
 
             this.transformFunctions(aast);
+            this.updateGlobalObject(aast, this.envSpaces);
             return this.envSpaces;
         },
         /**
@@ -162,8 +163,8 @@
                         var space = analyzeResult[name][j];
                         var spaceName = this.getSpaceName(name, space);
                         if(!this.envSpaces[property]) this.envSpaces[property] = [];
-                        if(this.envSpaces[property].indexOf(space) == -1) this.envSpaces[property].push(
-                            { name: spaceName.split(".")[1], space: space } );
+                        if( !this.envSpaces[property].some(function(e){return e.space == space}))
+                            this.envSpaces[property].push({ name: spaceName.split(".")[1], space: space } );
                         if(!nameMap[name]) nameMap[name] = {};
                         nameMap[name][space] = this.getSpaceName(name, space);
                     }
@@ -359,7 +360,7 @@
                 enter: function (node, parent) {
                     //console.log("Enter:", node.type);
                     if(node.type == Syntax.MemberExpression && node.object.extra.global){
-                        if(result.indexOf(node.property) == -1)
+                        if(result.indexOf(node.property.name) == -1)
                             result.push(node.property.name);
                     }
                 }
@@ -386,6 +387,36 @@
             }
             if(declaration.declarations.length > 0)
                 body.unshift(declaration);
+        },
+
+        updateGlobalObject: function(aast, envSpaces){
+            if(!aast.globalParameters)
+                return;
+            var globalObject;
+            for(var funcName in aast.globalParameters){
+                var args = aast.globalParameters[funcName];
+                var i = args.length;
+                while(i--){
+                    if(args[i].extra.global)
+                        globalObject = args[i].extra;
+                }
+            }
+            if(!globalObject)
+                return;
+            var newInfo = {};
+            for(var propName in globalObject.info){
+                var data = globalObject.info[propName];
+                if(!envSpaces[propName]){
+                    newInfo[propName] = data;
+                    continue;
+                }
+                var entryList = envSpaces[propName];
+                for(var i = 0; i < entryList.length; ++i){
+                    var copyData = Base.deepExtend({}, data);
+                    newInfo[entryList[i].name]= copyData;
+                }
+            }
+            globalObject.info = newInfo;
         }
 
 

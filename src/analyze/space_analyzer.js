@@ -69,12 +69,13 @@
         };
         var transferSpaces = {};
         startNodeResult.forEach(function(elem) {
-            if(getSpaceFromSpaceVector(elem.space) == SpaceType.RESULT){
-                transferSpaces[elem.name] = true;
+            var split = elem.split(";"), name = split[0], space = split[1]*1;
+            if(getSpaceFromSpaceVector(space) == SpaceType.RESULT){
+                transferSpaces[name] = true;
                 return;
             }
-            if(!result[elem.name]) result[elem.name] = [];
-            result[elem.name].push(elem.space);
+            if(!result[name]) result[name] = [];
+            result[name].push(space);
         });
         for(var i = 0; i < functionAast.params.length; ++i){
             var name = functionAast.params[i].name;
@@ -83,6 +84,7 @@
         c_customFunctionPropagations[functionAast.id.name] = tranferEntry;
         return result;
     }
+
 
     function setSpaceInfo(ast, key, value){
         if(!ast.spaceInfo)
@@ -125,19 +127,17 @@
             }
         }
         setSpaceInfoSpaces(this.astNode, "transferSpaces", spaceTypes);
-        if(spaceTypes.size >= 1){
-            finalSpaces = createSpaceInfoFromDependencies(depSpaceInfo, generatedDependencies.dependencies, spaceTypes);
-        }
+        finalSpaces = createSpaceInfoFromDependencies(depSpaceInfo, generatedDependencies.dependencies, spaceTypes);
         setSpaceInfoSpaces(this.astNode, "finalSpaces", (finalSpaces && finalSpaces.size > 0) ? finalSpaces : null);
 
         input = new Set(input.filter(function (elem) {
-            return !kill.has(elem.name);
+            return !kill.has(elem.split(";")[0]);
         }));
         return mergeSpaceInfo(input, depSpaceInfo);
     }
 
     function getSpaceVectorTypesFromInfo(spaceInfo, identifier){
-        return new Set(spaceInfo.filter(function(elem){return elem.name == identifier}).map(function(elem){ return elem.space}));
+        return new Set(spaceInfo.filter(function(elem){return elem.split(";")[0] == identifier}).map(function(elem){ return elem.split(";")[1]*1}));
     }
     function isSpaceTypeValid(spaceType, dependencies){
         var type = getVectorFromSpaceVector(spaceType);
@@ -148,7 +148,7 @@
     function createSpaceInfoFromDependencies(depSpaceInfo, dependencies, spaces){
         var finalSpaces = new Set();
         dependencies.toObjectSet.forEach(function(name){
-            depSpaceInfo.add({name: name, space: SpaceVectorType.OBJECT});
+            depSpaceInfo.add(  name + ";" + SpaceVectorType.OBJECT);
         })
         spaces.forEach(function(spaceVector){
             var space = getSpaceFromSpaceVector(spaceVector);
@@ -173,7 +173,7 @@
             spaceVector = isValid ?  spaceVector : SpaceVectorType.OBJECT;
 
             dependencies.propagateSet.forEach(function(name){
-                depSpaceInfo.add({name: name, space: spaceVector});
+                depSpaceInfo.add( name + ";"  + spaceVector );
             });
         });
         var overrides = dependencies.spaceOverrides;
@@ -196,13 +196,7 @@
         if (b)
             b.forEach(
                 function (elem) {
-                    var name = elem.name, space = elem.space;
-                    var resultA = s.filter(function (other) {
-                        return other.name == name && other.space == space;
-                    });
-                    if (!resultA.length) {
-                        s.add(elem);
-                    }
+                    s.add(elem);
                 }
             );
         return s;
@@ -281,7 +275,7 @@
         if(space){
             var subResult = new SpaceDependencies();
             gatherSpaceDependencies(callAst.arguments[1], subResult);
-            result.addSpaceOverride(space, fromObjectSpace, subResult, callAst);
+            result.addSpaceOverride(space, fromObjectSpace, subResult);
             setSpaceInfo(callAst, "spaceOverride", space);
             setSpaceInfo(callAst, "propagateSet", subResult.propagateSet.values());
             return true;
@@ -317,7 +311,7 @@
                 if(handleSpaceOverride(this, result, true))
                     return;
                 recurse(this.callee);
-                recurse(this.arguments);
+                this.arguments.map(recurse);
             }
         });
     }
