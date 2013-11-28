@@ -6,8 +6,9 @@
          * @param {Vec3} normal
          */
         ns.diffuse = function diffuse(color, n, roughness) {
-            var N = n.normalize();
+            var N = this.transformNormal(Space.VIEW,n.normalize());
             var V = _env.position.flip().normalize();
+
             var intensity = new Vec3();
 
             // If a roughness is defined we use Oren Nayar brdf.
