@@ -45,6 +45,17 @@
                     kind: KINDS.FLOAT3
                 };
             }
+        },
+        transformPoint: {
+            type: TYPES.FUNCTION,
+            evaluate: function (result, args, context, objectReference, root) {
+                if (args.length != 2)
+                    throw new Error("transformPoint expects 2 parameters.");
+                return {
+                    type: TYPES.OBJECT,
+                    kind: KINDS.FLOAT3
+                };
+            }
         }
     }
 
