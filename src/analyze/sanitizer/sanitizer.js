@@ -225,8 +225,8 @@
                 case Syntax.WhileStatement:
                     return this.performStatementSplit(node, [{prop: "test", pre: true, post: true}], "body");
                 case Syntax.ForStatement:
-                    return this.performStatementSplit(node, [{prop: "init", pre: true, extract: true},
-                                                             {prop: "update", post: true, extract: true},
+                    return this.performStatementSplit(node, [ /*{prop: "init", pre: true, extract: true},
+                                                             {prop: "update", post: true, extract: true},*/
                                                              {prop: "test", pre: true, post: true}], "body");
                 case Syntax.DoWhileStatement:
                     return this.performStatementSplit(node, [{prop: "test", post: true}], "body");
