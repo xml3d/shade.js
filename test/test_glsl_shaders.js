@@ -25,6 +25,7 @@ function createTest(dir, file) {
         var result = new GLSLCompiler().compileFragmentShader(aast, {useStatic: true, omitHeader: true});
         var actual = result.source.trim();
         var expected = comments[1].value.trim();
+        expected = expected.replace(/\r\n/g,"\n");
         //console.log(actual);
         actual.should.eql(expected);
     });

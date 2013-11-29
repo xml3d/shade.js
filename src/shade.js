@@ -6,7 +6,12 @@
         sanitizer = require("./analyze/sanitizer/sanitizer.js"),
         Base = require("./base/index.js"),
         GLSLCompiler = require("./generate/glsl/compiler.js").GLSLCompiler,
-        resolver = require("./resolve/resolve.js");
+        resolver = require("./resolve/resolve.js"),
+        SpaceTransformer = require("./generate/space/transform.js").SpaceTransformer;
+    var spaceAnalyzer = require("./analyze/space_analyzer.js"),
+        SpaceVectorType = spaceAnalyzer.SpaceVectorType,
+        SpaceType = spaceAnalyzer.SpaceType,
+        VectorType = spaceAnalyzer.VectorType;
 
 
 
@@ -53,6 +58,11 @@
             return resolver.resolveClosures(ast, implementation, opt);
         },
 
+        resolveSpaces: function(aast, opt){
+            opt = opt || {};
+            return SpaceTransformer.transformAast(aast, opt);
+        },
+
         compileFragmentShader: function(aast, opt){
             return new GLSLCompiler().compileFragmentShader(aast, opt);
         },
@@ -60,6 +70,7 @@
         TYPES : interfaces.TYPES,
         OBJECT_KINDS : interfaces.OBJECT_KINDS,
         SOURCES: interfaces.SOURCES,
+        SPACE_VECTOR_TYPES: SpaceVectorType,
         Vec2: interfaces.Vec2,
         Vec3: interfaces.Vec3,
         Vec4: interfaces.Vec4,

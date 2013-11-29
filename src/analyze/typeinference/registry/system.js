@@ -31,6 +31,35 @@
 
     };
 
+    var BaseMethods = {
+        /**
+         * Methods
+         */
+        transformNormal: {
+            type: TYPES.FUNCTION,
+            evaluate: function (result, args, context, objectReference, root) {
+                if (args.length != 2)
+                    throw new Error("transformNormal expects 2 parameters.");
+                return {
+                    type: TYPES.OBJECT,
+                    kind: KINDS.FLOAT3
+                };
+            }
+        },
+        transformPoint: {
+            type: TYPES.FUNCTION,
+            evaluate: function (result, args, context, objectReference, root) {
+                if (args.length != 2)
+                    throw new Error("transformPoint expects 2 parameters.");
+                return {
+                    type: TYPES.OBJECT,
+                    kind: KINDS.FLOAT3
+                };
+            }
+        }
+    }
+
+
     var OptionalMethods = {
         fwidth: {
             type: TYPES.FUNCTION,
@@ -58,8 +87,13 @@
         var thisAnnotation = ANNO({}, systemInfo);
         // Add those parameters that can be calculated from system inputs
         var objectInfo = thisAnnotation.getNodeInfo();
-        if (!objectInfo)
-            return thisAnnotation;
+        if (!objectInfo) {
+            objectInfo = {};
+            thisAnnotation.setNodeInfo(objectInfo);
+        }
+
+        // All this objects have a set o base methods
+        Base.extend(objectInfo, BaseMethods);
 
         if(objectInfo.hasOwnProperty("coords")) {
             Base.extend(objectInfo, DerivedCanvasProperties);

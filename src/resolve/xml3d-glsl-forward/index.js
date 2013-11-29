@@ -5,7 +5,8 @@
         Syntax = Traversal.Syntax,
         parser = require('esprima'),
         Shade = require("../../interfaces.js"),
-        ANNO = require("./../../base/annotation.js").ANNO;
+        ANNO = require("./../../base/annotation.js").ANNO,
+        sanitizer = require("./../../analyze/sanitizer/sanitizer.js");
 
 
 
@@ -45,6 +46,7 @@
         var closureImplementation = Closures[closureName];
         try {
             var closureAST = parser.parse(closureImplementation.toString(), { raw: true });
+            closureAST = sanitizer.sanitize(closureAST);
             state.newFunctions.push(closureAST.body[0]);
         } catch (e) {
             console.error("Error in analysis of closure '", closureName, "'", e);
