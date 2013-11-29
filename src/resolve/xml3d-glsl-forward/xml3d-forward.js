@@ -7,7 +7,8 @@
          */
         ns.diffuse = function diffuse(color, n, roughness) {
             var N = this.transformNormal(Space.VIEW,n.normalize());
-            var V = _env.position.flip().normalize();
+            var position = this.transformPoint(Space.VIEW,_env.position);
+            var V = position.flip().normalize();
 
             var intensity = new Vec3();
 
@@ -36,7 +37,7 @@
                         continue;
 
                     L = this.viewMatrix.mulVec(this.pointLightPosition[i], 1.0).xyz();
-                    L = L.sub(_env.position);
+                    L = L.sub(position);
                     dist = L.length();
                     L = L.normalize();
 
@@ -82,7 +83,7 @@
                         continue;
 
                     L = this.viewMatrix.mulVec(this.spotLightPosition[i], 1.0).xyz();
-                    L = L.sub(_env.position);
+                    L = L.sub(position);
                     dist = L.length();
                     L = L.normalize();
 
@@ -117,16 +118,17 @@
         };
 
         ns.phong = function phong(color, n, shininess) {
-            var N = n.normalize(), i, L, R, atten, kd, dist;
+            var N = this.transformNormal(Space.VIEW,n.normalize()), i, L, R, atten, kd, dist;
             var intensity = new Vec3();
-            var eyeVector = _env.position.normalize();
+            var position = this.transformPoint(Space.VIEW,_env.position);
+            var eyeVector = position.normalize();
             if(this.MAX_POINTLIGHTS)
                 for (i = 0; i < this.MAX_POINTLIGHTS; i++) {
                     if (!this.pointLightOn[i])
                         continue;
 
                     L = this.viewMatrix.mulVec(this.pointLightPosition[i], 1.0).xyz();
-                    L = L.sub(_env.position);
+                    L = L.sub(position);
                     dist = L.length();
                     L = L.normalize();
                     R = L.reflect(N).normalize();
@@ -151,7 +153,7 @@
                         continue;
 
                     L = this.viewMatrix.mulVec(this.spotLightPosition[i], 1.0).xyz();
-                    L = L.sub(_env.position);
+                    L = L.sub(position);
                     dist = L.length();
                     L = L.normalize();
                     R = L.reflect(N).normalize();
@@ -173,8 +175,9 @@
         };
 
         ns.diffusephong = function phong(diffuseColor, phongColor, n, shininess) {
-            var N = n.normalize();
+            var N = this.transformNormal(Space.VIEW,n.normalize());
             var diffuseIntensity = new Vec3(), phongIntensity = new Vec3();
+            var position = this.transformPoint(Space.VIEW,_env.position);
             var eyeVector = _env.position.normalize();
             if(this.MAX_POINTLIGHTS)
                 for (var i = 0; i < this.MAX_POINTLIGHTS; i++) {
@@ -182,7 +185,7 @@
                         continue;
 
                     var L = this.viewMatrix.mulVec(this.pointLightPosition[i], 1.0).xyz();
-                    L = L.sub(_env.position);
+                    L = L.sub(position);
                     var dist = L.length();
                     L = L.normalize();
                     var R = L.reflect(N).normalize();
@@ -211,7 +214,7 @@
                         continue;
 
                     var L = this.viewMatrix.mulVec(this.spotLightPosition[i], 1.0).xyz();
-                    L = L.sub(_env.position);
+                    L = L.sub(position);
                     var dist = L.length();
                     L = L.normalize();
                     var R = L.reflect(N).normalize();
