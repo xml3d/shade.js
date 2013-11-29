@@ -284,6 +284,8 @@
      * @returns {string}
      */
     var handleExpression = function(node, opt) {
+        if(!node) return "";
+
         var result = "<unhandled: " + node.type+ ">",
             opt = opt || {};
 
@@ -374,7 +376,8 @@
 
 
     function handleInlineDeclaration(node, opt) {
-
+        if(!node)
+            return "";
         if (node.type == Syntax.VariableDeclaration) {
             var result = node.declarations.reduce(function (declString, declaration) {
                 var decl = toGLSLType(declaration.extra) + " " + declaration.id.name;
