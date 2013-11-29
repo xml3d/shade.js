@@ -23,6 +23,9 @@
         },
         length: {
             callExp: Tools.Vec.generateLengthCall
+        },
+        cross: {
+            callExp: Tools.Vec.createFunctionCall.bind(null, "cross", 3)
         }
     }
     Tools.Vec.attachSwizzles(Vec3Instance, 3);

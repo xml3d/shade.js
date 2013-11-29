@@ -86,8 +86,6 @@
                 return "bool";
             case Types.INT:
                 return "int";
-            case Types.BOOLEAN:
-                return "bool";
             default:
                 //throw new Error("toGLSLType: Unhandled type: " + info.type);
                 return info.type;

@@ -30,6 +30,11 @@
             if (opt.name) {
                 node.callee.name = opt.name;
             }
+            if (opt.arguments) {
+                for (var idx = 0; idx < opt.arguments.length; ++idx)
+                    if (typeof opt.arguments[idx] !== "undefined")
+                        node.arguments[idx] = opt.arguments[idx];
+            }
             return node;
         }
     };
@@ -39,7 +44,7 @@
         acos: { callExp: handleMathCall() },
         asin: { callExp: handleMathCall() },
         atan: { callExp: handleMathCall() },
-        atan2: { callExp: handleMathCall({ name: "atan" } ) },
+        atan2: { callExp: handleMathCall({ name: "atan" }) },
         ceil: { callExp: handleIntVersion },
         cos:  { callExp: handleMathCall() },
         exp: { callExp: handleMathCall() },
@@ -57,6 +62,25 @@
 
         // Non-standard methods
         clamp: { callExp: handleMathCall() },
+        saturate: { callExp: handleMathCall({ name: "clamp", arguments: [
+            undefined,
+            {
+                type: Syntax.Literal,
+                value: 0.0,
+                extra: {
+                    type: Shade.TYPES.NUMBER,
+                    staticValue: 0.0
+                }
+            },
+            {
+                type: Syntax.Literal,
+                value: 1.0,
+                extra: {
+                    type: Shade.TYPES.NUMBER,
+                    staticValue: 1.0
+                }
+            }
+        ] }) },
         smoothstep: { callExp: handleMathCall() },
         step: { callExp: handleMathCall() },
         fract: { callExp: handleMathCall() },

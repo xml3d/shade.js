@@ -65,6 +65,10 @@
                     }
 
                 },
+                extra: {
+                    type: Shade.TYPES.OBJECT,
+                    kind: Shade.OBJECT_KINDS.COLOR_CLOSURE
+                },
                 arguments: [ result ]};
         }
     }
