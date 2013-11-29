@@ -93,6 +93,9 @@
                     }
                 }
             }
+            if(isForInit && newNode.expressions.length == 1){
+                return newNode.expressions[0];
+            }
             return newNode;
         },
 
