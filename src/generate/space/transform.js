@@ -417,6 +417,21 @@
                 }
             }
             globalObject.info = newInfo;
+            walk.traverse(aast, {
+                enter: function (node, parent) {
+                    //console.log("Enter:", node.type);
+                    if(node.extra && node.extra.global){
+                        node.extra.info = newInfo;
+                    }
+                    if(node.scope && node.scope.bindings){
+                        for(var name in node.scope.bindings){
+                            if(node.scope.bindings[name].extra.global){
+                                node.scope.bindings[name].extra.info = newInfo;
+                            }
+                        }
+                    }
+                }
+            });
         }
 
 
