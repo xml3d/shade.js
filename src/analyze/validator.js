@@ -47,6 +47,12 @@
 
         var test, staticValue;
 
+        var typeInfo = ANNO(node);
+        if(typeInfo.hasError()) {
+            var error = typeInfo.getError();
+            throw error;
+        }
+
         if(node.type == Syntax.IfStatement) {
             test = ANNO(node.test);
 

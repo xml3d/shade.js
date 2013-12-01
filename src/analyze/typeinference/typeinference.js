@@ -442,9 +442,6 @@
         // (Re-)add derived function to the program
         result.body = result.body.concat(context.derivedFunctions.values().sort(function(a,b) { return b.order - a.order; }).map(function(derived) {return derived.ast}));
 
-        // Validate and transform program based on analysis
-        result = validator.validate(result);
-
         return result;
     };
 

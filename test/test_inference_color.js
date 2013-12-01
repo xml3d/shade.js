@@ -5,7 +5,7 @@ var Shade = require(".."),
 
 
 var parseAndInferenceExpression = function (str, ctx) {
-    var aast = Shade.parseAndInferenceExpression(str, ctx || {});
+    var aast = Shade.parseAndInferenceExpression(str, ctx || { throwOnError: true });
     return aast.body;
 }
 

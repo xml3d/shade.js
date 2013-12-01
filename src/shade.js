@@ -7,8 +7,10 @@
         Base = require("./base/index.js"),
         GLSLCompiler = require("./generate/glsl/compiler.js").GLSLCompiler,
         resolver = require("./resolve/resolve.js"),
-        SpaceTransformer = require("./generate/space/transform.js").SpaceTransformer;
-    var spaceAnalyzer = require("./analyze/space_analyzer.js"),
+        SpaceTransformer = require("./generate/space/transform.js").SpaceTransformer,
+        spaceAnalyzer = require("./analyze/space_analyzer.js"),
+        validator = require("./analyze/validator.js"),
+        analyzer = require("./analyze/analyze.js"),
         SpaceVectorType = spaceAnalyzer.SpaceVectorType,
         SpaceType = spaceAnalyzer.SpaceType,
         VectorType = spaceAnalyzer.VectorType;
@@ -17,6 +19,13 @@
 
 
     Base.extend(ns, {
+
+        parse: function(ast, opt) {
+            if (typeof ast == 'string') {
+                return parser.parse(ast, {raw: true, loc: opt.loc || false });
+            }
+            return ast;
+        },
 
         /**
          * Analyze the given source and extract all used shader and system parameters
@@ -42,15 +51,22 @@
             opt = opt || {};
             opt.entry = opt.entry || "global.shade";
 
-            if (typeof ast == 'string') {
-                ast = parser.parse(ast, {raw: true, loc: opt.loc || false });
-            }
+            ast = ns.parse(ast, opt);
 
             if (opt.implementation) {
                 ast = this.resolveClosures(ast, opt.implementation, opt);
             }
 
-            return inference.infer(ast, opt);
+            ast = inference.infer(ast, opt);
+            ast = validator.validate(ast, opt);
+            return ast;
+        },
+
+        analyze: function(ast, opt) {
+            opt = opt || {};
+            ast = ns.parse(ast, opt);
+
+            return analyzer.analyze(ast, opt)
         },
 
         resolveClosures: function(ast, implementation, opt) {

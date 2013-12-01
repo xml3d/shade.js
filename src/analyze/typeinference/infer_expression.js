@@ -28,8 +28,17 @@
     };
 
 
-    var evaluateTruth = function(exp) {
-        return !!exp;
+    var generateError = function() {
+        var args = Array.prototype.slice.call(arguments);
+        var node = args.shift(),
+            loc = node.loc,
+            msg = "";
+
+        if (loc && loc.start.line) {
+            msg = ", Line " + loc.start.line + ": ";
+        }
+        msg += ": " + codegen.generate(node);
+        return { msg: args.join(" ") + msg };
     }
 
     var handlers = {
@@ -193,8 +202,9 @@
                         result.setType(TYPES.NUMBER);
                     }
                     else {
-                        //console.error(node, left.getType(), operator, right.getType());
-                        Shade.throwError(node, "Evaluates to NaN: " + left.getTypeString() + " " + operator + " " + right.getTypeString());
+                        // NaN
+                        result.setType(TYPES.INVALID);
+                        result.setError(generateError(node))
                     }
                     break;
                 case "===":
@@ -247,7 +257,10 @@
                     return;
                 }
                 else {
-                    Shade.throwError(node, "TypeError: Cannot access member via computed value from object '" + objectAnnotation.getTypeString());
+                    resultType.setType(TYPES.INVALID);
+                    resultType.setError(generateError(node, "Cannot access member via computed value from object", objectAnnotation.getTypeString()))
+
+                    //Shade.throwError(node, "TypeError: Cannot access member via computed value from object '" + objectAnnotation.getTypeString());
                 }
             }
             var propertyName = node.property.name;
@@ -334,11 +347,12 @@
                 var args = common.createTypeInfo(node.arguments, scope);
                 try {
                     var extra = context.callFunction(scope.getVariableIdentifier(functionName), args);
+                    extra && result.setFromExtra(extra);
+                    node.callee.name = extra.newName;
                 } catch(e) {
-                    Shade.throwError(node, "Failure in function call: " + e.message);
+                    result.setType(TYPES.INVALID);
+                    result.setError(generateError(node, "Failure in function call: ", e.msg))
                 }
-                extra && result.setFromExtra(extra);
-                node.callee.name = extra.newName;
                 return;
             }
 
