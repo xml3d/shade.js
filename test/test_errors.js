@@ -30,21 +30,38 @@ describe('Error:', function () {
 
     }),
 
-    describe('ReferenceError should be thrown', function () {
+        describe('ReferenceError should be thrown', function () {
+            it("using a undefined variable", function () {
+                var exp = "Math.cos(a);";
+                var analyze = parseAndInferenceExpression.bind(null, exp);
+                analyze.should.throw("ReferenceError: a is not defined");
+            });
 
-        it("using a undefined variable", function () {
-            var exp = "Math.cos(a);";
-            var analyze = parseAndInferenceExpression.bind(null, exp);
-            analyze.should.throw("ReferenceError: a is not defined");
+            it("calling new on undefined function", function () {
+                var exp = "new UnknownFunction();";
+                var analyze = parseAndInferenceExpression.bind(null, exp);
+                analyze.should.throw(/ReferenceError: UnknownFunction is not defined/);
+            });
+
         });
 
-        it("calling new on undefined function", function () {
-            var exp = "new UnknownFunction();";
+    describe('NotANumberError should be thrown', function () {
+        it("Using + on object", function () {
+            var exp = "+new Vec3();";
             var analyze = parseAndInferenceExpression.bind(null, exp);
-            analyze.should.throw("ReferenceError: UnknownFunction is not defined");
+            analyze.should.throw(/NotANumberError/);
+        });
+    });
+
+    describe('NotSupportedError should be thrown', function () {
+        it("Using + on object", function () {
+            var exp = "var a = new Vec3(); delete a.x;";
+            var analyze = parseAndInferenceExpression.bind(null, exp);
+            analyze.should.throw(/NotSupportedError/);
         });
 
-    })
+
+    });
 
 
 });

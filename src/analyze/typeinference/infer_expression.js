@@ -8,25 +8,8 @@
     var codegen = require('escodegen');
 
     var Syntax = common.Syntax,
-        VisitorOption = common.VisitorOption,
         TYPES = Shade.TYPES,
         ANNO = common.ANNO;
-
-
-    var enterExpression = function (context, node, parent) {
-        var handlerName = "enter" + node.type;
-        if (handlers.hasOwnProperty(handlerName)) {
-            return handlers[handlerName].call(this, node, parent, context);
-        }
-    };
-
-    var exitExpression = function (context, node, parent) {
-        var handlerName = "exit" + node.type;
-        if (handlers.hasOwnProperty(handlerName)) {
-            return handlers[handlerName].call(this, node, parent, context);
-        }
-    };
-
 
     var generateErrorInformation = function() {
         var args = Array.prototype.slice.call(arguments);
@@ -39,14 +22,14 @@
         }
         msg += ": " + codegen.generate(node);
         return { message: args.join(" ") + msg, loc: loc};
-    }
+    };
 
     var handlers = {
 
         /**
          * @param node
          */
-        enterLiteral: function (node) {
+        Literal: function (node) {
             var value = node.raw !== undefined ? node.raw : node.value,
                 result = ANNO(node);
 
@@ -70,7 +53,7 @@
         /**
          * ExpressionStatement: Just copy the result from the actual expression
          */
-        exitExpressionStatement: function (node, parent, context) {
+        ExpressionStatement: function (node) {
             var result = ANNO(node),
                 expression = ANNO(node.expression);
             result.copy(expression);
@@ -82,7 +65,7 @@
          * form the argument, otherwise it's undefined. Inform the scope on
          * the return type of this return branch.
          */
-        exitReturnStatement: function (node, parent, context) {
+        ReturnStatement: function (node, parent, context) {
             var result = ANNO(node),
                 argument = context.getTypeInfo(node.argument);
 
@@ -98,7 +81,7 @@
          * NewExpression: Find the type of the Callee from
          * the scope and evaluate based on annotated parameters
          */
-        exitNewExpression: function(node, parent, context) {
+        NewExpression: function(node, parent, context) {
             var result = ANNO(node);
 
             var scope = context.getScope();
@@ -110,11 +93,11 @@
                     var extra = constructor.evaluate(result, args, scope);
                     result.setFromExtra(extra);
                 } catch (e) {
-                    result.setType(TYPES.INVALID);
+                    result.setInvalid(e);
                 }
             }
             else {
-                throw new Error("ReferenceError: " + node.callee.name + " is not defined");
+                result.setInvalid(generateErrorInformation(node, "ReferenceError: " + node.callee.name + " is not defined"));
             }
         },
 
@@ -122,11 +105,12 @@
         /**
          * UnaryExpression
          */
-        exitUnaryExpression: function (node, parent, context) {
+        UnaryExpression: function (node, parent, context) {
             var result = ANNO(node),
                 argument = context.getTypeInfo(node.argument),
                 operator = node.operator;
 
+            //noinspection FallthroughInSwitchStatementJS
             switch (operator) {
                 case "!":
                     result.setType(TYPES.BOOLEAN);
@@ -138,7 +122,7 @@
                     } else if (argument.canNumber()) {
                         result.setType(TYPES.NUMBER);
                     } else {
-                        throw new Error("Can't evaluate '" + operator + '" for ' + argument);
+                        result.setInvalid(generateErrorInformation(node, "NotANumberError"));
                     }
                     break;
                 case "~":
@@ -146,7 +130,7 @@
                 case "void":
                 case "delete":
                 default:
-                    throw new Error("Operator not yet supported: " + operator);
+                    result.setInvalid(generateErrorInformation(node, "NotSupportedError"));
             }
         },
 
@@ -154,7 +138,7 @@
          * 'Undefined' is an identifier. Variables, names of functions and
          * member properties are handled within parent expressions
          */
-        exitIdentifier: function (node) {
+        Identifier: function (node) {
             if (node.name === "undefined") {
                 ANNO(node).setType(TYPES.UNDEFINED);
             }
@@ -163,12 +147,17 @@
         /**
          * BinaryExpression
          */
-        exitBinaryExpression: function (node, parent, context) {
+        BinaryExpression: function (node, parent, context) {
             //console.log(node.left, node.right);
             var left = context.getTypeInfo(node.left),
                 right = context.getTypeInfo(node.right),
                 result = ANNO(node),
                 operator = node.operator;
+
+            if(!(left.isValid() && right.isValid())) {
+                result.setInvalid()
+                return;
+            }
 
             //noinspection FallthroughInSwitchStatementJS
             switch (operator) {
@@ -222,7 +211,7 @@
             }
         },
 
-        exitAssignmentExpression: function (node, parent, context) {
+        AssignmentExpression: function (node, parent, context) {
             var right = context.getTypeInfo(node.right),
                 result = ANNO(node);
 
@@ -238,7 +227,7 @@
         },
 
 
-        exitMemberExpression: function (node, parent, context) {
+        MemberExpression: function (node, parent, context) {
             var resultType = context.getTypeInfo(node),
                 objectAnnotation = ANNO(node.object),
                 propertyAnnotation = ANNO(node.property),
@@ -263,7 +252,7 @@
                 }
                 else {
                     resultType.setType(TYPES.INVALID);
-                    resultType.setError(generateErrorInformation(node, "Cannot access member via computed value from object", objectAnnotation.getTypeString()))
+                    resultType.setError(generateErrorInformation(node, "Cannot access member via computed value from object", objectAnnotation.getTypeString()));
 
                     //Shade.throwError(node, "TypeError: Cannot access member via computed value from object '" + objectAnnotation.getTypeString());
                 }
@@ -300,9 +289,10 @@
             resultType.setFromExtra(propertyTypeInfo);
         },
 
-        exitCallExpression: function (node, parent, context) {
+        CallExpression: function (node, parent, context) {
             var result = ANNO(node),
-                scope = context.getScope();
+                scope = context.getScope(),
+                extra, args;
 
             // Call on an object, e.g. Math.cos()
             if (node.callee.type == Syntax.MemberExpression) {
@@ -340,8 +330,8 @@
                     var propertyHandler = objectInfo[propertyName];
                     if (typeof propertyHandler.evaluate == "function") {
                         try {
-                            var args = context.getTypeInfo(node.arguments);
-                            var extra = propertyHandler.evaluate(result, args, scope, objectReference, context);
+                            args = context.getTypeInfo(node.arguments);
+                            extra = propertyHandler.evaluate(result, args, scope, objectReference, context);
                             result.setFromExtra(extra);
                         } catch(e) {
                             result.setType(TYPES.INVALID);
@@ -366,9 +356,9 @@
                 if(!func.isFunction()) {
                     Shade.throwError(node, "TypeError: " + func.getTypeString() + " is not a function");
                 }
-                var args = common.createTypeInfo(node.arguments, scope);
+                args = common.createTypeInfo(node.arguments, scope);
                 try {
-                    var extra = context.callFunction(scope.getVariableIdentifier(functionName), args);
+                    extra = context.callFunction(scope.getVariableIdentifier(functionName), args);
                     extra && result.setFromExtra(extra);
                     node.callee.name = extra.newName;
                 } catch(e) {
@@ -382,26 +372,21 @@
 
         },
 
-        enterVariableDeclaration: function (node, parent, context) {
-            context.setInDeclaration(true);
-        },
-
-        exitVariableDeclaration: function (node, parent, context) {
+        VariableDeclaration: function (node, parent, context) {
             context.setInDeclaration(false);
         },
 
-        exitLogicalExpression: function (node, parent, context) {
+        LogicalExpression: function (node, parent, context) {
             var left = context.getTypeInfo(node.left),
                 right = context.getTypeInfo(node.right),
-                result = ANNO(node),
-                operator = node.operator;
+                result = ANNO(node);
 
             if (left.equals(right)) {
                 result.copy(left);
             }
         },
 
-        exitConditionalExpression: function (node, parent, context) {
+        ConditionalExpression: function (node, parent, context) {
             var consequent = context.getTypeInfo(node.consequent),
                 alternate = context.getTypeInfo(node.alternate),
                 test = context.getTypeInfo(node.test),
@@ -419,17 +404,27 @@
 
     };
 
-    ns.annotateRight  = function(ast, propagatedConstants) {
+    ns.annotateRight  = function(ast) {
 
         if(!ast)
             throw Error("No node to analyze");
 
         var controller = new estraverse.Controller();
+        var context = this;
 
         controller.traverse(ast, {
-            enter: enterExpression.bind(controller, this),
-            leave: exitExpression.bind(controller, this)
-        })
+            enter: function(node) {
+                if(node.type == Syntax.VariableDeclaration) {
+                    context.setInDeclaration(true);
+                }
+            },
+            leave: function(node, parent) {
+                if (handlers.hasOwnProperty(node.type)) {
+                    return handlers[node.type].call(this, node, parent, context);
+                }
+                return null;
+            }
+        });
 
     }
 }(exports));

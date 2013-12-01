@@ -123,7 +123,7 @@
                 case "void":
                 case "delete":
                 default:
-                    throw new Error("Operator not yet supported: " + operator);
+                    return; // Not yet supported.
             }
             if (argument.hasStaticValue()) {
                 result.setStaticValue(evaluator.getStaticValue(node));
