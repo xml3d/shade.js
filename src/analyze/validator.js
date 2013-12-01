@@ -4,7 +4,7 @@
         Shade = require("../interfaces.js"),
         estraverse = require('estraverse');
 
-    //var codegen = require('escodegen');
+    // var codegen = require('escodegen');
 
     var Syntax = common.Syntax,
         TYPES = Shade.TYPES,
@@ -48,8 +48,8 @@
         var test, staticValue;
 
         var typeInfo = ANNO(node);
-        if(typeInfo.hasError()) {
-            var errorInfo = typeInfo.getError();
+        if(!typeInfo.isValid()) {
+            var errorInfo = findErrorInfo(node);
             var error = new Error(errorInfo.message);
             error.loc = errorInfo.loc;
             throw error;
@@ -85,19 +85,22 @@
                     return validate(node.alternate);
                 }
             }
-        } else if (node.type == Syntax.CallExpression) {
-            if (node.callee.type == Syntax.MemberExpression) {
-                var callingObject = ANNO(node.callee);
-                var object = node.callee.object,
-                    propertyName = node.callee.property.name;
-
-                // Call a unknown function, we can't compute anything static
-                if(!callingObject.isFunction()) {
-                    Shade.throwError(node, "TypeError: " + (object.type == Syntax.ThisExpression ? "'this'" : callingObject.getTypeString())+ " has no method '"+ propertyName + "'");
-                }
-            }
         }
     };
+
+    function findErrorInfo(node) {
+        var result = { message: "Unknown error.", loc: node.loc };
+        estraverse.traverse(node, {
+            enter: function(node) {
+                var annotation = ANNO(node);
+                if(annotation.hasError()) {
+                    result = annotation.getError();
+                    this.break();
+                }
+            }
+        });
+        return result;
+    }
 
 
     /**

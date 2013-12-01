@@ -230,7 +230,7 @@
 
             // Check, if a assigned variable still has the same type as
             // before and update type of uninitialized variables.
-            if (node.left.type == Syntax.Identifier && !context.inDeclaration()) {
+            if (node.left.type == Syntax.Identifier && !context.inDeclaration() && right.isValid()) {
                 var name = node.left.name;
                 var scope = context.getScope();
                 scope.updateTypeInfo(name, right);
@@ -243,6 +243,11 @@
                 objectAnnotation = ANNO(node.object),
                 propertyAnnotation = ANNO(node.property),
                 scope = context.getScope();
+
+            if(!objectAnnotation.isValid()) {
+                resultType.setInvalid();
+                return;
+            }
 
             //console.log("Member", node.object.name, node.property.name);
             if (node.computed) {
@@ -269,7 +274,7 @@
 
             objectOfInterest || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + scope.str());
 
-            if (objectOfInterest.getType() == TYPES.UNDEFINED) {  // e.g. var a = undefined; a.unknown;
+            if (!objectOfInterest.isValid() || objectOfInterest.getType() == TYPES.UNDEFINED) {  // e.g. var a = undefined; a.unknown;
                 resultType.setType(TYPES.INVALID); // TypeError: Cannot read property 'x' of undefined
                 resultType.setError(generateErrorInformation(node, "TypeError: Cannot read property '" + propertyName + "' of undefined"));
                 return;
@@ -301,7 +306,13 @@
 
             // Call on an object, e.g. Math.cos()
             if (node.callee.type == Syntax.MemberExpression) {
-                var callingObject = context.getTypeInfo(node.callee);
+
+                var memberExpression = context.getTypeInfo(node.callee);
+                if(!memberExpression.isValid()) {
+                    result.setInvalid();
+                    return;
+                }
+
                 var object = node.callee.object,
                     propertyName = node.callee.property.name;
 
@@ -309,17 +320,22 @@
                 if(!objectReference)  {
                     Shade.throwError(node, "Internal: No object info for: " + object);
                 }
-
-                if (!callingObject.isFunction()) { // e.g. Math.PI()
-                    result.setType(TYPES.UNDEFINED);
-                    return;
-                }
-
-
                 var objectInfo = scope.getObjectInfoFor(objectReference);
                 if(!objectInfo) { // Every object needs an info, otherwise we did something wrong
                     Shade.throwError(node, "Internal Error: No object registered for: " + objectReference.getTypeString() + JSON.stringify(node.object));
                 }
+
+                if (!memberExpression.isFunction()) { // e.g. Math.PI()
+                    result.setInvalid();
+                    if (objectInfo.hasOwnProperty(propertyName)) {
+                      result.setError(generateErrorInformation(node, "TypeError: Property '" + propertyName + "' of object #<"+ objectReference.getTypeString() +"> is not a function"));
+                    } else {
+                      result.setError(generateErrorInformation(node, "TypeError: " + (object.type == Syntax.ThisExpression ? "'this'" : objectReference.getTypeString())+ " has no method '"+ propertyName + "'"));
+                    }
+                    return;
+                }
+
+
                 if (objectInfo.hasOwnProperty(propertyName)) {
                     var propertyHandler = objectInfo[propertyName];
                     if (typeof propertyHandler.evaluate == "function") {

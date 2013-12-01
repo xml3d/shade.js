@@ -21,6 +21,12 @@ describe('Error:', function () {
             analyze.should.throw(/TypeError: Cannot read property 'x' of undefined/);
         });
 
+        it("when trying to call a property", function () {
+            var exp = "Math.PI();";
+            var analyze = parseAndInferenceExpression.bind(null, exp);
+            analyze.should.throw(/TypeError: Property 'PI' of object #<Object> is not a function/);
+        });
+
 
     }),
 

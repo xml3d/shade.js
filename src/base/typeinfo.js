@@ -89,6 +89,12 @@
                 this.setKind(kind);
         },
 
+        setInvalid: function(message) {
+            this.setType(TYPES.INVALID);
+            if(message)
+                this.setError(message);
+        },
+
         isOfType: function (type) {
             return this.getType() == type;
         },
@@ -238,7 +244,7 @@
         },
         getTypeString: function() {
             if (this.isObject()) {
-                return "Object #<" + this.getKind() + ">";
+                return this.isOfKind(KINDS.ANY) ? "Object" : ("Object #<" + this.getKind() + ">");
             }
             return this.getType();
         },
