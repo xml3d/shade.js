@@ -50,16 +50,11 @@
         parseAndInferenceExpression: function (ast, opt) {
             opt = opt || {};
             opt.entry = opt.entry || "global.shade";
+            opt.validate = opt.validate !== undefined ? opt.validate : true;
+            opt.throwOnError = opt.throwOnError !== undefined ? opt.throwOnError : true;
 
             ast = ns.parse(ast, opt);
-
-            if (opt.implementation) {
-                ast = this.resolveClosures(ast, opt.implementation, opt);
-            }
-
-            ast = inference.infer(ast, opt);
-            ast = validator.validate(ast, opt);
-            return ast;
+            return analyzer.analyze(ast, opt).ast;
         },
 
         analyze: function(ast, opt) {
