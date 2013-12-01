@@ -30,7 +30,7 @@ var Tools = {
         }
     },
 
-    findVariableAssignments: function (ast) {
+    findVariableAssignments: function (ast, ignoreUninitalizedDeclarations) {
         var definitions = new Set();
         walk.traverse(ast, {
             leave: function (node, parent) {
@@ -41,7 +41,7 @@ var Tools = {
                         }
                         break;
                     case Syntax.VariableDeclarator:
-                        if (node.id.type == Syntax.Identifier && node.init) {
+                        if (node.id.type == Syntax.Identifier && (!ignoreUninitalizedDeclarations || node.init)) {
                             definitions.add(node.id.name);
                         }
                         break;

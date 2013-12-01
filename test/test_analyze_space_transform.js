@@ -74,7 +74,7 @@ function createTest(dir, file) {
     });
 }
 
-describe('Space Transform:', function () {
+xdescribe('Space Transform:', function () {
 
     var dir = __dirname + '/data/spacetransform/';
     //createTest(dir, "functioncall.js");
