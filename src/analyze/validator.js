@@ -49,7 +49,9 @@
 
         var typeInfo = ANNO(node);
         if(typeInfo.hasError()) {
-            var error = typeInfo.getError();
+            var errorInfo = typeInfo.getError();
+            var error = new Error(errorInfo.message);
+            error.loc = errorInfo.loc;
             throw error;
         }
 

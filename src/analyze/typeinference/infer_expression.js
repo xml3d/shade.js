@@ -28,17 +28,17 @@
     };
 
 
-    var generateError = function() {
+    var generateErrorInformation = function() {
         var args = Array.prototype.slice.call(arguments);
         var node = args.shift(),
             loc = node.loc,
             msg = "";
 
         if (loc && loc.start.line) {
-            msg = ", Line " + loc.start.line + ": ";
+            msg = ", Line " + loc.start.line;
         }
         msg += ": " + codegen.generate(node);
-        return { msg: args.join(" ") + msg };
+        return { message: args.join(" ") + msg, loc: loc};
     }
 
     var handlers = {
@@ -204,7 +204,7 @@
                     else {
                         // NaN
                         result.setType(TYPES.INVALID);
-                        result.setError(generateError(node))
+                        result.setError(generateErrorInformation(node))
                     }
                     break;
                 case "===":
@@ -258,7 +258,7 @@
                 }
                 else {
                     resultType.setType(TYPES.INVALID);
-                    resultType.setError(generateError(node, "Cannot access member via computed value from object", objectAnnotation.getTypeString()))
+                    resultType.setError(generateErrorInformation(node, "Cannot access member via computed value from object", objectAnnotation.getTypeString()))
 
                     //Shade.throwError(node, "TypeError: Cannot access member via computed value from object '" + objectAnnotation.getTypeString());
                 }
@@ -271,6 +271,7 @@
 
             if (objectOfInterest.getType() == TYPES.UNDEFINED) {  // e.g. var a = undefined; a.unknown;
                 resultType.setType(TYPES.INVALID); // TypeError: Cannot read property 'x' of undefined
+                resultType.setError(generateErrorInformation(node, "TypeError: Cannot read property '" + propertyName + "' of undefined"));
                 return;
             }
             if (objectOfInterest.getType() != TYPES.OBJECT) { // e.g. var a = 5; a.unknown;
@@ -322,9 +323,14 @@
                 if (objectInfo.hasOwnProperty(propertyName)) {
                     var propertyHandler = objectInfo[propertyName];
                     if (typeof propertyHandler.evaluate == "function") {
-                        var args = context.getTypeInfo(node.arguments);
-                        var extra = propertyHandler.evaluate(result, args, scope, objectReference, context);
-                        result.setFromExtra(extra);
+                        try {
+                            var args = context.getTypeInfo(node.arguments);
+                            var extra = propertyHandler.evaluate(result, args, scope, objectReference, context);
+                            result.setFromExtra(extra);
+                        } catch(e) {
+                            result.setType(TYPES.INVALID);
+                            result.setError(e);
+                        }
                         return;
                     } else {
                         Shade.throwError(node, "Internal: no handler registered for '" + propertyName + "'");
@@ -351,7 +357,7 @@
                     node.callee.name = extra.newName;
                 } catch(e) {
                     result.setType(TYPES.INVALID);
-                    result.setError(generateError(node, "Failure in function call: ", e.msg))
+                    result.setError(generateErrorInformation(node, "Failure in function call: ", e.msg))
                 }
                 return;
             }

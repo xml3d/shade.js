@@ -43,7 +43,7 @@ var argv = require('optimist').argv,
     console.log(codegen.generate(code.ast));
 
     if(code.error)
-        console.error(code.error.msg);
+        console.error(code.error);
 
 
 

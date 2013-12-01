@@ -236,7 +236,7 @@
 
     AnalysisContext.prototype = {
         getTypeInfo: function (node) {
-            return common.getTypeInfo(node, this.getScope(), this.constants);
+            return common.getTypeInfo(node, this.getScope(), this.constants, true);
         },
         inference: function (node) {
             if (this.analysis) {

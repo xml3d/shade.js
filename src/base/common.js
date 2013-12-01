@@ -37,19 +37,26 @@
      * @param constants Additional array of constants
      * @returns {TypeInfo|Array.<TypeInfo>}
      */
-    ns.getTypeInfo = function getTypeInfo(node, scope, constants) {
+    ns.getTypeInfo = function getTypeInfo(node, scope, constants, check) {
         if(!node)
             return null;
 
         if(Array.isArray(node)) {
             return node.map(function (arg) {
-                return getTypeInfo(arg, scope, constants);
+                return getTypeInfo(arg, scope, constants, check);
             });
         }
         var binding;
         if (node.type == Syntax.Identifier) {
             var name = node.name;
+
+            if(name == 'undefined')
+                return ANNO(node);
+
             binding = scope.getBindingByName(name);
+            if(binding == undefined && check) {
+                throw new Error("ReferenceError: " + name + " is not defined");
+            }
             if(binding && constants) {
                 var propagatedConstant =  constants.filter(function(constant) { return constant.name == name; });
                 if (propagatedConstant.length) {

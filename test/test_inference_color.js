@@ -81,10 +81,7 @@ describe('Inference:', function () {
                 callExpression.extra.should.have.property("kind", TYPES.FLOAT3);
             });
 
-            it("unknown color method should throw", function () {
-                var exp = parseAndInferenceExpression.bind(null, "var x = new Color(128); x.something();");
-                exp.should.throw(/has no method 'something'/);
-            });
+
 
         });
     });
