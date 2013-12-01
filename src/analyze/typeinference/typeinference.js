@@ -61,9 +61,9 @@
 
                 // Local
                 if(context.propagateConstants) {
-                    this.kill = this.kill || Tools.findVariableAssignments(this.astNode);
+                    this.kill = this.kill || Tools.findVariableAssignments(this.astNode, true);
                     if (this.kill.size > 1)
-                        console.warn("Multiple Assignments found")
+                        console.warn("Multiple Assignments found", this.kill)
                 }
                 this.inference = this.inference || context.inference(this.astNode);
                 this.decl = this.decl || context.declareVariables(this.astNode);
