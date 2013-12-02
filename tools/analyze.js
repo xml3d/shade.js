@@ -32,7 +32,8 @@ var argv = require('optimist').argv,
                     loc: true,
                     implementation: "xml3d-glsl-forward",
                     entry: "global.shade",
-                    propagateConstants: true,
+                    propagateConstants: false,
+                    throwOnError: false,
                     sanitize: args.sanitize == undefined ? true :  args.sanitize,
                     validate: args.validate == undefined ? true :  args.validate
         };
@@ -43,7 +44,7 @@ var argv = require('optimist').argv,
     console.log(codegen.generate(code.ast));
 
     if(code.error)
-        console.error(code.error);
+        console.log("Error", code.error);
 
 
 

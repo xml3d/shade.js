@@ -4,7 +4,8 @@
         resolver =  require("../resolve/resolve.js"),
         staticTransformer = require("./constants/staticTransformer.js"),
         validator = require("./validator.js"),
-        inference = require("./typeinference/typeinference.js");
+        inference = require("./typeinference/typeinference.js"),
+        spaceTransformer = require("../generate/space/transform.js").SpaceTransformer;
 
     /**
      *
@@ -29,6 +30,9 @@
 
             // Remove/Replace dead code and static expressions
             ast = staticTransformer.transform(ast, opt);
+
+
+            opt.transformSpaces ? spaceTransformer.transformAast(ast, opt) : ast;
 
             // Remove dead code and check for remaining code the completeness
             // of annotations
