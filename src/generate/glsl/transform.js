@@ -114,12 +114,12 @@
 
             var usedParameters = state.usedParameters;
             for(name in usedParameters.shader){
-                decl = handleTopDeclaration(name, usedParameters.shader[name]);
+                decl = createTopDeclaration(name, usedParameters.shader[name]);
                 decl && program.body.unshift(decl);
             }
 
             for(name in usedParameters.system){
-                decl = handleTopDeclaration(name, usedParameters.system[name]);
+                decl = createTopDeclaration(name, usedParameters.system[name]);
                 decl && program.body.unshift(decl);
             }
 
@@ -146,42 +146,30 @@
                     //console.log("Enter:", node.type);
                     switch (node.type) {
                         case Syntax.Identifier:
-                            return handleIdentifier(node, parent, state.blockedNames, state.idNameMap);
+                            return enterIdentifier(node, parent, state);
                         case Syntax.IfStatement:
-                            return handleIfStatement(node, state, this, controller);
+                            return enterIfStatement(node);
                         case Syntax.FunctionDeclaration:
-                            // No need to declare, this has been annotated already
-                            var parentContext = state.contextStack[state.contextStack.length - 1];
-                            var context = new Scope(node, parentContext, {name: node.id.name });
-                            state.context = context;
-                            state.contextStack.push(context);
-                            state.inMain = this.mainId == context.str();
-                            break;
+                            return enterFunctionDeclaration(node, state, this.mainId);
                     }
                 }.bind(this),
 
                 leave: function(node, parent) {
                     switch(node.type) {
                         case Syntax.MemberExpression:
-                            return handleMemberExpression(node, parent, state);
+                            return leaveMemberExpression(node, parent, state);
                         case Syntax.NewExpression:
-                            return handleNewExpression(node, parent, state.context);
+                            return leaveNewExpression(node, state);
                         case Syntax.LogicalExpression:
-                            return handleExitLogicalExpression(node, this, state);
+                            return leaveLogicalExpression(node);
                         case Syntax.CallExpression:
-                            return handleCallExpression(node, parent, state);
+                            return leaveCallExpression(node, parent, state);
                         case Syntax.UnaryExpression:
-                            return handleUnaryExpression(node, parent, state);
+                            return leaveUnaryExpression(node);
                         case Syntax.FunctionDeclaration:
-                            state.context = state.contextStack.pop();
-                            state.inMain = state.context.str() == this.mainId;
-                            if (state.inMain)
-                                return handleMainFunction(node, parent, state.context);
+                            return leaveFunctionDeclaration(node, state, this.mainId);
                         case Syntax.ReturnStatement:
-                            if(state.inMain) {
-                                return handleReturnInMain(node, state.context);
-                            }
-                            break;
+                            return leaveReturnStatement(node, state);
                         case Syntax.BinaryExpression:
                             return handleBinaryExpression(node, parent, state.context);
 
@@ -195,9 +183,10 @@
     var traverseSubTree = function(ast, state, root, controller) {
         controller.skip();
         return root.replace(ast, state);
-    }
+    };
 
-    var handleTopDeclaration = function(name, typeInfo){
+
+    var createTopDeclaration = function(name, typeInfo){
         var propertyLiteral =  { type: Syntax.Identifier, name: name};
         var propertyAnnotation =  ANNO(propertyLiteral);
         propertyAnnotation.setFromExtra(typeInfo);
@@ -222,9 +211,12 @@
         var declAnnotation =  ANNO(decl.declarations[0]);
         declAnnotation.copy(propertyAnnotation);
         return decl;
-    }
+    };
 
-    var handleIdentifier = function(node, parent, blockedNames, idNameMap){
+    var enterIdentifier = function(node, parent, state){
+        var blockedNames = state.blockedNames;
+        var idNameMap = state.idNameMap;
+
         if(parent.type == Syntax.MemberExpression)
             return node;
         var name = node.name;
@@ -239,7 +231,12 @@
     }
 
 
-    var handleUnaryExpression = function(node, parent, state) {
+    /**
+     * Transform a !number expression into an binary expression, number == 0
+     * @param node
+     * @returns {*}
+     */
+    var leaveUnaryExpression = function(node) {
         if(node.operator == "!") {
             var argument = ANNO(node.argument);
             switch(argument.getType()) {
@@ -262,7 +259,19 @@
         }
     }
 
-    var handleReturnInMain = function(node, context) {
+    /**
+     * A return in the main functions sets gl_FragColor or discard if the
+     * main method returns without argument
+     * @param node
+     * @param scope
+     * @returns {*}
+     */
+    var leaveReturnStatement = function(node, context) {
+        var scope = context.context;
+
+        if(!context.inMain)
+            return;
+
         if (node.argument) {
             return {
                 type: Syntax.BlockStatement,
@@ -274,7 +283,7 @@
                             type: Syntax.Identifier,
                             name: "gl_FragColor"
                         },
-                        right: castToVec4(node.argument, context)
+                        right: castToVec4(node.argument, scope)
                     },
                     {
                         type: Syntax.ReturnStatement
@@ -292,7 +301,12 @@
         }
     };
 
-    var handleMainFunction = function(node, parent, context) {
+    /**
+     * Transform the main function into a GLSL conform main function
+     * with signature 'void main(void)'
+     * @param node
+     */
+    var leaveMainFunction = function(node) {
         var anno = new FunctionAnnotation(node);
         anno.setReturnInfo({ type: Types.UNDEFINED });
 
@@ -301,7 +315,7 @@
         // Rename to 'main'
         node.id.name = "main";
         //console.log(node);
-    }
+    };
 
 
     function getNameOfNode(node) {
@@ -317,8 +331,8 @@
         }
     };
 
-    var handleCallExpression = function (callExpression, parent, state) {
-        var topDeclarations = state.topDeclarations, context = state.context;
+    var leaveCallExpression = function (callExpression, parent, state) {
+        var context = state.context;
         // Is this a call on an object?
         if (callExpression.callee.type == Syntax.MemberExpression) {
             var calleeReference = common.getTypeInfo(callExpression.callee, context);
@@ -347,8 +361,9 @@
         }
     }
 
-    var handleNewExpression = function(newExpression, parent, context){
-        var entry = context.getBindingByName(newExpression.callee.name);
+    var leaveNewExpression = function(newExpression, context){
+        var scope = context.context;
+        var entry = scope.getBindingByName(newExpression.callee.name);
         //console.error(entry);
         if (entry && entry.hasConstructor()) {
             var constructor = entry.getConstructor();
@@ -360,7 +375,7 @@
     }
 
 
-    var handleMemberExpression = function (memberExpression, parent, state) {
+    var leaveMemberExpression = function (memberExpression, parent, state) {
         var propertyName = memberExpression.property.name,
             context = state.context,
             parameterName,
@@ -417,7 +432,6 @@
         if (!objectReference.isArray()) {
             Shade.throwError(memberExpression, "In shade.js, [] access is only allowed on arrays.");
         }
-
     }
 
     var handleBinaryExpression = function (node, parent, scope) {
@@ -473,9 +487,13 @@
         Shade.throwError(ast, "Can't cast from '" + exp.getTypeString() + "' to vec4");
     }
 
-    var handleModulo = function (binaryExpression) {
-        binaryExpression.right = Tools.castToFloat(binaryExpression.right);
-        binaryExpression.left = Tools.castToFloat(binaryExpression.left);
+    /**
+     * Transform % operator of JavaScript into a mod function in GLSL
+     * @param node
+     */
+    var handleModulo = function (node) {
+        node.right = Tools.castToFloat(node.right);
+        node.left = Tools.castToFloat(node.left);
         return {
             type: Syntax.CallExpression,
             callee: {
@@ -483,8 +501,8 @@
                 name: "mod"
             },
             arguments: [
-                binaryExpression.left,
-                binaryExpression.right
+                node.left,
+                node.right
             ],
             extra: {
                 type: Types.NUMBER
@@ -492,14 +510,30 @@
         }
     }
 
+    var enterFunctionDeclaration = function(node, state, mainId) {
+        var parentContext = state.contextStack[state.contextStack.length - 1];
+        var context = new Scope(node, parentContext, {name: node.id.name });
+        state.context = context;
+        state.contextStack.push(context);
+        state.inMain = mainId == context.str();
+    };
 
-    var handleIfStatement = function (node, state, root, controller) {
+    var leaveFunctionDeclaration = function(node, state, mainId) {
+        state.context = state.contextStack.pop();
+        state.inMain = state.context.str() == mainId;
+        if (state.inMain)
+            return leaveMainFunction(node);
+    };
+
+
+    var enterIfStatement = function (node) {
         var test = ANNO(node.test);
 
        assert(!test.hasStaticValue(), "Static value in IfStatement test");
        assert(!test.isObject(), "Object in IfStatement test");
 
-       switch(test.getType()) {
+       //noinspection FallthroughInSwitchStatementJS
+        switch(test.getType()) {
            // Transform 'if(number)' into 'if(number != 0)'
            case Types.INT:
            case Types.NUMBER:
@@ -514,18 +548,16 @@
                            type: test.getType()
                        }
                    }
-               }
+               };
                break;
        }
-
-
     };
 
     /**
      * Need to transform truth expressions in real boolean expression, because something like if(0) is
      * not allowed in GLSL
      */
-    var handleExitLogicalExpression = function(node, root, state) {
+    var leaveLogicalExpression = function(node) {
         var left = ANNO(node.left);
         var right = ANNO(node.right);
 
