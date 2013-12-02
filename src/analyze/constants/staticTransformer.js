@@ -71,6 +71,46 @@
         }
     }
 
+    function handleLogicalExpression(node, controller, opt) {
+        var left = ANNO(node.left);
+        var right = ANNO(node.right);
+        var leftBool = left.getStaticTruthValue();
+        var rightBool = right.getStaticTruthValue();
+
+        if (node.operator === "||") {
+            if (leftBool === false) {
+                return node.right;
+            }
+            if (leftBool === true) {
+                return node.left;
+            }
+            // Left is dynamic, let's check right
+            if (rightBool === false) {
+                return node.left;
+            }
+        } else if (node.operator === "&&") {
+            if (leftBool === false) {
+                return node.left;
+            }
+            if (leftBool === true) {
+                return node.right;
+            }
+            // Left is dynamic, let's check right
+            if (rightBool === true) {
+                // Now the result type is always the one of the left value
+                return node.left;
+            }
+            if (rightBool === false) {
+                // Now the result must be false
+                return {
+                    type: Syntax.Literal,
+                    value: "false",
+                    extra: { type: "boolean"}
+                };
+            }
+        }
+    }
+
     function handleAssignmentExpression(node) {
         var right = ANNO(node);
 
@@ -111,9 +151,12 @@
                 return handleIfStatement(node, controller, opt);
             case Syntax.ConditionalExpression:
                 return handleConditionalExpression(node, controller, opt);
+            case Syntax.LogicalExpression:
+                return handleLogicalExpression(node, controller, opt);
             case Syntax.AssignmentExpression:
                 return handleAssignmentExpression(node);
             case Syntax.NewExpression:
+            //case Syntax.CallExpression:
                 return handleCallExpression(node);
         }
     };

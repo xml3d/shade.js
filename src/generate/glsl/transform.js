@@ -9,7 +9,8 @@
         Kinds = Shade.OBJECT_KINDS,
         Sources = require("./../../interfaces.js").SOURCES,
         Tools = require('./registry/tools.js'),
-        System = require('./registry/system.js');
+        System = require('./registry/system.js'),
+        assert = require('assert');
 
     var Scope = require("./registry/").GLTransformScope;
 
@@ -148,10 +149,6 @@
                             return handleIdentifier(node, parent, state.blockedNames, state.idNameMap);
                         case Syntax.IfStatement:
                             return handleIfStatement(node, state, this, controller);
-                        case Syntax.ConditionalExpression:
-                            return handleConditionalExpression(node, state, this, controller);
-                        case Syntax.LogicalExpression:
-                            return handleEnterLogicalExpression(node, state, this, controller);
                         case Syntax.FunctionDeclaration:
                             // No need to declare, this has been annotated already
                             var parentContext = state.contextStack[state.contextStack.length - 1];
@@ -495,22 +492,12 @@
         }
     }
 
-    var handleConditionalExpression = function(node, state, root, controller) {
-        var consequent = ANNO(node.consequent);
-        var alternate = ANNO(node.alternate);
-        if (consequent.canEliminate() || alternate.canEliminate()) {
-            // In this case, we replace the whole conditional expression by the
-            // resulting expression. We have to do the traversal manually and skip the
-            // subtree for the parent traversal.
-            return traverseSubTree(consequent.canEliminate() ? node.alternate : node.consequent, state, root, controller);
-        }
-    }
 
     var handleIfStatement = function (node, state, root, controller) {
         var test = ANNO(node.test);
-        if (test.hasStaticValue() || test.isObject()) {
-            Shade.throwError(node, "Internal error: Static value or object in IfStatement: " + test.getStaticValue());
-        }
+
+       assert(!test.hasStaticValue(), "Static value in IfStatement test");
+       assert(!test.isObject(), "Object in IfStatement test");
 
        switch(test.getType()) {
            // Transform 'if(number)' into 'if(number != 0)'
@@ -534,19 +521,10 @@
 
     };
 
-    var handleEnterLogicalExpression = function (node, state, root, controller) {
-        var left = ANNO(node.left);
-        var right = ANNO(node.right);
-        if (left.canEliminate()) {
-            return traverseSubTree(node.right, state, root, controller);
-        }
-        if (right.canEliminate()) {
-            controller.skip();
-            return traverseSubTree(node.left, state, root, controller);
-        }
-    }
-
-
+    /**
+     * Need to transform truth expressions in real boolean expression, because something like if(0) is
+     * not allowed in GLSL
+     */
     var handleExitLogicalExpression = function(node, root, state) {
         var left = ANNO(node.left);
         var right = ANNO(node.right);

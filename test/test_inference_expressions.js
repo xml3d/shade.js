@@ -167,7 +167,6 @@ describe('Inference:', function () {
                 var exp = parseAndInferenceExpression("undefined || 8");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.INT);
-                exp.left.extra.should.have.property("eliminate", true);
             });
             it("should annotate T(a) == undefined: a && b ⇒ undefined", function () {
                 var exp = parseAndInferenceExpression("undefined && true");
