@@ -193,7 +193,7 @@
                     else {
                         // NaN
                         result.setType(TYPES.INVALID);
-                        result.setError(generateErrorInformation(node))
+                        result.setError(generateErrorInformation(node, "NotANumberError"))
                     }
                     break;
                 case "===":

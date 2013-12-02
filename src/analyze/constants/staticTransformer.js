@@ -134,6 +134,18 @@
         return node;
     }
 
+    function handleVariableDeclaration(node) {
+        var declarations = node.declarations, newDeclarations = [];
+        declarations.forEach(function (declaration) {
+            var typeInfo = ANNO(declaration);
+            if (!typeInfo.isUndefined()) {
+                newDeclarations.push(declaration);
+            }
+        });
+        node.declarations = newDeclarations;
+        return node;
+    }
+
     /**
      *
      * @param {Object} node
@@ -158,6 +170,9 @@
             case Syntax.NewExpression:
             //case Syntax.CallExpression:
                 return handleCallExpression(node);
+            case Syntax.VariableDeclaration:
+                return handleVariableDeclaration(node);
+
         }
     };
 

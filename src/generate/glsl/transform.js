@@ -516,6 +516,8 @@
         state.context = context;
         state.contextStack.push(context);
         state.inMain = mainId == context.str();
+        node.params = node.params.filter(function(a) { return !ANNO(a).isUndefined()});
+        return node;
     };
 
     var leaveFunctionDeclaration = function(node, state, mainId) {

@@ -105,6 +105,10 @@
         throw new Error("toGLSLSource: Unhandled type: " + info.source);
     }
 
+    function filterUndefined(arr) {
+        return arr.filter(function(n) { return n.extra.type != Types.UNDEFINED; });
+    }
+
     function createLineStack() {
         var arr = [];
         arr.push.apply(arr, arguments);
