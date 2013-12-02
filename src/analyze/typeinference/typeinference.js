@@ -5,6 +5,7 @@
     var esgraph = require('esgraph');
     var worklist = require('analyses');
     var common = require("../../base/common.js");
+    var Context = require("../../base/context.js");
     var Base = require("../../base/index.js");
     var codegen = require('escodegen');
     var annotateRight = require("./infer_expression.js").annotateRight;
@@ -157,6 +158,8 @@
             if (i < types.length) {
                 funcParam.setFromExtra(types[i].getExtra());
                 funcParam.setDynamicValue();
+            } else {
+                funcParam.setType(Shade.TYPES.UNDEFINED);
             }
         }
     }
@@ -169,13 +172,10 @@
      * @constructor
      */
     var AnalysisContext = function (ast, analysis, opt) {
+        Context.call(this, ast, opt);
+
         opt = opt || {};
 
-        /**
-         * The root of the program to analyze
-         * @type {*}
-         */
-        this.root = ast;
         this.root.globalParameters = {};
 
         /**
@@ -185,10 +185,6 @@
          */
         this.analysis = analysis;
 
-        /**
-         * @type {Array.<Scope>}
-         */
-        this.scopeStack = opt.scope ? [opt.scope] : [ new Scope(ast) ];
 
         /**
          * Map of (global) function name to untyped functions that
@@ -234,7 +230,7 @@
 
     };
 
-    AnalysisContext.prototype = {
+    Base.createClass(AnalysisContext, Context, {
         getTypeInfo: function (node) {
             return common.getTypeInfo(node, this.getScope(), this.constants, true);
         },
@@ -245,15 +241,6 @@
         },
         computeConstants: function (node, constants) {
             return constantEvaluation.evaluate.call(this, node, constants);
-        },
-        getScope: function () {
-            return this.scopeStack[this.scopeStack.length - 1];
-        },
-        pushScope: function (scope) {
-            return this.scopeStack.push(scope);
-        },
-        popScope: function () {
-            return this.scopeStack.pop();
         },
         /**
          *
@@ -424,7 +411,7 @@
             return ast;
         }
 
-    };
+    });
 
 
 
