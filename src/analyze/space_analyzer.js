@@ -137,7 +137,10 @@
     }
 
     function getSpaceVectorTypesFromInfo(spaceInfo, identifier){
-        return new Set(spaceInfo.filter(function(elem){return elem.split(";")[0] == identifier}).map(function(elem){ return elem.split(";")[1]*1}));
+        var set = new Set(spaceInfo.filter(function(elem){return elem.split(";")[0] == identifier}).map(function(elem){ return elem.split(";")[1]*1}));
+        if(set.size == 0)
+            set.add(SpaceVectorType.OBJECT);
+        return set;
     }
     function isSpaceTypeValid(spaceType, dependencies){
         var type = getVectorFromSpaceVector(spaceType);
