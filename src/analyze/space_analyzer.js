@@ -106,7 +106,7 @@
             return input;
 
         // Local
-        var kill = this.kill = this.kill || Tools.findVariableAssignments(this.astNode);
+        var kill = this.kill = this.kill || Tools.findVariableAssignments(this.astNode, true);
         var generatedDependencies = this.generate = this.generate || generateSpaceDependencies(this.astNode, kill);
         //generate && console.log(this.label, generate);
 

@@ -60,13 +60,18 @@
             if(binding == undefined && check) {
                 throw new Error("ReferenceError: " + name + " is not defined");
             }
-            if(binding && constants) {
-                var propagatedConstant =  constants.filter(function(constant) { return constant.name == name; });
-                if (propagatedConstant.length) {
-                    var result = ANNO(node, binding.getExtra());
-                    result.setStaticValue(propagatedConstant[0].constant);
-                    return result;
+            if(binding) {
+                var result = ANNO(node, binding.getExtra());
+                if (constants) {
+                    var propagatedConstant = constants.filter(function (constant) {
+                        return constant.name == name;
+                    });
+                    if (propagatedConstant.length) {
+                        result.setStaticValue(propagatedConstant[0].constant);
+                    }
                 }
+                return binding;
+
             }
         } else if (node.type == Syntax.ThisExpression) {
             binding = scope.getBindingByName('this');
