@@ -288,13 +288,11 @@
                     consequent = context.getTypeInfo(node.consequent);
                     result.copy(consequent);
                     var alternate = ANNO(node.alternate);
-                    alternate.eliminate();
                 } else {
                     context.inference(node.alternate);
                     var alternate = context.getTypeInfo(node.alternate);
                     result.copy(alternate);
                     var consequent = ANNO(node.consequent);
-                    consequent.eliminate();
                 }
             } else {
                 // We can't decide, thus traverse both;
@@ -340,38 +338,32 @@
             if (operator === "||") {
                 if (leftBool === false) {
                     result.copy(right);
-                    left.eliminate();
                     return;
                 }
                 if (leftBool === true) {
                     result.copy(left);
-                    right.eliminate();
                     return;
                 }
                 // Left is dynamic, let's check right
                 if (rightBool === false) {
                     // Now the result type is always the one of the left value
                     result.copy(left);
-                    right.eliminate();
                     return;
                 }
             } else if (operator === "&&") {
                 if (leftBool === false) {
                     // T(x) == false => x && y == x
                     result.copy(left);
-                    right.eliminate();
                     return;
                 }
                 if (leftBool === true) {
                     result.copy(right);
-                    left.eliminate();
                     return;
                 }
                 // Left is dynamic, let's check right
                 if (rightBool === true) {
                     // Now the result type is always the one of the left value
                     result.copy(left);
-                    right.eliminate();
                     return;
                 }
                 if (rightBool === false) {

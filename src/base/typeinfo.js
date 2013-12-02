@@ -204,14 +204,6 @@
         canColor: function() {
             return this.isObject() && (this.isOfKind(KINDS.FLOAT4) || this.isOfKind(KINDS.FLOAT3));
         },
-        eliminate : function() {
-            var extra = this.getExtra();
-            extra.eliminate = true;
-        },
-        canEliminate : function() {
-            var extra = this.getExtra();
-            return extra.eliminate == true;
-        },
         hasError : function() {
             return this.getError() != null;
         },

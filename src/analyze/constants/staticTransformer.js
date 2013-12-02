@@ -12,8 +12,8 @@
 
 
     /**
-     * Validates AST: Eliminates static branches and test
-     * if the non-eliminated have all necessary type info
+     * Transform AST: Eliminate branches due to static conditions
+     * and replace static expressions with simpler expressions
      * @param {Object} ast
      * @returns Object
      */

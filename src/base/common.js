@@ -34,12 +34,15 @@
      *
      * @param {object|Array.<object>} node
      * @param scope
-     * @param constants Additional array of constants
+     * @param {Array?} constants Additional array of constants
+     * @param {boolean} check
      * @returns {TypeInfo|Array.<TypeInfo>}
      */
     ns.getTypeInfo = function getTypeInfo(node, scope, constants, check) {
         if(!node)
             return null;
+
+        check = check == undefined ? false : check;
 
         if(Array.isArray(node)) {
             return node.map(function (arg) {

@@ -31,14 +31,6 @@
         clearCall: function() {
             var extra = this.getExtra();
             delete extra.evaluate;
-        },
-        eliminate : function() {
-            var extra = this.getExtra();
-            extra.eliminate = true;
-        },
-        canEliminate : function() {
-            var extra = this.getExtra();
-            return extra.eliminate == true;
         }
 
     });
