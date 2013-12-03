@@ -238,8 +238,9 @@
         };
 
         ns.cookTorrance = function cookTorrance(color, n, R0, roughness) {
-            var N = n.normalize();
-            var V = _env.position.flip().normalize();
+            var N = this.transformNormal(Space.VIEW,n.normalize());
+            var position = this.transformPoint(Space.VIEW,_env.position);
+            var V = position.flip().normalize();
             var intensity = new Vec3();
 
             var NdotV = N.dot(V);
@@ -260,7 +261,7 @@
                         continue;
 
                     L = this.viewMatrix.mulVec(this.pointLightPosition[i], 1.0).xyz();
-                    L = L.sub(_env.position);
+                    L = L.sub(position);
                     dist = L.length();
                     L = L.normalize();
                     H = V.add(L).normalize();
@@ -326,7 +327,7 @@
                         continue;
 
                     L = this.viewMatrix.mulVec(this.spotLightPosition[i], 1.0).xyz();
-                    L = L.sub(_env.position);
+                    L = L.sub(position);
                     dist = L.length();
                     L = L.normalize();
                     H = V.add(L).normalize();
@@ -367,11 +368,12 @@
         };
 
         ns.ward = function ward(color, n, t, ax, ay) {
-            var N = n.normalize();
-            var T = t.normalize();
+            var N = this.transformNormal(Space.VIEW,n.normalize());
+            var position = this.transformPoint(Space.VIEW,_env.position);
+            var V = position.flip().normalize();
+            var T = this.transformNormal(Space.VIEW,t.normalize());
             var B = N.cross(T).normalize();
 
-            var V = _env.position.flip().normalize();
             var intensity = new Vec3();
             var NdotV = N.dot(V);
                 //bias to prevent division through zero
@@ -388,7 +390,7 @@
                         continue;
 
                     L = this.viewMatrix.mulVec(this.pointLightPosition[i], 1.0).xyz();
-                    L = L.sub(_env.position);
+                    L = L.sub(position);
                     dist = L.length();
                     L = L.normalize();
                     H = V.add(L).normalize();
@@ -436,7 +438,7 @@
                         continue;
 
                     L = this.viewMatrix.mulVec(this.spotLightPosition[i], 1.0).xyz();
-                    L = L.sub(_env.position);
+                    L = L.sub(position);
                     dist = L.length();
                     L = L.normalize();
                     H = V.add(L).normalize();
@@ -468,11 +470,12 @@
         }
 
         ns.ashikhminShirley = function ashikhminShirley(color, n, t, R0, nv, nu) {
-            var N = n.normalize();
-            var T = t.normalize();
+            var N = this.transformNormal(Space.VIEW,n.normalize());
+            var position = this.transformPoint(Space.VIEW,_env.position);
+            var V = position.flip().normalize();
+            var T = this.transformNormal(Space.VIEW,t.normalize());
             var B = N.cross(T).normalize();
 
-            var V = _env.position.flip().normalize();
             var intensity = new Vec3();
             var NdotV = N.dot(V);
 
@@ -489,7 +492,7 @@
                         continue;
 
                     L = this.viewMatrix.mulVec(this.pointLightPosition[i], 1.0).xyz();
-                    L = L.sub(_env.position);
+                    L = L.sub(position);
                     dist = L.length();
                     L = L.normalize();
                     H = V.add(L).normalize();
@@ -541,7 +544,7 @@
                         continue;
 
                     L = this.viewMatrix.mulVec(this.spotLightPosition[i], 1.0).xyz();
-                    L = L.sub(_env.position);
+                    L = L.sub(position);
                     dist = L.length();
                     L = L.normalize();
                     H = V.add(L).normalize();
@@ -575,8 +578,10 @@
         }
 
         ns.scatter = function scatter(color, n, wrap, scatterWidth) {
-            var N = n.normalize();
-            var V = _env.position.flip().normalize();
+            var N = this.transformNormal(Space.VIEW,n.normalize());
+            var position = this.transformPoint(Space.VIEW,_env.position);
+            var V = position.flip().normalize();
+            var T = this.transformNormal(Space.VIEW,t.normalize());
             var intensity = new Vec3();
 
             var L, dist, kd, atten;
@@ -589,7 +594,7 @@
                         continue;
 
                     L = this.viewMatrix.mulVec(this.pointLightPosition[i], 1.0).xyz();
-                    L = L.sub(_env.position);
+                    L = L.sub(position);
                     dist = L.length();
                     L = L.normalize();
 
@@ -625,7 +630,7 @@
                         continue;
 
                     L = this.viewMatrix.mulVec(this.spotLightPosition[i], 1.0).xyz();
-                    L = L.sub(_env.position);
+                    L = L.sub(position);
                     dist = L.length();
                     L = L.normalize();
 
