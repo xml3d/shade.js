@@ -30,6 +30,26 @@
     Tools.Vec.attachVecMethods(Vector3Instance, "Vec3", 1, 3, ['dot']);
     Tools.Vec.attachVecMethods(Vector3Instance, "Vec3", 3, 0, ['normalize', 'flip']);
 
+    Vector3Instance["refract"] = {
+        type: TYPES.FUNCTION,
+        evaluate: function (result, args, ctx) {
+            if (args.length < 2)
+                Shade.throwError(result.node, "Not enough parameters for refract.");
+
+            var eta = args.pop();
+            if (!eta || !eta.canNumber())
+                Shade.throwError(result.node, "Invalid parameter for refract, expected a number got " + eta.getTypeString());
+
+            Tools.Vec.checkVecArguments(Vector3Instance + "." + "refract", 3, false, 0, result, args);
+
+            var typeInfo = {
+                type: TYPES.OBJECT,
+                kind: KINDS.FLOAT3
+            };
+
+            return typeInfo;
+        }
+    };
 
     Tools.extend(ns, {
         id: "Vec3",

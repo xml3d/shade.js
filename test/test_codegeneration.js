@@ -282,6 +282,10 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("var a = new Vec3(5).div(new Vec3(2))");
             code.should.equal("vec3 a = vec3(5) / vec3(2);");
         });
+        it("refract()", function() {
+            var code = generateExpression("var a = new Vec3(5).refract(new Vec3(2), 1)");
+            code.should.equal("vec3 a = refract(vec3(5), vec3(2), 1.0);");
+        });
     });
 
 
@@ -522,7 +526,6 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("function shade(env) { if(!env.a && env.b) { return new Vec3(1) } else { return new Vec3(0) }}", { "a": { "type": "boolean" }});
             code.should.not.match(/if\(!_env_a\)/);
         });
-
     })
 
     it("Main function", function() {

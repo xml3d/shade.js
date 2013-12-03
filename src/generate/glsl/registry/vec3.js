@@ -21,6 +21,15 @@
         reflect: {
             callExp: Tools.Vec.createFunctionCall.bind(null, 'reflect', 3)
         },
+        refract: {
+            callExp: function (node, args, parent) {
+                var eta = node.arguments.pop();
+                var result = Tools.Vec.createFunctionCall("refract", 3, node, args, parent);
+                ANNO(eta).setType(TYPES.NUMBER);
+                result.arguments.push(eta);
+                return result;
+            }
+        },
         length: {
             callExp: Tools.Vec.generateLengthCall
         },

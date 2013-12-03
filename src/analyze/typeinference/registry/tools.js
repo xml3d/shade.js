@@ -175,11 +175,11 @@
         },
         attachVecMethods: function(instance, objectName, destVecSize, srcVecSize, methodNames){
             for(var i = 0; i < methodNames.length; ++i){
-                var methodName = methodNames[i];
-                instance[methodName] = {
-                    type: TYPES.FUNCTION,
-                    evaluate: Vec.vecEvaluate.bind(null, objectName, methodName, destVecSize, srcVecSize)
-                }
+                    var methodName = methodNames[i];
+                    instance[methodName] = {
+                        type: TYPES.FUNCTION,
+                        evaluate: Vec.vecEvaluate.bind(null, objectName, methodName, destVecSize, srcVecSize)
+                    }
             }
         },
 
