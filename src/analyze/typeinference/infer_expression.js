@@ -494,12 +494,13 @@
                 test = context.getTypeInfo(node.test),
                 result = ANNO(node);
 
-            if (consequent.equals(alternate)) {
+            var testResult = test.getStaticTruthValue();
+            if(testResult === true) {
                 result.copy(consequent);
-            } else if (consequent.canNumber() && alternate.canNumber()) {
-                result.setType(TYPES.NUMBER);
-            } else if(test.isNullOrUndefined()) {
+            } else if (testResult === false) {
                 result.copy(alternate);
+            } else if (!result.setCommonType(consequent, alternate)) {
+                result.setInvalid(generateErrorInformation(node, "Can't evaluate polymorphic conditional expression"))
             }
 
         }
