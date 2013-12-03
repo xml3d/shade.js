@@ -333,6 +333,10 @@
 
     var leaveCallExpression = function (callExpression, parent, state) {
         var context = state.context;
+
+        /** Filter out undefined arguments, we do the same for the declaration */
+        callExpression.arguments = callExpression.arguments.filter(function(a) { return !ANNO(a).isUndefined()});
+
         // Is this a call on an object?
         if (callExpression.callee.type == Syntax.MemberExpression) {
             var calleeReference = common.getTypeInfo(callExpression.callee, context);
