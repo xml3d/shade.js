@@ -11,8 +11,8 @@
 
 
     function containsClosure(arr, name) {
-        arr.some(function (func) {
-            return func.name = name;
+        return arr.some(function (func) {
+            return func.id.name == name;
         });
     }
 
