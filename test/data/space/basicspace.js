@@ -13,7 +13,7 @@
  */
 function shade(color, n) {
     var normal;
-    normal = this.transformNormal(Space.VIEW, n);
+    normal = Space.transformDirection(Space.VIEW, n);
     return color.mul(normal.dot(1,0,0));
 }
 

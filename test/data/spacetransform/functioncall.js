@@ -22,7 +22,7 @@
     function shade(env) {
         var normal, viewNormal;
         normal = interpolateNormals(env.normal1, env.normal2, env.weight);
-        viewNormal = this.transformNormal(Space.VIEW, normal);
+        viewNormal = Space.transformDirection(Space.VIEW, normal);
         return env.color.mul(viewNormal.dot(1,0,0));
     }
 }

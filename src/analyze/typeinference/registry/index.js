@@ -6,6 +6,7 @@
 
     var objects = {
         Shade : require("./shade.js"),
+        Space : require("./space.js"),
         Math : require("./math.js"),
         Vec2 : require("./vec2.js"),
         Vec3 : require("./vec3.js"),
@@ -54,6 +55,7 @@
             this.registerObject("Vec4", objects.Vec4);
             this.registerObject("Texture", objects.Texture);
             this.registerObject("Shade", objects.Shade);
+            this.registerObject("Space", objects.Space);
             this.registerObject("Mat3", objects.Mat3);
             this.registerObject("Mat4", objects.Mat4);
             this.declareVariable("_env");

@@ -250,11 +250,12 @@
 
     function getSpaceConversion(callAst){
         var callee = callAst.callee;
-        if(callee.type == Syntax.MemberExpression && callee.object.type == Syntax.ThisExpression){
+        if(callee.type == Syntax.MemberExpression && callee.object.type == Syntax.Identifier
+            && callee.object.name == "Space"){
             var spaceType = 0;
             switch(callee.property.name){
                 case "transformPoint": spaceType = VectorType.POINT; break;
-                case "transformNormal": spaceType = VectorType.NORMAL; break;
+                case "transformDirection": spaceType = VectorType.NORMAL; break;
             }
             spaceType = spaceType << 3;
             if(spaceType){

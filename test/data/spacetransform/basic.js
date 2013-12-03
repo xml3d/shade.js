@@ -14,7 +14,7 @@
 {
     function shade(env) {
         var normal;
-        normal = this.transformNormal(Space.VIEW, env.normal);
+        normal = Space.transformDirection(Space.VIEW, env.normal);
         return env.color.mul(normal.dot(1,0,0));
     }
 }

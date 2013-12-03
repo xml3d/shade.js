@@ -11,14 +11,14 @@ function shade(color, n) {
     var b = n;
     b = new Vec3(1,2,3);
     n = b;
-    var normal = this.transformNormal(Space.VIEW, n);
+    var normal = Space.transformDirection(Space.VIEW, n);
     return color.mul(normal.dot(1,0,0));
 }
 function shade(color, n) {
     var b = n;
     b = b.mul(2); // transfer: viewNormal|object // b => viewNormal|object
     n = b; // transfer: viewNormal   // b => viewNormal
-    var normal = this.transformNormal(Space.VIEW, n); // // n =>  viewNormal
+    var normal = Space.transformDirection(Space.VIEW, n); // // n =>  viewNormal
     return color.mul(normal.dot(1,0,0)); // // color => object, normal => object
 }
 // Converted: n => viewNormal
@@ -26,7 +26,7 @@ function shade(color, n) {
     var b = n;
     b = new Vec3(1,2,3); //
     n = b; // transfer: viewNormal   // b => viewNormal
-    var normal = this.transformNormal(Space.VIEW, n); // // n =>  viewNormal
+    var normal = Space.transformDirection(Space.VIEW, n); // // n =>  viewNormal
     return color.mul(normal.dot(1,0,0)); // // color => object, normal => object
 }
 
@@ -34,7 +34,7 @@ function shade(color, n) {
     var b = n; // transfer: viewNormal|object, n => viewNormal|object
     b = b.mul(2); // transfer: viewNormal|object // b => viewNormal|object
     n = b; // transfer: viewNormal|object   // b => viewNormal|object
-    var normal = this.transformNormal(Space.VIEW, n); //  // n =>  viewNormal|object
+    var normal = Space.transformDirection(Space.VIEW, n); //  // n =>  viewNormal|object
     return color.mul(n).mul(normal.dot(1,0,0)); // // color => object, normal => object, n => object
 }
 // Converted: n => object, n_viewspace => viewNormal
@@ -52,8 +52,8 @@ function shade(color, n, n_viewspace) {
 
 
 function shade(color, n){
-    var normal1 = this.transformNormal(Space.WORLD, n.mul(this.transformNormal(Space.VIEW, n.mul(1,2,3)).dot(1,0,0))); // n => viewNormal|worldNormal|object
-    n = this.transformNormal(Space.VIEW, n); //  || n => viewNormal
+    var normal1 = Space.transformDirection(Space.WORLD, n.mul(Space.transformDirection(Space.VIEW, n.mul(1,2,3)).dot(1,0,0))); // n => viewNormal|worldNormal|object
+    n = Space.transformDirection(Space.VIEW, n); //  || n => viewNormal
     return color.mul(n).mul(normal1.dot(1,0,0)).mul(n.dot(1,0,0)); //  || n => object, normal1 => object
 }
 
@@ -64,8 +64,8 @@ function shade(color, n, n_world, n_view){
 }
 
 function shade(color, n){
-    var wNormal = this.transformNormal(Space.World, n); // n => viewNormal|viewSpace
-    n = this.transformNormal(Space.View, n);    // n => viewNormal
+    var wNormal = Space.transformDirection(Space.World, n); // n => viewNormal|viewSpace
+    n = Space.transformDirection(Space.View, n);    // n => viewNormal
     return color.mul(n).mul(wNormal)    // color => object, n => object, wNormal => object
 }
 

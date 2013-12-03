@@ -3,8 +3,9 @@
     var Shade = require("../../../interfaces.js"),
         Tools = require("./tools.js"),
         Syntax = require('estraverse').Syntax;
-
-
+    var ANNO = require("../../../base/annotation.js").ANNO;
+    var TYPES = Shade.TYPES,
+        KINDS = Shade.OBJECT_KINDS;
     var SystemDefines = {};
     SystemDefines.CANVAS_DIMENSIONS = "coords";
     SystemDefines.DERIVATE_EXTENSION = "#extension GL_OES_standard_derivatives : enable";
@@ -14,6 +15,7 @@
         kind: Shade.OBJECT_KINDS.FLOAT3,
         source: Shade.SOURCES.UNIFORM
     };
+
 
     var DerivedParameters = {
         coords: {

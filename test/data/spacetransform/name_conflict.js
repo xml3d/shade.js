@@ -18,7 +18,7 @@
 {
     function awesomeClosure(color, normal){
         var viewNormal;
-        viewNormal = this.transformNormal(Space.VIEW, normal);
+        viewNormal = Space.transformDirection(Space.VIEW, normal);
         return color.mul(viewNormal.dot(1,0,0));
     }
 

@@ -11,6 +11,7 @@
 
     var objects = {
         Shade : require("./shade.js"),
+        Space : require("./space.js"),
         Math : require("./math.js"),
         System : require("./system.js"),
         Vec2 : require("./vec2.js"),
@@ -59,6 +60,7 @@
             this.registerObject("Shade", objects.Shade);
             this.registerObject("Mat3", objects.Mat3);
             this.registerObject("Mat4", objects.Mat4);
+            this.registerObject("Space", objects.Space);
 
             this.declareVariable("gl_FragCoord", false);
             this.updateTypeInfo("gl_FragCoord", new TypeInfo({

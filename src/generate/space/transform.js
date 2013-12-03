@@ -102,13 +102,16 @@
             var functionName;
             switch(vectorType){
                 case VectorType.POINT: functionName = "transformPoint"; break;
-                case VectorType.NORMAL: functionName = "transformNormal"; break;
+                case VectorType.NORMAL: functionName = "transformDirection"; break;
             }
-            return {
+            var result = {
                 type: Syntax.MemberExpression,
-                object: { type: Syntax.ThisExpression },
+                object: {type: Syntax.Identifier, name: "Space"},
                 property: { type: Syntax.Identifier, name: functionName }
             };
+            ANNO(result).setType(Types.FUNCTION);
+            ANNO(result.object).setType(Types.OBJECT, Kinds.ANY);
+            return result;
         },
         getSpaceConvertArg: function(space){
             var spaceType = spaceAnalyzer.getSpaceFromSpaceVector(space);

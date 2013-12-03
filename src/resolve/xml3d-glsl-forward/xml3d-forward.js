@@ -6,8 +6,8 @@
          * @param {Vec3} normal
          */
         ns.diffuse = function diffuse(color, n, roughness) {
-            var N = this.transformNormal(Space.VIEW,n.normalize());
-            var position = this.transformPoint(Space.VIEW,_env.position);
+            var N = Space.transformDirection(Space.VIEW,n.normalize());
+            var position = Space.transformPoint(Space.VIEW,_env.position);
             var V = position.flip().normalize();
 
             var intensity = new Vec3();
@@ -118,9 +118,9 @@
         };
 
         ns.phong = function phong(color, n, shininess) {
-            var N = this.transformNormal(Space.VIEW,n.normalize()), i, L, R, atten, kd, dist;
+            var N = Space.transformDirection(Space.VIEW,n.normalize()), i, L, R, atten, kd, dist;
             var intensity = new Vec3();
-            var position = this.transformPoint(Space.VIEW,_env.position);
+            var position = Space.transformPoint(Space.VIEW,_env.position);
             var eyeVector = position.normalize();
             if(this.MAX_POINTLIGHTS)
                 for (i = 0; i < this.MAX_POINTLIGHTS; i++) {
@@ -175,9 +175,9 @@
         };
 
         ns.diffusephong = function phong(diffuseColor, phongColor, n, shininess) {
-            var N = this.transformNormal(Space.VIEW,n.normalize());
+            var N = Space.transformDirection(Space.VIEW,n.normalize());
             var diffuseIntensity = new Vec3(), phongIntensity = new Vec3();
-            var position = this.transformPoint(Space.VIEW,_env.position);
+            var position = Space.transformPoint(Space.VIEW,_env.position);
             var eyeVector = _env.position.normalize();
             if(this.MAX_POINTLIGHTS)
                 for (var i = 0; i < this.MAX_POINTLIGHTS; i++) {
@@ -238,8 +238,8 @@
         };
 
         ns.cookTorrance = function cookTorrance(color, n, R0, roughness) {
-            var N = this.transformNormal(Space.VIEW,n.normalize());
-            var position = this.transformPoint(Space.VIEW,_env.position);
+            var N = Space.transformDirection(Space.VIEW,n.normalize());
+            var position = Space.transformPoint(Space.VIEW,_env.position);
             var V = position.flip().normalize();
             var intensity = new Vec3();
 
@@ -368,10 +368,10 @@
         };
 
         ns.ward = function ward(color, n, t, ax, ay) {
-            var N = this.transformNormal(Space.VIEW,n.normalize());
-            var position = this.transformPoint(Space.VIEW,_env.position);
+            var N = Space.transformDirection(Space.VIEW,n.normalize());
+            var position = Space.transformPoint(Space.VIEW,_env.position);
             var V = position.flip().normalize();
-            var T = this.transformNormal(Space.VIEW,t.normalize());
+            var T = Space.transformDirection(Space.VIEW,t.normalize());
             var B = N.cross(T).normalize();
 
             var intensity = new Vec3();
@@ -470,10 +470,10 @@
         }
 
         ns.ashikhminShirley = function ashikhminShirley(color, n, t, R0, nv, nu) {
-            var N = this.transformNormal(Space.VIEW,n.normalize());
-            var position = this.transformPoint(Space.VIEW,_env.position);
+            var N = Space.transformDirection(Space.VIEW,n.normalize());
+            var position = Space.transformPoint(Space.VIEW,_env.position);
             var V = position.flip().normalize();
-            var T = this.transformNormal(Space.VIEW,t.normalize());
+            var T = Space.transformDirection(Space.VIEW,t.normalize());
             var B = N.cross(T).normalize();
 
             var intensity = new Vec3();
@@ -578,10 +578,10 @@
         }
 
         ns.scatter = function scatter(color, n, wrap, scatterWidth) {
-            var N = this.transformNormal(Space.VIEW,n.normalize());
-            var position = this.transformPoint(Space.VIEW,_env.position);
+            var N = Space.transformDirection(Space.VIEW,n.normalize());
+            var position = Space.transformPoint(Space.VIEW,_env.position);
             var V = position.flip().normalize();
-            var T = this.transformNormal(Space.VIEW,t.normalize());
+            var T = Space.transformDirection(Space.VIEW,t.normalize());
             var intensity = new Vec3();
 
             var L, dist, kd, atten;

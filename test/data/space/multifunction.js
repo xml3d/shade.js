@@ -26,6 +26,6 @@
 function shade(env) {
     var normal, viewNormal;
     normal = env.normal1.mul(1 - env.weight).add(env.normal2.mul(env.weight));
-    viewNormal = this.transformNormal(Space.VIEW, normal);
+    viewNormal = Space.transformDirection(Space.VIEW, normal);
     return env.color.mul(viewNormal.dot(1,0,0));
 }
