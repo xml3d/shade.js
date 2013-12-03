@@ -48,7 +48,7 @@
             return input;
 
         // Local
-        var kill = this.kill = this.kill || Tools.findVariableDefinitions(this.astNode);
+        var kill = this.kill = this.kill || Tools.findVariableAssignments(this.astNode);
         var generatedDependencies = this.generate = this.generate || generateSemanticDependencies(this.astNode, kill);
         var generatedSemantics = this.generatedSemantics = this.generatedSemantics || generateNewSemantics(this.astNode);
         //generate && console.log(this.label, generate);

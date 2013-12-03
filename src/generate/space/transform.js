@@ -80,7 +80,7 @@
                             for(var i = 0; i < paramTransitions.length; ++i){
                                 var paramT = paramTransitions[i];
                                 if(!paramT.space)
-                                    newArgs.push(oldArgs[paramT.idx]);
+                                    oldArgs[paramT.idx] !== undefined && newArgs.push(oldArgs[paramT.idx]);
                                 else{
                                     var callExpression = {
                                         type: Syntax.CallExpression,

@@ -13,8 +13,10 @@ describe('Inference:', function () {
     describe('Variables', function () {
         describe('initialization', function () {
 
-        it("is annotated for no init expression", function () {
-            var program = parseAndInferenceExpression("var a;");
+        it("should throw if not initialized", function () {
+            var program = parseAndInferenceExpression.bind(null,"var a = 5.0; var a = 4.0;");
+            program.should.throw();
+            /*var program = parseAndInferenceExpression("var a;");
             var declaration = program.body[0].declarations[0];
             declaration.should.have.property("extra");
             declaration.extra.should.have.property("type", TYPES.UNDEFINED);
@@ -22,7 +24,7 @@ describe('Inference:', function () {
             program.should.have.property("scope").property("bindings").property("a");
             var a = program.scope.bindings.a;
             a.should.have.property("initialized", false);
-            a.extra.should.have.property("type", TYPES.UNDEFINED);
+            a.extra.should.have.property("type", TYPES.UNDEFINED);*/
         });
 
         it("is annotated for simple expression", function () {

@@ -9,6 +9,7 @@ var argv = require('optimist').argv,
     var fs = require("fs"),
         path = require("path"),
         GLSLCompiler = require("../src/generate/glsl/compiler").GLSLCompiler,
+        codegen = require('escodegen'),
         filename = args._[0];
 
 
@@ -27,27 +28,24 @@ var argv = require('optimist').argv,
             contextData = JSON.parse(fs.readFileSync(ctx, "utf-8"));
         }
         var data = fs.readFileSync(filename, "utf-8");
-        var opt = {
-            inject: contextData,
-            loc: true,
-            implementation: "xml3d-glsl-forward",
-            entry: "global.shade",
-            propagateConstants: false,
-            validate: true,
-            sanitize: false,
-            transformSpaces: true,
-            throwOnError: true
+        var opt = { inject: contextData,
+                    loc: true,
+                    implementation: "xml3d-glsl-forward",
+                    entry: "global.shade",
+                    propagateConstants: false,
+                    throwOnError: false,
+                    sanitize: args.sanitize == undefined ? true :  args.sanitize,
+                    validate: args.validate == undefined ? true :  args.validate
         };
-        var aast = Shade.parseAndInferenceExpression(data, opt);
-        //return require("../src/generate/glsl/generate.js").generate(aast);
-        return new GLSLCompiler().compileFragmentShader(aast, {useStatic: true});
+        return Shade.analyze(data, opt);
+
     }());
 
-    if (args.p) {
-        console.log(code.source);
-    } else {
-        console.log(code.source);
+    console.log(codegen.generate(code.ast));
 
-    }
+    if(code.error)
+        console.log("Error", code.error);
+
+
 
 }(argv));

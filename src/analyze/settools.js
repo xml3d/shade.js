@@ -1,6 +1,7 @@
 
 var Set = require('analyses').Set;
 var walk = require('estraverse');
+var codegen = require('escodegen');
 
 var Syntax = walk.Syntax;
 
@@ -22,30 +23,40 @@ var Tools = {
         cb = cb || JSON.stringify;
         for (var node in cfg[2]) {
             var n = cfg[2][node];
-            console.log(n.label, cb(map.get(n)));
+            if (n.label || n.type || !n.astNode)
+                console.log(n.label || n.type, cb(map.get(n)));
+            else
+                console.log(codegen.generate(n.astNode), cb(map.get(n)));
         }
     },
 
-    findVariableDefinitions: function(ast) {
-    var definitions = new Set();
-    walk.traverse(ast, {
-        leave: function(node, parent) {
-            switch(node.type) {
-                case Syntax.AssignmentExpression:
-                    if (node.left.type == Syntax.Identifier) {
-                        definitions.add(node.left.name);
-                    }
-                    break;
-                case Syntax.VariableDeclarator:
-                    if (node.id.type == Syntax.Identifier && node.init) {
-                        definitions.add(node.id.name);
-                    }
-                    break;
+    findVariableAssignments: function (ast, ignoreUninitalizedDeclarations) {
+        var definitions = new Set();
+        walk.traverse(ast, {
+            leave: function (node, parent) {
+                switch (node.type) {
+                    case Syntax.AssignmentExpression:
+                        if (node.left.type == Syntax.Identifier) {
+                            definitions.add(node.left.name);
+                        }
+                        break;
+                    case Syntax.VariableDeclarator:
+                        if (node.id.type == Syntax.Identifier && (!ignoreUninitalizedDeclarations || node.init)) {
+                            definitions.add(node.id.name);
+                        }
+                        break;
+                    case Syntax.UpdateExpression:
+                        if (node.argument.type == Syntax.Identifier) {
+                            console.log("found update on", node.argument.name)
+                            definitions.add(node.argument.name);
+                        }
+                        break;
+                }
             }
-        }
-    })
-    return definitions;
-}
+        })
+        return definitions;
+    }
+
 }
 
 module.exports = Tools;

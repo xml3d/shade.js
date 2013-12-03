@@ -39,7 +39,7 @@ function createTest(dir, file) {
 
 describe('Space analysis:', function () {
     var dir = __dirname + '/data/space/';
-    //createTest(dir, "dualspace.js");
+    //createTest(dir, "multifunction.js");
 
     var files = fs.readdirSync(dir);
     files.forEach(function (file) {

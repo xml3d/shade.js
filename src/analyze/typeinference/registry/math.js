@@ -6,6 +6,19 @@
         Tools = require("./tools.js");
 
 
+    var notStatic = function() {};
+
+    var evaluateStatic = function(name) {
+        return function (result, args) {
+            if (Tools.allArgumentsAreStatic(args)) {
+                var callArgs = args.map(function (a) {
+                    return a.getStaticValue();
+                });
+                return Math[name].apply(null, callArgs);
+            }
+        }
+    }
+
     var evaluateMethod = function (name, paramCount, returnType) {
         /**
          * @param {Annotation} result
@@ -19,23 +32,15 @@
                 }
             }
 
-            var argArray = [];
-            var isStatic = true;
             args.forEach(function (param, index) {
                 if (!(param.canNumber() || param.isVector()))
                     throw new Error("Parameter " + index + " has invalid type for Math." + name + ", expected 'number', but got " + param.getType());
-                isStatic = isStatic && param.hasStaticValue();
-                if (isStatic)
-                    argArray.push(param.getStaticValue());
             });
             var typeInfo = {
                 type: returnType || args[0].isVector() ? args[0].getType() : TYPES.NUMBER
             }
             args[0].isVector() && (typeInfo.kind = args[0].getKind());
 
-            if (isStatic) {
-                typeInfo.staticValue = Math[name].apply(undefined, argArray);
-            }
             return typeInfo;
         }
     }
@@ -49,7 +54,8 @@
                 return {
                     type: TYPES.NUMBER
                 }
-            }
+            },
+            computeStaticValue: notStatic
         },
         abs: {
             type: TYPES.FUNCTION,
@@ -68,7 +74,8 @@
                 }
                 // TODO: Static value
                 return typeInfo;
-            }
+            },
+            computeStaticValue: evaluateStatic("abs")
         },
 
 
@@ -81,40 +88,22 @@
                 if (args.every(function (e) {
                     return e.canNumber();
                 })) {
-                    var typeInfo = {
-                        type: TYPES.NUMBER
-                    }
-                    if (Tools.allArgumentsAreStatic(args)) {
-                        var callArgs = args.map(function (a) {
-                            return a.getStaticValue();
-                        });
-                        typeInfo.staticValue = Math.clamp.apply(null, callArgs);
-                    }
-                    return typeInfo;
+                    return { type: TYPES.NUMBER }
                 }
                 Shade.throwError(result.node, "Math.clamp not supported with argument types: " + args.map(function (arg) {
                     return arg.getTypeString();
                 }).join(", "));
-            }
+            },
+            computeStaticValue: evaluateStatic("clamp")
+
         },
         smoothstep: {
             type: TYPES.FUNCTION,
             evaluate: function (result, args, ctx) {
                 Tools.checkParamCount(result.node, "Math.smoothstep", [3], args.length);
 
-                if (args.every(function (e) {
-                    return e.canNumber();
-                })) {
-                    var typeInfo = {
-                        type: TYPES.NUMBER
-                    }
-                    if (Tools.allArgumentsAreStatic(args)) {
-                        var callArgs = args.map(function (a) {
-                            return a.getStaticValue();
-                        });
-                        typeInfo.staticValue = Math.smoothstep.apply(null, callArgs);
-                    }
-                    return typeInfo;
+                if (args.every(function (e) { return e.canNumber(); })) {
+                    return { type: TYPES.NUMBER };
                 }
                 if (args.every(function (e) {
                     return e.isVector();
@@ -124,7 +113,7 @@
                             return arg.getTypeString();
                         }).join(", "));
                     };
-                    return typeInfo = {
+                    return  {
                         type: TYPES.OBJECT,
                         kind: args[0].getKind()
                     }
@@ -133,55 +122,47 @@
                 Shade.throwError(result.node, "Math.smoothstep not supported with argument types: " + args.map(function (arg) {
                     return arg.getTypeString();
                 }).join(", "));
-            }
+            },
+            computeStaticValue: evaluateStatic("smoothstep")
         },
         step: {
             type: TYPES.FUNCTION,
             evaluate: function (result, args, ctx) {
                 Tools.checkParamCount(result.node, "Shade.step", [2], args.length);
 
-                if (args.every(function (e) {
-                    return e.canNumber();
-                })) {
-                    var typeInfo = {
-                        type: TYPES.NUMBER
-                    }
-                    if (Tools.allArgumentsAreStatic(args)) {
-                        var callArgs = args.map(function (a) {
-                            return a.getStaticValue();
-                        });
-                        typeInfo.staticValue = Math.step.apply(null, callArgs);
-                    }
-                    return typeInfo;
+                if (Tools.allArgumentsCanNumber(args)) {
+                    return { type: TYPES.NUMBER }
                 }
                 Shade.throwError(result.node, "Shade.step not supported with argument types: " + args.map(function (arg) {
                     return arg.getTypeString();
                 }).join(", "));
-            }
+            },
+            computeStaticValue: evaluateStatic("step")
         },
         fract: {
             type: TYPES.FUNCTION,
-            evaluate: Tools.Vec.anyVecArgumentEvaluate.bind(null, "fract")
+            evaluate: Tools.Vec.anyVecArgumentEvaluate.bind(null, "fract"),
+            computeStaticValue: evaluateStatic("fract")
         },
         mix: {
             type: TYPES.FUNCTION,
             evaluate: function (result, args, ctx) {
-                Tools.checkParamCount(result.node, "Shade.mix", [3], args.length);
+                Tools.checkParamCount(result.node, "Math.mix", [3], args.length);
 
-                var arg = args[0];
+                var cnt = Tools.Vec.checkAnyVecArgument(result.node, "Math.mix", args[0]);
 
                 var typeInfo = {};
-                var cnt = Tools.Vec.checkAnyVecArgument("Shade.mix", args[0]);
                 Base.extend(typeInfo, Tools.Vec.getType(cnt));
 
                 if (!args[1].equals(args[0]))
-                    Shade.throwError(result.node, "Shade.mix types of first two arguments do no match: got " + arg[0].getTypeString() +
-                        " and " + arg[1].getTypeString());
+                    Shade.throwError(result.node, "Math.mix types of first two arguments do no match: got " + args[0].getTypeString() +
+                        " and " + args[1].getTypeString());
                 if (!args[2].canNumber())
-                    Shade.throwError(result.node, "Shade.mix third argument is not a number.");
+                    Shade.throwError(result.node, "Math.mix third argument is not a number.");
 
                 return typeInfo;
-            }
+            },
+            computeStaticValue: evaluateStatic("mix")
         },
         saturate: {
             type: TYPES.FUNCTION,
@@ -192,15 +173,12 @@
                     type: TYPES.NUMBER
                 }
                 var arg = args[0];
-                if (arg.canNumber()) {
-                    if (Tools.allArgumentsAreStatic([arg]))
-                        typeInfo.staticValue = Math.saturate(arg.getStaticValue());
-                }
-                else
+                if (!arg.canNumber()) {
                     Shade.throwError(result.node, "Math.saturate not supported with argument type: " + arg.getTypeString());
-
+                }
                 return typeInfo;
-            }
+            },
+            computeStaticValue: evaluateStatic("saturate")
         }
     };
 
@@ -215,19 +193,19 @@
     });
 
     OneParameterNumberMethods.forEach(function (method) {
-        MathObject[method] = { type: TYPES.FUNCTION, evaluate: evaluateMethod(method, 1) };
+        MathObject[method] = { type: TYPES.FUNCTION, evaluate: evaluateMethod(method, 1), computeStaticValue: evaluateStatic(method) };
     });
 
     TwoParameterNumberMethods.forEach(function (method) {
-        MathObject[method] = { type: TYPES.FUNCTION, evaluate: evaluateMethod(method, 2) };
+        MathObject[method] = { type: TYPES.FUNCTION, evaluate: evaluateMethod(method, 2), computeStaticValue: evaluateStatic(method)  };
     });
 
     OneParameterIntMethods.forEach(function (method) {
-        MathObject[method] = { type: TYPES.FUNCTION, evaluate: evaluateMethod(method, 1, TYPES.INT) };
+        MathObject[method] = { type: TYPES.FUNCTION, evaluate: evaluateMethod(method, 1, TYPES.INT), computeStaticValue: evaluateStatic(method)  };
     });
 
     ArbitraryParameterNumberMethods.forEach(function (method) {
-        MathObject[method] = { type: TYPES.FUNCTION, evaluate: evaluateMethod(method, -1) };
+        MathObject[method] = { type: TYPES.FUNCTION, evaluate: evaluateMethod(method, -1), computeStaticValue: evaluateStatic(method)  };
     });
 
     Base.extend(ns, {

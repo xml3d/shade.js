@@ -69,7 +69,7 @@ function directRelevantVariables(cfg, startNode, variables, dominatorMap) {
 
         // Local
         var ref = this.ref = this.ref || findVariableReferences(this.astNode);
-        var def = this.def = this.def || SetTools.findVariableDefinitions(this.astNode);
+        var def = this.def = this.def || SetTools.findVariableAssignments(this.astNode);
         this.infl = this.infl || computeInfluence(this, dominatorMap.get(this));
 
         var result = null;

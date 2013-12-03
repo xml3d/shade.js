@@ -105,6 +105,10 @@
         throw new Error("toGLSLSource: Unhandled type: " + info.source);
     }
 
+    function filterUndefined(arr) {
+        return arr.filter(function(n) { return n.extra.type != Types.UNDEFINED; });
+    }
+
     function createLineStack() {
         var arr = [];
         arr.push.apply(arr, arguments);
@@ -422,7 +426,7 @@
 
         // Even if the whole expression is static, we have to assign it
         if (node.type == Syntax.AssignmentExpression) {
-            return handleExpression(node.left) + " " + node.operator + " " + handleStaticValue(node.right);
+            return handleExpression(node.left) + " " + node.operator + " " + handleExpression(node.right);
         }
 
         switch(node.extra.type) {

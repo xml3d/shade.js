@@ -1,8 +1,8 @@
 (function(ns){
 
     var Syntax = require('estraverse').Syntax,
-        ANNO = require("../base/annotation.js").ANNO,
-        Shade = require("../interfaces.js");
+        ANNO = require("../../base/annotation.js").ANNO,
+        Shade = require("../../interfaces.js");
 
 
     var UnaryFunctions = {
@@ -50,7 +50,7 @@
                 default: return value;
             }
         }
-        if (node.type == Syntax.MemberExpression || node.type == Syntax.CallExpression) {
+        if (node.type == Syntax.MemberExpression || node.type == Syntax.CallExpression  || node.type == Syntax.Identifier || node.type == Syntax.NewExpression) {
             return ANNO(node).getStaticValue();
         }
         if (node.type === Syntax.UnaryExpression) {

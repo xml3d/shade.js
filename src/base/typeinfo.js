@@ -87,6 +87,14 @@
             extra.type = type;
             if (kind)
                 this.setKind(kind);
+            if(this.isValid())
+                this.clearError();
+        },
+
+        setInvalid: function(message) {
+            this.setType(TYPES.INVALID);
+            if(message)
+                this.setError(message);
         },
 
         isOfType: function (type) {
@@ -102,6 +110,9 @@
         },
         isNumber: function () {
             return this.isOfType(TYPES.NUMBER);
+        },
+        isValid: function () {
+            return !this.isOfType(TYPES.INVALID);
         },
         isNullOrUndefined: function () {
             return this.isNull() || this.isUndefined();
@@ -145,6 +156,17 @@
         },
         canObject: function () {
             return this.isObject() || this.isArray() || this.isFunction();
+        },
+        setCommonType: function(a,b) {
+            if(a.equals(b)) {
+                this.copy(a);
+                return true;
+            }
+            if(a.canNumber() && b.canNumber()) {
+                this.setType(TYPES.NUMBER)
+                return true;
+            }
+            return false;
         },
         hasStaticValue : function() {
             var extra = this.getExtra();
@@ -195,14 +217,6 @@
         canColor: function() {
             return this.isObject() && (this.isOfKind(KINDS.FLOAT4) || this.isOfKind(KINDS.FLOAT3));
         },
-        eliminate : function() {
-            var extra = this.getExtra();
-            extra.eliminate = true;
-        },
-        canEliminate : function() {
-            var extra = this.getExtra();
-            return extra.eliminate == true;
-        },
         hasError : function() {
             return this.getError() != null;
         },
@@ -235,7 +249,7 @@
         },
         getTypeString: function() {
             if (this.isObject()) {
-                return "Object #<" + this.getKind() + ">";
+                return this.isOfKind(KINDS.ANY) ? "Object" : ("Object #<" + this.getKind() + ">");
             }
             return this.getType();
         },

@@ -2,127 +2,38 @@
 
     var common = require("./../../base/common.js"),
         Shade = require("../../interfaces.js"),
-        evaluator = require("../evaluator.js"),
+        evaluator = require("../constants/evaluator.js"),
         estraverse = require('estraverse');
 
     var codegen = require('escodegen');
 
     var Syntax = common.Syntax,
-        VisitorOption = common.VisitorOption,
         TYPES = Shade.TYPES,
         ANNO = common.ANNO;
 
+    var debug = false;
 
-    var enterExpression = function (context, node, parent) {
-        var handlerName = "enter" + node.type;
-        if (handlers.hasOwnProperty(handlerName)) {
-            return handlers[handlerName].call(this, node, parent, context);
+    var generateErrorInformation = function() {
+        var args = Array.prototype.slice.call(arguments);
+        var node = args.shift(),
+            loc = node.loc,
+            msg = "";
+
+        if (loc && loc.start.line) {
+            msg = ", Line " + loc.start.line;
         }
+        msg += ": " + codegen.generate(node);
+        return { message: args.join(" ") + msg, loc: loc};
     };
-
-    var exitExpression = function (context, node, parent) {
-        var handlerName = "exit" + node.type;
-        if (handlers.hasOwnProperty(handlerName)) {
-            return handlers[handlerName].call(this, node, parent, context);
-        }
-    };
-
-
-    var evaluateTruth = function(exp) {
-        return !!exp;
-    }
 
     var handlers = {
 
-        enterVariableDeclaration: function (node, parent, context) {
-            context.setInDeclaration(true);
-        },
-
-        exitVariableDeclaration: function (node, parent, context) {
-            context.setInDeclaration(false);
-        },
-
-
-        exitExpressionStatement: function (node, parent, context) {
-            var result = ANNO(node),
-                expression = ANNO(node.expression);
-
-            result.copy(expression);
-        },
-
-        enterLogicalExpression: function(node, parent, context) {
-            var result = ANNO(node);
-
-            context.analyze(node.left);
-
-            var left = context.getTypeInfo(node.left);
-            var leftBool = left.getStaticTruthValue();
-
-            if (leftBool == true && node.operator == "||") {
-                return VisitorOption.Skip; // Don't evaluate right expression
-            }
-            if (leftBool == false && node.operator == "&&") {
-                return VisitorOption.Skip; // Don't evaluate right expression
-            }
-            // In all other cases we also evaluate the right expression
-            context.analyze(node.right);
-            this.skip();
-        },
-
-
-
-        enterConditionalExpression: function (node, parent, context) {
-            var result = ANNO(node);
-
-            context.analyze(node.test);
-            var test = context.getTypeInfo(node.test);
-
-            // console.log(node.test, node.consequent, node.alternate);
-            if (test.hasStaticValue() || test.canObject()) {
-                var testResult = test.hasStaticValue() ? evaluateTruth(test.getStaticValue()) : true;
-                if (testResult === true) {
-                    context.analyze(node.consequent);
-                    consequent = context.getTypeInfo(node.consequent);
-                    result.copy(consequent);
-                    var alternate = ANNO(node.alternate);
-                    alternate.eliminate();
-                } else {
-                    context.analyze(node.alternate);
-                    var alternate = context.getTypeInfo(node.alternate);
-                    result.copy(alternate);
-                    var consequent = ANNO(node.consequent);
-                    consequent.eliminate();
-                }
-            } else {
-                // We can't decide, thus traverse both;
-                context.analyze(node.consequent);
-                context.analyze(node.alternate);
-                var consequent = context.getTypeInfo(node.consequent),
-                    alternate = context.getTypeInfo(node.alternate);
-
-
-                if (consequent.equals(alternate)) {
-                    result.copy(consequent);
-                    result.setDynamicValue();
-                } else if (consequent.canNumber() && alternate.canNumber()) {
-                    result.setType(TYPES.NUMBER);
-                }
-                else if (test.isNullOrUndefined()) {
-                    result.setType(alternate.getType())
-                } else {
-                    // We don't allow dynamic types (the type of the result depends on the value of it's operands).
-                    // At this point, the expression needs to evaluate to a result, otherwise it's an error
-                    throw Shade.throwError(node, "Static evaluation not implemented yet");
-                }
-            }
-            return VisitorOption.Skip;
-
-        },
-
-
-        enterLiteral: function (literal) {
-            var value = literal.raw !== undefined ? literal.raw : literal.value,
-                result = ANNO(literal);
+        /**
+         * @param node
+         */
+        Literal: function (node) {
+            var value = node.raw !== undefined ? node.raw : node.value,
+                result = ANNO(node);
 
             var number = parseFloat(value);
             if (!isNaN(number)) {
@@ -140,28 +51,26 @@
                 result.setType(TYPES.STRING);
             }
             if (!result.isNull()) {
-                result.setStaticValue(evaluator.getStaticValue(literal));
+                result.setStaticValue(evaluator.getStaticValue(node));
             }
         },
 
-        exitAssignmentExpression: function (node, parent, context) {
-            var right = context.getTypeInfo(node.right),
-                result = ANNO(node);
-
-            result.copy(right);
-            if (node.left.type == Syntax.Identifier) {
-                var scope = context.getScope();
-                var name = node.left.name;
-                if(context.inDeclaration()) {
-                    scope.declareVariable(name, true, result)
-                }
-                scope.updateTypeInfo(name, right);
-            } else {
-                throw new Error("Assignment expression");
-            }
+        /**
+         * ExpressionStatement: Just copy the result from the actual expression
+         */
+        ExpressionStatement: function (node) {
+            var result = ANNO(node),
+                expression = ANNO(node.expression);
+            result.copy(expression);
         },
 
-        exitReturnStatement: function (node, parent, context) {
+
+        /**
+         * ReturnStatement: If return has an argument, copy the TypeInfo
+         * form the argument, otherwise it's undefined. Inform the scope on
+         * the return type of this return branch.
+         */
+        ReturnStatement: function (node, parent, context) {
             var result = ANNO(node),
                 argument = context.getTypeInfo(node.argument);
 
@@ -173,28 +82,50 @@
             context.getScope().updateReturnInfo(result);
         },
 
-        exitNewExpression: function(node, parent, context) {
-            var result = ANNO(node);
+        /**
+         * NewExpression: Find the type of the Callee from
+         * the scope and evaluate based on annotated parameters
+         */
+        NewExpression: function(node, parent, context) {
+            var result = ANNO(node), staticValue;
 
             var scope = context.getScope();
             var entry = scope.getBindingByName(node.callee.name);
-            //console.error(entry);
             if (entry && entry.hasConstructor()) {
                 var constructor = entry.getConstructor();
-                var args = common.createTypeInfo(node.arguments, scope);
-                var extra = constructor.evaluate(result, args, scope);
-                result.setFromExtra(extra);
+                var args = context.getTypeInfo(node.arguments);
+                try {
+                    var extra = constructor.evaluate(result, args, scope);
+                    result.setFromExtra(extra);
+                } catch (e) {
+                    result.setInvalid(e);
+                }
+                if (constructor.computeStaticValue) {
+                    try {
+                        staticValue = constructor.computeStaticValue(result, context.getTypeInfo(node.arguments), scope);
+                        if (staticValue !== undefined) {
+                            result.setStaticValue(staticValue);
+                        }
+                    } catch (e) {
+                        result.setDynamicValue();
+                    }
+                }
             }
-           else {
-                throw new Error("ReferenceError: " + node.callee.name + " is not defined");
+            else {
+                result.setInvalid(generateErrorInformation(node, "ReferenceError: " + node.callee.name + " is not defined"));
             }
         },
 
-        exitUnaryExpression: function (node, parent, context) {
+
+        /**
+         * UnaryExpression
+         */
+        UnaryExpression: function (node, parent, context) {
             var result = ANNO(node),
                 argument = context.getTypeInfo(node.argument),
                 operator = node.operator;
 
+            //noinspection FallthroughInSwitchStatementJS
             switch (operator) {
                 case "!":
                     result.setType(TYPES.BOOLEAN);
@@ -210,7 +141,7 @@
                     } else if (argument.canNumber()) {
                         result.setType(TYPES.NUMBER);
                     } else {
-                        throw new Error("Can't evaluate '" + operator + '" for ' + argument);
+                        result.setInvalid(generateErrorInformation(node, "NotANumberError"));
                     }
                     break;
                 case "~":
@@ -218,100 +149,41 @@
                 case "void":
                 case "delete":
                 default:
-                    throw new Error("Operator not yet supported: " + operator);
+                    result.setInvalid(generateErrorInformation(node, "NotSupportedError"));
             }
             if (argument.hasStaticValue()) {
                 result.setStaticValue(evaluator.getStaticValue(node));
             } else {
                 result.setDynamicValue();
             }
-
         },
 
-
-        exitIdentifier: function (node) {
+        /**
+         * 'Undefined' is an identifier. Variables, names of functions and
+         * member properties are handled within parent expressions
+         */
+        Identifier: function (node) {
             if (node.name === "undefined") {
                 ANNO(node).setType(TYPES.UNDEFINED);
             }
         },
 
-
-
-        exitLogicalExpression: function (node, parent, context) {
-            var left = context.getTypeInfo(node.left),
-                right = context.getTypeInfo(node.right),
-                result = ANNO(node),
-                operator = node.operator;
-
-            // static: true || false, dynamic: undefined
-            var leftBool = left.getStaticTruthValue();
-            var rightBool = right.getStaticTruthValue();
-
-            if (operator === "||") {
-                if (leftBool === false) {
-                    result.copy(right);
-                    left.eliminate();
-                    return;
-                }
-                if (leftBool === true) {
-                    result.copy(left);
-                    right.eliminate();
-                    return;
-                }
-                // Left is dynamic, let's check right
-                if (rightBool === false) {
-                    // Now the result type is always the one of the left value
-                    result.copy(left);
-                    right.eliminate();
-                    return;
-                }
-            } else if (operator === "&&") {
-                if (leftBool === false) {
-                    // T(x) == false => x && y == x
-                    result.copy(left);
-                    right.eliminate();
-                    return;
-                }
-                if (leftBool === true) {
-                    result.copy(right);
-                    left.eliminate();
-                    return;
-                }
-                // Left is dynamic, let's check right
-                if (rightBool === true) {
-                    // Now the result type is always the one of the left value
-                    result.copy(left);
-                    right.eliminate();
-                    return;
-                }
-                if (rightBool === false) {
-                    // Now the result must be false
-                    result.setType(TYPES.BOOLEAN);
-                    result.setStaticValue(false);
-                    return;
-                }
-            }
-
-            if (left.getType() == right.getType()) {
-                result.copy(left);
-            }
-            else {
-                // We don't allow dynamic types (the type of the result depends on the value of it's operands).
-                // At this point, the expression needs to evaluate to a result, otherwise it's an error
-                Shade.throwError(node, "Type of Logical expression depends on values of its arguments. This is not supported in shade.js.");
-            }
-            //throw new Error("Operator not supported: " + node.operator);
-
-        },
-
-
-        exitBinaryExpression: function (node, parent, context) {
+        /**
+         * BinaryExpression
+         */
+        BinaryExpression: function (node, parent, context) {
             //console.log(node.left, node.right);
             var left = context.getTypeInfo(node.left),
                 right = context.getTypeInfo(node.right),
                 result = ANNO(node),
                 operator = node.operator;
 
+            if(!(left.isValid() && right.isValid())) {
+                result.setInvalid()
+                return;
+            }
+
+            //noinspection FallthroughInSwitchStatementJS
             switch (operator) {
                 case "+":
                 case "-":
@@ -333,18 +205,18 @@
                     // number 'op' number => number
                     else if (left.isNumber() && right.isNumber()) {
                         result.setType(TYPES.NUMBER);
-                    // int 'op' null => int
+                        // int 'op' null => int
                     }
-                    else if (left.isInt() && right.isNullOrUndefined() || right.isInt() && left.isNullOrUndefined()) {
+                    else if (left.isInt() && right.isNull() || right.isInt() && left.isNull()) {
                         result.setType(TYPES.INT);
                     }
                     // number 'op' null => number
-                    else if ((left.isNumber() && right.isNullOrUndefined()) || (right.isNumber() && left.isNullOrUndefined())) {
+                    else if ((left.isNumber() && right.isNull()) || (right.isNumber() && left.isNull())) {
                         result.setType(TYPES.NUMBER);
                     }
                     else {
-                        //console.error(node, left.getType(), operator, right.getType());
-                        Shade.throwError(node, "Evaluates to NaN: " + left.getTypeString() + " " + operator + " " + right.getTypeString());
+                        // NaN
+                        result.setInvalid(generateErrorInformation(node, "NotANumberError"));
                     }
                     break;
                 case "===":
@@ -372,21 +244,41 @@
                 default:
                     throw new Error("Operator not supported: " + operator);
             }
-            if (left.hasStaticValue() && right.hasStaticValue()) {
+             if (left.hasStaticValue() && right.hasStaticValue()) {
                 //console.log(left.getStaticValue(), operator, right.getStaticValue());
                 result.setStaticValue(evaluator.getStaticValue(node));
             } else {
                 result.setDynamicValue();
             }
+        },
 
+        AssignmentExpression: function (node, parent, context) {
+            var right = context.getTypeInfo(node.right),
+                result = ANNO(node);
+
+            result.copy(right);
+            result.setDynamicValue();
+
+            // Check, if a assigned variable still has the same type as
+            // before and update type of uninitialized variables.
+            if (node.left.type == Syntax.Identifier && !context.inDeclaration() && right.isValid()) {
+                var name = node.left.name;
+                var scope = context.getScope();
+                scope.updateTypeInfo(name, right);
+            }
         },
 
 
-        exitMemberExpression: function (node, parent, context) {
+        MemberExpression: function (node, parent, context) {
             var resultType = context.getTypeInfo(node),
                 objectAnnotation = ANNO(node.object),
                 propertyAnnotation = ANNO(node.property),
                 scope = context.getScope();
+
+            if(!objectAnnotation.isValid()) {
+                resultType.setInvalid();
+                return;
+            }
 
             //console.log("Member", node.object.name, node.property.name);
             if (node.computed) {
@@ -401,7 +293,9 @@
                     return;
                 }
                 else {
-                    Shade.throwError(node, "TypeError: Cannot access member via computed value from object '" + objectAnnotation.getTypeString());
+                    resultType.setInvalid(generateErrorInformation(node, "Cannot access member via computed value from object", objectAnnotation.getTypeString()));
+
+                    //Shade.throwError(node, "TypeError: Cannot access member via computed value from object '" + objectAnnotation.getTypeString());
                 }
             }
             var propertyName = node.property.name;
@@ -410,8 +304,9 @@
 
             objectOfInterest || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + scope.str());
 
-            if (objectOfInterest.getType() == TYPES.UNDEFINED) {  // e.g. var a = undefined; a.unknown;
-                Shade.throwError(node, "TypeError: Cannot read property '"+ propertyName +"' of undefined")
+            if (!objectOfInterest.isValid() || objectOfInterest.getType() == TYPES.UNDEFINED) {  // e.g. var a = undefined; a.unknown;
+                resultType.setInvalid(generateErrorInformation(node, "TypeError: Cannot read property '" + propertyName + "' of undefined"));
+                return;
             }
             if (objectOfInterest.getType() != TYPES.OBJECT) { // e.g. var a = 5; a.unknown;
                 resultType.setType(TYPES.UNDEFINED);
@@ -434,13 +329,26 @@
             resultType.setFromExtra(propertyTypeInfo);
         },
 
-        exitCallExpression: function (node, parent, context) {
+        CallExpression: function (node, parent, context) {
             var result = ANNO(node),
-                scope = context.getScope();
+                scope = context.getScope(),
+                args = context.getTypeInfo(node.arguments),
+                extra, staticValue;
+
+            if (!args.every(function (arg) {return arg.isValid() })) {
+                result.setInvalid(generateErrorInformation(node, "Not all arguments types of call expression could be evaluated"));
+                return;
+            }
 
             // Call on an object, e.g. Math.cos()
             if (node.callee.type == Syntax.MemberExpression) {
-                var callingObject = context.getTypeInfo(node.callee);
+
+                var memberExpression = context.getTypeInfo(node.callee);
+                if(!memberExpression.isValid()) {
+                    result.setInvalid();
+                    return;
+                }
+
                 var object = node.callee.object,
                     propertyName = node.callee.property.name;
 
@@ -448,29 +356,51 @@
                 if(!objectReference)  {
                     Shade.throwError(node, "Internal: No object info for: " + object);
                 }
-
-                if (!callingObject.isFunction()) { // e.g. Math.PI()
-                    Shade.throwError(node, "TypeError: " + (object.type == Syntax.ThisExpression ? "'this'" : objectReference.getTypeString())+ " has no method '"+ node.callee.property.name + "'");
-                }
-
-
                 var objectInfo = scope.getObjectInfoFor(objectReference);
                 if(!objectInfo) { // Every object needs an info, otherwise we did something wrong
                     Shade.throwError(node, "Internal Error: No object registered for: " + objectReference.getTypeString() + JSON.stringify(node.object));
                 }
-                if (objectInfo.hasOwnProperty(propertyName)) {
-                    var propertyHandler = objectInfo[propertyName];
-                    if (typeof propertyHandler.evaluate == "function") {
-                        var args = common.createTypeInfo(node.arguments, scope);
-                        var extra = propertyHandler.evaluate(result, args, scope, objectReference, context);
-                        result.setFromExtra(extra);
-                        return;
+
+                if (!memberExpression.isFunction()) { // e.g. Math.PI()
+                    result.setInvalid();
+                    if (objectInfo.hasOwnProperty(propertyName)) {
+                      result.setError(generateErrorInformation(node, "TypeError: Property '" + propertyName + "' of object #<"+ objectReference.getTypeString() +"> is not a function"));
                     } else {
-                        Shade.throwError(node, "Internal: no handler registered for '" + propertyName + "'");
+                      result.setError(generateErrorInformation(node, "TypeError: " + (object.type == Syntax.ThisExpression ? "'this'" : objectReference.getTypeString())+ " has no method '"+ propertyName + "'"));
                     }
-                } else {
-                    Shade.throwError(node, "TypeError: " + objectReference.getTypeString() + " has no method '" + propertyName + "')");
+                    return;
                 }
+
+
+                if (!objectInfo.hasOwnProperty(propertyName)) {
+                    result.setType(TYPES.UNDEFINED);
+                    return;
+                }
+                var propertyHandler = objectInfo[propertyName];
+
+                if (typeof propertyHandler.evaluate != "function") {
+                    Shade.throwError(node, "Internal: no handler registered for '" + propertyName + "'");
+                }
+                // Evaluate type of call
+
+                try {
+                    extra = propertyHandler.evaluate(result, args, scope, objectReference, context);
+                    result.setFromExtra(extra);
+                } catch (e) {
+                    result.setInvalid(generateErrorInformation(node, e.message));
+                    return;
+                }
+
+                // If we have a type, evaluate static value
+                if (typeof propertyHandler.computeStaticValue != "function") {
+                    debug && console.warn("No static evaluation exists for function", codegen.generate(node));
+                    return;
+                }
+                staticValue = propertyHandler.computeStaticValue(result, args, scope, objectReference, context);
+                if (staticValue !== undefined) {
+                    result.setStaticValue(staticValue);
+                }
+                return;
 
             }  else if (node.callee.type == Syntax.Identifier) {
                 var functionName = node.callee.name;
@@ -481,14 +411,12 @@
                 if(!func.isFunction()) {
                     Shade.throwError(node, "TypeError: " + func.getTypeString() + " is not a function");
                 }
-                var args = common.createTypeInfo(node.arguments, scope);
                 try {
-                var extra = context.callFunction(scope.getVariableIdentifier(functionName), args);
+                    extra = context.callFunction(scope.getVariableIdentifier(functionName), args);
+                    extra && result.setFromExtra(extra);
                 } catch(e) {
-                    Shade.throwError(node, "Failure in function call: " + e.message);
+                    result.setInvalid(generateErrorInformation(node, "Failure in function call: ", e.msg));
                 }
-                extra && result.setFromExtra(extra);
-                node.callee.name = extra.newName;
                 return;
             }
 
@@ -496,37 +424,109 @@
 
         },
 
-        exitVariableDeclarator: function (node, parent, context) {
-            var result = ANNO(node),
-                scope = context.getScope();
+        VariableDeclaration: function (node, parent, context) {
+            context.setInDeclaration(false);
+        },
 
-            if (node.id.type != Syntax.Identifier) {
-                throw new Error("Dynamic variable names are not yet supported");
-            }
-            var variableName = node.id.name;
-            scope.declareVariable(variableName, true, result);
+        LogicalExpression: function (node, parent, context) {
+            var left = context.getTypeInfo(node.left),
+                right = context.getTypeInfo(node.right),
+                result = ANNO(node);
 
-            if (node.init) {
-                var init = common.getTypeInfo(node.init, scope);
-                result.copy(init);
-                scope.updateTypeInfo(variableName, init);
-            } else {
-                result.setType(TYPES.UNDEFINED);
+
+            // static: true || false, dynamic: undefined
+            var leftBool = left.getStaticTruthValue(),
+                rightBool = right.getStaticTruthValue(),
+                operator = node.operator;
+
+            if (operator === "||") {
+                if (leftBool === false) {
+                    result.copy(right);
+                    return;
+                }
+                if (leftBool === true) {
+                    result.copy(left);
+                    return;
+                }
+                // Left is dynamic, let's check right
+                if (rightBool === false) {
+                    // Now the result type is always the one of the left value
+                    result.copy(left);
+                    return;
+                }
+            } else if (operator === "&&") {
+                if (leftBool === false) {
+                    // T(x) == false => x && y == x
+                    result.copy(left);
+                    return;
+                }
+                if (leftBool === true) {
+                    result.copy(right);
+                    return;
+                }
+                // Left is dynamic, let's check right
+                if (rightBool === true) {
+                    // Now the result type is always the one of the left value
+                    result.copy(left);
+                    return;
+                }
+                if (rightBool === false) {
+                    // Now the result must be false
+                    result.setType(TYPES.BOOLEAN);
+                    result.setStaticValue(false);
+                    return;
+                }
             }
-            // TODO: result.setType(init.getType());
+
+            // If we can cast both sides to a common type, it's fine
+            if(result.setCommonType(left, right)) {
+                return;
+            }
+
+
+            result.setInvalid(generateErrorInformation(node, "Can't evaluate polymorphic logical expression"))
+
+        },
+
+        ConditionalExpression: function (node, parent, context) {
+            var consequent = context.getTypeInfo(node.consequent),
+                alternate = context.getTypeInfo(node.alternate),
+                test = context.getTypeInfo(node.test),
+                result = ANNO(node);
+
+            if (consequent.equals(alternate)) {
+                result.copy(consequent);
+            } else if (consequent.canNumber() && alternate.canNumber()) {
+                result.setType(TYPES.NUMBER);
+            } else if(test.isNullOrUndefined()) {
+                result.copy(alternate);
+            }
+
         }
 
     };
 
-    ns.enterExpression = enterExpression;
-    ns.exitExpression = exitExpression;
-
     ns.annotateRight  = function(ast) {
+
+        if(!ast)
+            throw Error("No node to analyze");
+
         var controller = new estraverse.Controller();
+        var context = this;
 
         controller.traverse(ast, {
-            enter: enterExpression.bind(controller, this),
-            leave: exitExpression.bind(controller, this)
-        })
+            enter: function(node) {
+                if(node.type == Syntax.VariableDeclaration) {
+                    context.setInDeclaration(true);
+                }
+            },
+            leave: function(node, parent) {
+                if (handlers.hasOwnProperty(node.type)) {
+                    return handlers[node.type].call(this, node, parent, context);
+                }
+                return null;
+            }
+        });
+
     }
 }(exports));
