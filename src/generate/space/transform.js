@@ -264,7 +264,7 @@
                 var declarations = { type: Syntax.VariableDeclaration, kind: "var", declarations: []};
                 var i = addDeclarations.length;
                 while(i--){
-                    name = addDeclarations[i];
+                    var name = addDeclarations[i];
                     var decl = {type: Syntax.VariableDeclarator, id: {type: Syntax.Identifier, name: name}, init: null};
                     ANNO(decl).setType(Types.OBJECT, Kinds.FLOAT3);
                     declarations.declarations.push(decl);
@@ -274,6 +274,9 @@
         },
 
         isSpacePropagrationPossible: function(sInfo, targetSpace, nameMap){
+            if(sInfo.propagateSet.length == 0) // We need to have at least one dependency. Otherwise we can't propagate the space
+                return false;
+
             var spaceForNameNotFound = sInfo.propagateSet.some(function(identifier){
                 return !(nameMap[identifier] && nameMap[identifier][targetSpace]);
             });
