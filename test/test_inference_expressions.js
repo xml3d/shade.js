@@ -139,6 +139,7 @@ describe('Inference:', function () {
                     exp.extra.should.have.property("type", TYPES.NUMBER);
                     exp.extra.should.have.property("staticValue", 0.5);
                 });
+
             });
             describe('with comparision operators', function () {
                 it("should annotate exp == exp ⇒ boolean", function () {
@@ -152,6 +153,36 @@ describe('Inference:', function () {
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.BOOLEAN);
                     exp.extra.should.have.property("staticValue", true);
+                });
+                it("should annotate undefined === number ⇒ boolean", function () {
+                    var exp = parseAndInferenceExpression("undefined === 1.0");
+                    exp.should.have.property("extra");
+                    exp.extra.should.have.property("type", TYPES.BOOLEAN);
+                    exp.extra.should.have.property("staticValue", false);
+                });
+                it("should annotate undefined !== number ⇒ boolean", function () {
+                    var exp = parseAndInferenceExpression("undefined !== 1.0");
+                    exp.should.have.property("extra");
+                    exp.extra.should.have.property("type", TYPES.BOOLEAN);
+                    exp.extra.should.have.property("staticValue", true);
+                });
+                it("should annotate undefined == number ⇒ boolean", function () {
+                    var exp = parseAndInferenceExpression("undefined === 1.0");
+                    exp.should.have.property("extra");
+                    exp.extra.should.have.property("type", TYPES.BOOLEAN);
+                    exp.extra.should.have.property("staticValue", false);
+                });
+                it("should annotate undefined != number ⇒ boolean", function () {
+                    var exp = parseAndInferenceExpression("undefined !== 1.0");
+                    exp.should.have.property("extra");
+                    exp.extra.should.have.property("type", TYPES.BOOLEAN);
+                    exp.extra.should.have.property("staticValue", true);
+                });
+                it("should annotate undefined > number ⇒ boolean", function () {
+                    var exp = parseAndInferenceExpression("undefined > 1.0");
+                    exp.should.have.property("extra");
+                    exp.extra.should.have.property("type", TYPES.BOOLEAN);
+                    exp.extra.should.have.property("staticValue", false);
                 });
 
             })

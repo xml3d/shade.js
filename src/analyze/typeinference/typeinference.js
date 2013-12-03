@@ -17,7 +17,6 @@
     var Shade = require("../../interfaces.js");
     var walkes = require('walkes');
     var validator = require('../validator');
-    var constantEvaluation = require('../constants/computeConstants.js');
 
     // shortcuts
     var Syntax = common.Syntax;
@@ -66,10 +65,12 @@
                     if (this.kill.size > 1)
                         console.warn("Multiple Assignments found", this.kill)
                 }
-                this.inference = this.inference || context.inference(this.astNode);
+
+                context.inference(this.astNode, context.propagateConstants ? input : null );
+
                 this.decl = this.decl || context.declareVariables(this.astNode);
 
-                context.computeConstants(this.astNode, input);
+                //context.computeConstants(this.astNode, input);
 
                 if(!context.propagateConstants) {
                     return input;
@@ -234,13 +235,10 @@
         getTypeInfo: function (node) {
             return common.getTypeInfo(node, this.getScope(), this.constants, true);
         },
-        inference: function (node) {
+        inference: function (node, constants) {
             if (this.analysis) {
-                return this.analysis.call(this, node);
+                return this.analysis.call(this, node, constants);
             }
-        },
-        computeConstants: function (node, constants) {
-            return constantEvaluation.evaluate.call(this, node, constants);
         },
         /**
          *
@@ -414,6 +412,18 @@
     });
 
 
+    function addDerivedMethods(program, context) {
+        program.body = program.body.concat(context.derivedFunctions.values().sort(function(a,b) { return b.order - a.order; }).map(function(derived) {return derived.ast}));
+        walk.traverse(program, {
+            enter: function(node) {
+                if(node.type == Syntax.CallExpression) {
+                    if(node.extra && node.extra.newName) {
+                        node.callee.name = node.extra.newName;
+                    };
+                }
+            }
+        });
+    }
 
 
 
@@ -427,7 +437,7 @@
         var result = context.inferProgram(ast, opt);
 
         // (Re-)add derived function to the program
-        result.body = result.body.concat(context.derivedFunctions.values().sort(function(a,b) { return b.order - a.order; }).map(function(derived) {return derived.ast}));
+        addDerivedMethods(result, context);
 
         return result;
     };

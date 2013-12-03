@@ -87,6 +87,8 @@
             extra.type = type;
             if (kind)
                 this.setKind(kind);
+            if(this.isValid())
+                this.clearError();
         },
 
         setInvalid: function(message) {
@@ -154,6 +156,17 @@
         },
         canObject: function () {
             return this.isObject() || this.isArray() || this.isFunction();
+        },
+        setCommonType: function(a,b) {
+            if(a.equals(b)) {
+                this.copy(a);
+                return true;
+            }
+            if(a.canNumber() && b.canNumber()) {
+                this.setType(TYPES.NUMBER)
+                return true;
+            }
+            return false;
         },
         hasStaticValue : function() {
             var extra = this.getExtra();

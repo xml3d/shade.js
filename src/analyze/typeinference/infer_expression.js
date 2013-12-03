@@ -11,6 +11,8 @@
         TYPES = Shade.TYPES,
         ANNO = common.ANNO;
 
+    var debug = false;
+
     var generateErrorInformation = function() {
         var args = Array.prototype.slice.call(arguments);
         var node = args.shift(),
@@ -48,6 +50,9 @@
             } else {
                 result.setType(TYPES.STRING);
             }
+            if (!result.isNull()) {
+                result.setStaticValue(evaluator.getStaticValue(node));
+            }
         },
 
         /**
@@ -82,7 +87,7 @@
          * the scope and evaluate based on annotated parameters
          */
         NewExpression: function(node, parent, context) {
-            var result = ANNO(node);
+            var result = ANNO(node), staticValue;
 
             var scope = context.getScope();
             var entry = scope.getBindingByName(node.callee.name);
@@ -94,6 +99,16 @@
                     result.setFromExtra(extra);
                 } catch (e) {
                     result.setInvalid(e);
+                }
+                if (constructor.computeStaticValue) {
+                    try {
+                        staticValue = constructor.computeStaticValue(result, context.getTypeInfo(node.arguments), scope);
+                        if (staticValue !== undefined) {
+                            result.setStaticValue(staticValue);
+                        }
+                    } catch (e) {
+                        result.setDynamicValue();
+                    }
                 }
             }
             else {
@@ -114,6 +129,10 @@
             switch (operator) {
                 case "!":
                     result.setType(TYPES.BOOLEAN);
+                    if (argument.canObject()) {
+                        result.setStaticValue(false); // !obj == false
+                        return;
+                    }
                     break;
                 case "+":
                 case "-":
@@ -131,6 +150,11 @@
                 case "delete":
                 default:
                     result.setInvalid(generateErrorInformation(node, "NotSupportedError"));
+            }
+            if (argument.hasStaticValue()) {
+                result.setStaticValue(evaluator.getStaticValue(node));
+            } else {
+                result.setDynamicValue();
             }
         },
 
@@ -183,21 +207,27 @@
                         result.setType(TYPES.NUMBER);
                         // int 'op' null => int
                     }
-                    else if (left.isInt() && right.isNullOrUndefined() || right.isInt() && left.isNullOrUndefined()) {
+                    else if (left.isInt() && right.isNull() || right.isInt() && left.isNull()) {
                         result.setType(TYPES.INT);
                     }
                     // number 'op' null => number
-                    else if ((left.isNumber() && right.isNullOrUndefined()) || (right.isNumber() && left.isNullOrUndefined())) {
+                    else if ((left.isNumber() && right.isNull()) || (right.isNumber() && left.isNull())) {
                         result.setType(TYPES.NUMBER);
                     }
                     else {
                         // NaN
-                        result.setType(TYPES.INVALID);
-                        result.setError(generateErrorInformation(node, "NotANumberError"))
+                        result.setInvalid(generateErrorInformation(node, "NotANumberError"));
                     }
                     break;
                 case "===":
                 case "!==":
+                    result.setType(TYPES.BOOLEAN);
+                    if (left.isUndefined() || right.isUndefined()) {
+                        var value = left.isUndefined() && right.isUndefined();
+                        result.setStaticValue(operator == "===" ? value : !value);
+                        return;
+                    }
+                    break;
                 case "==": // comparison
                 case "!=":
                 case ">":
@@ -205,9 +235,20 @@
                 case ">=":
                 case "<=":
                     result.setType(TYPES.BOOLEAN);
+                    if (left.isUndefined() || right.isUndefined()) {
+                        var value = left.isUndefined() && right.isUndefined();
+                        result.setStaticValue(operator == "!=" ? !value : value);
+                        return;
+                    }
                     break;
                 default:
                     throw new Error("Operator not supported: " + operator);
+            }
+             if (left.hasStaticValue() && right.hasStaticValue()) {
+                //console.log(left.getStaticValue(), operator, right.getStaticValue());
+                result.setStaticValue(evaluator.getStaticValue(node));
+            } else {
+                result.setDynamicValue();
             }
         },
 
@@ -216,6 +257,7 @@
                 result = ANNO(node);
 
             result.copy(right);
+            result.setDynamicValue();
 
             // Check, if a assigned variable still has the same type as
             // before and update type of uninitialized variables.
@@ -251,8 +293,7 @@
                     return;
                 }
                 else {
-                    resultType.setType(TYPES.INVALID);
-                    resultType.setError(generateErrorInformation(node, "Cannot access member via computed value from object", objectAnnotation.getTypeString()));
+                    resultType.setInvalid(generateErrorInformation(node, "Cannot access member via computed value from object", objectAnnotation.getTypeString()));
 
                     //Shade.throwError(node, "TypeError: Cannot access member via computed value from object '" + objectAnnotation.getTypeString());
                 }
@@ -264,8 +305,7 @@
             objectOfInterest || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + scope.str());
 
             if (!objectOfInterest.isValid() || objectOfInterest.getType() == TYPES.UNDEFINED) {  // e.g. var a = undefined; a.unknown;
-                resultType.setType(TYPES.INVALID); // TypeError: Cannot read property 'x' of undefined
-                resultType.setError(generateErrorInformation(node, "TypeError: Cannot read property '" + propertyName + "' of undefined"));
+                resultType.setInvalid(generateErrorInformation(node, "TypeError: Cannot read property '" + propertyName + "' of undefined"));
                 return;
             }
             if (objectOfInterest.getType() != TYPES.OBJECT) { // e.g. var a = 5; a.unknown;
@@ -292,7 +332,13 @@
         CallExpression: function (node, parent, context) {
             var result = ANNO(node),
                 scope = context.getScope(),
-                extra, args;
+                args = context.getTypeInfo(node.arguments),
+                extra, staticValue;
+
+            if (!args.every(function (arg) {return arg.isValid() })) {
+                result.setInvalid(generateErrorInformation(node, "Not all arguments types of call expression could be evaluated"));
+                return;
+            }
 
             // Call on an object, e.g. Math.cos()
             if (node.callee.type == Syntax.MemberExpression) {
@@ -326,26 +372,35 @@
                 }
 
 
-                if (objectInfo.hasOwnProperty(propertyName)) {
-                    var propertyHandler = objectInfo[propertyName];
-                    if (typeof propertyHandler.evaluate == "function") {
-                        try {
-                            args = context.getTypeInfo(node.arguments);
-                            extra = propertyHandler.evaluate(result, args, scope, objectReference, context);
-                            result.setFromExtra(extra);
-                        } catch(e) {
-                            result.setType(TYPES.INVALID);
-                            result.setError(e);
-                        }
-                        return;
-                    } else {
-                        Shade.throwError(node, "Internal: no handler registered for '" + propertyName + "'");
-                    }
-                } else {
+                if (!objectInfo.hasOwnProperty(propertyName)) {
                     result.setType(TYPES.UNDEFINED);
                     return;
-                    //Shade.throwError(node, "TypeError: " + objectReference.getTypeString() + " has no method '" + propertyName + "')");
                 }
+                var propertyHandler = objectInfo[propertyName];
+
+                if (typeof propertyHandler.evaluate != "function") {
+                    Shade.throwError(node, "Internal: no handler registered for '" + propertyName + "'");
+                }
+                // Evaluate type of call
+
+                try {
+                    extra = propertyHandler.evaluate(result, args, scope, objectReference, context);
+                    result.setFromExtra(extra);
+                } catch (e) {
+                    result.setInvalid(generateErrorInformation(node, e.message));
+                    return;
+                }
+
+                // If we have a type, evaluate static value
+                if (typeof propertyHandler.computeStaticValue != "function") {
+                    debug && console.warn("No static evaluation exists for function", codegen.generate(node));
+                    return;
+                }
+                staticValue = propertyHandler.computeStaticValue(result, args, scope, objectReference, context);
+                if (staticValue !== undefined) {
+                    result.setStaticValue(staticValue);
+                }
+                return;
 
             }  else if (node.callee.type == Syntax.Identifier) {
                 var functionName = node.callee.name;
@@ -356,14 +411,11 @@
                 if(!func.isFunction()) {
                     Shade.throwError(node, "TypeError: " + func.getTypeString() + " is not a function");
                 }
-                args = common.createTypeInfo(node.arguments, scope);
                 try {
                     extra = context.callFunction(scope.getVariableIdentifier(functionName), args);
                     extra && result.setFromExtra(extra);
-                    node.callee.name = extra.newName;
                 } catch(e) {
-                    result.setType(TYPES.INVALID);
-                    result.setError(generateErrorInformation(node, "Failure in function call: ", e.msg))
+                    result.setInvalid(generateErrorInformation(node, "Failure in function call: ", e.msg));
                 }
                 return;
             }
@@ -381,9 +433,59 @@
                 right = context.getTypeInfo(node.right),
                 result = ANNO(node);
 
-            if (left.equals(right)) {
-                result.copy(left);
+
+            // static: true || false, dynamic: undefined
+            var leftBool = left.getStaticTruthValue(),
+                rightBool = right.getStaticTruthValue(),
+                operator = node.operator;
+
+            if (operator === "||") {
+                if (leftBool === false) {
+                    result.copy(right);
+                    return;
+                }
+                if (leftBool === true) {
+                    result.copy(left);
+                    return;
+                }
+                // Left is dynamic, let's check right
+                if (rightBool === false) {
+                    // Now the result type is always the one of the left value
+                    result.copy(left);
+                    return;
+                }
+            } else if (operator === "&&") {
+                if (leftBool === false) {
+                    // T(x) == false => x && y == x
+                    result.copy(left);
+                    return;
+                }
+                if (leftBool === true) {
+                    result.copy(right);
+                    return;
+                }
+                // Left is dynamic, let's check right
+                if (rightBool === true) {
+                    // Now the result type is always the one of the left value
+                    result.copy(left);
+                    return;
+                }
+                if (rightBool === false) {
+                    // Now the result must be false
+                    result.setType(TYPES.BOOLEAN);
+                    result.setStaticValue(false);
+                    return;
+                }
             }
+
+            // If we can cast both sides to a common type, it's fine
+            if(result.setCommonType(left, right)) {
+                return;
+            }
+
+
+            result.setInvalid(generateErrorInformation(node, "Can't evaluate polymorphic logical expression"))
+
         },
 
         ConditionalExpression: function (node, parent, context) {

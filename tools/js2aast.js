@@ -27,7 +27,13 @@ var argv = require('optimist').argv,
             var contextData = JSON.parse(fs.readFileSync(ctx, "utf-8"));
         }
         var data = fs.readFileSync(filename, "utf-8");
-        return Shade.parseAndInferenceExpression(data, { inject: contextData, propagateConstants: true });
+        return Shade.parseAndInferenceExpression(data, {
+            inject: contextData,
+            propagateConstants: false,
+            throwOnError: true,
+            implementation: "xml3d-glsl-forward",
+            sanitize: false
+        });
     }());
 
     if (args.p) {

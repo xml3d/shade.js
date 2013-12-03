@@ -120,7 +120,7 @@
         }
     }
 
-    function handleCallExpression(node) {
+    function handleNewExpression(node) {
         var args = node.arguments, newArgs = [];
         args.forEach(function (arg) {
             var typeInfo = ANNO(arg);
@@ -169,7 +169,7 @@
                 return handleAssignmentExpression(node);
             case Syntax.NewExpression:
             //case Syntax.CallExpression:
-                return handleCallExpression(node);
+                return handleNewExpression(node);
             case Syntax.VariableDeclaration:
                 return handleVariableDeclaration(node);
 

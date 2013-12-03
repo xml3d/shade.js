@@ -15,7 +15,7 @@
         var annotation = ANNO(node), right;
 
         if(!annotation.isValid()) {
-            var errorInfo = findErrorInfo(node);
+            var errorInfo = annotation.getError();
             var error = new Error(errorInfo.message);
             error.loc = errorInfo.loc;
             throw error;
@@ -44,22 +44,6 @@
         }
 
     };
-
-
-
-    function findErrorInfo(node) {
-        var result = { message: "Unknown error.", loc: node.loc };
-        estraverse.traverse(node, {
-            enter: function(node) {
-                var annotation = ANNO(node);
-                if(annotation.hasError()) {
-                    result = annotation.getError();
-                    this.break();
-                }
-            }
-        });
-        return result;
-    }
 
     /**
      * Validates AST: Tests if the non-eliminated nodes

@@ -71,10 +71,6 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("var x = new Color();");
             code.should.match(/vec3 x = vec3\(0\.0\);/);
         });
-        it("any", function() {
-            var code = generateExpression.bind(null, "var x;");
-            code.should.throw();
-        });
     });
     describe('assignment of type', function() {
         it("int", function() {
