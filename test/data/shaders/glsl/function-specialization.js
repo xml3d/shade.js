@@ -8,10 +8,10 @@ float global_mul1 ( float n ) {
 }
 void main ( void ) {
     float f = 2.0;
-    f = global_mul1(f);
+    f = global_mul1(2.0);
     float g = global_mul1(1.0);
     int i = 2;
-    i = global_mul2(i);
+    i = global_mul2(2);
     int j = global_mul2(i);
     gl_FragColor = vec4(vec3(f, g, i / 5), 1.0);
     return;

@@ -41,13 +41,13 @@
             this.node.initialized = v;
         },
         hasStaticValue: function() {
-            return this.globalObject ? true : false;
+            return this.globalObject ? true : TypeInfo.prototype.hasStaticValue.call(this);
         },
         getStaticValue : function() {
             if (!this.hasStaticValue()) {
                 throw new Error("Node has no static value: " + this.node);
             }
-           return this.globalObject.staticValue;
+           return this.globalObject ? this.globalObject.staticValue : TypeInfo.prototype.getStaticValue.call(this);
         },
         isGlobal: function() {
             return this.node.info && this.node.info._global || TypeInfo.prototype.isGlobal.call(this);

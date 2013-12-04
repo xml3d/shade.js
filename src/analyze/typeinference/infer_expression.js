@@ -507,13 +507,15 @@
 
     };
 
-    ns.annotateRight  = function(ast) {
+    ns.annotateRight  = function(ast, propagatedConstants) {
 
         if(!ast)
             throw Error("No node to analyze");
 
         var controller = new estraverse.Controller();
         var context = this;
+
+        this.setConstants(propagatedConstants || null);
 
         controller.traverse(ast, {
             enter: function(node) {
@@ -528,6 +530,8 @@
                 return null;
             }
         });
+
+        this.setConstants(null);
 
     }
 }(exports));

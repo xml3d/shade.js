@@ -2,7 +2,7 @@
 /*
 void main ( void ) {
     float n = 1.0;
-    gl_FragColor = vec4(vec3(1.0), 1.0);
+    gl_FragColor = vec4(vec3(1, 1, 1), 1.0);
     return;
 }
  */

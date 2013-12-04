@@ -235,8 +235,9 @@
         setFromExtra: function(extra){
             Base.deepExtend(this.node.extra, extra);
             // Set static object extra: This might be an object
-            if (extra.staticValue != undefined)
+            if (extra.staticValue != undefined) {
                 this.setStaticValue(extra.staticValue);
+            }
         },
         getNodeInfo: function() {
             if (this.isObject())

@@ -67,6 +67,7 @@
                         return constant.name == name;
                     });
                     if (propagatedConstant.length) {
+                        binding.setStaticValue(propagatedConstant[0].constant);
                         result.setStaticValue(propagatedConstant[0].constant);
                     }
                 }
