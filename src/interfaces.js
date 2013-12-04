@@ -140,7 +140,7 @@
             }
 
             var funcArgs = "";
-            var body = '  return getVec' + maskCount + '.apply(null, arguments);\n';
+            var body = '  return getVec' + maskCount + '(' + args.join(", ") +');\n';
             if(generateSetter){
                 for(var j = 0; j < vecCount; ++j){
                     if(setterArgs[j] === undefined)
