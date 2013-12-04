@@ -81,6 +81,43 @@ describe('Inference:', function () {
 
            });
 
+           it("swizzle accessor functions", function () {
+               var exp = parseAndInferenceExpression("new Vec2(1.0, 2.0).xy()");
+               exp = exp[0].expression;
+               exp.should.have.property("extra");
+               exp.extra.should.have.property("type", TYPES.OBJECT);
+               exp.extra.should.have.property("staticValue");
+               exp.extra.staticValue.should.have.property("0", 1.0);
+               exp.extra.staticValue.should.have.property("1", 2.0);
+
+               var exp = parseAndInferenceExpression("new Vec2(1.0, 2.0).yx()");
+               exp = exp[0].expression;
+               exp.should.have.property("extra");
+               exp.extra.should.have.property("type", TYPES.OBJECT);
+               exp.extra.should.have.property("staticValue");
+               exp.extra.staticValue.should.have.property("0", 2.0);
+               exp.extra.staticValue.should.have.property("1", 1.0);
+
+               var exp = parseAndInferenceExpression("new Vec3(1, 2, 3).yyy()");
+               exp = exp[0].expression;
+               exp.should.have.property("extra");
+               exp.extra.should.have.property("type", TYPES.OBJECT);
+               exp.extra.should.have.property("staticValue");
+               exp.extra.staticValue.should.have.property("0", 2);
+               exp.extra.staticValue.should.have.property("1", 2);
+               exp.extra.staticValue.should.have.property("2", 2);
+
+               var exp = parseAndInferenceExpression("new Vec3(1, 2, 3).zyx().bgr()");
+               exp = exp[0].expression;
+               exp.should.have.property("extra");
+               exp.extra.should.have.property("type", TYPES.OBJECT);
+               exp.extra.should.have.property("staticValue");
+               exp.extra.staticValue.should.have.property("0", 1);
+               exp.extra.staticValue.should.have.property("1", 2);
+               exp.extra.staticValue.should.have.property("2", 3);
+
+
+           });
 
 
 
