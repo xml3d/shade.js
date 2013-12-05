@@ -11,6 +11,30 @@
     var TextureInstance = {
         sample2D: {
             callExp: Tools.Vec.createFunctionCall.bind(null, 'texture2D', 2)
+        },
+        width: {
+            property: function (node, parent, context, state) {
+                var parameterName = node.object.name;
+                node.property.name = parameterName + "_width";
+                state.usedParameters.shader[parameterName + "_width"] = {
+                    type: Shade.TYPES.INT,
+                    kind: Shade.OBJECT_KINDS.INT,
+                    source: Shade.SOURCES.UNIFORM
+                };
+                return node.property;
+            }
+        },
+        height: {
+            property: function (node, parent, context, state) {
+                var parameterName = node.object.name;
+                node.property.name = parameterName + "_height";
+                state.usedParameters.shader[parameterName + "_height"] = {
+                    type: Shade.TYPES.INT,
+                    kind: Shade.OBJECT_KINDS.INT,
+                    source: Shade.SOURCES.UNIFORM
+                };
+                return node.property;
+            }
         }
     }
 

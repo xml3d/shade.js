@@ -22,9 +22,15 @@
     };
 
     var TextureInstance = {
+        width: {
+            type: TYPES.INT
+        },
+        height: {
+            type: TYPES.INT
+        }
     };
-    Tools.Vec.attachVecMethods(TextureInstance, "Texture", 4, 2, ['sample2D']);
 
+    Tools.Vec.attachVecMethods(TextureInstance, "Texture", 4, 2, ['sample2D']);
 
     Tools.extend(ns, {
         id: "Texture",

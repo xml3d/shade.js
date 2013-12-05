@@ -55,7 +55,6 @@
 
 
         createUniformSetterFunction: function (parameters) {
-
             return function (envNames, sysNames, inputCollection, cb) {
                 var i, base, override;
                 if (envNames && inputCollection.envBase) {
@@ -65,6 +64,10 @@
                     while (i--) {
                         var srcName = envNames[i], destName = Tools.getNameForGlobal(envNames[i]);
                         cb(destName, override && override[srcName] !== undefined ? override[srcName] : base[srcName]);
+                        if (parameters.shader[destName].kind === Shade.OBJECT_KINDS.TEXTURE) {
+                            cb(destName + "_width", override && override[srcName] !== undefined ? override[srcName].width : base[srcName][0].width);
+                            cb(destName + "_height", override && override[srcName] !== undefined ? override[srcName].height : base[srcName][0].height)
+                        }
                     }
                 }
                 if (sysNames && inputCollection.sysBase) {
