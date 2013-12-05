@@ -35,7 +35,27 @@
 
         // Already contains the function. Normally we have to also check for the signature
         if (containsClosure(state.newFunctions, closureName)) {
-            return result;
+            if (node.callee.object.type === Syntax.NewExpression)
+                return result;
+            else
+                return {
+                    type: Syntax.CallExpression,
+                    callee: {
+                        type: "MemberExpression",
+                        computed: false,
+                        object: node.callee.object,
+                        property: {
+                            "type": "Identifier",
+                            "name": "add"
+                        }
+
+                    },
+                    extra: {
+                        type: Shade.TYPES.OBJECT,
+                        kind: Shade.OBJECT_KINDS.COLOR_CLOSURE
+                    },
+                    arguments: [ result ]
+                };
         }
 
         if (!Closures.hasOwnProperty(closureName)) {
