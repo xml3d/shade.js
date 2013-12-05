@@ -245,15 +245,9 @@
 
             var NdotV = N.dot(V);
 
-            // This is the so called Schlick's Approximation of the fresnel reflection coefficient.
-            // R0 = n1 - n2 / n2 + n1 where n1 and n2 are the indices of refraction of the two media.
-            // We set n1 = 1 the ior of air.
-            //var R0 = Math.pow((1 - ior) / (1 + ior), 2)
-            var f = Math.max(0, R0 + (1 - R0) * Math.pow(1 - NdotV, 5));
-
             var L, H, dist, kd, atten;
             var NdotH, NdotL, HdotN, HdotL, HdotV;
-            var brdf, alpha, numerator, denominator, d, G1, G2, g;
+            var brdf, alpha, numerator, denominator, d, G1, G2, g, f;
 
             if (this.MAX_POINTLIGHTS)
                 for (var i = 0; i < this.MAX_POINTLIGHTS; i++) {
@@ -282,6 +276,7 @@
                     G1 = 2 * HdotN * NdotV / HdotV;
                     G2 = 2 * HdotN * NdotL / HdotV;
                     g =  Math.min(1, Math.max(0, Math.min(G1, G2)));
+                    f = Math.max(0, R0 + (1 - R0) * Math.pow(1 - NdotH, 5));
 
                     brdf = d * g * f / (Math.PI * NdotL * NdotV);
 
@@ -309,6 +304,7 @@
                     numerator = Math.exp(-Math.pow(Math.tan(alpha) / roughness, 2));
                     denominator = Math.pow(roughness, 2) * Math.pow(NdotH, 4);
                     d =  Math.max(0, numerator / denominator);
+                    f = Math.max(0, R0 + (1 - R0) * Math.pow(1 - NdotH, 5));
 
                     // Geometric attenuation
                     G1 = 2 * HdotN * NdotV / HdotV;
@@ -343,6 +339,7 @@
                     numerator = Math.exp(-Math.pow(Math.tan(alpha) / roughness, 2));
                     denominator = Math.pow(roughness, 2) * Math.pow(NdotH, 4);
                     d =  Math.saturate(numerator / denominator);
+                    f = Math.max(0, R0 + (1 - R0) * Math.pow(1 - NdotH, 5));
 
                     // Geometric attenuation
                     G1 = 2 * HdotN * NdotV / HdotV;
