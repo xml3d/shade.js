@@ -412,13 +412,17 @@
             if(args[0].extra.kind == Kinds.FLOAT3){
                 recurse(args[0]);
             }
-            else if(scaling && args[0].extra.type == Types.NUMBER){
+            else if(scaling && typeIsScalar(args[0].extra.type)){
                 gatherObjectDependencies(args[0], result);
             }
             else{
                 result.normalSpaceViolation = true;
             }
         }
+    }
+
+    function typeIsScalar(type){
+        return type == Types.NUMBER || type == Types.INT;
     }
 
 
