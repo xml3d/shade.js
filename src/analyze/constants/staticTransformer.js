@@ -59,6 +59,10 @@
                             return that.handleVariableDeclaration(node);
 
                     }
+
+                    if(that.foldConstants && isExpression(node.type) && isSimpleStatic(typeInfo)) {
+                        return generateLiteralFromTypeInfo(typeInfo);
+                    }
                 }
             });
         },
@@ -188,6 +192,13 @@
     function isSimpleStatic(typeInfo) {
         return typeInfo.hasStaticValue() && !(typeInfo.isObject() || typeInfo.isNullOrUndefined());
     }
+
+
+    var c_expressions = [Syntax.BinaryExpression, Syntax.UnaryExpression, Syntax.Identifier];
+    function isExpression(type) {
+        return c_expressions.indexOf(type) !== -1;
+    };
+
 
 
     function generateLiteralFromTypeInfo(typeInfo) {
