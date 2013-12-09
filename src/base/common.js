@@ -65,6 +65,7 @@
                 // A variable is dynamic per default. Only if it's listed in constant
                 // we can assume a static value
                 result.setDynamicValue();
+                binding.setDynamicValue();
                 if (constants) {
                     var propagatedConstant = constants.filter(function (constant) {
                         return constant.name == name;
