@@ -35,7 +35,7 @@
         transform: function (ast) {
             var that = this;
             return this.controller.replace(ast, {
-                enter: function (node) {
+                enter: function (node, parent) {
                     var typeInfo = ANNO(node);
                     if (!typeInfo.isValid()) {
                         return;
@@ -60,7 +60,7 @@
 
                     }
 
-                    if(that.foldConstants && isExpression(node.type) && isSimpleStatic(typeInfo)) {
+                    if(that.foldConstants && isExpression(node.type, parent.type) && isSimpleStatic(typeInfo)) {
                         return generateLiteralFromTypeInfo(typeInfo);
                     }
                 }
@@ -194,23 +194,46 @@
     }
 
 
-    var c_expressions = [Syntax.BinaryExpression, Syntax.UnaryExpression, Syntax.Identifier];
-    function isExpression(type) {
+    var c_expressions = [Syntax.BinaryExpression, Syntax.UnaryExpression, Syntax.MemberExpression];
+    var c_parentLiteralExpressions = [Syntax.BinaryExpression];
+
+
+    function isExpression(type, parentType) {
+        if(type === Syntax.Identifier) {
+            return c_parentLiteralExpressions.indexOf(parentType) !== -1;
+        }
+
         return c_expressions.indexOf(type) !== -1;
     };
 
 
 
+
     function generateLiteralFromTypeInfo(typeInfo) {
+        var value = typeInfo.getStaticValue();
+        var isNegative = value < 0;
+
         var result = {
             type: Syntax.Literal,
-            value: typeInfo.getStaticValue(),
+            value: isNegative ? -value : value,
             extra: {}
         }
         Base.extend(result.extra, typeInfo.getExtra());
+
+        if(isNegative) {
+            result.extra.staticValue = -value;
+            result = {
+                type: Syntax.UnaryExpression,
+                operator: "-",
+                argument: result,
+                extra: {}
+            }
+            Base.extend(result.extra, typeInfo.getExtra());
+        }
+
+
         return result;
     }
-
 
 
 
