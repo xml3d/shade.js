@@ -37,6 +37,25 @@
         return result;
     }
 
+       /**
+     * @param {TypeInfo} typeInfo
+     * @param {Object?} value
+     */
+    TypeInfo.copyStaticValue = function(typeInfo, value) {
+        value = value || typeInfo.getStaticValue();
+        // We don't have to copy primitive types
+        if(!typeInfo.isObject())
+            return value;
+        switch(typeInfo.getKind()) {
+            case KINDS.FLOAT2: return new Shade.Vec2(value);
+            case KINDS.FLOAT3: return new Shade.Vec3(value);
+            case KINDS.FLOAT4: return new Shade.Vec4(value);
+            case KINDS.MATRIX3: return new Shade.Mat3(value);
+            case KINDS.MATRIX4: return new Shade.Mat4(value);
+            default: throw new Error("Can't copy static value of kind: " + typeInfo.getKind());
+        }
+    }
+
     TypeInfo.prototype = {
         getExtra: function () {
             return this.node.extra;
@@ -236,7 +255,7 @@
             Base.deepExtend(this.node.extra, extra);
             // Set static object extra: This might be an object
             if (extra.staticValue != undefined) {
-                this.setStaticValue(extra.staticValue);
+                this.setStaticValue(TypeInfo.copyStaticValue(this, extra.staticValue));
             }
         },
         getNodeInfo: function() {
@@ -284,6 +303,9 @@
         }
 
     }
+
+
+
 
     ns.TypeInfo = TypeInfo;
 

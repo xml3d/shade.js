@@ -47,7 +47,6 @@ var Tools = {
                         break;
                     case Syntax.UpdateExpression:
                         if (node.argument.type == Syntax.Identifier) {
-                            console.log("found update on", node.argument.name)
                             definitions.add(node.argument.name);
                         }
                         break;

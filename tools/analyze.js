@@ -32,7 +32,7 @@ var argv = require('optimist').argv,
                     loc: true,
                     implementation: "xml3d-glsl-forward",
                     entry: "global.shade",
-                    propagateConstants: false,
+                    propagateConstants: true,
                     throwOnError: false,
                     sanitize: args.sanitize == undefined ? true :  args.sanitize,
                     validate: args.validate == undefined ? true :  args.validate

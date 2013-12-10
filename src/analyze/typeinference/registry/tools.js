@@ -201,31 +201,12 @@
                 Shade[objectName].apply(v, argArray);
                 return v;
             }
-            return null;
-        },
-
-        getConstructorTypeInfo: function(objectName, vecSize, type, result, args){
-            var argArray = [];
-            var isStatic = true;
-            args.forEach(function (param, index) {
-                isStatic = isStatic && param.hasStaticValue();
-                if (isStatic)
-                    argArray.push(param.getStaticValue());
-            });
-
-            var typeInfo = Base.extend({}, type);
-
-            if (isStatic) {
-                var v = new Shade[objectName]();
-                Shade[objectName].apply(v, argArray);
-                typeInfo.staticValue = v;
-            }
-            return typeInfo;
+            return undefined;
         },
 
         constructorEvaluate: function(objectName, vecSize, result, args, ctx) {
             Vec.checkVecArguments(objectName, vecSize, true, 0, result, args);
-            return Vec.getConstructorTypeInfo(objectName, vecSize, Vec.getType(vecSize), result, args);
+            return Vec.getType(vecSize);
         },
         constructorComputeStaticValue: function(objectName, result, args, ctx) {
             return Vec.getStaticValueFromConstructor(objectName, args);

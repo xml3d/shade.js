@@ -35,7 +35,7 @@
         transform: function (ast) {
             var that = this;
             return this.controller.replace(ast, {
-                enter: function (node) {
+                enter: function (node, parent) {
                     var typeInfo = ANNO(node);
                     if (!typeInfo.isValid()) {
                         return;
@@ -58,6 +58,10 @@
                         case Syntax.VariableDeclaration:
                             return that.handleVariableDeclaration(node);
 
+                    }
+
+                    if(that.foldConstants && isExpression(node.type, parent.type)) {
+                        return that.foldConstantExpression(node);
                     }
                 }
             });
@@ -158,7 +162,7 @@
         },
 
         handleVariableDeclaration: function (node) {
-            var declarations = node.declarations, newDeclarations = [];
+            var declarations = node.declarations, newDeclarations = [], that = this;
             declarations.forEach(function (declaration) {
                 var typeInfo = ANNO(declaration);
                 if (!typeInfo.isUndefined()) {
@@ -176,8 +180,12 @@
         },
         foldConstantExpression: function (node) {
             var anno = ANNO(node);
-            if (this.foldConstants && isSimpleStatic(anno)) {
-                return generateLiteralFromTypeInfo(anno);
+            if (this.foldConstants) {
+                if (isSimpleStatic(anno)) {
+                    return generateLiteralFromTypeInfo(anno);
+                } else if (isStaticObject(anno)) {
+                    return generateConstructorFromTypeInfo(anno);
+                }
             }
             return node;
         }
@@ -189,17 +197,90 @@
         return typeInfo.hasStaticValue() && !(typeInfo.isObject() || typeInfo.isNullOrUndefined());
     }
 
+     function isStaticObject(typeInfo) {
+        return typeInfo.hasStaticValue() && typeInfo.isVector();
+    }
 
-    function generateLiteralFromTypeInfo(typeInfo) {
-        var result = {
-            type: Syntax.Literal,
-            value: typeInfo.getStaticValue(),
-            extra: {}
+    var c_expressions = [Syntax.BinaryExpression, Syntax.UnaryExpression, Syntax.MemberExpression];
+    var c_parentLiteralExpressions = [Syntax.BinaryExpression, Syntax.ReturnStatement];
+
+
+    function isExpression(type, parentType) {
+        if(type === Syntax.Identifier) {
+            return c_parentLiteralExpressions.indexOf(parentType) !== -1;
         }
-        Base.extend(result.extra, typeInfo.getExtra());
+        return c_expressions.indexOf(type) !== -1;
+    };
+
+
+    function generateConstructorFromTypeInfo(typeInfo) {
+        var value = typeInfo.getStaticValue(), size, name, arguments = [];
+        switch(typeInfo.getKind()) {
+            case Shade.OBJECT_KINDS.FLOAT2: size = 2; name = "Vec2"; break;
+            case Shade.OBJECT_KINDS.FLOAT3: size = 3; name = "Vec3"; break;
+            case Shade.OBJECT_KINDS.FLOAT4: size = 4; name = "Vec4"; break;
+            default:
+                throw new Error("Internal error in static transformation. Unknown kind: " + typeInfo.getKind());
+        }
+
+        for(var i = 0; i < size; ++i) {
+            arguments.push(generateFloatLiteralFromValue(value[i]));
+        }
+
+
+        var result = {
+            type: Syntax.NewExpression,
+            callee: {
+                type: Syntax.Identifier,
+                name: name
+            },
+            arguments: arguments
+        }
+        ANNO(result).copy(typeInfo);
         return result;
     }
 
+    function generateFloatLiteralFromValue(value) {
+        var needsSign = value < 0;
+
+        var literal = { type: Syntax.Literal, value: needsSign ? -value : value };
+        ANNO(literal).setType(Shade.TYPES.NUMBER);
+
+        if (!needsSign)
+            return literal;
+
+        var expression = {
+                type: Syntax.UnaryExpression,
+                operator: "-",
+                argument: literal
+        }
+        ANNO(expression).setType(Shade.TYPES.NUMBER);
+        return expression;
+    }
+
+    function generateLiteralFromTypeInfo(typeInfo) {
+        var value = typeInfo.getStaticValue();
+        var isNegative = value < 0;
+
+        var result = {
+            type: Syntax.Literal,
+            value: isNegative ? -value : value,
+            extra: {}
+        }
+        Base.extend(result.extra, typeInfo.getExtra());
+
+        if(isNegative) {
+            result.extra.staticValue = -value;
+            result = {
+                type: Syntax.UnaryExpression,
+                operator: "-",
+                argument: result,
+                extra: {}
+            }
+            Base.extend(result.extra, typeInfo.getExtra());
+        }
+        return result;
+    }
 
 
 

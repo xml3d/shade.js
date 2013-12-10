@@ -62,10 +62,15 @@
             }
             if(binding) {
                 var result = ANNO(node, binding.getExtra());
+                // A variable is dynamic per default. Only if it's listed in constant
+                // we can assume a static value
+                result.setDynamicValue();
+                binding.setDynamicValue();
                 if (constants) {
                     var propagatedConstant = constants.filter(function (constant) {
                         return constant.name == name;
                     });
+
                     if (propagatedConstant.length) {
                         binding.setStaticValue(propagatedConstant[0].constant);
                         result.setStaticValue(propagatedConstant[0].constant);
@@ -79,6 +84,8 @@
         }
         return binding || ANNO(node);
     };
+
+
 
     ns.Syntax = Syntax;
     ns.VisitorOption = estraverse.VisitorOption;

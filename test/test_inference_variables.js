@@ -197,6 +197,32 @@ describe('Inference:', function () {
             newExpression.extra.should.have.property("kind", KINDS.FLOAT3);
         });
 
+        it("Update expression (pre)", function () {
+            var program = parseAndInferenceExpression("var a = 1, b, c; b = ++a; c = a", {propagateConstants: true});
+            var expression = program.body[1].expression;
+
+            expression.extra.should.have.property("type", TYPES.INT);
+            expression.extra.should.have.property("staticValue", 2);
+
+            var expression = program.body[2].expression;
+
+            expression.extra.should.have.property("type", TYPES.INT);
+            expression.extra.should.have.property("staticValue", 2);
+        });
+
+        it("Update expression (post)", function () {
+            var program = parseAndInferenceExpression("var a = 1, b, c; b = a++; c = a;", {propagateConstants: true});
+            var expression = program.body[1].expression;
+
+            expression.extra.should.have.property("type", TYPES.INT);
+            expression.extra.should.have.property("staticValue", 1);
+
+            var expression = program.body[2].expression;
+            expression.extra.should.have.property("type", TYPES.INT);
+            expression.extra.should.have.property("staticValue", 2);
+
+        });
+
     });
     });
 
