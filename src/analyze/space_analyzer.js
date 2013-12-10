@@ -164,9 +164,8 @@
                     throw new Error("Detection of repeated space conversion. Not supported!");
             }
 
-            if(isValid){
-                finalSpaces.add(spaceVector);
-            }
+            finalSpaces.add(spaceVector);
+
             if(!isValid && space == SpaceType.RESULT){
                 if(getVectorFromSpaceVector(spaceVector) == VectorType.NORMAL)
                     c_resultNormalOk = false;
@@ -206,8 +205,8 @@
     }
 
     function SpaceDependencies(){
-        this.normalSpaceViolation = null;
-        this.pointSpaceViolation = null;
+        this.normalSpaceViolation = false;
+        this.pointSpaceViolation = false;
         this.propagateSet = new Set();
         this.toObjectSet = new Set();
         this.spaceOverrides = [];
@@ -241,6 +240,8 @@
         if(isFloat3Statement){
             gatherSpaceDependencies(ast, result.dependencies);
             setSpaceInfo(ast, "propagateSet", result.dependencies.propagateSet.values());
+            setSpaceInfo(ast, "normalSpaceViolation", result.dependencies.normalSpaceViolation);
+            setSpaceInfo(ast, "pointSpaceViolation", result.dependencies.pointSpaceViolation);
         }
         else
             gatherObjectDependencies(ast, result.dependencies);
@@ -282,6 +283,8 @@
             result.addSpaceOverride(space, fromObjectSpace, subResult);
             setSpaceInfo(callAst, "spaceOverride", space);
             setSpaceInfo(callAst, "propagateSet", subResult.propagateSet.values());
+            setSpaceInfo(callAst, "normalSpaceViolation", subResult.normalSpaceViolation);
+            setSpaceInfo(callAst, "pointSpaceViolation", subResult.pointSpaceViolation);
             return true;
         }
         return false;

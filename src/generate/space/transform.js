@@ -82,12 +82,7 @@
                                 if(!paramT.space)
                                     oldArgs[paramT.idx] !== undefined && newArgs.push(oldArgs[paramT.idx]);
                                 else{
-                                    var callExpression = {
-                                        type: Syntax.CallExpression,
-                                        callee: self.getSpaceConvertFunction(paramT.space),
-                                        arguments: [ self.getSpaceConvertArg(paramT.space), oldArgs[paramT.idx]]
-                                    };
-                                    newArgs.push(callExpression);
+                                    newArgs.push(self.getSpaceTransformCall(oldArgs[paramT.idx], paramT.space));
                                 }
                             }
                             node.arguments = newArgs;
@@ -95,6 +90,14 @@
                     }
                 }
             });
+        },
+        getSpaceTransformCall: function(ast, space){
+            var callExpression = {
+                type: Syntax.CallExpression,
+                callee: this.getSpaceConvertFunction(space),
+                arguments: [ this.getSpaceConvertArg(space), ast ]
+            };
+            return callExpression;
         },
 
         getSpaceConvertFunction: function(space){
@@ -226,11 +229,14 @@
             }
 
             sInfo.finalSpaces.forEach(function(space){
-                if(space != SpaceVectorType.OBJECT && !this.isSpacePropagrationPossible(sInfo, space, nameMap))
-                    return;
-
                 var expressionCopy = Base.deepExtend({}, child);
-                this.resolveSpaceUsage(expressionCopy, space, nameMap);
+                if(space != SpaceVectorType.OBJECT && !this.isSpacePropagrationPossible(sInfo, space)){
+                    this.resolveSpaceUsage(expressionCopy, SpaceVectorType.OBJECT, nameMap);
+                    expressionCopy.right = this.getSpaceTransformCall(expressionCopy.right, space);
+                }
+                else{
+                    this.resolveSpaceUsage(expressionCopy, space, nameMap);
+                }
                 duplicatedStatements.push({ type: Syntax.ExpressionStatement, expression: expressionCopy });
                 if(space != SpaceVectorType.OBJECT){
                     var spaceName = this.getSpaceName(sInfo.def, space);
@@ -251,7 +257,7 @@
             var blockStatement = {
                 type: Syntax.BlockStatement,
                 body: duplicatedStatements
-            }
+            };
             return blockStatement
 
         },
@@ -276,14 +282,16 @@
             }
         },
 
-        isSpacePropagrationPossible: function(sInfo, targetSpace, nameMap){
+        isSpacePropagrationPossible: function(sInfo, targetSpace){
             if(sInfo.propagateSet.length == 0) // We need to have at least one dependency. Otherwise we can't propagate the space
                 return false;
+            var vectorType = spaceAnalyzer.getVectorFromSpaceVector(targetSpace)
+            if(vectorType == VectorType.NORMAL && sInfo.normalSpaceViolation)
+                return false;
+            if(vectorType == VectorType.POINT && sInfo.pointSpaceViolation)
+                return false;
 
-            var spaceForNameNotFound = sInfo.propagateSet.some(function(identifier){
-                return !(nameMap[identifier] && nameMap[identifier][targetSpace]);
-            });
-            return !spaceForNameNotFound;
+            return true;
         },
 
         resolveSpaceUsage: function(aast, targetSpace, nameMap){
@@ -308,7 +316,7 @@
                         case Syntax.CallExpression:
                             var sInfo = spaceInfo(node);
                             if(sInfo.spaceOverride &&
-                                self.isSpacePropagrationPossible(sInfo, sInfo.spaceOverride, nameMap))
+                                self.isSpacePropagrationPossible(sInfo, sInfo.spaceOverride))
                             {
                                 var result = self.resolveSpaceUsage(node.arguments[1], sInfo.spaceOverride, nameMap);
                                 this.skip();
