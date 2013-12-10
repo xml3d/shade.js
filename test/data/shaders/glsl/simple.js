@@ -1,7 +1,7 @@
 // Simple shader
 /*
 void main ( void ) {
-    gl_FragColor = vec4(vec3(1, 1, 1), 1.0);
+    gl_FragColor = vec4(vec3(1), 1.0);
     return;
 }
 */

@@ -202,7 +202,7 @@
     }
 
     var c_expressions = [Syntax.BinaryExpression, Syntax.UnaryExpression, Syntax.MemberExpression];
-    var c_parentLiteralExpressions = [Syntax.BinaryExpression, Syntax.ReturnStatement];
+    var c_parentLiteralExpressions = [Syntax.BinaryExpression, Syntax.ReturnStatement, Syntax.CallExpression];
 
 
     function isExpression(type, parentType) {
@@ -223,7 +223,14 @@
                 throw new Error("Internal error in static transformation. Unknown kind: " + typeInfo.getKind());
         }
 
-        for(var i = 0; i < size; ++i) {
+        var same = true;
+        for(var i = 0; (i < size-1) && same; ++i) {
+            same = same && value[i] == value[i+1];
+        }
+
+        size = same ? 1 : size;
+
+        for(i = 0; i < size; ++i) {
             arguments.push(generateFloatLiteralFromValue(value[i]));
         }
 

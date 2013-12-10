@@ -1,7 +1,7 @@
 // Constant folding
 /*
 void main ( void ) {
-    gl_FragColor = vec4(vec3(0.8283185307179586, 2, -1), 1.0);
+    gl_FragColor = vec4(vec3(0.8283185307179586, 2, -1.0), 1.0);
     return;
 }
  */
