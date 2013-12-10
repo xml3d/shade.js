@@ -444,6 +444,15 @@
 
         },
 
+        VariableDeclarator: function (node, parent, context) {
+            var init = node.init ? context.getTypeInfo(node.init) : null,
+                result = ANNO(node);
+            if(init) {
+                ANNO(node.init).copy(init);
+                result.copy(init);
+            }
+        },
+
         VariableDeclaration: function (node, parent, context) {
             context.setInDeclaration(false);
         },

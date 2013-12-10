@@ -17,6 +17,7 @@
     var Shade = require("../../interfaces.js");
     var walkes = require('walkes');
     var validator = require('../validator');
+    var TypeInfo = require("../../base/typeinfo.js").TypeInfo;
 
     // shortcuts
     var Syntax = common.Syntax;
@@ -57,13 +58,11 @@
                 if (!this.astNode || this.type) // Start and end node do not influence the result
                     return input;
 
-                // console.log("Analyze", codegen.generate(this.astNode), this.astNode.type);
+                //console.log("Analyze", codegen.generate(this.astNode), this.astNode.type);
 
                 // Local
                 if(context.propagateConstants) {
                     this.kill = this.kill || Tools.findVariableAssignments(this.astNode, true);
-                    if (this.kill.size > 1)
-                        console.warn("Multiple Assignments found", this.kill)
                 }
 
                 context.inference(this.astNode, context.propagateConstants ? input : null );
@@ -124,7 +123,7 @@
                 if(names.has(name)) {
                     annotation = ANNO(this.right);
                     if(annotation.hasStaticValue()) {
-                        result.add({ name: name, constant: annotation.getStaticValue()});
+                        result.add({ name: name, constant: TypeInfo.copyStaticValue(annotation)});
                     }
                 }
                 recurse(this.right);
@@ -135,7 +134,7 @@
                 if (this.init && names.has(name)) {
                     annotation = ANNO(this.init);
                     if(annotation.hasStaticValue()) {
-                        result.add({ name: name, constant: annotation.getStaticValue()});
+                        result.add({ name: name, constant: TypeInfo.copyStaticValue(annotation)});
                     }
                 }
                 recurse(this.init);
@@ -146,7 +145,7 @@
                     name = this.argument.name;
                     annotation = ANNO(this);
                     if(annotation.hasStaticValue()) {
-                        var value = annotation.getStaticValue();
+                        var value = TypeInfo.copyStaticValue(annotation);
                         if (!this.prefix) {
                             value = this.operator == "--" ? --value : ++value;
                         }
@@ -311,7 +310,7 @@
                     scope.declareVariable(variableName, true, result);
 
                     if (declaration.init) {
-                        var init = context.getTypeInfo(declaration.init);
+                        var init = ANNO(declaration.init);
                         scope.updateTypeInfo(variableName, init);
                         if (declaration.init.type == Syntax.AssignmentExpression) {
                             context.declareVariables(declaration.init, true);
@@ -321,7 +320,7 @@
                     }
                 })
             } else if (ast.type == Syntax.AssignmentExpression && inDeclaration) {
-                var typeInfo = context.getTypeInfo(ast.right);
+                var typeInfo = ANNO(ast.right);
 
                 if (ast.left.type != Syntax.Identifier) {
                     throw new Error("Dynamic variable names are not yet supported");
