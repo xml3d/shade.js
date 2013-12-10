@@ -293,10 +293,6 @@
         var result = "<unhandled: " + node.type+ ">",
             opt = opt || {};
 
-        if(opt.useStatic && node.extra && node.extra.staticValue) {
-            return handleStaticValue(node);
-        }
-
         switch(node.type) {
             case Syntax.NewExpression:
                 result = toGLSLType(node.extra);
@@ -421,61 +417,7 @@
         return result + ")";
     }
 
-    function handleStaticValue(node) {
-        var result = "unhandled static value: " + node.type;
 
-        // Even if the whole expression is static, we have to assign it
-        if (node.type == Syntax.AssignmentExpression) {
-            return handleExpression(node.left) + " " + node.operator + " " + handleExpression(node.right);
-        }
-
-        switch(node.extra.type) {
-            case Types.NUMBER:
-            case Types.INT:
-            case Types.BOOLEAN:
-                result = handleLiteral(node.extra);
-                break;
-
-            case Types.OBJECT:
-                var staticValue = node.extra.staticValue;
-                switch(node.extra.kind) {
-                    case Kinds.FLOAT2:
-                        result = "vec2(" + staticValue.r() + ", " + staticValue.g() + ")";
-                        break;
-                    case Kinds.FLOAT3:
-                        result = "vec3(" + staticValue.r() + ", " + staticValue.g() + ", " + staticValue.b() + ")";
-                        break;
-                    case Kinds.FLOAT4:
-                        result = "vec4(" + staticValue.r() + ", " + staticValue.g() + ", " + staticValue.b() + ", " + staticValue.a() + ")";
-                        break;
-                    case Kinds.MATRIX3:
-                        result = "mat3(";
-                        for(var i = 0; i < 9; i++) {
-                            result += staticValue[i];
-                            if(i < 8)
-                                result += ",";
-                        }
-                        result +=")"
-                        break;
-                    case Kinds.MATRIX4:
-                        result = "mat4(";
-                        for(var i = 0; i < 16; i++) {
-                            result += staticValue[i];
-                            if(i < 15)
-                                result += ",";
-                        }
-                        result +=")"
-                        break;
-                    default:
-                        Shade.throwError(node, "Internal: Can't generate static GLSL value for kind: " + node.extra.kind);
-                }
-                break;
-            default:
-                Shade.throwError(node, "Internal: Can't generate static GLSL value for type: " + node.extra.type);
-
-        }
-        return result;
-    }
 
     function handleLiteral(extra, alternative) {
         var value = extra.staticValue !== undefined ? extra.staticValue : alternative;
