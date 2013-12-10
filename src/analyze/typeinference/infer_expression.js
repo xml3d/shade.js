@@ -252,6 +252,26 @@
             }
         },
 
+        UpdateExpression: function(node, parent, context) {
+            var argument = context.getTypeInfo(node.argument),
+                result = ANNO(node);
+            if(argument.canNumber()) {
+                result.copy(argument);
+                if(node.prefix && argument.hasStaticValue()) {
+                    if(node.operator == "++") {
+                        result.setStaticValue(argument.getStaticValue()+1)
+                    } else if(node.operator == "--") {
+                        result.setStaticValue(argument.getStaticValue()-1)
+                    } else {
+                        throw new Error("Operator not supported: " + node.operator);
+                    }
+                }
+            } else {
+                // e.g. var a = {}; a++;
+                result.setInvalid(generateErrorInformation(node, "NotANumberError"));
+            }
+        },
+
         AssignmentExpression: function (node, parent, context) {
             var right = context.getTypeInfo(node.right),
                 result = ANNO(node);

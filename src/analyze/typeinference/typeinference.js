@@ -131,7 +131,7 @@
             },
 
             VariableDeclarator: function(recurse) {
-                var name = this.id.name;
+                name = this.id.name;
                 if (this.init && names.has(name)) {
                     annotation = ANNO(this.init);
                     if(annotation.hasStaticValue()) {
@@ -139,9 +139,21 @@
                     }
                 }
                 recurse(this.init);
+            },
+
+            UpdateExpression: function(recurse) {
+                if(this.argument.type == Syntax.Identifier) {
+                    name = this.argument.name;
+                    annotation = ANNO(this);
+                    if(annotation.hasStaticValue()) {
+                        var value = annotation.getStaticValue();
+                        if (!this.prefix) {
+                            value = this.operator == "--" ? --value : ++value;
+                        }
+                        result.add({ name: name, constant: value});
+                    }
+                }
             }
-
-
         });
 
         return result;
