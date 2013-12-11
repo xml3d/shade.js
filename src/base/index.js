@@ -23,7 +23,7 @@
 
     ns.deepExtend = function(destination, source) {
         for (var property in source) {
-            if (source[property] instanceof Array) {
+            if (Array.isArray(source[property])) {
                 destination[property] = destination[property] || [];
                 ns.deepExtend(destination[property], source[property]);
             } else if (typeof source[property] === "object" && source[property] !== null) {

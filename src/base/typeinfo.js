@@ -199,6 +199,29 @@
                 throw("Null and undefined have predefined values.");
             extra.staticValue = v;
         },
+        isUniformExpression: function() {
+            var extra = this.getExtra();
+            return extra.hasOwnProperty("uniformDependencies")
+        },
+        setUniformDependencies: function() {
+            var extra = this.getExtra();
+            extra.uniformDependencies = [];
+            var args = Array.prototype.slice.call(arguments);
+            args.forEach(function(arg) {
+               if(Array.isArray(arg))
+                   extra.uniformDependencies = extra.uniformDependencies.concat(arg);
+                else
+                   extra.uniformDependencies.push(arg);
+            });
+        },
+        getUniformDependencies: function() {
+            var extra = this.getExtra();
+            return extra.uniformDependencies || [];
+        },
+        clearUniformDependencies: function() {
+            var extra = this.getExtra();
+            delete extra.uniformDependencies;
+        },
         getStaticValue : function() {
             if (!this.hasStaticValue()) {
                 throw new Error("Node has no static value: " + this.node);

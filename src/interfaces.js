@@ -717,6 +717,10 @@
         throw error;
     }
 
+    ns.toJavaScript = function(node) {
+        return CodeGen.generate(node);
+    };
+
     ns.Vec2 = Vec2;
     ns.Vec3 = Vec3;
     ns.Vec4 = Vec4;
