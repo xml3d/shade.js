@@ -3,16 +3,15 @@
     var Base = require("../../base/index.js"),
         common = require("../../base/common.js"),
         FunctionAnnotation = require("../../base/annotation.js").FunctionAnnotation,
-        TypeInfo = require("../../base/typeinfo.js").TypeInfo,
         Shade = require("./../../interfaces.js"),
         Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS,
-        Sources = require("./../../interfaces.js").SOURCES,
         Tools = require('./registry/tools.js'),
         System = require('./registry/system.js'),
         assert = require('assert');
 
-    var Scope = require("./registry/").GLTransformScope;
+
+    var Context = require("./registry/").GLTransformContext;
 
 
     var walk = require('estraverse');
@@ -25,44 +24,44 @@
      * for code generation
      * @constructor
      */
-    var GLASTTransformer = function (mainId) {
-        this.mainId = mainId;
+    var GLASTTransformer = function (root, mainId, opt) {
+        this.context = new Context(root, mainId, opt);
     };
 
     Base.extend(GLASTTransformer.prototype, {
         /**
          *
-         * @param {Scope} scope
-         * @param {{blockedNames: Array, systemParameters: Object}} state
+         * @param {GLTransformScope} scope
          */
-        registerThisObject: function (scope, state) {
+        registerThisObject: function (scope) {
             var thisObject = scope.getBindingByName("this");
             if (thisObject && thisObject.isObject()) {
                 var properties = thisObject.getNodeInfo();
                 for (var name in properties) {
                     var prop = ANNO({}, properties[name]);
                     if (!prop.isDerived())
-                        state.blockedNames.push(Tools.getNameForSystem(name));
+                        this.context.blockedNames.push(Tools.getNameForSystem(name));
                 }
                 for (var property in System.derivedParameters) {
-                    if(properties[property]) {
+                    if(properties.hasOwnProperty(property)) {
                         Base.deepExtend(properties[property], System.derivedParameters[property]);
                     }
                 }
-                Base.extend(state.systemParameters, properties);
+                Base.extend(this.context.systemParameters, properties);
             }
         },
 
 
         createUniformSetterFunction: function (parameters) {
             return function (envNames, sysNames, inputCollection, cb) {
-                var i, base, override;
+                var i, base, override, srcName, destName;
                 if (envNames && inputCollection.envBase) {
                     i = envNames.length;
                     base = inputCollection.envBase;
                     override = inputCollection.envOverride;
                     while (i--) {
-                        var srcName = envNames[i], destName = Tools.getNameForGlobal(envNames[i]);
+                        srcName = envNames[i];
+                        destName = Tools.getNameForGlobal(envNames[i]);
                         cb(destName, override && override[srcName] !== undefined ? override[srcName] : base[srcName]);
                         if (parameters.shader[destName].kind === Shade.OBJECT_KINDS.TEXTURE) {
                             cb(destName + "_width", override && override[srcName] !== undefined ? override[srcName].width : base[srcName][0].width);
@@ -74,7 +73,8 @@
                     i = sysNames.length;
                     base = inputCollection.sysBase;
                     while (i--) {
-                        var srcName = sysNames[i], destName = Tools.getNameForSystem(sysNames[i]);
+                        srcName = sysNames[i];
+                        destName = Tools.getNameForSystem(sysNames[i]);
                         cb(destName, base[srcName]);
                     }
                 }
@@ -82,113 +82,96 @@
 
         },
 
-        transformAAST: function (program, opt) {
-            opt = opt || {};
-            this.root = program;
-            var scope = new Scope(program, null, {name: "global"}),
-                name, decl;
+        transform: function () {
+            var context = this.context,
+                program = context.root,
+                scope = context.createScope(this.context.root, null, "global"),
+                name, declaration;
+
             scope.registerGlobals();
+            context.pushScope(scope);
 
-            var state = {
-                 context: scope,
-                 contextStack: [scope],
-                 inMain:  this.mainId == scope.str(),
-                 globalParameters : program.globalParameters && program.globalParameters[this.mainId] && program.globalParameters[this.mainId][0] ? program.globalParameters[this.mainId][0].extra.info : {},
-                 usedParameters: {
-                     shader: {},
-                     system: {}
-                 },
-                 systemParameters: {},
-                 blockedNames : [],
-                 topDeclarations : [],
-                 internalFunctions: {},
-                 idNameMap : {},
-                 headers: [] // Collection of header lines to define
-            }
-
-            this.registerThisObject(scope, state);
+            this.registerThisObject(scope);
 
             // TODO: We should also block systemParameters here. We can block all system names, even if not used.
-            for(name in state.globalParameters){
-                state.blockedNames.push( Tools.getNameForGlobal(name) );
+            for(name in context.globalParameters){
+                context.blockedNames.push( Tools.getNameForGlobal(name) );
             }
 
-            this.replace(program, state);
+            this.replace(program);
 
-            var usedParameters = state.usedParameters;
+            var usedParameters = context.usedParameters;
             for(name in usedParameters.shader){
-                decl = createTopDeclaration(name, usedParameters.shader[name]);
-                decl && program.body.unshift(decl);
+                declaration = createTopDeclaration(name, usedParameters.shader[name]);
+                declaration && program.body.unshift(declaration);
             }
 
             for(name in usedParameters.system){
-                decl = createTopDeclaration(name, usedParameters.system[name]);
-                decl && program.body.unshift(decl);
+                declaration = createTopDeclaration(name, usedParameters.system[name]);
+                declaration && program.body.unshift(declaration);
             }
 
             var uniformSetter = this.createUniformSetterFunction(usedParameters);
 
+            var userData = ANNO(program).getUserData();
+            userData.internalFunctions = context.internalFunctions;
 
-            var userData = ANNO(this.root).getUserData();
-            userData.internalFunctions = state.internalFunctions;
-
-            opt.headers = state.headers;
-            return { program: program, uniformSetter: uniformSetter};
+            return { program: program, uniformSetter: uniformSetter, headers: context.headers};
         },
         /**
          *
          * @param {Object!} ast
-         * @param {Object!} state
          * @returns {*}
          */
-        replace: function(ast, state) {
-            var controller = new walk.Controller();
+        replace: function(ast) {
+            var controller = new walk.Controller(),
+                context = this.context;
+
             ast = controller.replace(ast, {
 
                 enter: function (node, parent) {
                     //console.log("Enter:", node.type);
                     switch (node.type) {
                         case Syntax.Identifier:
-                            return enterIdentifier(node, parent, state);
+                            return enterIdentifier(node, parent, context);
                         case Syntax.IfStatement:
                             return enterIfStatement(node);
                         case Syntax.FunctionDeclaration:
-                            return enterFunctionDeclaration(node, state, this.mainId);
+                            return enterFunctionDeclaration(node, context);
                     }
-                }.bind(this),
+                },
 
                 leave: function(node, parent) {
                     switch(node.type) {
                         case Syntax.MemberExpression:
-                            return leaveMemberExpression(node, parent, state);
+                            return leaveMemberExpression(node, parent, context);
                         case Syntax.NewExpression:
-                            return leaveNewExpression(node, state);
+                            return leaveNewExpression(node, context);
                         case Syntax.LogicalExpression:
                             return leaveLogicalExpression(node);
                         case Syntax.CallExpression:
-                            return leaveCallExpression(node, parent, state);
+                            return leaveCallExpression(node, parent, context);
                         case Syntax.UnaryExpression:
                             return leaveUnaryExpression(node);
                         case Syntax.FunctionDeclaration:
-                            return leaveFunctionDeclaration(node, state, this.mainId);
+                            return leaveFunctionDeclaration(node, context);
                         case Syntax.ReturnStatement:
-                            return leaveReturnStatement(node, state);
+                            return leaveReturnStatement(node, context);
                         case Syntax.BinaryExpression:
-                            return handleBinaryExpression(node, parent, state.context);
+                            return handleBinaryExpression(node, parent, context);
 
                     }
-                }.bind(this)
+                }
             });
             return ast;
         }
     });
 
-    var traverseSubTree = function(ast, state, root, controller) {
-        controller.skip();
-        return root.replace(ast, state);
-    };
-
-
+    /**
+     * @param {string} name
+     * @param {object} typeInfo
+     * @returns {*}
+     */
     var createTopDeclaration = function(name, typeInfo){
         var propertyLiteral =  { type: Syntax.Identifier, name: name};
         var propertyAnnotation =  ANNO(propertyLiteral);
@@ -231,7 +214,7 @@
         idNameMap[name] = newName;
         node.name = newName;
         return node;
-    }
+    };
 
 
     /**
@@ -242,6 +225,7 @@
     var leaveUnaryExpression = function(node) {
         if(node.operator == "!") {
             var argument = ANNO(node.argument);
+            //noinspection FallthroughInSwitchStatementJS
             switch(argument.getType()) {
                 case Types.INT:
                 case Types.NUMBER:
@@ -256,23 +240,23 @@
                                 type: argument.getType()
                             }
                         }
-                    }
+                    };
                     break;
             }
         }
-    }
+    };
 
     /**
      * A return in the main functions sets gl_FragColor or discard if the
      * main method returns without argument
      * @param node
-     * @param scope
+     * @param {GLTransformContext} context
      * @returns {*}
      */
     var leaveReturnStatement = function(node, context) {
-        var scope = context.context;
+        var scope = context.getScope();
 
-        if(!context.inMain)
+        if(!context.inMainFunction())
             return;
 
         if (node.argument) {
@@ -286,7 +270,7 @@
                             type: Syntax.Identifier,
                             name: "gl_FragColor"
                         },
-                        right: castToVec4(node.argument, scope)
+                        right: Tools.castToVec4(node.argument, scope)
                     },
                     {
                         type: Syntax.ReturnStatement
@@ -332,44 +316,51 @@
             default:
                 return "unknown(" + node.type + ")";
         }
-    };
+    }
 
-    var leaveCallExpression = function (callExpression, parent, state) {
-        var context = state.context;
+    /**
+     *
+     * @param {object} node
+     * @param {object} parent
+     * @param {GLTransformContext} context
+     * @returns {*}
+     */
+    var leaveCallExpression = function (node, parent, context) {
+        var scope = context.getScope();
 
         /** Filter out undefined arguments, we do the same for the declaration */
-        callExpression.arguments = callExpression.arguments.filter(function(a) { return !ANNO(a).isUndefined()});
+        node.arguments = node.arguments.filter(function(a) { return !ANNO(a).isUndefined()});
 
         // Is this a call on an object?
-        if (callExpression.callee.type == Syntax.MemberExpression) {
-            var calleeReference = common.getTypeInfo(callExpression.callee, context);
+        if (node.callee.type == Syntax.MemberExpression) {
+            var calleeReference = common.getTypeInfo(node.callee, scope);
             if(!(calleeReference && calleeReference.isFunction()))
-                Shade.throwError(callExpression, "Something went wrong in type inference, " + callExpression.callee.object.name);
+                Shade.throwError(node, "Something went wrong in type inference, " + node.callee.object.name);
 
-            var object = callExpression.callee.object,
-                propertyName = callExpression.callee.property.name;
+            var object = node.callee.object,
+                propertyName = node.callee.property.name;
 
-            var objectReference = common.getTypeInfo(object, context);
+            var objectReference = common.getTypeInfo(object, scope);
             if(!objectReference)  {
-                Shade.throwError(callExpression, "Internal: No type info for: " + object);
+                Shade.throwError(node, "Internal: No type info for: " + object);
             }
 
-            var objectInfo = context.getObjectInfoFor(objectReference);
+            var objectInfo = scope.getObjectInfoFor(objectReference);
             if(!objectInfo) { // Every object needs an info, otherwise we did something wrong
-                Shade.throwError(callExpression, "Internal Error: No object registered for: " + objectReference.getTypeString() + ", " + getNameOfNode(callExpression.callee.object)+", "+callExpression.callee.object.type);
+                Shade.throwError(node, "Internal Error: No object registered for: " + objectReference.getTypeString() + ", " + getNameOfNode(node.callee.object)+", "+node.callee.object.type);
             }
             if (objectInfo.hasOwnProperty(propertyName)) {
                 var propertyHandler = objectInfo[propertyName];
                 if (typeof propertyHandler.callExp == "function") {
-                    var args = common.createTypeInfo(callExpression.arguments, context);
-                    return propertyHandler.callExp(callExpression, args, parent, state);
+                    var args = common.createTypeInfo(node.arguments, scope);
+                    return propertyHandler.callExp(node, args, parent, context);
                 }
             }
         }
-    }
+    };
 
     var leaveNewExpression = function(newExpression, context){
-        var scope = context.context;
+        var scope = context.getScope();
         var entry = scope.getBindingByName(newExpression.callee.name);
         //console.error(entry);
         if (entry && entry.hasConstructor()) {
@@ -379,72 +370,89 @@
        else {
             throw new Error("ReferenceError: " + newExpression.callee.name + " is not defined");
         }
-    }
+    };
 
 
-    var leaveMemberExpression = function (memberExpression, parent, state) {
-        var propertyName = memberExpression.property.name,
-            context = state.context,
+    /**
+     *
+     * @param {object} node
+     * @param {object} parent
+     * @param {GLTransformContext} context
+     * @returns {*}
+     */
+    var leaveMemberExpression = function (node, parent, context) {
+        var propertyName = node.property.name,
+            scope = context.getScope(),
             parameterName,
             propertyLiteral;
 
-        if (memberExpression.computed) {
-            return handleComputedMemberExpression(memberExpression, parent, state);
+        if (node.computed) {
+            return handleComputedMemberExpression(node, parent, context);
         }
 
-        var objectReference = common.getTypeInfo(memberExpression.object, context);
+        var objectReference = common.getTypeInfo(node.object, scope);
 
         if (!objectReference || !objectReference.isObject())
-            Shade.throwError(memberExpression, "Internal Error: Object of Member expression is no object.");
+            Shade.throwError(node, "Internal Error: Object of Member expression is no object.");
 
-        var objectInfo = context.getObjectInfoFor(objectReference);
+        var objectInfo = scope.getObjectInfoFor(objectReference);
         if(!objectInfo) {// Every object needs an info, otherwise we did something wrong
-            Shade.throwError(memberExpression, "Internal Error: No object registered for: " + objectReference.getTypeString() + JSON.stringify(memberExpression.object));
+            Shade.throwError(node, "Internal Error: No object registered for: " + objectReference.getTypeString() + JSON.stringify(node.object));
         }
         if (!objectInfo.hasOwnProperty(propertyName))
-            Shade.throwError(memberExpression, "Internal Error: Object of type " + objectReference.getTypeString() + " has no property '" + propertyName +"'");
+            Shade.throwError(node, "Internal Error: Object of type " + objectReference.getTypeString() + " has no property '" + propertyName +"'");
 
         var propertyHandler = objectInfo[propertyName];
         if (typeof propertyHandler.property == "function") {
-            var result = propertyHandler.property(memberExpression, parent, context, state);
-            return result;
+            return propertyHandler.property(node, parent, scope, context);
         }
 
-        var usedParameters = state.usedParameters;
+        var usedParameters = context.usedParameters;
         if(objectReference.isGlobal()) {
             parameterName = Tools.getNameForGlobal(propertyName);
             if(!usedParameters.shader.hasOwnProperty(parameterName)) {
-                usedParameters.shader[parameterName] = state.globalParameters[propertyName];
+                usedParameters.shader[parameterName] = context.globalParameters[propertyName];
             }
 
             propertyLiteral =  { type: Syntax.Identifier, name: parameterName};
-            ANNO(propertyLiteral).copy(ANNO(memberExpression));
+            ANNO(propertyLiteral).copy(ANNO(node));
             return propertyLiteral;
         }
-        if (memberExpression.object.type == Syntax.ThisExpression) {
+        if (node.object.type == Syntax.ThisExpression) {
             parameterName = Tools.getNameForSystem(propertyName);
             if(!usedParameters.system.hasOwnProperty(parameterName)) {
-                usedParameters.system[parameterName] = state.systemParameters[propertyName];
+                usedParameters.system[parameterName] = context.systemParameters[propertyName];
             }
 
             propertyLiteral =  { type: Syntax.Identifier, name: parameterName};
-            ANNO(propertyLiteral).copy(ANNO(memberExpression));
+            ANNO(propertyLiteral).copy(ANNO(node));
             return propertyLiteral;
         }
 
     };
 
-    var handleComputedMemberExpression = function(memberExpression, parent, state) {
-        var objectReference = common.getTypeInfo(memberExpression.object, state.context);
+    /**
+     * @param {object} node
+     * @param {object} parent
+     * @param {GLASTTransformer} context
+     */
+    var handleComputedMemberExpression = function(node, parent, context) {
+        var objectReference = context.getTypeInfo(node.object);
         if (!objectReference.isArray()) {
-            Shade.throwError(memberExpression, "In shade.js, [] access is only allowed on arrays.");
+            Shade.throwError(node, "In shade.js, [] access is only allowed on arrays.");
         }
-    }
+    };
 
-    var handleBinaryExpression = function (node, parent, scope) {
+
+    /**
+     * @param {object} node
+     * @param {object} parent
+     * @param {GLASTTransformer} context
+     */
+    var handleBinaryExpression = function (node, parent, context) {
         // In GL, we can't mix up floats, ints and bool for binary expressions
-        var left = common.getTypeInfo(node.left, scope),
-            right = common.getTypeInfo(node.right, scope);
+        var left = context.getTypeInfo(node.left),
+            right = context.getTypeInfo(node.right);
 
         if (left.isNumber() && right.isInt()) {
             node.right = Tools.castToFloat(node.right);
@@ -457,9 +465,9 @@
             return handleModulo(node);
         }
         return node;
-    }
+    };
 
-    function castToInt(ast, force) {
+    /*function castToInt(ast, force) {
         var exp = ANNO(ast);
 
         if (!exp.isInt() || force) {   // Cast
@@ -470,29 +478,12 @@
                     name: "int"
                 },
                 arguments: [ast]
-            }
+            };
         }
         return ast;
-    }
+    };*/
 
-    function castToVec4(ast, context) {
-        var exp = TypeInfo.createForContext(ast, context);
 
-        if (exp.isOfKind(Kinds.FLOAT4) || exp.isOfKind(Kinds.COLOR_CLOSURE))
-            return ast;
-
-        if (exp.isOfKind(Kinds.FLOAT3)) {
-            return {
-                type: Syntax.CallExpression,
-                callee: {
-                    type: Syntax.Identifier,
-                    name: "vec4"
-                },
-                arguments: [ast, { type: Syntax.Literal, value: 1.0, extra: { type: Types.NUMBER} }]
-            }
-        }
-        Shade.throwError(ast, "Can't cast from '" + exp.getTypeString() + "' to vec4");
-    }
 
     /**
      * Transform % operator of JavaScript into a mod function in GLSL
@@ -515,22 +506,31 @@
                 type: Types.NUMBER
             }
         }
-    }
+    };
 
-    var enterFunctionDeclaration = function(node, state, mainId) {
-        var parentContext = state.contextStack[state.contextStack.length - 1];
-        var context = new Scope(node, parentContext, {name: node.id.name });
-        state.context = context;
-        state.contextStack.push(context);
-        state.inMain = mainId == context.str();
+    /**
+     * @param {Object} node
+     * @param {GLTransformContext} context
+     * @returns {*}
+     */
+    var enterFunctionDeclaration = function(node, context) {
+        var scope = context.createScope(node, context.getScope(), node.id.name);
+        context.pushScope(scope);
+
+        // Remove parameters of type undefined (these are not used anyway)
         node.params = node.params.filter(function(a) { return !ANNO(a).isUndefined()});
         return node;
     };
 
-    var leaveFunctionDeclaration = function(node, state, mainId) {
-        state.context = state.contextStack.pop();
-        state.inMain = state.context.str() == mainId;
-        if (state.inMain)
+    /**
+     * @param {Object} node
+     * @param {GLTransformContext} context
+     * @returns {*}
+     */
+    var leaveFunctionDeclaration = function(node, context) {
+        var wasMain = context.inMainFunction();
+        context.popScope();
+        if (wasMain)
             return leaveMainFunction(node);
     };
 
@@ -565,6 +565,9 @@
     /**
      * Need to transform truth expressions in real boolean expression, because something like if(0) is
      * not allowed in GLSL
+     *
+     * @param node
+     * @returns {*}
      */
     var leaveLogicalExpression = function(node) {
         var left = ANNO(node.left);
@@ -596,9 +599,9 @@
                 },
                 consequent: node.right,
                 alternate: test
-            }
+            };
         }
-    }
+    };
 
 
     // Exports

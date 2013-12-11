@@ -3,6 +3,8 @@
     var Syntax = require('estraverse').Syntax;
     var Base = require("../../../base/index.js");
     var ANNO = require("../../../base/annotation.js").ANNO;
+    var TypeInfo = require("../../../base/typeinfo.js").TypeInfo;
+
     var Shade = require("../../../interfaces.js"),
         TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS,
@@ -316,6 +318,30 @@
     ns.getNameForGlobal = function(baseName) {
         var name = "_env_" + baseName;
         return name.replace(/_+/g, "_");
+    }
+
+    /**
+     * @param {Object} node
+     * @param  {GLTransformContext} context
+     * @returns {*}
+     */
+    ns.castToVec4 = function (node, context) {
+        var exp = TypeInfo.createForContext(node, context);
+
+        if (exp.isOfKind(KINDS.FLOAT4) || exp.isOfKind(KINDS.COLOR_CLOSURE))
+            return node;
+
+        if (exp.isOfKind(KINDS.FLOAT3)) {
+            return {
+                type: Syntax.CallExpression,
+                callee: {
+                    type: Syntax.Identifier,
+                    name: "vec4"
+                },
+                arguments: [node, { type: Syntax.Literal, value: 1.0, extra: { type: TYPES.NUMBER} }]
+            }
+        }
+        Shade.throwError(node, "Can't cast from '" + exp.getTypeString() + "' to vec4");
     }
 
     ns.extend = Base.extend;

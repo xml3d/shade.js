@@ -1,9 +1,11 @@
 (function(ns) {
 
     var Scope = require("../../../base/scope.js"),
+        Context = require("../../../base/context.js"),
         Base = require("../../../base/index.js"),
         Shade = require("../../../interfaces.js"),
-        TypeInfo = require("../../../base/typeinfo.js").TypeInfo;
+        TypeInfo = require("../../../base/typeinfo.js").TypeInfo,
+        common = require("../../../base/common.js");
 
 
     var Types = Shade.TYPES,
@@ -31,13 +33,54 @@
         },
         getInstanceForKind: function(kind) {
             for(var obj in objects) {
+                //noinspection JSUnfilteredForInLoop
                 if (objects[obj].kind == kind) {
+                    //noinspection JSUnfilteredForInLoop
                     return objects[obj].instance;
                 }
             }
             return null;
         }
-    }
+    };
+
+
+    /**
+     * @param root
+     * @param {string} entry
+     * @param opt
+     * @extends {Context}
+     * @constructor
+     */
+    var GLTransformContext = function(root, entry, opt) {
+        Context.call(this, root, opt);
+        this.entry = entry;
+        this.usedParameters = {
+            shader: {},
+            system: {}
+        };
+        this.systemParameters = {};
+        this.blockedNames = [];
+        this.topDeclarations = [];
+        this.internalFunctions = {};
+        this.idNameMap = {};
+        this.headers = []; // Collection of header lines to define
+
+        this.globalParameters = root.globalParameters && root.globalParameters[entry] && root.globalParameters[entry][0] ? root.globalParameters[entry][0].extra.info : {};
+
+
+    };
+
+    Base.createClass(GLTransformContext, Context, {
+        inMainFunction: function() {
+            return this.getScope().str() == this.entry;
+        },
+        createScope: function(node, parent, name) {
+            return new GLTransformScope(node, parent, {name: name});
+        },
+        getTypeInfo: function(node) {
+            return common.getTypeInfo(node, this.getScope());
+        }
+    });
 
     /**
      * @constructor
@@ -46,7 +89,7 @@
     var GLTransformScope = function(node, parentScope, opt) {
         Scope.call(this, node, parentScope, opt);
         this.setRegistry(Registry);
-    }
+    };
 
     Base.createClass(GLTransformScope, Scope, {
 
@@ -70,9 +113,11 @@
                 }
             }));
         }
-
     });
 
+
+
     ns.GLTransformScope = GLTransformScope;
+    ns.GLTransformContext = GLTransformContext;
 
 }(exports));
