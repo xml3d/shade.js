@@ -364,9 +364,6 @@
 
             var propertyTypeInfo = objectInfo[propertyName];
             propertyAnnotation.setFromExtra(propertyTypeInfo);
-            if (propertyAnnotation.getSource() == Shade.SOURCES.UNIFORM) {
-                propertyAnnotation.setUniformDependencies(propertyName);
-            }
             resultType.copy(propertyAnnotation);
         },
 

@@ -3,7 +3,7 @@
     var sanitizer = require("./sanitizer/sanitizer.js"),
         resolver =  require("../resolve/resolve.js"),
         staticTransformer = require("./constants/staticTransformer.js"),
-        uniformAnalysis = require("./uniforms/uniformAnalysis.js"),
+        uniformAnalysis = require("./uniformExpressions/uniformAnalysis.js"),
         validator = require("./validator.js"),
         inference = require("./typeinference/typeinference.js"),
         spaceTransformer = require("../generate/space/transform.js").SpaceTransformer;
