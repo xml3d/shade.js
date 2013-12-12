@@ -3,11 +3,8 @@
     var walk = require('estraverse');
     var Syntax = walk.Syntax;
     var ANNO = require("../../base/annotation.js").ANNO;
-    var VisitorOption = walk.VisitorOption;
 
 
-    var enterVisitor = function (node) {
-    };
 
     function isMathCall(node) {
         return (node.callee.type === Syntax.MemberExpression && node.callee.object.type === Syntax.Identifier && node.callee.object.name === "Math");
@@ -20,10 +17,10 @@
         return firstArgument.isVector();
     }
 
-    var leaveVisitor = function (node) {
+    var leaveVisitor = function (node, parent) {
         if (node.type == Syntax.MemberExpression) {
             var object = ANNO(node.object);
-            if (object.isGlobal()) {
+            if (object.isGlobal() && node.property.type == Syntax.Identifier) {
                 var property = ANNO(node.property);
                 // Is the accessed parameter is a scalar value, we have to
                 // access the first entry of the input array
@@ -31,7 +28,7 @@
                     return {
                         type: Syntax.MemberExpression,
                         computed: true,
-                        object: node,
+                        object: node.property,
                         property: {
                             type: Syntax.Literal,
                             value: 0
@@ -44,6 +41,25 @@
         if (node.type == Syntax.CallExpression) {
             if (isVecMathCall(node)) {
                 node.callee.object.name = "VecMath";
+            }
+        }
+
+
+        if (node.type == Syntax.Identifier) {
+            if (~[Syntax.MemberExpression, Syntax.FunctionDeclaration, Syntax.VariableDeclarator].indexOf(parent.type))
+                return;
+
+            if (parent.type == Syntax.NewExpression && parent.callee == node)
+                return;
+
+            // Not a variable on the right side
+            if (parent.type == Syntax.AssignmentExpression && parent.left == node)
+                return;
+
+            if(this.hasOwnProperty(node.name)) {
+                //console.log("Found: " + node.name, this[node.name]);
+                return this[node.name].code;
+
             }
         }
 
@@ -63,8 +79,8 @@
 
         };
 
-    ns.transformUniformSetter = function (ast) {
-        return walk.replace(ast, {enter: enterVisitor, leave: leaveVisitor });
+    ns.transformUniformSetter = function (ast, variables) {
+        return walk.replace(ast, { leave: leaveVisitor.bind(variables) });
     };
 
 
