@@ -6,7 +6,7 @@
     /**
      * @enum {string}
      */
-    ns.TYPES = {
+    var Types = ns.TYPES = {
         ANY: "any",
         INT: "int",
         NUMBER: "number",
@@ -20,7 +20,7 @@
         INVALID: "invalid"
     }
 
-    ns.OBJECT_KINDS = {
+    var Kinds = ns.OBJECT_KINDS = {
         ANY: "any",
         FLOAT2: "float2", // virtual kinds
         FLOAT3: "float3", // virtual kinds
@@ -32,11 +32,39 @@
         COLOR_CLOSURE: "color_closure"
     }
 
+    var Semantics = ns.SEMANTICS = {
+        COLOR: 'color',
+        NORMAL: 'normal',
+        SCALAR_0_TO_1: 'scalar0To1',
+        UNKNOWN: 'unknown'
+    }
+
     ns.SOURCES = {
         UNIFORM: "uniform",
         VERTEX: "vertex",
         CONSTANT: "constant"
     }
+
+    ns.ColorClosures = {
+        "diffuse" : {
+            input: [
+                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR},
+                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0 }
+            ],
+            env: {
+                "ambientIntensity" :  { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0}
+            }
+        },
+        "phong" : {
+            input: [
+                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR},
+                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0}
+            ]
+        }
+    }
+
 
     function constructFromMatrix(dest, matSize, args){
         if(args.length > 1){
