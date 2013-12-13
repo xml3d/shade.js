@@ -79,6 +79,11 @@
         },
         getTypeInfo: function(node) {
             return common.getTypeInfo(node, this.getScope());
+        },
+        addHeader: function(headerStr) {
+            if (this.headers.indexOf(headerStr) == -1) {
+                this.headers.push(headerStr);
+            }
         }
     });
 

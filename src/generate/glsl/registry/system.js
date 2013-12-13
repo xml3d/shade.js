@@ -91,9 +91,7 @@
         },
         fwidth: {
             property: function (node, parent, context, state) {
-                if (state.headers.indexOf(SystemDefines.DERIVATE_EXTENSION) == -1) {
-                    state.headers.push(SystemDefines.DERIVATE_EXTENSION);
-                }
+                state.addHeader(SystemDefines.DERIVATE_EXTENSION);
                 return Tools.removeMemberFromExpression(node);
             }
         }

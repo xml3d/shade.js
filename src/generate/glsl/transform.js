@@ -262,6 +262,7 @@
         if (node.argument) {
             var argument = ANNO(node.argument);
             if (argument.isArray()) {
+               context.addHeader("#extension GL_EXT_draw_buffers : require");
                fragColors = {type: Syntax.BlockStatement, body: []};
                node.argument.elements.forEach(function(element, index) {
                     fragColors.body.push(createGLFragColor(Tools.castToVec4(element, scope), index));
