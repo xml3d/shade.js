@@ -21,13 +21,13 @@
         return aast;
     }
 
-    ns.resolveClosuresPostTypeInference = function(aast, implementationName, opt) {
+    ns.resolveClosuresPostTypeInference = function(aast, implementationName, processingData, opt) {
         if(!implementationName) {
             return aast;
         }
         try {
            var resolverImpl = Implementations[implementationName];
-            if(resolverImpl.resolvePostTypeInference())
+            if(resolverImpl.resolvePostTypeInference)
                 return resolverImpl.resolvePostTypeInference(aast, processingData, opt);
             else
                 return aast;

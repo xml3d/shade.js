@@ -31,6 +31,7 @@
             var argAast = gatherClosureArgs(this, closureInfo, scope);
             var textures = allocateArgumentsToTextures(this);
             this.id = getSignatureId(this);
+            argAast[0].value = this.id; // Set ID for shader id assignment
             return generateAast(textures, argAast);
         }
     });
@@ -71,7 +72,7 @@
                                && ANNO(node.callee.object).isOfKind(Kinds.COLOR_CLOSURE))
                             {
                                 result.push({
-                                    name: node.callee.property,
+                                    name: node.callee.property.name,
                                     args: node.arguments
                                 });
                             }
@@ -84,10 +85,14 @@
 
     function gatherClosureArgs(ccSig, closureInfo, scope){
         var argCache = {}, argAast = [];
+
+        // Add argument for signature id;
+        getCachedArgument(ccSig, {type: Types.INT}, {type: "Literal", value: "ID_UNSPECIFIED"}, argCache, argAast);
+
         for(var i = 0; i < closureInfo.length; ++i){
             var cInfo = closureInfo[i];
             var closureDefinition = Shade.ColorClosures[cInfo.name];
-            if(!closureInfo)
+            if(!closureDefinition)
                 throw new Error("Unknown Color closure '" + cInfo.name + "'");
             var argIndices = [], value;
             for(var i = 0; i < closureDefinition.input.length; ++i){
@@ -112,6 +117,7 @@
             }
             addColorClosure(ccSig, cInfo.name, argIndices, envIndices);
        }
+       return argAast;
     }
 
     function getCachedArgument(ccSig, inputDefinition, inputAast, argCache, argAast){
@@ -180,19 +186,19 @@
     function allocateArgumentsToTextures(ccSig){
         var argCopy = ccSig.args.slice();
         argCopy.sort(function(a, b){
-            return getStorageSize(a.storage) - getStorageSize(b.storage);
+            return getStorageSize(a.storeType) - getStorageSize(b.storeType);
         });
         var textures = [];
         var i = argCopy.length;
         while(i--){
-            var arg = argCopy(i);
+            var arg = argCopy[i];
             assignTextureSlot(arg, textures);
         }
         ccSig.textureCount = textures.length;
         return textures;
     }
     function assignTextureSlot(arg, textures){
-        var size = getStorageSize(arg.storage);
+        var size = getStorageSize(arg.storeType);
         for(var i = 0; i < textures.length; i++){
             var tex = textures[i];
             if(size < 32){
@@ -223,13 +229,14 @@
         }
     }
 
-    function getStorageSize(storage){
-        switch(storage){
+    function getStorageSize(storeType){
+        switch(storeType){
             case ArgStorageType.FLOAT1: return 32;
             case ArgStorageType.FLOAT1_BYTE: return 8;
             case ArgStorageType.FLOAT1_UBYTE: return 8;
             case ArgStorageType.FLOAT2: return 64;
             case ArgStorageType.FLOAT3: return 96;
+            case ArgStorageType.FLOAT3_NORMAL: return 24;
             case ArgStorageType.FLOAT4: return 128;
         }
     }
@@ -261,7 +268,7 @@
     }
 
     function getArgumentKey(arg){
-        return arg.type + "," + arg.kind + "," + arg.storage + "," + arg.texIdx + ","
+        return arg.type + "," + arg.kind + "," + arg.storeType + "," + arg.texIdx + ","
             + arg.componentIdx + "," + arg.bitIdx;
     }
 
@@ -281,9 +288,9 @@
 
     function generateVectorAast(texture, argAast){
         var vecArgs = [];
-        for(var i = 0; i < texture.storedArgs; ++i){
+        for(var i = 0; i < texture.storedArgs.length; ++i){
             var arg = texture.storedArgs[i];
-            var size = getStorageSize(arg.storage);
+            var size = getStorageSize(arg.storeType);
             if(size < 32){
                 throw new Error("We currently don't support storing of values smaller than 32 bit");
             }
