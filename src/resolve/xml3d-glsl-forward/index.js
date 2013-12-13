@@ -135,7 +135,7 @@
         }
     }
 
-    ns.resolve = function (aast, opt) {
+    ns.resolvePreTypeInference = function (aast, processData, opt) {
         var state = {
             program: aast,
             newFunctions: []

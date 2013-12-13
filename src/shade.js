@@ -17,6 +17,39 @@
         VectorType = spaceAnalyzer.VectorType;
 
 
+    var WorkingSet = function(){
+        this.ast = null;
+        this.aast = null;
+        this.result = null;
+        this.processingData = {};
+    };
+    Base.extend(WorkingSet.prototype, {
+        setAst: function(ast){
+            this.ast = ast;
+        },
+        parse: function(code, opt){
+            opt = opt || {};
+            this.ast = ns.parse(code, opt);
+        },
+        analyze: function(inject, implementation, opt){
+            opt = opt || {};
+            opt.entry = opt.entry || "global.shade";
+            opt.validate = opt.validate !== undefined ? opt.validate : true;
+            opt.throwOnError = opt.throwOnError !== undefined ? opt.throwOnError : true;
+            opt.implementation = implementation;
+            opt.inject = inject;
+            this.aast = analyzer.analyze(this.ast, this.processingData, opt).ast;
+            return this.aast;
+        },
+        getProcessingData: function(key){
+            return this.processingData[key];
+        },
+        compileFragmentShader: function(opt){
+            this.result = ns.compileFragmentShader(this.aast, opt);
+            return this.result;
+        }
+    });
+
 
 
     Base.extend(ns, {
@@ -55,14 +88,14 @@
             opt.throwOnError = opt.throwOnError !== undefined ? opt.throwOnError : true;
 
             ast = ns.parse(ast, opt);
-            return analyzer.analyze(ast, opt).ast;
+            return analyzer.analyze(ast, {}, opt).ast;
         },
 
         analyze: function(ast, opt) {
             opt = opt || {};
             ast = ns.parse(ast, opt);
 
-            return analyzer.analyze(ast, opt)
+            return analyzer.analyze(ast, {}, opt)
         },
 
         resolveClosures: function(ast, implementation, opt) {
@@ -92,7 +125,8 @@
         Vec4: interfaces.Vec4,
         Texture: interfaces.Texture,
         Color: interfaces.Color,
-        Mat3: interfaces.Mat3
+        Mat3: interfaces.Mat3,
+        WorkingSet: WorkingSet
 
 });
     /**
