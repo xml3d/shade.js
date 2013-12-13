@@ -28,6 +28,23 @@
 
     var handlers = {
 
+        ArrayExpression: function (node, parent, context) {
+            var result = ANNO(node), elements = context.getTypeInfo(node.elements), elementType = ANNO({});
+
+            result.setType(TYPES.ARRAY);
+            elements.forEach(function (element, index) {
+                if (!index) {
+                    elementType.copy(element);
+                } else {
+                    if (!elementType.setCommonType(elementType, element)) {
+                        result.setInvalid(generateErrorInformation(node, "shade.js does not support inhomogenous arrays: [", elements.map(function (e) {
+                            return e.getTypeString()
+                        }).join(", "), "]"));
+                    }
+                }
+            });
+        },
+
         /**
          * @param node
          */
@@ -176,10 +193,11 @@
             var left = context.getTypeInfo(node.left),
                 right = context.getTypeInfo(node.right),
                 result = ANNO(node),
-                operator = node.operator;
+                operator = node.operator,
+                value;
 
             if(!(left.isValid() && right.isValid())) {
-                result.setInvalid()
+                result.setInvalid();
                 return;
             }
 
@@ -223,7 +241,7 @@
                 case "!==":
                     result.setType(TYPES.BOOLEAN);
                     if (left.isUndefined() || right.isUndefined()) {
-                        var value = left.isUndefined() && right.isUndefined();
+                        value = left.isUndefined() && right.isUndefined();
                         result.setStaticValue(operator == "===" ? value : !value);
                         return;
                     }
@@ -236,7 +254,7 @@
                 case "<=":
                     result.setType(TYPES.BOOLEAN);
                     if (left.isUndefined() || right.isUndefined()) {
-                        var value = left.isUndefined() && right.isUndefined();
+                        value = left.isUndefined() && right.isUndefined();
                         result.setStaticValue(operator == "!=" ? !value : value);
                         return;
                     }

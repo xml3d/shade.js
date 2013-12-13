@@ -254,29 +254,26 @@
      * @returns {*}
      */
     var leaveReturnStatement = function(node, context) {
-        var scope = context.getScope();
+        var scope = context.getScope(), fragColors;
 
         if(!context.inMainFunction())
             return;
 
         if (node.argument) {
+            var argument = ANNO(node.argument);
+            if (argument.isArray()) {
+               fragColors = {type: Syntax.BlockStatement, body: []};
+               node.argument.elements.forEach(function(element, index) {
+                    fragColors.body.push(createGLFragColor(Tools.castToVec4(element, scope), index));
+               });
+            } else {
+                fragColors = createGLFragColor(Tools.castToVec4(node.argument, scope));
+            }
             return {
                 type: Syntax.BlockStatement,
-                body: [
-                    {
-                        type: Syntax.AssignmentExpression,
-                        operator: "=",
-                        left: {
-                            type: Syntax.Identifier,
-                            name: "gl_FragColor"
-                        },
-                        right: Tools.castToVec4(node.argument, scope)
-                    },
-                    {
-                        type: Syntax.ReturnStatement
-                    }
-                ]
-            }
+                body: [ fragColors, { type: Syntax.ReturnStatement } ]
+            };
+
         } else {
             return {
                 type: Syntax.ExpressionStatement,
@@ -304,6 +301,17 @@
         //console.log(node);
     };
 
+    function createGLFragColor(result, index) {
+        return {
+            type: Syntax.AssignmentExpression,
+            operator: "=",
+            left: {
+                type: Syntax.Identifier,
+                name: "gl_FragColor" + (index !== undefined ? "[" + index + "]" : "")
+            },
+            right: result
+        };
+    }
 
     function getNameOfNode(node) {
         switch (node.type) {
