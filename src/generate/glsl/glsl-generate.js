@@ -2,6 +2,7 @@
 
     var FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
     var Shade = require("./../../interfaces.js");
+    var Tools = require("../tools.js");
     var walk = require('estraverse'),
         Syntax = walk.Syntax,
         VisitorOption = walk.VisitorOption,
@@ -32,6 +33,10 @@
         }
     }
 
+    var handler = new Tools.ExpressionHandler( {
+        type: toGLSLType
+    });
+
 
     /**
      * @param {object} opt
@@ -50,7 +55,7 @@
         return header;
     }
 
-    var toGLSLType = function (info, allowUndefined) {
+    function toGLSLType(info, allowUndefined) {
         if(!info) return "?";
 
         switch (info.type) {
@@ -202,8 +207,7 @@
 
 
                             case Syntax.ReturnStatement:
-                                var hasArguments = node.argument;
-                                lines.appendLine("return" + (hasArguments ? (" " + handleExpression(node.argument, opt)) : "") + ";");
+                                lines.appendLine(handler.statement(node));
                                 return;
 
                             case Syntax.VariableDeclarator :
@@ -213,15 +217,12 @@
                                 return;
 
                             case Syntax.AssignmentExpression:
-                                lines.appendLine(handleExpression(node, opt) + ";")
-                                return;
-
                             case Syntax.ExpressionStatement:
-                                lines.appendLine(handleExpression(node.expression, opt) + ";");
-                                return VisitorOption.Skip;
+                                lines.appendLine(handler.expression(node) + ";")
+                                return VisitorOption.Skip;;
 
                             case Syntax.IfStatement:
-                                lines.appendLine("if(" + handleExpression(node.test, opt) + ") {");
+                                lines.appendLine("if(" + handler.expression(node.test, opt) + ") {");
 
                                 lines.changeIndention(1);
                                 traverse(node.consequent, lines, opt);
@@ -237,7 +238,7 @@
                                 return VisitorOption.Skip;
 
                             case Syntax.ForStatement:
-                                lines.appendLine("for (" + handleInlineDeclaration(node.init, opt) + "; " + handleExpression(node.test, opt) +"; " + handleExpression(node.update, opt) + ") {");
+                                lines.appendLine("for (" + handleInlineDeclaration(node.init, opt) + "; " + handler.expression(node.test, opt) +"; " + handler.expression(node.update, opt) + ") {");
                                 lines.changeIndention(1);
                                 traverse(node.body, lines, opt);
                                 lines.changeIndention(-1);
@@ -253,8 +254,8 @@
 
                         }
                     } catch (e) {
-                        // console.error(e);
-                        Shade.throwError(node, e.message);
+                        throw e;//console.error(e);
+                        //Shade.throwError(node, e.message);
                     }
                 },
                 leave: function (node) {
@@ -272,88 +273,6 @@
         );
     }
 
-    var generateFloat = function(value) {
-        if(isNaN(value))
-            throw Error("Internal: Expression generated NaN!");
-        var result = '' + value;
-        if (result.indexOf(".") == -1 && result.indexOf("e") == -1) {
-            result += ".0";
-        }
-        return result;
-    }
-
-    /**
-     *
-     * @param node
-     * @returns {string}
-     */
-    var handleExpression = function(node, opt) {
-        if(!node) return "";
-
-        var result = "<unhandled: " + node.type+ ">",
-            opt = opt || {};
-
-        switch(node.type) {
-            case Syntax.NewExpression:
-                result = toGLSLType(node.extra);
-                result += handleArguments(node.arguments, opt);
-                break;
-
-            case Syntax.Literal:
-                result = handleLiteral(node.extra, node.value);
-                break;
-
-
-            case Syntax.Identifier:
-                result = node.name;
-                break;
-
-            case Syntax.BinaryExpression:
-            case Syntax.LogicalExpression:
-            case Syntax.AssignmentExpression:
-                result = handleBinaryArgument(node.left, opt);
-                result += " " + node.operator + " ";
-                result += handleBinaryArgument(node.right, opt);
-                break;
-            case Syntax.UnaryExpression:
-                result = node.operator;
-                result += handleBinaryArgument(node.argument, opt);
-                break;
-
-            case Syntax.CallExpression:
-                result = handleExpression(node.callee, opt);
-                result += handleArguments(node.arguments, opt);
-                break;
-
-            case Syntax.MemberExpression:
-                result = handleBinaryArgument(node.object, opt);
-                result += node.computed ? "[" : ".";
-                result += handleExpression(node.property, opt);
-                node.computed && (result += "]");
-                break;
-
-            case Syntax.ConditionalExpression:
-                result = handleExpression(node.test, opt);
-                result += " ? ";
-                result += handleExpression(node.consequent, opt);
-                result += " : ";
-                result += handleExpression(node.alternate, opt);
-                break;
-
-            case Syntax.UpdateExpression:
-                result = "";
-                if (node.isPrefix) {
-                    result += node.operator;
-                }
-                result += handleExpression(node.argument, opt);
-                if (!node.isPrefix) {
-                    result += node.operator;
-                }
-            default:
-                //console.log("Unhandled: " , node.type);
-        }
-        return result;
-    }
 
     function getStaticValue(extra) {
         if (!extra || extra.staticValue === undefined) return "";
@@ -367,7 +286,7 @@
         if (node.extra.elements) {
             result += "[" + (node.extra.staticSize ? node.extra.staticSize : "0") + "]";
         }
-        if (node.init) result += " = " + handleExpression(node.init, opt);
+        if (node.init) result += " = " + handler.expression(node.init);
         if (!node.init && storageQualifier == GLSL.Storage.CONST) {
             result += " = " + getStaticValue(node.extra);
         }
@@ -382,7 +301,7 @@
             var result = node.declarations.reduce(function (declString, declaration) {
                 var decl = toGLSLType(declaration.extra) + " " + declaration.id.name;
                 if (declaration.init) {
-                    decl += " = " + handleExpression(declaration.init, opt);
+                    decl += " = " + handler.expression(declaration.init);
                 }
                 return declString + decl;
             }, "");
@@ -391,41 +310,14 @@
 
         // GLSL allows only declaration in init, but since this is a new scope, it should be fine
         if (node.type == Syntax.AssignmentExpression) {
-            return toGLSLType(node.extra) + " " + handleExpression(node.left) + " = " + handleExpression(node.right, opt);
+            return toGLSLType(node.extra) + " " + handler.expression(node.left) + " = " + handler.expression(node.right);
         }
         Shade.throwError(node, "Internal error in GLSL::handleInlineDeclaration, found " + node.type);
     }
 
-    function handleBinaryArgument(node, opt){
-        var result = handleExpression(node, opt);
-        switch(node.type) {
-            case Syntax.BinaryExpression:
-            case Syntax.LogicalExpression:
-            case Syntax.AssignmentExpression: result = "( " + result + " )"; break;
-        }
-        return result;
-    }
-
-    function handleArguments(container, opt) {
-        var result = "(";
-        container.forEach(function (arg, index) {
-            result += handleExpression(arg, opt);
-            if (index < container.length - 1) {
-                result += ", ";
-            }
-        });
-        return result + ")";
-    }
 
 
 
-    function handleLiteral(extra, alternative) {
-        var value = extra.staticValue !== undefined ? extra.staticValue : alternative;
-        if (extra.type == Types.NUMBER)
-            return generateFloat(value);
-        else
-            return value;
-    }
 
     exports.generate = generate;
 

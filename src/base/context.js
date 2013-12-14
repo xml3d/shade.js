@@ -11,6 +11,13 @@
         this.root = root;
 
         /**
+         * To identify the main method of the shader
+         * @type {*|string}
+         */
+        this.mainFunction = opt.mainFunction || "global.shade";
+
+
+        /**
          * @type {Array.<Scope>}
          */
         this.scopeStack = opt.scope ? [opt.scope] : [  ];
@@ -26,8 +33,10 @@
         },
         popScope: function () {
             return this.scopeStack.pop();
+        },
+        inMainFunction: function() {
+            return this.getScope().str() == this.mainFunction;
         }
-
     };
 
 

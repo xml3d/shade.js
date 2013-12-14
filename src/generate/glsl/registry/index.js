@@ -53,7 +53,6 @@
      */
     var GLTransformContext = function(root, entry, opt) {
         Context.call(this, root, opt);
-        this.entry = entry;
         this.usedParameters = {
             shader: {},
             system: {}
@@ -71,9 +70,6 @@
     };
 
     Base.createClass(GLTransformContext, Context, {
-        inMainFunction: function() {
-            return this.getScope().str() == this.entry;
-        },
         createScope: function(node, parent, name) {
             return new GLTransformScope(node, parent, {name: name});
         },
