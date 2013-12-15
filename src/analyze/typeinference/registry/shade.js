@@ -24,9 +24,14 @@
         }
     };
 
-    var checkFirstArgumentIsColor = function(node, args, name) {
-        if(!args.length || !args[0].canColor())
-            Shade.throwError(node, "First argument of Shade." + name + " must evaluate to a color, found " + (args.length ? args[0].getTypeString() : "undefined"));
+    var checkArgumentIsColor = function(node, args, position, name) {
+        if(!args[position] || !args[position].canColor())
+            Shade.throwError(node, "Argument "+ position + " of Shade." + name + " must evaluate to a color, found " + (args.length ? args[position].getTypeString() : "undefined"));
+    };
+
+    var checkArgumentIsNormal = function(node, args, position, name) {
+        if(!args[position] || !args[position].canNormal())
+            Shade.throwError(node, "Argument "+ position + " of Shade." + name + " must evaluate to a normal, found " + (args.length ? args[position].getTypeString() : "undefined"));
     };
 
     var ShadeObject = {
@@ -45,11 +50,9 @@
             type: TYPES.FUNCTION,
             name: "diffuse",
             evaluate: function(result, args, context, objectReference, root) {
-                checkFirstArgumentIsColor(result.node, args, this.name);
-                var normal = args[1];
-                if(!(normal && normal.canNormal())) {
-                    Shade.throwError(result.node, "Second argument of Shade.diffuse must evaluate to a normal, but");
-                }
+                checkArgumentIsColor(result.node, args, 0, this.name);
+                checkArgumentIsNormal(result.node, args, 1, this.name);
+
                 return {
                     type: TYPES.OBJECT,
                     kind: KINDS.COLOR_CLOSURE
@@ -60,16 +63,11 @@
             type: TYPES.FUNCTION,
             name: "phong",
             evaluate: function(result, args, ctx) {
-                checkFirstArgumentIsColor(result.node, args, this.name);
+                checkArgumentIsColor(result.node, args, 0, this.name);
+                checkArgumentIsNormal(result.node, args, 1, this.name);
 
-                var normal = args[1];
-                if(!(normal && normal.canNormal())) {
-                    throw new Error("Second argument (normal) of Shade.phong must evaluate to a normal");
-                }
-
-                if (args.length > 1) {
+                if (args.length > 2) {
                     var shininess = args[2];
-                    //console.log("Color: ", color.str(), color.getType(ctx));
                     if(!shininess.canNumber()) {
                         throw new Error("Third argument (shininess) of Shade.phong must evaluate to a number. Found: " + shininess.str());
                     }
@@ -79,7 +77,23 @@
                     kind: KINDS.COLOR_CLOSURE
                 };
             }
+        },
+        cookTorrance: {
+            type: TYPES.FUNCTION,
+            name: "cookTorrance",
+            evaluate: function(result, args, ctx) {
+                checkArgumentIsColor(result.node, args, 0, this.name);
+                checkArgumentIsNormal(result.node, args, 1, this.name);
+
+                // TODO: Check other arguments
+
+                return {
+                    type: TYPES.OBJECT,
+                    kind: KINDS.COLOR_CLOSURE
+                };
+            }
         }
+
     };
 
     Base.extend(ns, {
