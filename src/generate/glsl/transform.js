@@ -6,7 +6,7 @@
         Shade = require("./../../interfaces.js"),
         Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS,
-        Tools = require('./registry/tools.js'),
+        Tools = require('../tools.js'),
         System = require('./registry/system.js'),
         assert = require('assert');
 

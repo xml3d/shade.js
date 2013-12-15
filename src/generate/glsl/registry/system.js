@@ -1,11 +1,15 @@
 (function (ns) {
 
-    var Shade = require("../../../interfaces.js"),
-        Tools = require("./tools.js"),
-        Syntax = require('estraverse').Syntax;
-    var ANNO = require("../../../base/annotation.js").ANNO;
+    // Dependencies
+    var Shade = require("../../../interfaces.js");
+    var Tools = require("../../tools.js");
+    var Syntax = require('estraverse').Syntax;
+
+    // Shortcuts
     var TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS;
+
+
     var SystemDefines = {};
     SystemDefines.CANVAS_DIMENSIONS = "coords";
     SystemDefines.DERIVATE_EXTENSION = "#extension GL_OES_standard_derivatives : enable";

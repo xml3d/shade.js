@@ -2,7 +2,7 @@
 
    var Shade = require("../../../interfaces.js");
    var Syntax = require('estraverse').Syntax;
-   var Tools = require('./tools.js');
+   var Tools = require("../../tools.js");
 
     var MathConstants = ["E", "PI", "LN2", "LOG2E", "LOG10E", "PI", "SQRT1_2", "SQRT2"];
 

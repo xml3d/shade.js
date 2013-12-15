@@ -2,7 +2,7 @@
 
     var Shade = require("../../../interfaces.js");
     var Syntax = require('estraverse').Syntax;
-    var Tools = require("./tools.js");
+    var Tools = require("../../tools.js");
     var ANNO = require("../../../base/annotation.js").ANNO;
 
     var TYPES = Shade.TYPES,
