@@ -6,16 +6,29 @@
 
     var ShadeInstance = {
         diffuse: {
-            callExp: function(node) {
+            callExp: function(node, args, parent) {
+                //console.log("HAllo", node.callee);
+                var color = node.arguments.shift();
+                var closureName = node.arguments.length == 2 ? "oren_nayar" : "diffuse";
                 return {
                     type: Syntax.BinaryExpression,
-                    operator: "+",
+                    operator: "*",
                     left: {
                         type: Syntax.CallExpression,
-                        callee: node.callee.property,
+                        callee: {
+                            type: Syntax.Identifier,
+                            name: "color"
+                        },
+                        arguments: [ color ]
+                    },
+                    right: {
+                        type: Syntax.CallExpression,
+                        callee: {
+                            type: Syntax.Identifier,
+                            name: closureName
+                        },
                         arguments: node.arguments
                     },
-                    right: node.callee,
                     extra: {
                         type: Shade.TYPES.OBJECT,
                         kind: Shade.OBJECT_KINDS.COLOR_CLOSURE
@@ -25,6 +38,9 @@
         },
         phong: {
 
+        },
+        cookTorrance: {
+
         }
 
     }
@@ -33,8 +49,8 @@
         id: "Shade",
         kind: Shade.OBJECT_KINDS.COLOR_CLOSURE,
         object: {
-            constructor: function() {
-                console.error("HaLLO");
+            constructor: function(node, parent) {
+                return;
             },
             static: {}
         },

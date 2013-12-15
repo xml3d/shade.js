@@ -4,13 +4,54 @@
     var Tools = require("../tools.js");
     var Syntax = require('estraverse').Syntax;
     var Shade = require("./../../interfaces.js");
+    var AbstractGenerator = require("../base/base-generator.js").AbstractGenerator;
+    var ExpressionHandler = require('../base/expression-handler.js').ExpressionHandler;
 
 
     // Shortcuts
-    var AbstractGenerator = Tools.AbstractGenerator,
-        Types = Shade.TYPES,
+    var Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS;
 
+
+    function getParameterInitializer(typeInfo) {
+        if(!typeInfo) return "?";
+        switch (typeInfo.type) {
+            case Types.OBJECT:
+                switch (typeInfo.kind) {
+                    case Kinds.FLOAT4:
+                        return "?";
+                    case Kinds.FLOAT3:
+                        return "0";
+                    case Kinds.FLOAT2:
+                        return "?";
+                    case Kinds.TEXTURE:
+                        return "?";
+                    case Kinds.MATRIX3:
+                        return "?";
+                    case Kinds.MATRIX4:
+                        return "?";
+                    case Kinds.COLOR_CLOSURE:
+                        return "background";
+                    default:
+                        return "<undefined>";
+                }
+            case Types.ARRAY:
+                return "array"
+
+            case Types.UNDEFINED:
+                    return "void";
+            case Types.NUMBER:
+                return "0";
+            case Types.BOOLEAN:
+                return "true";
+            case Types.INT:
+                return "0";
+            default:
+                //throw new Error("toGLSLType: Unhandled type: " + info.type);
+                return info.type;
+
+        }
+    }
 
     var toOSLType = function(info) {
         if(!info) return "?";
@@ -21,7 +62,7 @@
                     case Kinds.FLOAT4:
                         return "vec4";
                     case Kinds.FLOAT3:
-                        return "color";
+                        return "vector";
                     case Kinds.FLOAT2:
                         return "vector";
                     case Kinds.TEXTURE:
@@ -55,7 +96,7 @@
         }
     }
 
-    var handler = new Tools.ExpressionHandler( {
+    var handler = new ExpressionHandler( {
         type: toOSLType
     });
 
@@ -89,7 +130,7 @@
                     lines.appendLine(J(["shader", node.id.name, "("]));
                     lines.changeIndention(1);
                     node.params.forEach(function(param) {
-                        lines.appendLine(J([toOSLType(param.extra), param.name + ","]));
+                        lines.appendLine(J([toOSLType(param.extra), param.name , "=" , getParameterInitializer(param.extra)])+",");
                     });
                     lines.appendLine("output closure color result = 0");
                     lines.changeIndention(-1);

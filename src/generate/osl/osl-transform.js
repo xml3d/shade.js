@@ -3,10 +3,10 @@
     // Dependencies
     var Context = require("./registry/").OSLTransformContext,
         Tools = require("../tools.js"),
+        AbstractTransformer = require("../base/base-transformer.js").AbstractTransformer,
         common = require("../../base/common.js");
 
     var walk = require('estraverse'),
-        AbstractTransformer = Tools.AbstractTransformer,
         ANNO = common.ANNO;
 
     // Shortcuts
@@ -59,7 +59,7 @@
 
                 case Syntax.ReturnStatement:
                     if(context.inMainFunction()) {
-                        this.leaveMainReturn(node)
+                        return this.leaveMainReturn(node)
                     }
 
             }

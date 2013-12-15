@@ -1,7 +1,7 @@
 (function(ns) {
 
     var Scope = require("../../../base/scope.js"),
-        TransformContext = require("../../tools.js").TransformContext,
+        TransformContext = require("../../base/context.js").TransformContext,
         Base = require("../../../base/index.js"),
         Shade = require("../../../interfaces.js"),
         common = require("../../../base/common.js");
@@ -14,17 +14,17 @@
 
 
     var objects = {
-        Shade : require("./shade.js")
- /*       Space : require("./space.js"),
-        Math : require("./math.js"),
-        System : require("./system.js"),
-        Vec2 : require("./vec2.js"),
-        Vec3 : require("./vec3.js"),
-        Color: require("./vec3.js"),
-        Vec4 : require("./vec4.js"),
-        Mat3 : require("./mat3.js"),
-        Mat4 : require("./mat4.js"),
-        Texture : require("./texture.js")*/
+        Shade : require("./shade.js"),
+//        Space : require("./space.js"),
+//        Math : require("./math.js"),
+//        System : require("./system.js"),
+//        Vec2 : require("./vec2.js"),
+        Vec3 : require("./vec3.js")
+//        Color: require("./vec3.js"),
+//        Vec4 : require("./vec4.js"),
+//        Mat3 : require("./mat3.js"),
+//        Mat4 : require("./mat4.js"),
+//        Texture : require("./texture.js")
     };
 
     var Registry = {
@@ -85,20 +85,24 @@
             }
         },
         createEnvironmentParameter: function(parameterName, typeInfo) {
-            //parameterName = context.getNameForGlobal(parameterName);
-            this.addUsedParameter(parameterName, this.globalParameters[parameterName]);
-            var propertyLiteral = { type: Syntax.Identifier, name: parameterName };
+            var newParameterName = capitaliseFirstLetter(parameterName);
+            this.addUsedParameter(newParameterName, this.globalParameters[parameterName]);
+            var propertyLiteral = { type: Syntax.Identifier, name: newParameterName };
             ANNO(propertyLiteral).copy(typeInfo);
             return propertyLiteral;
         },
         createSystemParameter: function(parameterName, typeInfo) {
-            //parameterName = context.getNameForGlobal(parameterName);
-            this.addUsedParameter(parameterName, this.globalParameters[parameterName]);
-            var propertyLiteral = { type: Syntax.Identifier, name: parameterName };
+            var newParameterName = capitaliseFirstLetter(parameterName);
+            this.addUsedParameter(newParameterName, this.globalParameters[parameterName]);
+            var propertyLiteral = { type: Syntax.Identifier, name: newParameterName };
             ANNO(propertyLiteral).copy(typeInfo);
             return propertyLiteral;
         }
     });
+
+    function capitaliseFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+    }
 
     /**
      * @constructor
@@ -115,7 +119,7 @@
 //            this.registerObject("Math", objects.Math);
 //            this.registerObject("Color",  objects.Color);
 //            this.registerObject("Vec2", objects.Vec2);
-//            this.registerObject("Vec3", objects.Vec3);
+            this.registerObject("Vec3", objects.Vec3);
 //            this.registerObject("Vec4", objects.Vec4);
 //            this.registerObject("Texture", objects.Texture);
             this.registerObject("Shade", objects.Shade);
