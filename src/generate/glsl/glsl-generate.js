@@ -1,13 +1,16 @@
 (function (ns) {
 
+    // Dependencies
     var FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
     var Shade = require("./../../interfaces.js");
-    var Tools = require("../tools.js");
-    var walk = require('estraverse'),
+    var walk = require('estraverse');
+    var ExpressionHandler = require('../base/expression-handler.js').ExpressionHandler,
         Syntax = walk.Syntax,
         VisitorOption = walk.VisitorOption,
         ANNO = require("../../base/annotation.js").ANNO;
 
+
+    // Shortcuts
     var Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS,
         Sources = Shade.SOURCES;
@@ -33,7 +36,7 @@
         }
     }
 
-    var handler = new Tools.ExpressionHandler( {
+    var handler = new ExpressionHandler( {
         type: toGLSLType
     });
 

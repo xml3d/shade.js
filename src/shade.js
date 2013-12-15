@@ -1,5 +1,6 @@
 (function (ns) {
     var parser = require('esprima'),
+        codegen = require('escodegen'),
         parameters = require("./analyze/parameters.js"),
         interfaces = require("./interfaces.js"),
         inference = require("./analyze/typeinference/typeinference.js"),
@@ -76,6 +77,10 @@
 
         compileFragmentShader: function(aast, opt){
             return new GLSLCompiler().compileFragmentShader(aast, opt);
+        },
+
+        toJavaScript: function(aast, opt){
+            return codegen.generate(aast, opt);
         },
 
         TYPES : interfaces.TYPES,
