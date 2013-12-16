@@ -184,10 +184,11 @@
 
 
     function allocateArgumentsToTextures(ccSig){
-        var argCopy = ccSig.args.slice();
+        var argCopy = ccSig.args.slice(1);
         argCopy.sort(function(a, b){
             return getStorageSize(a.storeType) - getStorageSize(b.storeType);
         });
+        argCopy.push(ccSig.args[0]); // ID argument always comes first (and thus: last in this array)
         var textures = [];
         var i = argCopy.length;
         while(i--){
