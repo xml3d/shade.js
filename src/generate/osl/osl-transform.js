@@ -1,10 +1,11 @@
 (function(ns){
 
     // Dependencies
-    var Context = require("./registry/").OSLTransformContext,
+    var OSLTransformContext = require("./registry/").OSLTransformContext,
         Tools = require("../tools.js"),
         AbstractTransformer = require("../base/base-transformer.js").AbstractTransformer,
-        common = require("../../base/common.js");
+        common = require("../../base/common.js"),
+        ASTTools = require("../../base/asttools.js");
 
     var walk = require('estraverse'),
         ANNO = common.ANNO;
@@ -20,7 +21,9 @@
      */
     var OSLTransformer = function(program, options) {
         AbstractTransformer.call(this, program, options);
-        this.context = new Context(program, "global.shade", options);
+        this.context = new OSLTransformContext(program, "global.shade", Tools.extend(options,{
+            blockedNames : ["N"]
+        }));
     };
 
     Tools.createClass(OSLTransformer, AbstractTransformer, {
@@ -61,8 +64,33 @@
                     if(context.inMainFunction()) {
                         return this.leaveMainReturn(node)
                     }
+                    break;
+                case Syntax.Identifier:
+                    if(ASTTools.isVariableName(node, parent)) {
+                        return this.leaveVariable(node);
+                    } else {
+                        if(node.name == "N")
+                        console.log(node.name, node.type, parent.type);
+                    }
+                    break;
 
             }
+        },
+
+        leaveVariable: function(node) {
+            var oldName = node.name;
+            var newName = this.context.getVariableName(oldName);
+            if(newName) {
+                console.log("From map");
+                node.name = newName;
+                return node;
+            }
+            newName = this.context.getSafeName(oldName);
+            if(newName != oldName) {
+                node.name = newName;
+                this.context.setVariableName(oldName, newName);
+            }
+            return node;
         },
 
         leaveMainReturn: function (node) {

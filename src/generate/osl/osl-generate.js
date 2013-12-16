@@ -19,13 +19,13 @@
             case Types.OBJECT:
                 switch (typeInfo.kind) {
                     case Kinds.FLOAT4:
-                        return "?";
+                        return "0";
                     case Kinds.FLOAT3:
                         return "0";
                     case Kinds.FLOAT2:
-                        return "?";
+                        return "0";
                     case Kinds.TEXTURE:
-                        return "?";
+                        return "\"\"";
                     case Kinds.MATRIX3:
                         return "?";
                     case Kinds.MATRIX4:
@@ -60,13 +60,13 @@
             case Types.OBJECT:
                 switch (info.kind) {
                     case Kinds.FLOAT4:
-                        return "vec4";
+                        return "vector";
                     case Kinds.FLOAT3:
                         return "vector";
                     case Kinds.FLOAT2:
                         return "vector";
                     case Kinds.TEXTURE:
-                        return "sampler2D";
+                        return "string";
                     case Kinds.MATRIX3:
                         return "mat3";
                     case Kinds.MATRIX4:
@@ -136,13 +136,20 @@
                     lines.changeIndention(-1);
                     lines.appendLine(")", "{");
                     break;
-                case Syntax.ExpressionStatement:
+
                 case Syntax.AssignmentExpression:
+                case Syntax.ExpressionStatement:
                     lines.appendLine(handler.expression(node) + ";")
                     controller.skip();
                     break;
+
                 case Syntax.ReturnStatement:
                     lines.appendLine(handler.statement(node));
+                    break;
+
+                case Syntax.VariableDeclarator:
+                    lines.appendLine(J([toOSLType(node.extra), node.id.name + ";"]));
+                    break;
 
             }
         },
