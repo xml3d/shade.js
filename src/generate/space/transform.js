@@ -12,6 +12,7 @@
         SpaceVectorType = Shade.SpaceVectorType,
         SpaceType = Shade.SpaceType,
         VectorType = Shade.VectorType;
+    var SpaceTransformTools = require("./space-transform-tools.js");
 
 
 
@@ -81,7 +82,7 @@
                                 if(!paramT.space)
                                     oldArgs[paramT.idx] !== undefined && newArgs.push(oldArgs[paramT.idx]);
                                 else{
-                                    newArgs.push(self.getSpaceTransformCall(oldArgs[paramT.idx], paramT.space));
+                                    newArgs.push(SpaceTransformTools.getSpaceTransformCall(oldArgs[paramT.idx], paramT.space));
                                 }
                             }
                             node.arguments = newArgs;
@@ -90,45 +91,6 @@
                 }
             });
         },
-        getSpaceTransformCall: function(ast, space){
-            var callExpression = {
-                type: Syntax.CallExpression,
-                callee: this.getSpaceConvertFunction(space),
-                arguments: [ this.getSpaceConvertArg(space), ast ]
-            };
-            return callExpression;
-        },
-
-        getSpaceConvertFunction: function(space){
-            var vectorType = Shade.getVectorFromSpaceVector(space);
-            var functionName;
-            switch(vectorType){
-                case VectorType.POINT: functionName = "transformPoint"; break;
-                case VectorType.NORMAL: functionName = "transformDirection"; break;
-            }
-            var result = {
-                type: Syntax.MemberExpression,
-                object: {type: Syntax.Identifier, name: "Space"},
-                property: { type: Syntax.Identifier, name: functionName }
-            };
-            ANNO(result).setType(Types.FUNCTION);
-            ANNO(result.object).setType(Types.OBJECT, Kinds.ANY);
-            return result;
-        },
-        getSpaceConvertArg: function(space){
-            var spaceType = Shade.getSpaceFromSpaceVector(space);
-            var spaceName;
-            switch(spaceType){
-                case SpaceType.VIEW: spaceName = "VIEW"; break;
-                case SpaceType.WORLD: spaceName = "WORLD"; break;
-            }
-            return {
-                type: Syntax.MemberExpression,
-                object: { type: Syntax.Identifier, name: "Space"  },
-                property: { type: Syntax.Identifier, name: spaceName }
-            };
-        },
-
 
         extractSpaceTransforms: function(functionAast){
             var self = this;
@@ -231,7 +193,7 @@
                 var expressionCopy = Base.deepExtend({}, child);
                 if(space != SpaceVectorType.OBJECT && !this.isSpacePropagrationPossible(sInfo, space)){
                     this.resolveSpaceUsage(expressionCopy, SpaceVectorType.OBJECT, nameMap);
-                    expressionCopy.right = this.getSpaceTransformCall(expressionCopy.right, space);
+                    expressionCopy.right = SpaceTransformTools.getSpaceTransformCall(expressionCopy.right, space);
                 }
                 else{
                     this.resolveSpaceUsage(expressionCopy, space, nameMap);
