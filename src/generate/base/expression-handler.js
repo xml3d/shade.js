@@ -61,7 +61,7 @@
         expression: function (node) {
             if (!node) return "";
 
-            var result = "<unhandled: " + node.type + ">";
+            var result = "";
 
             //noinspection FallthroughInSwitchStatementJS
             switch (node.type) {
@@ -78,10 +78,10 @@
                     result = node.name;
                     break;
 
+                case Syntax.AssignmentExpression:
                 case Syntax.BinaryExpression:
                 case Syntax.LogicalExpression:
-                case Syntax.AssignmentExpression:
-                    result = this.binary(node.left);
+                    result += this.binary(node.left);
                     result += " " + node.operator + " ";
                     result += this.binary(node.right);
                     break;
@@ -119,11 +119,12 @@
                     if (!node.isPrefix) {
                         result += node.operator;
                     }
+                    break;
                 case Syntax.ExpressionStatement:
                     result = this.expression(node.expression);
-
+                    break;
                 default:
-                //console.log("Unhandled: " , node.type);
+                    result = "<unhandled: " + node.type + ">"
             }
             return result;
         },
