@@ -125,7 +125,7 @@
             return replace;
         },
 
-        attachSwizzles: function (instance, vecCount){
+        attachSwizzles: function (instance, vecCount, callExp){
             for(var s = 0; s < VecBase.swizzleSets.length; ++s){
                 for(var count = 1; count <= 4; ++count){
                     var max = Math.pow(vecCount, count);
@@ -138,7 +138,7 @@
                             key+= VecBase.swizzleSets[s][idx];
                         }
                         instance[key] = {
-                            callExp: Vec.createSwizzle.bind(null, vecCount, key)
+                            callExp: callExp.bind(null, vecCount, key)
                         };
                     }
                 }

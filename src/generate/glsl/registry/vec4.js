@@ -25,7 +25,7 @@
             callExp: Tools.Vec.generateLengthCall
         }
     }
-    Tools.Vec.attachSwizzles(Vec4Instance, 4);
+    Tools.Vec.attachSwizzles(Vec4Instance, 4, Tools.Vec.createSwizzle);
     Tools.Vec.attachOperators(Vec4Instance, 4, {
         add: '+',
         sub: '-',
