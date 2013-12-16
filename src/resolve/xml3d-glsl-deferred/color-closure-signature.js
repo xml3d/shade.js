@@ -3,8 +3,11 @@
     var Base = require("../../base/index.js"),
         Traversal = require('estraverse'),
         Syntax = Traversal.Syntax,
-        ANNO = require("./../../base/annotation.js").ANNO;
+        ANNO = require("./../../base/annotation.js").ANNO,
+        DeferredInfo = require("./xml3d-deferred.js");
+
     var Shade = require("../../interfaces.js"),
+        SpaceVectorType = Shade.SpaceVectorType,
         Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS;
 
@@ -120,7 +123,8 @@
        return argAast;
     }
 
-    function getCachedArgument(ccSig, inputDefinition, inputAast, argCache, argAast){
+    function getCachedArgument(ccSig, inputDefinition, inputAast, argCache, argAast, space){
+        space = space || SpaceVectorType.OBJECT;
         var storageType = getStorageType(inputDefinition);
         var key = storageType + ";" + JSON.stringify(inputAast);
         if(argCache[key] === undefined){

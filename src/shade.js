@@ -9,12 +9,11 @@
         GLSLCompiler = require("./generate/glsl/compiler.js").GLSLCompiler,
         resolver = require("./resolve/resolve.js"),
         SpaceTransformer = require("./generate/space/transform.js").SpaceTransformer,
-        spaceAnalyzer = require("./analyze/space_analyzer.js"),
         validator = require("./analyze/validator.js"),
         analyzer = require("./analyze/analyze.js"),
-        SpaceVectorType = spaceAnalyzer.SpaceVectorType,
-        SpaceType = spaceAnalyzer.SpaceType,
-        VectorType = spaceAnalyzer.VectorType;
+        SpaceVectorType = interfaces.SpaceVectorType,
+        SpaceType = interfaces.SpaceType,
+        VectorType = interfaces.VectorType;
 
 
     var WorkingSet = function(){

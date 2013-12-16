@@ -31,7 +31,7 @@ function createTest(dir, file) {
     });
 }
 
-describe.only('GLSL Shader Code:', function () {
+describe('GLSL Deferred Shader Code:', function () {
     var dir = __dirname + '/data/shaders/deferred/';
     var files = fs.readdirSync(dir);
     files.filter(function(filename) { return filename.split('.').pop() == "js" }).forEach(function (file) {

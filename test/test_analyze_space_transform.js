@@ -10,7 +10,7 @@ var fs = require('fs');
 var should = require('should');
 var spaceAnalyzer = require("../src/analyze/space_analyzer.js"),
     SpaceTransformer = require("../src/generate/space/transform.js").SpaceTransformer,
-    SpaceVectorType = spaceAnalyzer.SpaceVectorType;
+    SpaceVectorType = require("../src/interfaces.js").SpaceVectorType;
 
 var Set = analyses.Set;
 

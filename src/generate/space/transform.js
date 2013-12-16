@@ -7,12 +7,11 @@
         Shade = require("./../../interfaces.js"),
         esgraph = require('esgraph'),
         Types = Shade.TYPES,
-        Kinds = Shade.OBJECT_KINDS,
-        Sources = require("./../../interfaces.js").SOURCES;
+        Kinds = Shade.OBJECT_KINDS;
     var spaceAnalyzer = require("../../analyze/space_analyzer.js"),
-        SpaceVectorType = spaceAnalyzer.SpaceVectorType,
-        SpaceType = spaceAnalyzer.SpaceType,
-        VectorType = spaceAnalyzer.VectorType;
+        SpaceVectorType = Shade.SpaceVectorType,
+        SpaceType = Shade.SpaceType,
+        VectorType = Shade.VectorType;
 
 
 
@@ -101,7 +100,7 @@
         },
 
         getSpaceConvertFunction: function(space){
-            var vectorType = spaceAnalyzer.getVectorFromSpaceVector(space);
+            var vectorType = Shade.getVectorFromSpaceVector(space);
             var functionName;
             switch(vectorType){
                 case VectorType.POINT: functionName = "transformPoint"; break;
@@ -117,7 +116,7 @@
             return result;
         },
         getSpaceConvertArg: function(space){
-            var spaceType = spaceAnalyzer.getSpaceFromSpaceVector(space);
+            var spaceType = Shade.getSpaceFromSpaceVector(space);
             var spaceName;
             switch(spaceType){
                 case SpaceType.VIEW: spaceName = "VIEW"; break;
@@ -285,7 +284,7 @@
         isSpacePropagrationPossible: function(sInfo, targetSpace){
             if(sInfo.propagateSet.length == 0) // We need to have at least one dependency. Otherwise we can't propagate the space
                 return false;
-            var vectorType = spaceAnalyzer.getVectorFromSpaceVector(targetSpace)
+            var vectorType = Shade.getVectorFromSpaceVector(targetSpace)
             if(vectorType == VectorType.NORMAL && sInfo.normalSpaceViolation)
                 return false;
             if(vectorType == VectorType.POINT && sInfo.pointSpaceViolation)

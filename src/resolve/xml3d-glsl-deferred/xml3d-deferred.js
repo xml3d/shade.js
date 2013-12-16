@@ -1,7 +1,14 @@
 (function (ns) {
 
         var Shade = require("../../interfaces.js"),
-            Types = Shade.TYPES,
-            Kinds = Shade.OBJECT_KINDS;
+            SpaceVectorType = Shade.SpaceVectorType;
+
+        ns.phong = {
+            inputSpaces: [
+                SpaceVectorType.OBJECT,
+                SpaceVectorType.VIEW_NORMAL,
+                SpaceVectorType.OBJECT
+            ]
+        }
 
 }(exports));

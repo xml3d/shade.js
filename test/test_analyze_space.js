@@ -6,7 +6,7 @@ var Shade = require("..");
 var fs = require('fs');
 var should = require('should');
 var spaceAnalyzer = require("../src/analyze/space_analyzer.js"),
-    SpaceVectorType = spaceAnalyzer.SpaceVectorType;
+    SpaceVectorType = require("../src/interfaces.js").SpaceVectorType;
 
 var Set = analyses.Set;
 

@@ -39,6 +39,37 @@
         UNKNOWN: 'unknown'
     }
 
+    /**
+     * Possible Spaces
+     * @enum
+     */
+    var SpaceType = ns.SpaceType = {
+        OBJECT: 0,
+        VIEW: 1,
+        WORLD: 2,
+        RESULT: 5
+    };
+    var VectorType = ns.VectorType = {
+        NONE: 0,
+        POINT: 1,
+        NORMAL: 2
+    };
+    ns.SpaceVectorType = {
+        OBJECT: SpaceType.OBJECT,
+        VIEW_POINT : SpaceType.VIEW + (VectorType.POINT << 3),
+        WORLD_POINT : SpaceType.WORLD + (VectorType.POINT << 3),
+        VIEW_NORMAL : SpaceType.VIEW + (VectorType.NORMAL << 3),
+        WORLD_NORMAL : SpaceType.WORLD + (VectorType.NORMAL << 3),
+        RESULT_POINT : SpaceType.RESULT + (VectorType.POINT << 3),
+        RESULT_NORMAL : SpaceType.RESULT + (VectorType.NORMAL << 3)
+    };
+    ns.getVectorFromSpaceVector = function(spaceType){
+        return spaceType >> 3;
+    }
+    ns.getSpaceFromSpaceVector = function(spaceType){
+        return spaceType % 8;
+    }
+
     ns.SOURCES = {
         UNIFORM: "uniform",
         VERTEX: "vertex",
