@@ -3,6 +3,7 @@ var worklist = require('analyses');
 var common = require("../base/common.js");
 var codegen = require('escodegen');
 var SetTools = require("./settools.js");
+var ASTTools = require("./../base/asttools.js");
 var Set = worklist.Set;
 
 module.exports = slice;
@@ -120,10 +121,7 @@ function mergeMap(A, B) {
 }
 
 
-function isVariableReference(node, parent) {
-    return node.type == Syntax.Identifier &&
-        !(parent.type == Syntax.MemberExpression || parent.type == Syntax.FunctionDeclaration || parent.type == Syntax.NewExpression || parent.type == Syntax.VariableDeclarator || (parent.type == Syntax.CallExpression && parent.callee == node));
-}
+
 
 function isMemberReference(node, parent) {
     return node.type == Syntax.MemberExpression && node.object.type == Syntax.Identifier && node.property.type == Syntax.Identifier && !(parent.type === Syntax.CallExpression && parent.callee == node);
@@ -149,13 +147,13 @@ function findVariableReferences(ast) {
                     controller.break();
                     break;
                 case Syntax.Identifier:
-                    if (isVariableReference(node, parent)) {
+                    if (ASTTools.isVariableReference(node, parent)) {
                         references.add(node.name);
                     }
                     break;
                 case Syntax.MemberExpression:
                     if (isMemberReference(node, parent)) {
-                        if (isVariableReference(node.object, node)) {
+                        if (ASTTools.isVariableReference(node.object, node)) {
                             references.add(node.name);
                         }
                         references.add(getMemberName(node));
