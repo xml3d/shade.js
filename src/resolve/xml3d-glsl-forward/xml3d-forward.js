@@ -575,10 +575,8 @@
         }
 
         ns.scatter = function scatter(color, n, wrap, scatterWidth) {
-            var N = Space.transformDirection(Space.VIEW,n.normalize());
-            var position = Space.transformPoint(Space.VIEW,_env.position);
-            var V = position.flip().normalize();
-            var T = Space.transformDirection(Space.VIEW,t.normalize());
+            var N = Space.transformDirection(Space.VIEW, n.normalize());
+            var position = Space.transformPoint(Space.VIEW, _env.position);
             var intensity = new Vec3();
 
             var L, dist, kd, atten;
@@ -595,7 +593,7 @@
                     dist = L.length();
                     L = L.normalize();
 
-                    NdotL = N.dot(L);
+                    NdotL = Math.saturate(N.dot(L));
 
                     NdotLWrap = (NdotL + wrap) / (1 + wrap);
                     scatter = Math.smoothstep(0.0, scatterWidth, NdotLWrap) * Math.smoothstep(scatterWidth * 2.0, scatterWidth, NdotLWrap);
@@ -612,7 +610,7 @@
                     L = this.viewMatrix.mulVec(this.directionalLightDirection[i], 0).xyz();
                     L = L.flip().normalize();
 
-                    NdotL = N.dot(L);
+                    NdotL = Math.saturate(N.dot(L));
 
                     NdotLWrap = (NdotL + wrap) / (1 + wrap);
                     scatter = Math.smoothstep(0.0, scatterWidth, NdotLWrap) * Math.smoothstep(scatterWidth * 2.0, scatterWidth, NdotLWrap);
