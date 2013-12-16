@@ -237,7 +237,7 @@
             return new Vec4(diffuseIntensity.mul(diffuseColor).add(phongIntensity.mul(phongColor)), 1.0);
         };
 
-        ns.cookTorrance = function cookTorrance(color, n, R0, roughness) {
+        ns.cookTorrance = function cookTorrance(color, n, ior, roughness) {
             var N = Space.transformDirection(Space.VIEW,n.normalize());
             var position = Space.transformPoint(Space.VIEW,_env.position);
             var V = position.flip().normalize();
@@ -248,7 +248,7 @@
             var L, H, dist, kd, atten;
             var NdotH, NdotL, HdotN, HdotL, HdotV;
             var brdf, alpha, numerator, denominator, d, G1, G2, g, f;
-
+            var R0 = Math.pow((1 - ior) / (1 + ior), 2);
             if (this.MAX_POINTLIGHTS)
                 for (var i = 0; i < this.MAX_POINTLIGHTS; i++) {
                     if (!this.pointLightOn[i])
