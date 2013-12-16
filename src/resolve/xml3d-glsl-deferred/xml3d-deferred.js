@@ -11,4 +11,12 @@
             ]
         }
 
+        ns.diffuse = {
+            inputSpaces: [
+                SpaceVectorType.OBJECT,
+                SpaceVectorType.VIEW_NORMAL,
+                SpaceVectorType.OBJECT
+            ]
+        }
+
 }(exports));

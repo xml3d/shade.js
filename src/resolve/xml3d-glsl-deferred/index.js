@@ -15,7 +15,7 @@
             colorClosureSignatures: [],
             inMain: false
         };
-
+        var globalScrope = aast.scope;
         aast = Traversal.replace(aast, {
             enter: function(node, parent){
                 switch(node.type){
@@ -38,7 +38,7 @@
                     case Syntax.ReturnStatement:
                         if(state.inMain){
                             var signature = new ColorClosureSignature();
-                            var replacement = signature.construct(node);
+                            var replacement = signature.construct(node, globalScrope);
                             state.colorClosureSignatures.push(signature);
                             return replacement;
                         }
