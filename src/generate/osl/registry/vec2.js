@@ -1,12 +1,8 @@
 (function(ns){
 
     var Shade = require("../../../interfaces.js");
-    var Syntax = require('estraverse').Syntax;
     var Tools = require("../../tools.js");
-    var ANNO = require("../../../base/annotation.js").ANNO;
-
-    var TYPES = Shade.TYPES,
-        KINDS = Shade.OBJECT_KINDS;
+    var OSLTools = require("./osl-tools.js");
 
     var Vec2Instance = {
         normalize: {
@@ -25,7 +21,7 @@
             callExp: Tools.Vec.generateLengthCall
         }
     }
-    Tools.Vec.attachSwizzles(Vec2Instance, 2);
+    Tools.Vec.attachSwizzles(Vec2Instance, 2, OSLTools.Vec.createOSLSwizzle);
     Tools.Vec.attachOperators(Vec2Instance, 2, {
         add: '+',
         sub: '-',
@@ -37,9 +33,20 @@
 
     Tools.extend(ns, {
         id: "Vec2",
-        kind: KINDS.FLOAT2,
+        kind: Shade.OBJECT_KINDS.FLOAT2,
         object: {
-            constructor: Tools.Vec.generateConstructor,
+            constructor: function(node) {
+                if(node.arguments == 2) {
+                    node.arguments.push({
+                        type: Syntax.Literal,
+                        value: 1,
+                        extra: {
+                            type: Shade.TYPES.NUMBER
+                        }
+                    })
+                }
+                return node;
+            },
             static: {}
         },
         instance: Vec2Instance

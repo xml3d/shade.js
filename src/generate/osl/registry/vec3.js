@@ -2,10 +2,13 @@
 
     var Shade = require("../../../interfaces.js");
     var Tools = require("../../tools.js");
+    var OSLTools = require("./osl-tools.js");
     var ANNO = require("../../../base/annotation.js").ANNO;
 
     var TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS;
+
+
 
     var Vec3Instance = {
         normalize: {
@@ -36,7 +39,7 @@
             callExp: Tools.Vec.createFunctionCall.bind(null, "cross", 3)
         }
     }
-    Tools.Vec.attachSwizzles(Vec3Instance, 3);
+    Tools.Vec.attachSwizzles(Vec3Instance, 3, OSLTools.Vec.createOSLSwizzle);
     Tools.Vec.attachOperators(Vec3Instance, 3, {
         add: '+',
         sub: '-',

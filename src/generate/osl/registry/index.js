@@ -16,7 +16,7 @@
     var objects = {
         Shade : require("./shade.js"),
 //        Space : require("./space.js"),
-//        Math : require("./math.js"),
+        Math : require("./math.js"),
 //        System : require("./system.js"),
         Vec2 : require("./vec2.js"),
         Vec3 : require("./vec3.js"),
@@ -116,7 +116,7 @@
     Base.createClass(GLTransformScope, Scope, {
 
         registerGlobals: function() {
-//            this.registerObject("Math", objects.Math);
+            this.registerObject("Math", objects.Math);
 //            this.registerObject("Color",  objects.Color);
             this.registerObject("Vec2", objects.Vec2);
             this.registerObject("Vec3", objects.Vec3);

@@ -1,11 +1,12 @@
 (function(ns){
 
     // Dependencies
-    var OSLTransformContext = require("./registry/").OSLTransformContext,
-        Tools = require("../tools.js"),
-        AbstractTransformer = require("../base/base-transformer.js").AbstractTransformer,
-        common = require("../../base/common.js"),
-        ASTTools = require("../../base/asttools.js");
+    var OSLTransformContext = require("./registry/").OSLTransformContext;
+    var Tools = require("../tools.js");
+    var AbstractTransformer = require("../base/base-transformer.js").AbstractTransformer;
+    var common = require("../../base/common.js");
+    var ASTTools = require("../../base/asttools.js");
+    var Shade = require("./../../interfaces.js");
 
     var walk = require('estraverse'),
         ANNO = common.ANNO;
@@ -38,7 +39,23 @@
 
             //this.registerThisObject(scope);
             this.replace(program);
+            this.vect2tovec3(program);
             return ast;
+        },
+
+        vect2tovec3: function(node) {
+            walk.traverse(node, {
+                enter: function(node) {
+                    if(node.type == Syntax.NewExpression && ANNO(node).isOfKind(Shade.OBJECT_KINDS.FLOAT2)) {
+                        if(node.arguments.length == 2) {
+                            node.arguments.push({
+                                type: Syntax.Literal,
+                                value: 1
+                            });
+                        }
+                    }
+                }
+            });
         },
 
         leave: function(node, parent, controller) {

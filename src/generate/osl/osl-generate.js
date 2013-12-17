@@ -6,6 +6,7 @@
     var Shade = require("./../../interfaces.js");
     var AbstractGenerator = require("../base/base-generator.js").AbstractGenerator;
     var ExpressionHandler = require('../base/expression-handler.js').ExpressionHandler;
+    var FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
 
 
     // Shortcuts
@@ -53,8 +54,9 @@
         }
     }
 
-    var toOSLType = function(info) {
+    var toOSLType = function(info, options) {
         if(!info) return "?";
+        options = options || {};
 
         switch (info.type) {
             case Types.OBJECT:
@@ -127,12 +129,18 @@
             // console.log(node.type);
             switch(node.type) {
                 case Syntax.FunctionDeclaration:
-                    lines.appendLine(J(["shader", node.id.name, "("]));
+                    var func = new FunctionAnnotation(node);
+                    var inMain = node.id.name == "main";
+                    lines.appendLine(J([inMain? "shader" : toOSLType(func.getReturnInfo()), node.id.name, "("]));
                     lines.changeIndention(1);
-                    node.params.forEach(function(param) {
-                        lines.appendLine(J([toOSLType(param.extra), param.name , "=" , getParameterInitializer(param.extra)])+",");
+                    node.params.forEach(function(param, index, arr) {
+                        var result = [toOSLType(param.extra), param.name];
+                        if(inMain) {
+                            result.push( "=" , getParameterInitializer(param.extra));
+                        }
+                        lines.appendLine(J(result) + ((index < arr.length -1 || inMain) ? "," : ""));
                     });
-                    lines.appendLine("output closure color result = 0");
+                    inMain && lines.appendLine("output closure color result = 0");
                     lines.changeIndention(-1);
                     lines.appendLine(")", "{");
                     break;

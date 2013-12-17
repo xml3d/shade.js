@@ -1,16 +1,22 @@
 (function(ns){
 
     var Shade = require("../../../interfaces.js");
-    var Syntax = require('estraverse').Syntax;
+    var common = require("../../../base/common.js");
     var Tools = require("../../tools.js");
-    var ANNO = require("../../../base/annotation.js").ANNO;
+    var OSLTools = require("./osl-tools.js");
 
-    var TYPES = Shade.TYPES,
-        KINDS = Shade.OBJECT_KINDS;
+    var Syntax = common.Syntax;
 
     var TextureInstance = {
         sample2D: {
-            callExp: Tools.Vec.createFunctionCall.bind(null, 'texture2D', 2)
+            callExp: function(node) {
+                var call = Tools.Vec.createFunctionCall('texture', 0, node);
+                call.arguments.push(OSLTools.Vec.createArrayAccess(node.arguments[0], 0));
+                call.arguments.push(OSLTools.Vec.createArrayAccess(node.arguments[0], 1));
+                call.arguments.push({ type: Syntax.Literal, value: "\"wrap\""});
+                call.arguments.push({ type: Syntax.Literal, value: "\"periodic\""});
+                return call;
+            }
         },
         width: {
             property: function (node, parent, context, state) {
@@ -40,7 +46,7 @@
 
     Tools.extend(ns, {
         id: "Texture",
-        kind: KINDS.TEXTURE,
+        kind: Shade.OBJECT_KINDS.TEXTURE,
         object: {
             constructor: null,
             static: {}
