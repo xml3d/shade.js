@@ -58,8 +58,9 @@
         return header;
     }
 
-    function toGLSLType(info, allowUndefined) {
+    function toGLSLType(info, options) {
         if(!info) return "?";
+        options = options || {};
 
         switch (info.type) {
             case Types.OBJECT:
@@ -82,10 +83,10 @@
                         return "<undefined>";
                 }
             case Types.ARRAY:
-                return toGLSLType(info.elements);
+                return toGLSLType(info.elements, options);
 
             case Types.UNDEFINED:
-                if (allowUndefined)
+                if (options.allowUndefined)
                     return "void";
                 throw new Error("Could not determine type");
             case Types.NUMBER:
@@ -189,7 +190,7 @@
                             case Syntax.FunctionDeclaration:
                                 opt.newLines && lines.appendLine();
                                 var func = new FunctionAnnotation(node);
-                                var methodStart = [toGLSLType(func.getReturnInfo(), true)];
+                                var methodStart = [toGLSLType(func.getReturnInfo(), { allowUndefined: true })];
                                 methodStart.push(node.id.name, '(');
                                 if(node.id.name == "main")
                                     insideMain = true;

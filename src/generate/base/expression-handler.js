@@ -53,7 +53,9 @@
             return result + ")";
         },
         literal: function (extra, alternative) {
-            var value = extra.staticValue !== undefined ? extra.staticValue : alternative;
+            var extra = extra || {},
+                value = extra.staticValue !== undefined ? extra.staticValue : alternative;
+
             if (extra.type == Shade.TYPES.NUMBER)
                 return this.controller.generateFloat(value); else
                 return value;
@@ -66,7 +68,7 @@
             //noinspection FallthroughInSwitchStatementJS
             switch (node.type) {
                 case Syntax.NewExpression:
-                    result = this.controller.type(node.extra);
+                    result = this.controller.type(node.extra, { constructor: true });
                     result += this.arguments(node.arguments);
                     break;
 
