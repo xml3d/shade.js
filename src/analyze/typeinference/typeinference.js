@@ -80,7 +80,7 @@
                 var filteredInput = null, generate = null;
                 if (this.kill.size) {
                     // Only if there's an assignment, we need to generate
-                    generate = findConstantsFor(this.astNode, this.kill);
+                    generate = findConstantsFor(this.astNode, this.kill, context.propagateConstants ? input : null);
                     var that = this;
                     filteredInput = new Set(input.filter(function (elem) {
                             return !that.kill.some(function(tokill) { return elem.name == tokill });
@@ -88,11 +88,11 @@
                 }
 
                 var result = Set.union(filteredInput || input, generate);
-                /*console.log("input:", input);
-                console.log("kill:", this.kill);
-                console.log("generate:", generate);
-                console.log("filteredInput:", filteredInput);*/
-                //console.log("result:", result);
+//                console.log("input:", input);
+//                console.log("kill:", this.kill);
+//                console.log("generate:", generate);
+//                console.log("filteredInput:", filteredInput);
+//                console.log("result:", result);
                 return result;
             }
             , {
@@ -111,10 +111,13 @@
     }
 
 
-    function findConstantsFor(ast, names) {
-        var result = new Set(), annotation, name;
+    function findConstantsFor(ast, names, constantVariables) {
+        var result = new Set(), annotation, name, formerValue;
+        constantVariables = constantVariables ? constantVariables.values() : [];
+
         walkes(ast, {
             AssignmentExpression: function(recurse) {
+
 
                 if (this.left.type != Syntax.Identifier) {
                     Shade.throwError(ast, "Can't find constant for computed left expression");
@@ -123,7 +126,23 @@
                 if(names.has(name)) {
                     annotation = ANNO(this.right);
                     if(annotation.hasStaticValue()) {
-                        result.add({ name: name, constant: TypeInfo.copyStaticValue(annotation)});
+                        switch(this.operator) {
+                            case "=":
+                                result.add({ name: name, constant: TypeInfo.copyStaticValue(annotation)});
+                                break;
+                            case "-=":
+                            case "+=":
+                                formerValue = constantVariables.filter(function(v){ return v.name == name; });
+                                if(formerValue.length) {
+                                    var c = formerValue[0].constant;
+                                    var v = this.operator == "+=" ? c + TypeInfo.copyStaticValue(annotation) : c - TypeInfo.copyStaticValue(annotation);
+                                    result.add({ name: name, constant: v});
+                                }
+                                break;
+                            default:
+                                assert(!this.operator);
+                        }
+
                     }
                 }
                 recurse(this.right);
