@@ -2,6 +2,7 @@
 
     var Base = require("../../base/index.js");
 
+    var OSLTransformContext = require("./registry/").OSLTransformContext;
     var transform = require("./osl-transform.js").transform;
     var generate = require("./osl-generate.js").generate;
 
@@ -13,9 +14,13 @@
 
         compile: function (aast) {
 
-            var transformed = transform(aast, this.options);
+            var context = new OSLTransformContext(aast, "global.shade", Base.extend(this.options, {
+                blockedNames: ["N"]
+            }));
 
-            var code = generate(transformed, this.options);
+            var transformed = transform(aast, context);
+
+            var code = generate(transformed, context);
 
             return code;
         }

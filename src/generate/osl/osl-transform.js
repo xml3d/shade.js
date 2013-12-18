@@ -1,7 +1,6 @@
 (function(ns){
 
     // Dependencies
-    var OSLTransformContext = require("./registry/").OSLTransformContext;
     var Tools = require("../tools.js");
     var AbstractTransformer = require("../base/base-transformer.js").AbstractTransformer;
     var common = require("../../base/common.js");
@@ -20,11 +19,9 @@
      * @param options
      * @constructor
      */
-    var OSLTransformer = function(program, options) {
-        AbstractTransformer.call(this, program, options);
-        this.context = new OSLTransformContext(program, "global.shade", Tools.extend(options,{
-            blockedNames : ["N"]
-        }));
+    var OSLTransformer = function(program, context) {
+        AbstractTransformer.call(this, program, context.options);
+        this.context = context;
     };
 
     Tools.createClass(OSLTransformer, AbstractTransformer, {
@@ -74,7 +71,7 @@
                               }
                               node.params.push(param);
                         }
-                    };
+                    }
                     break;
 
                 case Syntax.ReturnStatement:
@@ -85,11 +82,15 @@
                 case Syntax.Identifier:
                     if(ASTTools.isVariableName(node, parent)) {
                         return this.leaveVariable(node);
-                    } else {
-                        if(node.name == "N")
-                        console.log(node.name, node.type, parent.type);
                     }
                     break;
+
+                case Syntax.BinaryExpression:
+                    if(node.operator == "%") {
+                        return Tools.binaryExpression2FunctionCall(node, "fmod");
+                    }
+
+
 
             }
         },
@@ -139,7 +140,6 @@
 
     /**
      * @param {Object} node
-     * @param {GLTransformContext} context
      * @returns {*}
      */
     enterFunctionDeclaration : function(node) {
@@ -151,10 +151,15 @@
 
     });
 
+    /**
+     * @param {*} program
+     * @param {OSLTransformContext} context
+     * @returns {*}
+     */
+    ns.transform = function(program, context) {
+        var transformer = new OSLTransformer(program, context);
+        return transformer.transform(program);
 
-    ns.transform = function(program, options) {
-        var transformer = new OSLTransformer(program, options);
-        return transformer.transform(program)
     };
 
 }(exports));

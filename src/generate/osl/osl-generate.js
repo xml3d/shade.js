@@ -108,9 +108,9 @@
      * @param options
      * @constructor
      */
-    var OSLGenerator = function(program, options) {
-        AbstractGenerator.call(this, program, options);
-
+    var OSLGenerator = function(program, context) {
+        AbstractGenerator.call(this, program, context.options);
+        this.context = context;
     };
 
     var J = function(arr) {
@@ -119,10 +119,14 @@
 
     Tools.createClass(OSLGenerator, AbstractGenerator, {
         generate: function(ast) {
+            var lines = this.lines;
+            this.context.getNativeFunctions().forEach(function(func) {
+                lines.appendLine(func);
+            });
 
             this.traverse(ast);
 
-            return this.lines.join("\n");;
+            return lines.join("\n");;
         },
         enter: function(node, parent, controller) {
             var lines = this.lines;
@@ -159,6 +163,37 @@
                     lines.appendLine(J([toOSLType(node.extra), node.id.name + ";"]));
                     break;
 
+                case Syntax.IfStatement:
+                    controller.skip();
+                    lines.appendLine("if(" + handler.expression(node.test) + ") {");
+
+                    lines.changeIndention(1);
+                    this.traverse(node.consequent);
+                    lines.changeIndention(-1);
+
+                    if (node.alternate) {
+                        lines.appendLine("} else {");
+                        lines.changeIndention(1);
+                        this.traverse(node.alternate);
+                        lines.changeIndention(-1);
+                    }
+                    lines.appendLine("}");
+                    break;
+
+
+                case Syntax.ForStatement:
+                    controller.skip();
+                    lines.appendLine("for (" + handleInlineDeclaration(node.init, opt) + "; " + handler.expression(node.test) + "; " + handler.expression(node.update) + ") {");
+                    lines.changeIndention(1);
+                    this.traverse(node.body);
+                    lines.changeIndention(-1);
+                    lines.appendLine("}");
+                    break;
+
+
+                case Syntax.ContinueStatement:
+                    lines.appendLine("continue;");
+
             }
         },
         leave: function(node, parent, controller) {
@@ -172,8 +207,8 @@
     });
 
 
-    ns.generate = function(program, options) {
-        var generator = new OSLGenerator(program, options);
+    ns.generate = function(program, context) {
+        var generator = new OSLGenerator(program, context);
         return generator.generate(program)
     };
 

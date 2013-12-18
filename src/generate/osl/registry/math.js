@@ -1,8 +1,12 @@
 (function(ns){
 
-   var Shade = require("../../../interfaces.js");
-   var Syntax = require('estraverse').Syntax;
-   var Tools = require("../../tools.js");
+    var Shade = require("../../../interfaces.js");
+    var Syntax = require('estraverse').Syntax;
+    var Tools = require("../../tools.js");
+    var common = require("../../../base/common.js");
+
+
+    var ANNO = common.ANNO;
 
     var MathConstants = ["E", "PI", "LN2", "LOG2E", "LOG10E", "PI", "SQRT1_2", "SQRT2"];
 
@@ -83,16 +87,22 @@
         ] }) },
         smoothstep: { callExp: handleMathCall() },
         step: { callExp: handleMathCall() },
-        fract: { callExp: handleMathCall({ name: "fmod", arguments: [
-            undefined,
-            {
-               type: Syntax.Literal,
-               value: 1.0,
-               extra: {
-                    type: Shade.TYPES.NUMBER
-                }
+        fract: { callExp: function(node, args, parent, context) {
+            if (args[0].canNumber()) {
+                return handleMathCall({ name: "fmod", arguments: [
+                    undefined, {
+                        type: Syntax.Literal,
+                        value: 1.0,
+                        extra: {
+                            type: Shade.TYPES.NUMBER
+                        }
+                    }
+                ]})(node, args);
             }
-        ]}) },
+            context.addNativeFunction("vector fractVector(vector in) { return vector(fmod(in[0], 1.0), fmod(in[1], 1.0), fmod(in[2], 1.0)); }")
+            return handleMathCall({ name: "fractVector" })(node, args);
+        }
+        },
         mix: { callExp: handleMathCall() }
     };
 
