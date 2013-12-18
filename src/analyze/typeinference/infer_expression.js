@@ -546,8 +546,12 @@
                 result.copy(consequent);
             } else if (testResult === false) {
                 result.copy(alternate);
-            } else if (!result.setCommonType(consequent, alternate)) {
-                result.setInvalid(generateErrorInformation(node, "Can't evaluate polymorphic conditional expression"))
+            } else {
+                if (result.setCommonType(consequent, alternate)) {
+                    result.setDynamicValue();
+                } else {
+                    result.setInvalid(generateErrorInformation(node, "Can't evaluate polymorphic conditional expression"))
+                }
             }
 
         }
