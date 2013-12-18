@@ -233,7 +233,7 @@
     function handleReturnStatement(returnAast, state){
         var list = getClosureList(returnAast, state);
         if(list.length == 0)
-            return null;
+            return;
         var lightLoopFunction = getLightLoopFunction(list, state);
         var lighLoopCall = generateLightLoopCall(lightLoopFunction, list, state);
         returnAast.argument = lighLoopCall;
