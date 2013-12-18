@@ -15,7 +15,7 @@
 
     var ADD_POSITION_TO_ARGS = true;
 
-    var ArgStorageType = {
+    var ArgStorageType = ns.ArgStorageType = {
         FLOAT : 'float',
         FLOAT_BYTE: 'floatByte',
         FLOAT_UBYTE: 'floatUByte',
