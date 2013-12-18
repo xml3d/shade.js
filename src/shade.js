@@ -46,6 +46,9 @@
         compileFragmentShader: function(opt){
             this.result = ns.compileFragmentShader(this.aast, opt);
             return this.result;
+        },
+        compileLightPassShader: function(colorClosureSignatures){
+
         }
     });
 
@@ -99,7 +102,7 @@
 
         resolveClosures: function(ast, implementation, opt) {
             opt = opt || {};
-            return resolver.resolveClosures(ast, implementation, opt);
+            return resolver.resolveClosuresPreTypeInference(ast, implementation, opt);
         },
 
         resolveSpaces: function(aast, opt){

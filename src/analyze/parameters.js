@@ -134,7 +134,7 @@
         var parameterPosition = opt.param || 0;
 
         if(opt.implementation) {
-            program = resolver.resolveClosures(program, opt.implementation, opt);
+            program = resolver.resolveClosuresPreTypeInference(program, opt.implementation, opt);
         }
         return findParametersInFunction(functionName, program, parameterPosition);
     };
