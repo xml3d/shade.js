@@ -471,7 +471,7 @@
         }
 
         if (node.operator == "%") {
-            return handleModulo(node);
+            return Tools.binaryExpression2FunctionCall(node, "mod");
         }
         return node;
     };
@@ -491,31 +491,6 @@
         }
         return ast;
     };*/
-
-
-
-    /**
-     * Transform % operator of JavaScript into a mod function in GLSL
-     * @param node
-     */
-    var handleModulo = function (node) {
-        node.right = Tools.castToFloat(node.right);
-        node.left = Tools.castToFloat(node.left);
-        return {
-            type: Syntax.CallExpression,
-            callee: {
-                type: Syntax.Identifier,
-                name: "mod"
-            },
-            arguments: [
-                node.left,
-                node.right
-            ],
-            extra: {
-                type: Types.NUMBER
-            }
-        }
-    };
 
     /**
      * @param {Object} node

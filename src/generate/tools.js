@@ -38,7 +38,27 @@
             };
         }
         return state.internalFunctions[key].name;
-    }
+    };
+
+
+    ns.binaryExpression2FunctionCall = function(node, name) {
+        node.right = ns.castToFloat(node.right);
+        node.left = ns.castToFloat(node.left);
+        return {
+            type: Syntax.CallExpression,
+            callee: {
+                type: Syntax.Identifier,
+                name: name
+            },
+            arguments: [
+                node.left,
+                node.right
+            ],
+            extra: {
+                type: TYPES.NUMBER
+            }
+        }
+    };
 
     var Vec = {
         getVecArgs: function(args){
