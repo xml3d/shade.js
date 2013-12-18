@@ -99,13 +99,10 @@
         getCachedArgument(ccSig, {type: Types.INT}, {type: "Literal", value: "ID_UNSPECIFIED"}, argCache, argAast);
         if(ADD_POSITION_TO_ARGS)
             addPositionArgument(ccSig, argCache, argAast);
-        var ambientValue = null;
-        if(scope.bindings['_env'].extra.info.hasOwnProperty("ambientIntensity")){
-            ambientValue = getEnvAccess("ambientIntensity", AMBIENT_DEFINITION);
-        }
-        else{
-            ambientValue = getDefaultValue(AMBIENT_DEFINITION);
-        }
+        var ambientValue = { type: Syntax.LogicalExpression, operator : "||",
+                        left: getEnvAccess("ambientIntensity", AMBIENT_DEFINITION),
+                        right: getDefaultValue(AMBIENT_DEFINITION) };
+
         getCachedArgument(ccSig, AMBIENT_DEFINITION, ambientValue, argCache, argAast);
 
         for(var i = 0; i < closureInfo.length; ++i){
@@ -127,12 +124,9 @@
             for(var property in closureDefinition.env){
                 var envDefinition = closureDefinition.env[property];
                 // TODO: Determine if env property is undefined and use defaultValue in this case;
-                if(scope.bindings['_env'].extra.info.hasOwnProperty(property)){
-                    value = getEnvAccess(property, envDefinition);
-                }
-                else{
-                    value = getDefaultValue(envDefinition);
-                }
+                value = { type: Syntax.LogicalExpression, operator : "||",
+                        left: getEnvAccess(property, envDefinition),
+                        right: getDefaultValue(envDefinition) };
                 envIndices[property] = getCachedArgument(ccSig, envDefinition, value, argCache, argAast);
             }
             addColorClosure(ccSig, cInfo.name, argIndices, envIndices);
@@ -145,9 +139,9 @@
             object: { type: Syntax.Identifier, name: "_env"},
             property: { type: Syntax.Identifier, name: "position"}
         }
-        ANNO(positionLookup).setType(Types.OBJECT, Kinds.FLOAT3);
-        ANNO(positionLookup.object).setType(Types.OBJECT, Kinds.ANY);
-        ANNO(positionLookup.object).setGlobal(true);
+        // ANNO(positionLookup).setType(Types.OBJECT, Kinds.FLOAT3);
+        // ANNO(positionLookup.object).setType(Types.OBJECT, Kinds.ANY);
+        // ANNO(positionLookup.object).setGlobal(true);
         getCachedArgument(ccSig, {type: Types.OBJECT, kind: Kinds.FLOAT3}, positionLookup, argCache, argAast,
             SpaceVectorType.VIEW_POINT);
     }
@@ -202,10 +196,10 @@
             object: {type: Syntax.Identifier, name: "_env" },
             property: {type: Syntax.Identifier, name: property }
         }
-        ANNO(result).setType(definition.type, definition.kind);
-        var objAnno = ANNO(result.object);
-        objAnno.setType(Types.OBJECT, Kinds.ANY);
-        objAnno.setGlobal(true);
+        // ANNO(result).setType(definition.type, definition.kind);
+        // var objAnno = ANNO(result.object);
+        // objAnno.setType(Types.OBJECT, Kinds.ANY);
+        // objAnno.setGlobal(true);
         return result;
     }
 
@@ -218,7 +212,7 @@
                 type: Syntax.Literal,
                 value: definition.defaultValue
             }
-            ANNO(result).setType(Types.NUMBER);
+            // ANNO(result).setType(Types.NUMBER);
             return result;
         }
         else{
@@ -335,7 +329,7 @@
             var vectorExpression = generateVectorAast(textures[i], argAast);
             arrayExpression.elements.push(vectorExpression);
         }
-        ANNO(arrayExpression).setType(Types.ARRAY);
+        // ANNO(arrayExpression).setType(Types.ARRAY);
 
         var returnStatement = {type: Syntax.ReturnStatement, argument: arrayExpression};
         return returnStatement;
@@ -355,11 +349,11 @@
         }
         for(i = texture.usedComponents; i < 4; ++i){
             var zeroLiteral = { type: Syntax.Literal, value: "0" };
-            ANNO(zeroLiteral).setType(Types.INT);
+            // ANNO(zeroLiteral).setType(Types.INT);
             vecArgs.push(zeroLiteral);
         }
         var result = { type: Syntax.NewExpression, callee: { type: Syntax.Identifier, name: "Vec4"}, arguments: vecArgs};
-        ANNO(result).setType(Types.OBJECT, Kinds.FLOAT4);
+        // ANNO(result).setType(Types.OBJECT, Kinds.FLOAT4);
         return result;
     }
 

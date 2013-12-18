@@ -10,7 +10,7 @@
         ColorClosureSignature = require("./color-closure-signature.js").ColorClosureSignature;
 
 
-    ns.resolvePostTypeInference = function (aast, processData, opt) {
+    ns.resolvePreTypeInference = function (aast, processData, opt) {
         var state = {
             colorClosureSignatures: [],
             inMain: false

@@ -159,41 +159,28 @@
         var callee = ANNO(node.callee);
         // console.log("Call", node.callee.property, callee.getTypeString(), node.callee.object)
         if(callee.isOfKind(Shade.OBJECT_KINDS.COLOR_CLOSURE)) {
-            ANNO(node).copy(callee);
             colorClosureList.push({ name: node.callee.property.name, args: node.arguments });
-        }
-    }
-
-    function handleNewExpression(node, state, parent) {
-        if (node.callee.name == "Shade") {
-            var result = ANNO(node);
-            result.setType(Shade.TYPES.OBJECT, Shade.OBJECT_KINDS.COLOR_CLOSURE);
-            //console.log(parent);
         }
     }
 
     function handleMemberExpression(node, state, parent) {
         var object = ANNO(node.object);
-        var result = ANNO(node);
         if (object.isOfKind(Shade.OBJECT_KINDS.COLOR_CLOSURE)) {
             var closureName = node.property.name;
             if (!ClosuresImpl.hasOwnProperty(closureName)) {
                 console.error("No implementation for closure '", closureName, "'");
                 return;
             };
-            result.copy(object);
         }
     }
 
     function getClosureList(returnAast, state){
         var colorClosureList = [];
-        var list = Traversal.traverse(returnAast, {
+        Traversal.traverse(returnAast, {
             leave: function(node, parent){
                  switch (node.type) {
                     case Syntax.CallExpression:
                         return handleCallExpression(node, state, colorClosureList);
-                    case Syntax.NewExpression:
-                        return handleNewExpression(node, state, parent);
                     case Syntax.MemberExpression:
                         return handleMemberExpression(node, state, parent);
                 }
