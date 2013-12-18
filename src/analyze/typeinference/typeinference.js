@@ -132,10 +132,25 @@
                                 break;
                             case "-=":
                             case "+=":
+                            case "*=":
+                            case "/=":
                                 formerValue = constantVariables.filter(function(v){ return v.name == name; });
                                 if(formerValue.length) {
-                                    var c = formerValue[0].constant;
-                                    var v = this.operator == "+=" ? c + TypeInfo.copyStaticValue(annotation) : c - TypeInfo.copyStaticValue(annotation);
+                                    var c = formerValue[0].constant, v;
+                                    switch(this.operator) {
+                                        case "+=":
+                                            v = c + TypeInfo.copyStaticValue(annotation);
+                                            break;
+                                        case "-=":
+                                            v = c - TypeInfo.copyStaticValue(annotation);
+                                            break;
+                                        case "*=":
+                                            v = c * TypeInfo.copyStaticValue(annotation);
+                                            break;
+                                        case "/=":
+                                            v = c / TypeInfo.copyStaticValue(annotation);
+                                            break;
+                                    }
                                     result.add({ name: name, constant: v});
                                 }
                                 break;
