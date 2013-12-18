@@ -25,6 +25,8 @@
         FLOAT4: 'float4'
     }
 
+    var AMBIENT_DEFINITION = {type: Types.NUMBER, semantic: Shade.SEMANTICS.SCALAR_0_TO_1, defaultValue: 0 };
+
 
     ns.ColorClosureSignature = function(){
         this.id = 0;
@@ -97,6 +99,14 @@
         getCachedArgument(ccSig, {type: Types.INT}, {type: "Literal", value: "ID_UNSPECIFIED"}, argCache, argAast);
         if(ADD_POSITION_TO_ARGS)
             addPositionArgument(ccSig, argCache, argAast);
+        var ambientValue = null;
+        if(scope.bindings['_env'].extra.info.hasOwnProperty("ambientIntensity")){
+            ambientValue = getEnvAccess("ambientIntensity", AMBIENT_DEFINITION);
+        }
+        else{
+            ambientValue = getDefaultValue(AMBIENT_DEFINITION);
+        }
+        getCachedArgument(ccSig, AMBIENT_DEFINITION, ambientValue, argCache, argAast);
 
         for(var i = 0; i < closureInfo.length; ++i){
             var cInfo = closureInfo[i];
@@ -221,10 +231,11 @@
 
 
     function allocateArgumentsToTextures(ccSig){
-        var argCopy = ccSig.args.slice( ADD_POSITION_TO_ARGS ? 2 : 1);
+        var argCopy = ccSig.args.slice( ADD_POSITION_TO_ARGS ? 3 : 2);
         argCopy.sort(function(a, b){
             return getStorageSize(a.storeType) - getStorageSize(b.storeType);
         });
+        argCopy.push(ccSig.args[ADD_POSITION_TO_ARGS ? 2 : 1]); // Ambient comes third.
         if(ADD_POSITION_TO_ARGS)
             argCopy.push(ccSig.args[1]); // POSITION comes second.
         argCopy.push(ccSig.args[0]); // ID argument always comes first (and thus: last in this array)

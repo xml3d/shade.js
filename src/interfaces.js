@@ -82,10 +82,7 @@
                 { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR},
                 { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0 }
-            ],
-            env: {
-                "ambientIntensity" :  { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0}
-            }
+            ]
         },
         "phong" : {
             input: [
