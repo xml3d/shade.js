@@ -81,7 +81,7 @@
         for(var i = PRE_TEXTURE_FETCHES; i < colorClosureSignature.textureCount; ++i){
             statements.push(
             {type: Syntax.ExpressionStatement,
-                expression: {type: Syntax.AssignmentExpression,
+                expression: {type: Syntax.AssignmentExpression, operator: "=",
                     left: { type: Syntax.Identifier, name: DEFERRED_VALUE_PREFIX + i },
                     right: { type: Syntax.CallExpression,
                         callee: {type: Syntax.MemberExpression,
@@ -107,7 +107,7 @@
                 throw new Error("StoreType '" + arg.storeType + "' not supported in light pass shader");
             var valueFetchAst = FetchResolver[arg.storeType](arg);
             statements.push({type: Syntax.ExpressionStatement,
-                expression: {type: Syntax.AssignmentExpression,
+                expression: {type: Syntax.AssignmentExpression, operator: "=",
                     left: {type: Syntax.Identifier, name: "ccArg" + (i - defaultArgCount)},
                     right: valueFetchAst
                     }});
@@ -117,7 +117,7 @@
     function getColorClosureArgs(ccEntry){
         var defaultArgCount = POSITION_IS_IN_ARGS ? 3 : 2;
         var args = [], argIndices = ccEntry.argIndices;
-        for(var i = 0; argIndices.length; ++i){
+        for(var i = 0; i < argIndices.length; ++i){
             args.push({type: Syntax.Identifier, name: "ccArg" + (argIndices[i] - defaultArgCount)});
         }
         return args;
@@ -160,7 +160,7 @@
                 };
     }
 
-    function generateLightPassAst(colorClosureSignatures){
+    ns.generateLightPassAst = function(colorClosureSignatures){
         var lightPassAst;
         try{
             lightPassAst = parser.parse(Template.toString(), { raw: true });
@@ -172,8 +172,13 @@
         var functionBlock = lightPassAst.body[0].body;
         functionBlock.body.push(getInputArgDeclaration(colorClosureSignatures));
 
+        var resolvedIfStatements = [];
         for(var i = 0; i < colorClosureSignatures.length; ++i){
-            functionBlock.body.push(getIfStatement(colorClosureSignatures[i]));
+            if(resolvedIfStatements.indexOf(colorClosureSignatures[i].id) == -1){
+                resolvedIfStatements.push(colorClosureSignatures[i].id);
+                functionBlock.body.push(getIfStatement(colorClosureSignatures[i]));
+            }
+
         }
 
         return lightPassAst;
@@ -183,9 +188,10 @@
     ns.generateLightPassAast = function(colorClosureSignatures, inject){
         var resultAast;
 
-        var ast = generateLightPassAst(colorClosureSignatures);
+        var ast = ns.generateLightPassAst(colorClosureSignatures);
         if(!ast) return null;
 
+        // TODO inject the stuff
 
         return resultAast;
     }
