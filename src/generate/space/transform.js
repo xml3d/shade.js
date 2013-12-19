@@ -7,12 +7,12 @@
         Shade = require("./../../interfaces.js"),
         esgraph = require('esgraph'),
         Types = Shade.TYPES,
-        Kinds = Shade.OBJECT_KINDS,
-        Sources = require("./../../interfaces.js").SOURCES;
+        Kinds = Shade.OBJECT_KINDS;
     var spaceAnalyzer = require("../../analyze/space_analyzer.js"),
-        SpaceVectorType = spaceAnalyzer.SpaceVectorType,
-        SpaceType = spaceAnalyzer.SpaceType,
-        VectorType = spaceAnalyzer.VectorType;
+        SpaceVectorType = Shade.SpaceVectorType,
+        SpaceType = Shade.SpaceType,
+        VectorType = Shade.VectorType;
+    var SpaceTransformTools = require("./space-transform-tools.js");
 
 
 
@@ -82,7 +82,7 @@
                                 if(!paramT.space)
                                     oldArgs[paramT.idx] !== undefined && newArgs.push(oldArgs[paramT.idx]);
                                 else{
-                                    newArgs.push(self.getSpaceTransformCall(oldArgs[paramT.idx], paramT.space));
+                                    newArgs.push(SpaceTransformTools.getSpaceTransformCall(oldArgs[paramT.idx], paramT.space));
                                 }
                             }
                             node.arguments = newArgs;
@@ -91,45 +91,6 @@
                 }
             });
         },
-        getSpaceTransformCall: function(ast, space){
-            var callExpression = {
-                type: Syntax.CallExpression,
-                callee: this.getSpaceConvertFunction(space),
-                arguments: [ this.getSpaceConvertArg(space), ast ]
-            };
-            return callExpression;
-        },
-
-        getSpaceConvertFunction: function(space){
-            var vectorType = spaceAnalyzer.getVectorFromSpaceVector(space);
-            var functionName;
-            switch(vectorType){
-                case VectorType.POINT: functionName = "transformPoint"; break;
-                case VectorType.NORMAL: functionName = "transformDirection"; break;
-            }
-            var result = {
-                type: Syntax.MemberExpression,
-                object: {type: Syntax.Identifier, name: "Space"},
-                property: { type: Syntax.Identifier, name: functionName }
-            };
-            ANNO(result).setType(Types.FUNCTION);
-            ANNO(result.object).setType(Types.OBJECT, Kinds.ANY);
-            return result;
-        },
-        getSpaceConvertArg: function(space){
-            var spaceType = spaceAnalyzer.getSpaceFromSpaceVector(space);
-            var spaceName;
-            switch(spaceType){
-                case SpaceType.VIEW: spaceName = "VIEW"; break;
-                case SpaceType.WORLD: spaceName = "WORLD"; break;
-            }
-            return {
-                type: Syntax.MemberExpression,
-                object: { type: Syntax.Identifier, name: "Space"  },
-                property: { type: Syntax.Identifier, name: spaceName }
-            };
-        },
-
 
         extractSpaceTransforms: function(functionAast){
             var self = this;
@@ -232,7 +193,7 @@
                 var expressionCopy = Base.deepExtend({}, child);
                 if(space != SpaceVectorType.OBJECT && !this.isSpacePropagrationPossible(sInfo, space)){
                     this.resolveSpaceUsage(expressionCopy, SpaceVectorType.OBJECT, nameMap);
-                    expressionCopy.right = this.getSpaceTransformCall(expressionCopy.right, space);
+                    expressionCopy.right = SpaceTransformTools.getSpaceTransformCall(expressionCopy.right, space);
                 }
                 else{
                     this.resolveSpaceUsage(expressionCopy, space, nameMap);
@@ -285,7 +246,7 @@
         isSpacePropagrationPossible: function(sInfo, targetSpace){
             if(sInfo.propagateSet.length == 0) // We need to have at least one dependency. Otherwise we can't propagate the space
                 return false;
-            var vectorType = spaceAnalyzer.getVectorFromSpaceVector(targetSpace)
+            var vectorType = Shade.getVectorFromSpaceVector(targetSpace)
             if(vectorType == VectorType.NORMAL && sInfo.normalSpaceViolation)
                 return false;
             if(vectorType == VectorType.POINT && sInfo.pointSpaceViolation)

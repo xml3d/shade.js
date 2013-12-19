@@ -7,7 +7,11 @@
     var esgraph = require('esgraph');
     var codegen = require('escodegen');
     var Tools = require("./settools.js");
-    var Shade = require("./../interfaces.js");
+    var Shade = require("./../interfaces.js"),
+        SpaceType = Shade.SpaceType,
+        VectorType = Shade.VectorType,
+        SpaceVectorType = Shade.SpaceVectorType;
+
 
     // shortcuts
     var Syntax = common.Syntax;
@@ -17,36 +21,6 @@
 
     // defines
 
-    /**
-     * Possible Spaces
-     * @enum
-     */
-    var SpaceType = {
-        OBJECT: 0,
-        VIEW: 1,
-        WORLD: 2,
-        RESULT: 5
-    };
-    var VectorType = {
-        NONE: 0,
-        POINT: 1,
-        NORMAL: 2
-    };
-    var SpaceVectorType = {
-        OBJECT: SpaceType.OBJECT,
-        VIEW_POINT : SpaceType.VIEW + (VectorType.POINT << 3),
-        WORLD_POINT : SpaceType.WORLD + (VectorType.POINT << 3),
-        VIEW_NORMAL : SpaceType.VIEW + (VectorType.NORMAL << 3),
-        WORLD_NORMAL : SpaceType.WORLD + (VectorType.NORMAL << 3),
-        RESULT_POINT : SpaceType.RESULT + (VectorType.POINT << 3),
-        RESULT_NORMAL : SpaceType.RESULT + (VectorType.NORMAL << 3)
-    };
-    function getVectorFromSpaceVector(spaceType){
-        return spaceType >> 3;
-    }
-    function getSpaceFromSpaceVector(spaceType){
-        return spaceType % 8;
-    }
 
     var c_resultPointOk = true, c_resultNormalOk = true,
         c_customFunctionPropagations = null;
@@ -70,7 +44,7 @@
         var transferSpaces = {};
         startNodeResult.forEach(function(elem) {
             var split = elem.split(";"), name = split[0], space = split[1]*1;
-            if(getSpaceFromSpaceVector(space) == SpaceType.RESULT){
+            if(Shade.getSpaceFromSpaceVector(space) == SpaceType.RESULT){
                 transferSpaces[name] = true;
                 return;
             }
@@ -92,7 +66,7 @@
         ast.spaceInfo[key] = value;
     }
     function setSpaceInfoSpaces(ast, key, spaces){
-        var values = spaces && spaces.filter(function(space){ return getSpaceFromSpaceVector(space) != SpaceType.RESULT });
+        var values = spaces && spaces.filter(function(space){ return Shade.getSpaceFromSpaceVector(space) != SpaceType.RESULT });
         setSpaceInfo(ast, key, values);
     }
 
@@ -143,7 +117,7 @@
         return set;
     }
     function isSpaceTypeValid(spaceType, dependencies){
-        var type = getVectorFromSpaceVector(spaceType);
+        var type = Shade.getVectorFromSpaceVector(spaceType);
         return type == VectorType.NONE || (type == VectorType.NORMAL && !dependencies.normalSpaceViolation)
            || (type == VectorType.POINT && !dependencies.pointSpaceViolation);
     }
@@ -154,7 +128,7 @@
             depSpaceInfo.add(  name + ";" + SpaceVectorType.OBJECT);
         })
         spaces.forEach(function(spaceVector){
-            var space = getSpaceFromSpaceVector(spaceVector);
+            var space = Shade.getSpaceFromSpaceVector(spaceVector);
             var isValid = isSpaceTypeValid(spaceVector, dependencies);
 
             if(space != SpaceType.OBJECT && dependencies.hasDirectVec3SpaceOverride()){
@@ -167,7 +141,7 @@
             finalSpaces.add(spaceVector);
 
             if(!isValid && space == SpaceType.RESULT){
-                if(getVectorFromSpaceVector(spaceVector) == VectorType.NORMAL)
+                if(Shade.getVectorFromSpaceVector(spaceVector) == VectorType.NORMAL)
                     c_resultNormalOk = false;
                 else
                     c_resultPointOk = false;
@@ -439,11 +413,6 @@
         }
     }
     module.exports = {
-        SpaceVectorType: SpaceVectorType,
-        SpaceType: SpaceType,
-        VectorType: VectorType,
-        getVectorFromSpaceVector: getVectorFromSpaceVector,
-        getSpaceFromSpaceVector: getSpaceFromSpaceVector,
         analyze: analyze
     };
 

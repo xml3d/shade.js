@@ -7,15 +7,48 @@
         sanitizer = require("./analyze/sanitizer/sanitizer.js"),
         Base = require("./base/index.js"),
         GLSLCompiler = require("./generate/glsl/compiler.js").GLSLCompiler,
+        LightPassGenerator = require("./generate/light-pass/light-pass-generator.js"),
         resolver = require("./resolve/resolve.js"),
         SpaceTransformer = require("./generate/space/transform.js").SpaceTransformer,
-        spaceAnalyzer = require("./analyze/space_analyzer.js"),
         validator = require("./analyze/validator.js"),
         analyzer = require("./analyze/analyze.js"),
-        SpaceVectorType = spaceAnalyzer.SpaceVectorType,
-        SpaceType = spaceAnalyzer.SpaceType,
-        VectorType = spaceAnalyzer.VectorType;
+        SpaceVectorType = interfaces.SpaceVectorType,
+        SpaceType = interfaces.SpaceType,
+        VectorType = interfaces.VectorType;
 
+
+    var WorkingSet = function(){
+        this.ast = null;
+        this.aast = null;
+        this.result = null;
+        this.processingData = {};
+    };
+    Base.extend(WorkingSet.prototype, {
+        setAst: function(ast){
+            this.ast = ast;
+        },
+        parse: function(code, opt){
+            opt = opt || {};
+            this.ast = ns.parse(code, opt);
+        },
+        analyze: function(inject, implementation, opt){
+            opt = opt || {};
+            opt.entry = opt.entry || "global.shade";
+            opt.validate = opt.validate !== undefined ? opt.validate : true;
+            opt.throwOnError = opt.throwOnError !== undefined ? opt.throwOnError : true;
+            opt.implementation = implementation;
+            opt.inject = inject;
+            this.aast = analyzer.analyze(this.ast, this.processingData, opt).ast;
+            return this.aast;
+        },
+        getProcessingData: function(key){
+            return this.processingData[key];
+        },
+        compileFragmentShader: function(opt){
+            this.result = ns.compileFragmentShader(this.aast, opt);
+            return this.result;
+        }
+    });
 
 
 
@@ -55,24 +88,29 @@
             opt.throwOnError = opt.throwOnError !== undefined ? opt.throwOnError : true;
 
             ast = ns.parse(ast, opt);
-            return analyzer.analyze(ast, opt).ast;
+            return analyzer.analyze(ast, {}, opt).ast;
         },
 
         analyze: function(ast, opt) {
             opt = opt || {};
             ast = ns.parse(ast, opt);
 
-            return analyzer.analyze(ast, opt)
+            return analyzer.analyze(ast, {}, opt)
         },
 
-        resolveClosures: function(ast, implementation, opt) {
+        resolveClosures: function(ast, implementation, processData, opt) {
             opt = opt || {};
-            return resolver.resolveClosures(ast, implementation, opt);
+            processData = processData || {};
+            return resolver.resolveClosuresPreTypeInference(ast, implementation, processData, opt);
         },
 
         resolveSpaces: function(aast, opt){
             opt = opt || {};
             return SpaceTransformer.transformAast(aast, opt);
+        },
+
+        getLightPassAast: function(colorClosureSignatures, inject, opt){
+            return LightPassGenerator.generateLightPassAast(colorClosureSignatures, inject)
         },
 
         compileFragmentShader: function(aast, opt){
@@ -92,7 +130,8 @@
         Vec4: interfaces.Vec4,
         Texture: interfaces.Texture,
         Color: interfaces.Color,
-        Mat3: interfaces.Mat3
+        Mat3: interfaces.Mat3,
+        WorkingSet: WorkingSet
 
 });
     /**
