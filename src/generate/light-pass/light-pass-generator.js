@@ -90,10 +90,7 @@
                                 object: {type: Syntax.Identifier, name: "env"},
                                 property: {type: Syntax.Identifier, name: DEFERRED_TEX_PREFIX + i }},
                             property: {type: Syntax.Identifier, name: "sample2D"}},
-                        arguments: [{ type: Syntax.MemberExpression,
-                            object: { type: Syntax.Identifier, name: "env" },
-                            property: {type: Syntax.Identifier, name: TEXCOORD_NAME }
-                        }]
+                        arguments: [{ type: Syntax.Identifier, name: TEXCOORD_NAME }]
                     }
                 }
             });
