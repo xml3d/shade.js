@@ -100,9 +100,10 @@
             return analyzer.analyze(ast, {}, opt)
         },
 
-        resolveClosures: function(ast, implementation, opt) {
+        resolveClosures: function(ast, implementation, processData, opt) {
             opt = opt || {};
-            return resolver.resolveClosuresPreTypeInference(ast, implementation, opt);
+            processData = processData || {};
+            return resolver.resolveClosuresPreTypeInference(ast, implementation, processData, opt);
         },
 
         resolveSpaces: function(aast, opt){
