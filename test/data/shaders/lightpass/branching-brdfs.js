@@ -1,4 +1,4 @@
-// Basic deferred Shader
+// Branching Light Pass Shader
 {
     function shade(env) {
         if(env.factor < 0.25)

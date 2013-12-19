@@ -1,4 +1,4 @@
-// Basic deferred Shader
+// Env input usage
 /*
 uniform mat3 modelViewMatrixN;
 uniform mat3 modelViewMatrix;

@@ -1,4 +1,4 @@
-// Basic deferred Shader
+// Multi brdfs
 /*
 uniform mat3 modelViewMatrixN;
 uniform mat3 modelViewMatrix;

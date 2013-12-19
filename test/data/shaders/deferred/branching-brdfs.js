@@ -1,4 +1,4 @@
-// Basic deferred Shader
+// Branching deferred Shader
 /*
 uniform mat3 modelViewMatrixN;
 uniform mat3 modelViewMatrix;

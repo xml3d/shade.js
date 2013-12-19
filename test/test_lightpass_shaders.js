@@ -38,7 +38,7 @@ function createTest(dir, file) {
     });
 }
 
-describe.only('Light Pass Shader Code:', function () {
+describe('Light Pass Shader Code:', function () {
     var dir = __dirname + '/data/shaders/lightpass/';
     //createTest(dir, "basic.js");
 
