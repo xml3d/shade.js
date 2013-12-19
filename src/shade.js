@@ -7,6 +7,7 @@
         sanitizer = require("./analyze/sanitizer/sanitizer.js"),
         Base = require("./base/index.js"),
         GLSLCompiler = require("./generate/glsl/compiler.js").GLSLCompiler,
+        LightPassGenerator = require("./generate/light-pass/light-pass-generator.js"),
         resolver = require("./resolve/resolve.js"),
         SpaceTransformer = require("./generate/space/transform.js").SpaceTransformer,
         validator = require("./analyze/validator.js"),
@@ -46,9 +47,6 @@
         compileFragmentShader: function(opt){
             this.result = ns.compileFragmentShader(this.aast, opt);
             return this.result;
-        },
-        compileLightPassShader: function(colorClosureSignatures){
-
         }
     });
 
@@ -109,6 +107,10 @@
         resolveSpaces: function(aast, opt){
             opt = opt || {};
             return SpaceTransformer.transformAast(aast, opt);
+        },
+
+        getLightPassAast: function(colorClosureSignatures, inject, opt){
+            return LightPassGenerator.generateLightPassAast(colorClosureSignatures, inject)
         },
 
         compileFragmentShader: function(aast, opt){

@@ -4,7 +4,8 @@
         parser = require('esprima'),
         Shade = require("./../../interfaces.js"),
         Types = Shade.TYPES,
-        Kinds = Shade.OBJECT_KINDS;
+        Kinds = Shade.OBJECT_KINDS,
+        analyzer = require("../../analyze/analyze.js");
     var walk = require('estraverse');
     var Syntax = walk.Syntax;
 
@@ -186,13 +187,21 @@
 
 
     ns.generateLightPassAast = function(colorClosureSignatures, inject){
-        var resultAast;
+
 
         var ast = ns.generateLightPassAst(colorClosureSignatures);
         if(!ast) return null;
 
-        // TODO inject the stuff
-
+        var opt = {};
+        opt.entry = "global.shade";
+        opt.validate = true;
+        opt.throwOnError = true;
+        opt.implementation = "xml3d-glsl-forward";
+        opt.inject = inject;
+        opt.lightLoopNoSpaceTransform = true;
+        opt.lightLoopPositionArg = {type: Syntax.Identifier, name: "position"};
+        opt.lightLoopAmbientArg = {type: Syntax.Identifier, name: "ambientIntensity"};
+        var resultAast = analyzer.analyze(ast, {}, opt).ast;
         return resultAast;
     }
 
