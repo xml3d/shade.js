@@ -308,7 +308,7 @@
             operator: "=",
             left: {
                 type: Syntax.Identifier,
-                name: "gl_FragColor" + (index !== undefined ? "[" + index + "]" : "")
+                name: (index !== undefined ? "gl_FragData[" + index + "]" : "gl_FragColor")
             },
             right: result
         };
