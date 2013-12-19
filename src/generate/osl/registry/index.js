@@ -17,7 +17,7 @@
         Shade : require("./shade.js"),
 //        Space : require("./space.js"),
         Math : require("./math.js"),
-//        System : require("./system.js"),
+        System : require("./system.js"),
         Vec2 : require("./vec2.js"),
         Vec3 : require("./vec3.js"),
 //        Color: require("./vec3.js"),
@@ -92,6 +92,9 @@
             return propertyLiteral;
         },
         createSystemParameter: function(parameterName, typeInfo) {
+            if(typeInfo.isFunction()) {
+                return;
+            }
             var newParameterName = this.getSafeName(capitaliseFirstLetter(parameterName));
             this.addUsedParameter(newParameterName, this.globalParameters[parameterName]);
             var propertyLiteral = { type: Syntax.Identifier, name: newParameterName };
@@ -126,6 +129,7 @@
 //            this.registerObject("Mat3", objects.Mat3);
 //            this.registerObject("Mat4", objects.Mat4);
 //            this.registerObject("Space", objects.Space);
+            this.registerObject("this", objects.System);
 
         }
     });
