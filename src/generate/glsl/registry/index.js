@@ -55,7 +55,8 @@
         Context.call(this, root, opt);
         this.usedParameters = {
             shader: {},
-            system: {}
+            system: {},
+            uexp: {}
         };
         this.systemParameters = {};
         this.blockedNames = [];

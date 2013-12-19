@@ -64,6 +64,13 @@
                         destName = Tools.getNameForGlobal(envNames[i]);
                         if (!parameters.shader[destName])
                             continue;
+                        for(var name in parameters.uexp) {
+                            var deps = parameters.uexp[name].dependencies;
+                            var index = deps.indexOf(srcName);
+                            if (index != -1) {
+                                cb(name, parameters.uexp[name].setter.call(Shade, inputCollection.envBase));
+                            }
+                        }
                         cb(destName, override && override[srcName] !== undefined ? override[srcName] : base[srcName]);
                         if (parameters.shader[destName].kind === Shade.OBJECT_KINDS.TEXTURE) {
                             cb(destName + "_width", override && override[srcName] !== undefined ? override[srcName].width : base[srcName][0].width);
@@ -103,14 +110,11 @@
             this.replace(program);
 
             var usedParameters = context.usedParameters;
-            for(name in usedParameters.shader){
-                declaration = createTopDeclaration(name, usedParameters.shader[name]);
-                declaration && program.body.unshift(declaration);
-            }
-
-            for(name in usedParameters.system){
-                declaration = createTopDeclaration(name, usedParameters.system[name]);
-                declaration && program.body.unshift(declaration);
+            for (var container in usedParameters) {
+                for (name in usedParameters[container]) {
+                    declaration = createTopDeclaration(name, usedParameters[container][name]);
+                    declaration && program.body.unshift(declaration);
+                }
             }
 
             var uniformSetter = this.createUniformSetterFunction(usedParameters);
@@ -132,7 +136,12 @@
             ast = controller.replace(ast, {
 
                 enter: function (node, parent) {
-                    //console.log("Enter:", node.type);
+
+                    // Take a short cut if we have a uniform expression
+                    var uexp = handleUniformExpression(node, this, context);
+                    if (uexp)
+                        return uexp;
+
                     switch (node.type) {
                         case Syntax.Identifier:
                             return enterIdentifier(node, parent, context);
@@ -588,6 +597,33 @@
             };
         }
     };
+
+    var handleUniformExpression = function (node, root, context) {
+        if (!node.extra)
+            return;
+
+        var exp = ANNO(node);
+        if (exp.isUniformExpression() && !(exp.getSource() == Shade.SOURCES.UNIFORM)) {
+            var newUniformName = Tools.generateFreeName("uexp", context.blockedNames);
+            var extra = {};
+            extra.type = exp.getType();
+            if (exp.isObject()) {
+                extra.kind = exp.getKind();
+            }
+            extra.source = Shade.SOURCES.UNIFORM;
+            //extra.setter = generateUniformSetter(node);
+            extra.dependencies = exp.getUniformDependencies();
+
+            context.usedParameters.uexp[newUniformName] = extra;
+
+            return {
+                type: Syntax.Identifier,
+                name: newUniformName,
+                extra: extra
+            }
+        }
+
+    }
 
 
     // Exports

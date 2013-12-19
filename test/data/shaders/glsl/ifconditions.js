@@ -1,8 +1,8 @@
 // Shader with if statement
 /*
-uniform float _env_ufloat;
+uniform bool uexp;
 void main ( void ) {
-    if(_env_ufloat < 5.0) {
+    if(uexp) {
         gl_FragColor = vec4(vec3(1), 1.0);
         return;
     }
