@@ -1,5 +1,8 @@
 // Functions should specialize also if parameters are undefined
 /*
+// Forward declarations
+vec4 global_createVec1 ( float a, float c );
+
 vec4 global_createVec1 ( float a, float c ) {
     return vec4(a, 2, c, 4);
 }

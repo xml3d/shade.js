@@ -1,5 +1,10 @@
-// Need to order function in execution order for GLSL
+// Need to order function in execution order for GLSL - obsolete, have forward declarations now
 /*
+// Forward declarations
+float global_after3 ( int a );
+float global_after2 ( float a );
+float global_before1 ( int a );
+
 float global_after3 ( int a ) {
     return a / 10;
 }

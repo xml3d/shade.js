@@ -1,5 +1,9 @@
 // Functions should specialize based on their parameter types
 /*
+// Forward declarations
+int global_mul2 ( int n );
+float global_mul1 ( float n );
+
 int global_mul2 ( int n ) {
     return n * n;
 }

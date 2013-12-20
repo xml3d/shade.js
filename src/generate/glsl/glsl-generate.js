@@ -184,28 +184,16 @@
                                     lines.push(e)
                                 });
                                 appendInternalFunctions(lines, ANNO(ast).getUserData().internalFunctions);
+                                addForwardDeclarations(lines, node);
                                 break;
 
 
                             case Syntax.FunctionDeclaration:
                                 opt.newLines && lines.appendLine();
-                                var func = new FunctionAnnotation(node);
-                                var methodStart = [toGLSLType(func.getReturnInfo(), { allowUndefined: true })];
-                                methodStart.push(node.id.name, '(');
                                 if(node.id.name == "main")
                                     insideMain = true;
 
-                                if (!(node.params && node.params.length)) {
-                                    methodStart.push("void");
-                                } else {
-                                    var methodArgs = [];
-                                    node.params.forEach(function (param) {
-                                        methodArgs.push(toGLSLType(param.extra)+ " " + param.name);
-                                    })
-                                    methodStart.push(methodArgs.join(", "));
-                                }
-                                methodStart.push(') {');
-                                lines.appendLine(methodStart.join(" "));
+                                lines.appendLine(generateFunctionSignature(node) + " {");
                                 lines.changeIndention(1);
                                 return;
 
@@ -277,6 +265,43 @@
         );
     }
 
+    function addForwardDeclarations(lines, node) {
+        var first = true;
+        walk.traverse(node, {
+            enter: function(node) {
+                if(node.type == Syntax.FunctionDeclaration) {
+                    if(node.id.name == "main") {
+                        return;
+                    }
+                    if (first) {
+                        first = false;
+                        lines.appendLine("// Forward declarations");
+                    }
+                    lines.appendLine(generateFunctionSignature(node)+";");
+                }
+            }
+        });
+        if(!first) {
+            lines.appendLine("");
+        }
+    }
+
+    function generateFunctionSignature(node) {
+        var func = new FunctionAnnotation(node);
+        var methodStart = [toGLSLType(func.getReturnInfo(), { allowUndefined: true })];
+        methodStart.push(node.id.name, '(');
+        if (!(node.params && node.params.length)) {
+            methodStart.push("void");
+        } else {
+            var methodArgs = [];
+            node.params.forEach(function (param) {
+                methodArgs.push(toGLSLType(param.extra) + " " + param.name);
+            })
+            methodStart.push(methodArgs.join(", "));
+        }
+        methodStart.push(")");
+        return methodStart.join(" ");
+    }
 
     function getStaticValue(extra) {
         if (!extra || extra.staticValue === undefined) return "";
