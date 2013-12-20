@@ -11,7 +11,8 @@
         Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS;
 
-    var SpaceTransformTools = require("../../generate/space/space-transform-tools.js");
+    var SpaceTransformTools = require("../../generate/space/space-transform-tools.js"),
+        ColorClosureTools = require("../colorclosure-tools.js");
 
     var ADD_POSITION_TO_ARGS = true;
 
@@ -101,7 +102,7 @@
             addPositionArgument(ccSig, argCache, argAast);
         var ambientValue = { type: Syntax.LogicalExpression, operator : "||",
                         left: getEnvAccess("ambientIntensity", AMBIENT_DEFINITION),
-                        right: getDefaultValue(AMBIENT_DEFINITION) };
+                        right: ColorClosureTools.getDefaultValue(AMBIENT_DEFINITION) };
 
         getCachedArgument(ccSig, AMBIENT_DEFINITION, ambientValue, argCache, argAast);
 
@@ -116,7 +117,7 @@
                 if(j < cInfo.args.length)
                     value = cInfo.args[j];
                 else
-                    value = getDefaultValue(inputDefinition);
+                    value = ColorClosureTools.getDefaultValue(inputDefinition);
                 var space = DeferredInfo[cInfo.name] && DeferredInfo[cInfo.name].inputSpaces[j];
                 argIndices.push(getCachedArgument(ccSig, inputDefinition, value, argCache, argAast, space));
             }
@@ -126,7 +127,7 @@
                 // TODO: Determine if env property is undefined and use defaultValue in this case;
                 value = { type: Syntax.LogicalExpression, operator : "||",
                         left: getEnvAccess(property, envDefinition),
-                        right: getDefaultValue(envDefinition) };
+                        right: ColorClosureTools.getDefaultValue(envDefinition) };
                 envIndices[property] = getCachedArgument(ccSig, envDefinition, value, argCache, argAast);
             }
             addColorClosure(ccSig, cInfo.name, argIndices, envIndices);
@@ -201,23 +202,6 @@
         // objAnno.setType(Types.OBJECT, Kinds.ANY);
         // objAnno.setGlobal(true);
         return result;
-    }
-
-    function getDefaultValue(definition){
-        if(definition.defaultValue == undefined)
-            throw new Error("ColorClosure input has not default value!");
-
-        if(definition.type == Types.NUMBER || definition.type == Types.INT){
-            var result = {
-                type: Syntax.Literal,
-                value: definition.defaultValue
-            }
-            // ANNO(result).setType(Types.NUMBER);
-            return result;
-        }
-        else{
-            throw new Error("Currentlty don't support default values of type " + definition.type + " and kind " + definition.kind);
-        }
     }
 
 

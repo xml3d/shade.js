@@ -9,7 +9,8 @@
         ANNO = require("./../../base/annotation.js").ANNO,
         sanitizer = require("./../../analyze/sanitizer/sanitizer.js");
 
-    var SpaceTransformTools = require("../../generate/space/space-transform-tools.js");
+    var SpaceTransformTools = require("../../generate/space/space-transform-tools.js"),
+        ColorClosureTools = require("../colorclosure-tools.js");
 
 
 
@@ -201,8 +202,10 @@
         for(var i = 0; i < colorClosureList.length; ++i){
             var ccEntry = colorClosureList[i];
             var ccInput = Shade.ColorClosures[ccEntry.name].input;
-            for(var j = 0; j < ccEntry.args.length; ++j){
+            for(var j = 0; j < ccInput.length; ++j){
                 var arg = ccEntry.args[j];
+                if(!arg)
+                    arg = ColorClosureTools.getDefaultValue(ccInput[j]);
                 if(ccInput[j].semantic == Shade.SEMANTICS.NORMAL && !state.noSpaceTransform)
                     arg = SpaceTransformTools.getSpaceTransformCall(arg, Shade.SpaceVectorType.VIEW_NORMAL);
                 args.push(arg);
