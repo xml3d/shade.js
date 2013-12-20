@@ -40,8 +40,6 @@
                     // Calculate types and static values
                     ast = inference.infer(ast, this, options);
 
-            ast = opt.implementation ? resolver.resolveClosuresPostTypeInference(ast, opt.implementation, processingData, opt) : ast;
-
                     // Remove/Replace dead code and static expressions
                     ast = staticTransformer.transform(ast, options);
 
@@ -58,7 +56,7 @@
             }
             ast = context.getResult();
 
-            opt.transformSpaces && spaceTransformer.transformAast(ast, opt);
+            ast = opt.implementation ? resolver.resolveClosuresPostTypeInference(ast, opt.implementation, processingData, opt) : ast;
 
             // check for remaining code the completeness of annotations
             ast = opt.validate ? validator.validate(ast) : ast;
