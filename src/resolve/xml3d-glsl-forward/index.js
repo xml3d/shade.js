@@ -212,11 +212,9 @@
             }
         }
         return {
-            type: Syntax.ExpressionStatement,
-            expression: {type: Syntax.CallExpression,
-                callee: {type: Syntax.Identifier, name: lightLoopFunction},
-                arguments: args
-            }
+            type: Syntax.CallExpression,
+            callee: {type: Syntax.Identifier, name: lightLoopFunction},
+            arguments: args
         };
     }
 
