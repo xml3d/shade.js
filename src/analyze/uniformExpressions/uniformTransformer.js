@@ -43,9 +43,27 @@
                 }
             });
         },
+        getUniformExpression: function(uexp) {
+            for(var name in this.uniformExpressions) {
+                var other = this.uniformExpressions[name];
+                if(uexp.code == other.code && equalDependencies(uexp.dependencies, other.dependencies))
+                    return name;
+            }
+            return "";
+        },
         generateUniformExpression: function(node) {
             var anno = ANNO(node);
-            var name = "u" + this.getCounter();
+            var uexp = {
+                code: codegen.generate(setterGenerator.transformUniformSetter(node, this.activeUniformVariables)),
+                dependencies: anno.getUniformDependencies()
+
+            };
+
+            var name = this.getUniformExpression(uexp);
+            if(!name) {
+                name = "u" + this.getCounter();
+                this.uniformExpressions[name] = uexp;
+            }
             var result = {
                 type: Syntax.MemberExpression,
                 object: {
@@ -58,20 +76,28 @@
                 }
             }
 
-            this.uniformExpressions[name] = {
-                code: codegen.generate(setterGenerator.transformUniformSetter(node, this.activeUniformVariables)),
-                dependencies: anno.getUniformDependencies()
-
-            };
             ANNO(result).copy(anno);
             return result;
         }
     };
 
+    function equalDependencies(a, b) {
+        if(a.length != b.length)
+            return false;
+        a.forEach(function(elem) {
+            if(b.indexOf(elem) == -1)
+                return false;
+        });
+        return true;
+    }
+
     function shouldGenerateUniformExpression(node, anno) {
         var deps = anno.getUniformDependencies();
-        if(deps.length == 1 && node.type == Syntax.MemberExpression && node.property.name == deps[0]) {
-            return false;
+
+        if(deps.length == 1) {
+            // Only depends on itself
+            if(node.type == Syntax.MemberExpression && node.property.name == deps[0])
+                return false;
         }
 
         return true;

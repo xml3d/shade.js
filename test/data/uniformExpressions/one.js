@@ -4,7 +4,7 @@ function shade(env) {
     var a, b;
     a = uexp.u1;
     b = Math.sin(env.vfloat2);
-    a = uexp.u2 + b;
+    a = uexp.u1 + b;
     return new Vec3(a);
 }
  */

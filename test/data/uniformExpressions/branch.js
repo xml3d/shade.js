@@ -7,7 +7,7 @@ function shade(env) {
     if (env.ubool) {
         b = uexp.u2;
     }
-    a = uexp.u3 + b;
+    a = uexp.u1 + b;
     return new Vec3(a);
 }
  */
