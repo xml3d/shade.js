@@ -10,13 +10,15 @@
         TYPES = Shade.TYPES,
         ANNO = common.ANNO;
 
+    var activeFunction = "";
 
     var leaveNode = function(node) {
         var annotation = ANNO(node), right;
 
         if(!annotation.isValid()) {
             var errorInfo = annotation.getError();
-            var error = new Error(errorInfo.message);
+            var functionCall = activeFunction ? "In " + activeFunction + ": " : "";
+            var error = new Error(functionCall + errorInfo.message);
             error.loc = errorInfo.loc;
             throw error;
         }
@@ -43,6 +45,7 @@
             annotation.copy(exp);
         }
 
+
     };
 
     /**
@@ -53,7 +56,12 @@
      */
     var validate = ns.validate = function (ast) {
         return estraverse.replace(ast, {
-            leave: leaveNode
+            leave: leaveNode,
+            enter: function (node) {
+                if (node.type == Syntax.FunctionDeclaration) {
+                    activeFunction = node.id.name;
+                }
+            }
         });
     }
 
