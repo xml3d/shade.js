@@ -68,8 +68,8 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
                     (this.spotLightCosSoftFalloffAngle[i] -  this.spotLightCosFalloffAngle[i]);
 
             atten = 1.0 / (this.spotLightAttenuation[i].x() + this.spotLightAttenuation[i].y() * dist + this.spotLightAttenuation[i].z() * dist * dist);
-            kd = kd.mul(this.directionalLightIntensity[i]).mul(atten * softness);
-            ks = ks.mul(this.directionalLightIntensity[i]).mul(atten * softness);
+            kd = kd.mul(this.spotLightIntensity[i]).mul(atten * softness);
+            ks = ks.mul(this.spotLightIntensity[i]).mul(atten * softness);
             kdComplete = kdComplete.add(kd);
             ksComplete = ksComplete.add(ks);
         }
