@@ -14,13 +14,13 @@
         var ccId = deferred0.x();
         var position = deferred0.yzw();
         var ambientIntensity = deferred1.x();
-        var ccArg0, ccArg1, ccArg2;
         if(ccId == 0){
+            var cc0Arg0, cc0Arg1, cc0Arg2;
             deferred2 = env.deferred2.sample2D(texcoord);
-            ccArg0 = deferred2.xyz();
-            ccArg1 = deferred1.yzw();
-            ccArg2 = deferred2.w();
-            return new Shade().phong(ccArg0, ccArg1, ccArg2);
+            cc0Arg0 = deferred2.xyz();
+            cc0Arg1 = deferred1.yzw();
+            cc0Arg2 = deferred2.w();
+            return new Shade().phong(cc0Arg0, cc0Arg1, cc0Arg2);
         }
     }
 }

@@ -19,23 +19,25 @@
         var ccId = deferred0.x();
         var position = deferred0.yzw();
         var ambientIntensity = deferred1.x();
-        var ccArg0, ccArg1, ccArg2, ccArg3, ccArg4;
+
         if(ccId == 0){
+            var cc0Arg0, cc0Arg1, cc0Arg2;
             deferred2 = env.deferred2.sample2D(texcoord);
-            ccArg0 = deferred2.xyz();
-            ccArg1 = deferred1.yzw();
-            ccArg2 = deferred2.w();
-            return new Shade().diffuse(ccArg0, ccArg1, ccArg2);
+            cc0Arg0 = deferred2.xyz();
+            cc0Arg1 = deferred1.yzw();
+            cc0Arg2 = deferred2.w();
+            return new Shade().diffuse(cc0Arg0, cc0Arg1, cc0Arg2);
         }
         if(ccId == 1){
+            var cc1Arg0, cc1Arg1, cc1Arg2, cc1Arg3, cc1Arg4;
             deferred2 = env.deferred2.sample2D(texcoord);
             deferred3 = env.deferred3.sample2D(texcoord);
-            ccArg0 = deferred3.xyz();
-            ccArg1 = deferred2.xyz();
-            ccArg2 = deferred3.w();
-            ccArg3 = deferred1.yzw();
-            ccArg4 = deferred2.w();
-            return new Shade().diffuse(ccArg0, ccArg1, ccArg2).phong(ccArg3, ccArg1, ccArg4);
+            cc1Arg0 = deferred3.xyz();
+            cc1Arg1 = deferred2.xyz();
+            cc1Arg2 = deferred3.w();
+            cc1Arg3 = deferred1.yzw();
+            cc1Arg4 = deferred2.w();
+            return new Shade().diffuse(cc1Arg0, cc1Arg1, cc1Arg2).phong(cc1Arg3, cc1Arg1, cc1Arg4);
         }
     }
 }

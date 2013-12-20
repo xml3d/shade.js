@@ -18,15 +18,12 @@
         DEFERRED_TEX_PREFIX = "deferred",
         DEFERRED_VALUE_PREFIX = "deferred";
 
-    function getInputArgDeclaration(colorClosureSignatures){
-        var argMax = 0, defaultArgCount = POSITION_IS_IN_ARGS ? 3 : 2;
-        for(var i = 0; i < colorClosureSignatures.length; ++i){
-            argMax = Math.max(colorClosureSignatures[i].args.length - defaultArgCount, argMax);
-        }
+    function getInputArgDeclaration(colorClosureSignature){
         var declarations = [];
-        for(var i = 0; i < argMax; ++i){
+        var defaultArgCount = POSITION_IS_IN_ARGS ? 3 : 2;
+        for(var i = 0; i < colorClosureSignature.args.length - defaultArgCount; ++i){
             declarations.push({ type: Syntax.VariableDeclarator,
-            id: {type: Syntax.Identifier, name: "ccArg" + i},
+            id: {type: Syntax.Identifier, name: "cc" + colorClosureSignature.id + "Arg" + i},
             init: null});
         }
         return {
@@ -76,8 +73,6 @@
         return createTexMethodAccess(arg.texIdx, "xyzw");
     }
 
-
-
     function addTextureSamples(statements, colorClosureSignature){
         for(var i = PRE_TEXTURE_FETCHES; i < colorClosureSignature.textureCount; ++i){
             statements.push(
@@ -97,6 +92,7 @@
         }
     }
     function addArgumentFetching(statements, colorClosureSignature){
+        var id = colorClosureSignature.id;
         var defaultArgCount = POSITION_IS_IN_ARGS ? 3 : 2;
         var args = colorClosureSignature.args;
         for(var i = defaultArgCount; i < args.length; ++i){
@@ -106,17 +102,17 @@
             var valueFetchAst = FetchResolver[arg.storeType](arg);
             statements.push({type: Syntax.ExpressionStatement,
                 expression: {type: Syntax.AssignmentExpression, operator: "=",
-                    left: {type: Syntax.Identifier, name: "ccArg" + (i - defaultArgCount)},
+                    left: {type: Syntax.Identifier, name: "cc" + id + "Arg" + (i - defaultArgCount)},
                     right: valueFetchAst
                     }});
         }
     }
 
-    function getColorClosureArgs(ccEntry){
+    function getColorClosureArgs(id, ccEntry){
         var defaultArgCount = POSITION_IS_IN_ARGS ? 3 : 2;
         var args = [], argIndices = ccEntry.argIndices;
         for(var i = 0; i < argIndices.length; ++i){
-            args.push({type: Syntax.Identifier, name: "ccArg" + (argIndices[i] - defaultArgCount)});
+            args.push({type: Syntax.Identifier, name: "cc" + id + "Arg" + (argIndices[i] - defaultArgCount)});
         }
         return args;
     }
@@ -128,7 +124,7 @@
             arguments: []};
         var ccList = colorClosureSignature.colorClosures;
         for(var i = 0; i < ccList.length; ++i){
-            var args = getColorClosureArgs(ccList[i]);
+            var args = getColorClosureArgs(colorClosureSignature.id, ccList[i]);
             returnArgument = {  type: Syntax.CallExpression,
                                 callee: {type: Syntax.MemberExpression,
                                     object: returnArgument,
@@ -143,6 +139,7 @@
 
     function getIfStatement(colorClosureSignature){
         var statements = [];
+        statements.push(getInputArgDeclaration(colorClosureSignature));
         addTextureSamples(statements, colorClosureSignature);
         addArgumentFetching(statements, colorClosureSignature);
         statements.push(getReturnStatement(colorClosureSignature));
@@ -168,7 +165,7 @@
             return null;
         }
         var functionBlock = lightPassAst.body[0].body;
-        functionBlock.body.push(getInputArgDeclaration(colorClosureSignatures));
+        //functionBlock.body.push(getInputArgDeclaration(colorClosureSignatures));
 
         var resolvedIfStatements = [];
         for(var i = 0; i < colorClosureSignatures.length; ++i){
@@ -176,7 +173,6 @@
                 resolvedIfStatements.push(colorClosureSignatures[i].id);
                 functionBlock.body.push(getIfStatement(colorClosureSignatures[i]));
             }
-
         }
 
         return lightPassAst;
@@ -184,8 +180,6 @@
 
 
     ns.generateLightPassAast = function(colorClosureSignatures, inject){
-
-
         var ast = ns.generateLightPassAst(colorClosureSignatures);
         if(!ast) return null;
 
