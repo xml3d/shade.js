@@ -1,14 +1,17 @@
 (function (ns) {
 
     // Dependencies
+    var common = require("../../base/common.js");
     var esgraph = require('esgraph');
     var worklist = require('analyses');
     var evaluator = require('./evaluator.js');
     var transformer = require('./uniformTransformer.js');
     var Tools = require("../settools.js");
+    var assert = require("assert");
 
     // Shortcuts
-    var Set = worklist.Set;
+    var Set = worklist.Set,
+        Syntax = common.Syntax;
 
     /**
      * @param root
@@ -53,11 +56,11 @@
 
                 var result = Set.union(filteredInput, generate);
 
-                /*console.log("input:", input);
-                console.log("kill:", this.kill);
-                console.log("generate:", generate);
-                console.log("filteredInput:", filteredInput);*/
-                //console.log("result:", result);
+//                console.log("input:", input);
+//                console.log("kill:", this.kill);
+//                console.log("generate:", generate);
+//                console.log("filteredInput:", filteredInput);
+//                //console.log("result:", result);
                 return result;
                 }, {
                 direction: 'forward',
@@ -77,6 +80,8 @@
 
     ns.extract = function (ast, opt) {
 
+        assert.equal(ast.type, Syntax.Program, "Analysis expects program");
+
         var analysis = new UniformAnalysis(ast, opt);
 
         // Propagate and analyze
@@ -84,7 +89,6 @@
 
         // Transform
         return analysis.transform();
-
     };
 
 

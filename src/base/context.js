@@ -2,7 +2,7 @@
 
     var Context = function (root, opt) {
 
-        opt = opt || {};
+        this.options = opt || {};
 
         /**
          * The root of the program to analyze
@@ -22,6 +22,8 @@
          */
         this.scopeStack = opt.scope ? [opt.scope] : [  ];
 
+
+        this.declaration = false;
     };
 
     Context.prototype = {
@@ -36,7 +38,14 @@
         },
         inMainFunction: function() {
             return this.getScope().str() == this.mainFunction;
+        },
+        setInDeclaration: function(inDeclaration) {
+            this.declaration = inDeclaration;
+        },
+        inDeclaration : function () {
+            return this.declaration;
         }
+
     };
 
 
