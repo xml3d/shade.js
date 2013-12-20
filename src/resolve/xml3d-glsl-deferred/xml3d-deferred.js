@@ -33,6 +33,7 @@
                 SpaceVectorType.OBJECT,
                 SpaceVectorType.VIEW_NORMAL,
                 SpaceVectorType.VIEW_NORMAL,
+                SpaceVectorType.OBJECT,
                 SpaceVectorType.OBJECT
             ]
         }
