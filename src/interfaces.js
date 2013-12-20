@@ -26,6 +26,7 @@
         FLOAT3: "float3", // virtual kinds
         FLOAT4: "float4", // virtual kinds
         NORMAL: "normal",
+        TANGENT: "tangent",
         MATRIX3: "matrix3",
         MATRIX4: "matrix4",
         TEXTURE: "texture",
@@ -88,6 +89,31 @@
             input: [
                 { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR},
                 { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0}
+            ]
+        },
+        cookTorrance: {
+            input: [
+                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR},
+                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0.0},
+                { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0.0}
+            ]
+        },
+        ward: {
+            input: [
+                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR},
+                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.TANGENT},
+                { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0},
+                { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0}
+            ]
+        },
+        scatter: {
+            input: [
+                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR},
+                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0},
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0}
             ]
         }

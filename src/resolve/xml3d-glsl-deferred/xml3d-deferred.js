@@ -19,4 +19,30 @@
             ]
         }
 
+        ns.cookTorrance = {
+            inputSpaces: [
+                SpaceVectorType.OBJECT,
+                SpaceVectorType.VIEW_NORMAL,
+                SpaceVectorType.OBJECT,
+                SpaceVectorType.OBJECT
+            ]
+        }
+
+        ns.ward = {
+            inputSpaces: [
+                SpaceVectorType.OBJECT,
+                SpaceVectorType.VIEW_NORMAL,
+                SpaceVectorType.VIEW_NORMAL,
+                SpaceVectorType.OBJECT
+            ]
+        }
+
+        ns.scatter = {
+            inputSpaces: [
+                SpaceVectorType.OBJECT,
+                SpaceVectorType.VIEW_NORMAL,
+                SpaceVectorType.OBJECT
+            ]
+        }
+
 }(exports));

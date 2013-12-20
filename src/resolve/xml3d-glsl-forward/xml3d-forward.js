@@ -68,4 +68,33 @@
             }
         };
 
+        ns.ward = {
+            getSpecular: function getSpecular(L, V, color, N, T, ax, ay){
+                ax += 1e-5;
+                ay += 1e-5;
+                var NdotL = Math.saturate(N.dot(L));
+                var NdotH = N.dot(H);
+                var HdotT = H.dot(T);
+                var HdotB = H.dot(B);
+
+                var first = 1 / (4 * Math.PI * ax * ay * Math.sqrt(NdotL * NdotV));
+                var beta = -(Math.pow(HdotT / ax, 2) + Math.pow(HdotB / ay, 2)) / (NdotH * NdotH);
+                var second = Math.exp(beta);
+                var brdf = Math.max(0, first * second) * NdotL;
+
+                return color.mul(brdf);
+            }
+        };
+
+        ns.scatter = {
+            getSpecular: function getSpecular(L, V, color, N, wrap, scatterWidth){
+                var NdotL = Math.saturate(N.dot(L));
+
+                var NdotLWrap = (NdotL + wrap) / (1 + wrap);
+                var scatter = Math.smoothstep(0.0, scatterWidth, NdotLWrap) * Math.smoothstep(scatterWidth * 2.0, scatterWidth, NdotLWrap);
+
+                return color.mul(scatter);
+            }
+        };
+
 }(exports));
