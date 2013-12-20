@@ -45,6 +45,9 @@
                     // Remove/Replace dead code and static expressions
                     ast = staticTransformer.transform(ast, options);
 
+                    ast = opt.extractUniformExpressions ? uniformAnalysis.extract(ast, opt) : ast;
+                    //console.log(opt.uniformExpressions);
+
                     return ast;
 
             }, opt);
@@ -57,7 +60,6 @@
 
             opt.transformSpaces && spaceTransformer.transformAast(ast, opt);
 
-            ast = opt.extractUniformExpressions ? uniformAnalysis.extract(ast, opt) : ast;
             // check for remaining code the completeness of annotations
             ast = opt.validate ? validator.validate(ast) : ast;
 

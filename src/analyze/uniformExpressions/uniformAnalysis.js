@@ -25,9 +25,6 @@
 
 
     UniformAnalysis.prototype = {
-        analyzeProgram: function (node) {
-            this.analyzeBody(node.body[0].body);
-        },
         analyzeBody: function (body) {
             var cfg = esgraph(body, { omitExceptions: true });
 
@@ -70,22 +67,25 @@
                     return Set.intersect(a, b);
                 })
             });
+            //Tools.printMap(result, cfg);
+
         },
 
         transform: function () {
-            return transformer.transform(this.root, this.opt);
+            var result = transformer.transform(this.root, this.opt);
+            return result;
         }
     };
 
 
     ns.extract = function (ast, opt) {
 
-        assert.equal(ast.type, Syntax.Program, "Analysis expects program");
+        assert(ast.type == Syntax.Program || ast.type == Syntax.BlockStatement);
 
         var analysis = new UniformAnalysis(ast, opt);
 
         // Propagate and analyze
-        analysis.analyzeProgram(ast);
+        analysis.analyzeBody(ast.type == Syntax.Program ? ast.body : ast);
 
         // Transform
         return analysis.transform();
