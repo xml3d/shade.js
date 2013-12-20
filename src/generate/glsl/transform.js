@@ -62,6 +62,8 @@
                     while (i--) {
                         srcName = envNames[i];
                         destName = Tools.getNameForGlobal(envNames[i]);
+                        if (!parameters.shader[destName])
+                            continue;
                         cb(destName, override && override[srcName] !== undefined ? override[srcName] : base[srcName]);
                         if (parameters.shader[destName].kind === Shade.OBJECT_KINDS.TEXTURE) {
                             cb(destName + "_width", override && override[srcName] !== undefined ? override[srcName].width : base[srcName][0].width);
