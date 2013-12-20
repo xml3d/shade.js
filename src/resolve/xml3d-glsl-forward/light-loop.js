@@ -47,31 +47,75 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
     }
     if (this.MAX_SPOTLIGHTS)
     for (i = 0; i < this.MAX_SPOTLIGHTS; i++) {
-        if (!this.spotLightOn[i])
-            continue;
+        if (this.spotLightOn[i]) {
+            L = this.viewMatrix.mulVec(this.spotLightPosition[i], 1.0).xyz();
+            L = L.sub(position);
+            dist = L.length();
+            L = L.normalize();
 
-        L = this.viewMatrix.mulVec(this.spotLightPosition[i], 1.0).xyz();
-        L = L.sub(position);
-        dist = L.length();
-        L = L.normalize();
+            var lDirection = this.viewMatrix.mulVec(this.spotLightDirection[i].flip(), 0).xyz().normalize();
+            var angle = L.dot(lDirection);
+            if(angle > this.spotLightCosFalloffAngle[i]){
 
-        var lDirection = this.viewMatrix.mulVec(this.spotLightDirection[i].flip(), 0).xyz().normalize();
-        var angle = L.dot(lDirection);
-        if(angle > this.spotLightCosFalloffAngle[i]){
+                var kd = new Vec3(0,0,0), ks = new Vec3(0,0,0);
+                "BRDF_ENTRY";
 
-            var kd = new Vec3(0,0,0), ks = new Vec3(0,0,0);
-            "BRDF_ENTRY";
+                var c = 1.0;
+                if (this.spotLightCastShadow[i]) {
+                    var wpos = this.viewInverseMatrix.mulVec(position, 1.0).xyz();
+                    var lsPos = this.spotLightMatrix[i].mulVec(new Vec4(wpos, 1));
+                    var lsDepth = lsPos.z() / lsPos.w() - this.spotLightShadowBias[i];
 
-            var softness = 1.0;
-            if(angle < this.spotLightCosSoftFalloffAngle[i])
-                softness = (angle - this.spotLightCosFalloffAngle[i]) /
-                    (this.spotLightCosSoftFalloffAngle[i] -  this.spotLightCosFalloffAngle[i]);
+                    var perspectiveDivPos = lsPos.xy().div(lsPos.w());
+                    var lightuv = perspectiveDivPos;
+                    var bitShift = new Vec4( 1.0 / ( 256.0 * 256.0 * 256.0 ), 1.0 / ( 256.0 * 256.0 ), 1.0 / 256.0, 1.0 );
 
-            atten = 1.0 / (this.spotLightAttenuation[i].x() + this.spotLightAttenuation[i].y() * dist + this.spotLightAttenuation[i].z() * dist * dist);
-            kd = kd.mul(this.spotLightIntensity[i]).mul(atten * softness);
-            ks = ks.mul(this.spotLightIntensity[i]).mul(atten * softness);
-            kdComplete = kdComplete.add(kd);
-            ksComplete = ksComplete.add(ks);
+                    var texSize = new Vec2(2048.0, 2048.0);
+                    var texelSize = new Vec2(1.0, 1.0).div(texSize);
+                    var f = Math.fract(lightuv.mul(texSize).add(0.5));
+                    var centroidUV = Math.floor(lightuv.mul(texSize).add(0.5));
+                    centroidUV = centroidUV.div(texSize);
+
+                    var lb = this.spotLightShadowMap[i].sample2D(centroidUV.add(texelSize.mul(new Vec2(0.0, 0.0)))).dot(bitShift);
+                    if (lb >= lsDepth)
+                        lb = 1.0;
+                    else
+                        lb = 0.0;
+
+                    var lt = this.spotLightShadowMap[i].sample2D(centroidUV.add(texelSize.mul(new Vec2(0.0, 1.0)))).dot(bitShift)
+                    if (lt >= lsDepth)
+                        lt = 1.0;
+                    else
+                        lt = 0.0;
+
+                    var rb = this.spotLightShadowMap[i].sample2D(centroidUV.add(texelSize.mul(new Vec2(1.0, 0.0)))).dot(bitShift);
+                    if (rb >= lsDepth)
+                        rb = 1.0;
+                    else
+                        rb = 0.0;
+
+                    var rt = this.spotLightShadowMap[i].sample2D(centroidUV.add(texelSize.mul(new Vec2(1.0, 1.0)))).dot(bitShift);
+                    if (rt >= lsDepth)
+                        rt = 1.0;
+                    else
+                        rt = 0.0;
+
+                    var a = Math.mix(lb, lt, f.y());
+                    var b = Math.mix(rb, rt, f.y());
+                    c = Math.mix(a, b, f.x());
+                }
+
+                var softness = 1.0;
+                if(angle < this.spotLightCosSoftFalloffAngle[i])
+                    softness = (angle - this.spotLightCosFalloffAngle[i]) /
+                        (this.spotLightCosSoftFalloffAngle[i] -  this.spotLightCosFalloffAngle[i]);
+
+                atten = 1.0 / (this.spotLightAttenuation[i].x() + this.spotLightAttenuation[i].y() * dist + this.spotLightAttenuation[i].z() * dist * dist);
+                kd = kd.mul(this.spotLightIntensity[i]).mul(atten * softness * c);
+                ks = ks.mul(this.spotLightIntensity[i]).mul(atten * softness * c);
+                kdComplete = kdComplete.add(kd);
+                ksComplete = ksComplete.add(ks);
+            }
         }
     }
     var ambientColor = new Vec3(0,0,0);
