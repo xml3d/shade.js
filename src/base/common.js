@@ -66,7 +66,7 @@
                 // we can assume a static value
                 result.setDynamicValue();
                 binding.setDynamicValue();
-                if (constants) {
+                if (constants && !binding.isNullOrUndefined()) {
                     var propagatedConstant = constants.filter(function (constant) {
                         return constant.name == name;
                     });
