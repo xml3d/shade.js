@@ -92,15 +92,8 @@
     }
 
     function shouldGenerateUniformExpression(node, anno) {
-        var deps = anno.getUniformDependencies();
-
-        if(deps.length == 1) {
-            // Only depends on itself
-            if(node.type == Syntax.MemberExpression && node.property.name == deps[0])
-                return false;
-        }
-
-        return true;
+        var costs = anno.getUniformCosts();
+        return costs > 0;
     };
 
     var transform = ns.transform = function (ast, opt) {

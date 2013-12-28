@@ -14,7 +14,10 @@
     function toMap(uniformSet) {
         var result = {};
         uniformSet && uniformSet.forEach(function(entry) {
-            result[entry.name] = entry.dependencies;
+            result[entry.name] = {
+                dependencies: entry.dependencies,
+                costs: entry.costs
+            };
         });
         return result;
     }
@@ -37,6 +40,7 @@
                         var propertyAnnotation = ANNO(node.property);
                         if (propertyAnnotation.getSource() == Shade.SOURCES.UNIFORM) {
                             result.setUniformDependencies(node.property.name);
+                            result.setUniformCosts(0);
                         }
                         break;
 
@@ -53,7 +57,9 @@
                             return;
 
                         if(uniformVariables.hasOwnProperty(node.name)) {
-                            result.setUniformDependencies(uniformVariables[node.name]);
+                            var propagatedUniform = uniformVariables[node.name];
+                            result.setUniformDependencies(propagatedUniform.dependencies);
+                            result.setUniformCosts(propagatedUniform.costs);
                         }
 
                         break;
@@ -63,31 +69,39 @@
 
                         if (left.canUniformExpression() && right.canUniformExpression()) {
                             result.setUniformDependencies(left.getUniformDependencies(), right.getUniformDependencies());
+                            result.setUniformCosts(left.getUniformCosts() + right.getUniformCosts() + 2);
                         }
                         break;
                     case Syntax.UnaryExpression:
                         var argument = ANNO(node.argument);
 
                         if(argument.isUniformExpression()) {
-                            result.setUniformDependencies(argument.getUniformDependencies())
+                            result.setUniformDependencies(argument.getUniformDependencies());
+                            result.setUniformCosts(argument.getUniformCosts() + 1);
                         }
                         break;
                     case Syntax.CallExpression:
                         if(node.callee.type == Syntax.MemberExpression) {
                             var object = node.callee.object;
                             if(object.name && ~allowedMemberCalls.indexOf(object.name)) {
-                                var dependencies = mergeUniformDependencies(node.arguments);
+                                var args = node.arguments.map(function(arg) { return ANNO(arg);});
+                                var dependencies = mergeUniformDependencies(args);
                                 if(dependencies) {
                                     result.setUniformDependencies(dependencies);
+                                    var costs = args.reduce(function(prev, next) { return prev + next.getUniformCosts(); }, 1);
+                                    result.setUniformCosts(costs)
                                 }
                             }
                         }
                         break;
                     case Syntax.NewExpression:
                         if(node.callee.type == Syntax.Identifier) {
-                            var dependencies = mergeUniformDependencies(node.arguments);
+                            var args = node.arguments.map(function(arg) { return ANNO(arg);});
+                            var dependencies = mergeUniformDependencies(args);
                             if(dependencies) {
                                 result.setUniformDependencies(dependencies);
+                                var costs = args.reduce(function(prev, next) { return prev + next.getUniformCosts(); }, 1);
+                                result.setUniformCosts(costs);
                             }
                         }
                         break;
@@ -101,7 +115,7 @@
             case Syntax.AssignmentExpression:
                 var right = ANNO(ast.right);
                 if (right.isUniformExpression()) {
-                    result.add({ name: ast.left.name, dependencies: right.getUniformDependencies() });
+                    result.add({ name: ast.left.name, dependencies: right.getUniformDependencies(), costs: right.getUniformCosts() });
                 }
                 break;
             case Syntax.VariableDeclaration:
@@ -109,7 +123,7 @@
                     if (declaration.init) {
                         var init = ANNO(declaration.init);
                         if (init.isUniformExpression()) {
-                            result.add({ name: declaration.id.name, dependencies: init.getUniformDependencies() });
+                            result.add({ name: declaration.id.name, dependencies: init.getUniformDependencies(), costs: init.getUniformCosts() });
                         }
                     }
                 });
@@ -133,7 +147,6 @@
 
     function mergeUniformDependencies(args) {
         var uniformDependencies = null;
-        args = args.map(function(arg) { return ANNO(arg);});
 
         if(atLeastOneArgumentIsUniform(args)) {
             uniformDependencies = []

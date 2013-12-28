@@ -224,6 +224,14 @@
             var extra = this.getExtra();
             return extra.uniformDependencies || [];
         },
+        getUniformCosts: function() {
+            var extra = this.getExtra();
+            return extra.uniformCosts | 0;
+        },
+        setUniformCosts: function(costs) {
+            var extra = this.getExtra();
+            extra.uniformCosts = costs;
+        },
         clearUniformDependencies: function() {
             var extra = this.getExtra();
             delete extra.uniformDependencies;
