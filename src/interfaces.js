@@ -1,6 +1,7 @@
 (function (ns) {
     var Base = require("./base/index.js");
     var CodeGen = require("escodegen");
+    var VecMath = require("./base/vecmath.js").VecMath;
 
 
     /**
@@ -728,5 +729,6 @@
     ns.Mat4 = Mat4;
     ns.Color = Color;
     ns.Shade = Shade;
+    ns.VecMath = VecMath;
 
 }(exports));

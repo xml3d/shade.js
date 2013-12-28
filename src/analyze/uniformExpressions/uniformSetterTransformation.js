@@ -17,10 +17,10 @@
         return firstArgument.isVector();
     }
 
-    var leaveVisitor = function (node, parent) {
+    var leaveVisitor = function (node, parent, variables, controller) {
         if (node.type == Syntax.MemberExpression) {
             var object = ANNO(node.object);
-            if (object.isGlobal() && node.property.type == Syntax.Identifier) {
+            if (object.isGlobal() && node.property.type == Syntax.Identifier && ((parent == node) || parent.type != Syntax.MemberExpression)) {
                 var property = ANNO(node.property);
                 // Is the accessed parameter is a scalar value, we have to
                 // access the first entry of the input array
@@ -28,7 +28,7 @@
                     return {
                         type: Syntax.MemberExpression,
                         computed: true,
-                        object: node.property,
+                        object: node,
                         property: {
                             type: Syntax.Literal,
                             value: 0
@@ -40,7 +40,7 @@
 
         if (node.type == Syntax.CallExpression) {
             if (isVecMathCall(node)) {
-                node.callee.object.name = "VecMath";
+                node.callee.object.name = "this.VecMath";
             }
         }
 
@@ -56,10 +56,10 @@
             if (parent.type == Syntax.AssignmentExpression && parent.left == node)
                 return;
 
-            if(this.hasOwnProperty(node.name)) {
+            if(variables.hasOwnProperty(node.name)) {
                 //console.log("Found: " + node.name, this[node.name]);
-                return this[node.name].code;
-
+                var code = variables[node.name].code;
+                return code;
             }
         }
 
@@ -80,7 +80,9 @@
         };
 
     ns.transformUniformSetter = function (ast, variables) {
-        return walk.replace(ast, { leave: leaveVisitor.bind(variables) });
+        return walk.replace(ast, { leave: function(node, parent) {
+            return leaveVisitor(node, parent, variables, this);
+        }});
     };
 
 

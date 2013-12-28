@@ -58,6 +58,10 @@
             system: {},
             uexp: {}
         };
+
+        this.uniformExpressions = opt.uniformExpressions || {};
+
+
         this.systemParameters = {};
         this.blockedNames = [];
         this.topDeclarations = [];

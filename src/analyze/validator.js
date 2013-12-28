@@ -36,6 +36,7 @@
         if(node.type == Syntax.AssignmentExpression) {
             right = ANNO(node.right);
             annotation.copy(right);
+            annotation.clearUniformDependencies();
 
             if (annotation.getType() == TYPES.ANY || annotation.isNullOrUndefined()) {
                 Shade.throwError(node, "No type could be calculated for ")

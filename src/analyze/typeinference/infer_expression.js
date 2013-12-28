@@ -296,6 +296,7 @@
 
             result.copy(right);
             result.setDynamicValue();
+            result.clearUniformDependencies();
 
             // Check, if a assigned variable still has the same type as
             // before and update type of uninitialized variables.

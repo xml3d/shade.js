@@ -5,7 +5,7 @@
         FunctionAnnotation = require("../../base/annotation.js").FunctionAnnotation,
         Shade = require("./../../interfaces.js"),
         Types = Shade.TYPES,
-        Kinds = Shade.OBJECT_KINDS,
+        analyses = require('analyses'),
         Tools = require('../tools.js'),
         System = require('./registry/system.js'),
         assert = require('assert');
@@ -17,6 +17,8 @@
     var walk = require('estraverse');
     var Syntax = walk.Syntax;
     var ANNO = common.ANNO;
+    var Map = common.Map;
+    var Set = analyses.Set;
 
 
     /**
@@ -27,6 +29,25 @@
     var GLASTTransformer = function (root, mainId, opt) {
         this.context = new Context(root, mainId, opt);
     };
+
+    function createUniformDependencyMap(uniformExpressions) {
+        var name, uexpSet, dependencies, dependency, dl, dependencyMap = new Map();
+        for (name in uniformExpressions) {
+            dependencies = uniformExpressions[name].dependencies;
+            dl = dependencies.length;
+            while (dl--) {
+                dependency = dependencies[dl];
+                if (dependencyMap.has(dependency)) {
+                    uexpSet = dependencyMap.get(dependency);
+                } else {
+                    uexpSet = new Set();
+                    dependencyMap.set(dependency, uexpSet);
+                }
+                uexpSet.add(name);
+            }
+        }
+        return dependencyMap;
+    }
 
     Base.extend(GLASTTransformer.prototype, {
         /**
@@ -53,24 +74,30 @@
 
 
         createUniformSetterFunction: function (parameters) {
+            // Reverse uniform expression dependencies
+            var c_dependencyMap = createUniformDependencyMap(parameters.uexp);
+
             return function (envNames, sysNames, inputCollection, cb) {
-                var i, base, override, srcName, destName;
+                var i, base, override, srcName, destName, ul, uniformList;
                 if (envNames && inputCollection.envBase) {
                     i = envNames.length;
                     base = inputCollection.envBase;
                     override = inputCollection.envOverride;
                     while (i--) {
                         srcName = envNames[i];
+                        if(c_dependencyMap.has(srcName)) {
+                            uniformList = c_dependencyMap.get(srcName).values();
+                            ul = uniformList.length;
+                            while(ul--) {
+                                var expName = uniformList[ul];
+                                var expression = parameters.uexp[expName];
+                                var value = expression.setter.call(Shade, inputCollection.envBase);
+                                cb(expName, value);
+                            }
+                        }
                         destName = Tools.getNameForGlobal(envNames[i]);
                         if (!parameters.shader[destName])
                             continue;
-                        for(var name in parameters.uexp) {
-                            var deps = parameters.uexp[name].dependencies;
-                            var index = deps.indexOf(srcName);
-                            if (index != -1) {
-                                cb(name, parameters.uexp[name].setter.call(Shade, inputCollection.envBase));
-                            }
-                        }
                         cb(destName, override && override[srcName] !== undefined ? override[srcName] : base[srcName]);
                         if (parameters.shader[destName].kind === Shade.OBJECT_KINDS.TEXTURE) {
                             cb(destName + "_width", override && override[srcName] !== undefined ? override[srcName].width : base[srcName][0].width);
@@ -131,16 +158,12 @@
          */
         replace: function(ast) {
             var controller = new walk.Controller(),
-                context = this.context;
+                context = this.context,
+                that = this;
 
             ast = controller.replace(ast, {
 
                 enter: function (node, parent) {
-
-                    // Take a short cut if we have a uniform expression
-                    var uexp = handleUniformExpression(node, this, context);
-                    if (uexp)
-                        return uexp;
 
                     switch (node.type) {
                         case Syntax.Identifier:
@@ -410,10 +433,18 @@
             return handleComputedMemberExpression(node, parent, context);
         }
 
+        if(ANNO(node).isUniformExpression()) {
+            var uexp = handleUniformExpression(node, context);
+            if(uexp)
+                return uexp;
+        }
+
         var objectReference = common.getTypeInfo(node.object, scope);
 
-        if (!objectReference || !objectReference.isObject())
+        if (!objectReference || !objectReference.isObject()) {
             Shade.throwError(node, "Internal Error: Object of Member expression is no object.");
+        }
+
 
         var objectInfo = scope.getObjectInfoFor(objectReference);
         if(!objectInfo) {// Every object needs an info, otherwise we did something wrong
@@ -598,31 +629,53 @@
         }
     };
 
-    var handleUniformExpression = function (node, root, context) {
-        if (!node.extra)
-            return;
 
-        var exp = ANNO(node);
-        if (exp.isUniformExpression() && !(exp.getSource() == Shade.SOURCES.UNIFORM)) {
-            var newUniformName = Tools.generateFreeName("uexp", context.blockedNames);
-            var extra = {};
-            extra.type = exp.getType();
-            if (exp.isObject()) {
-                extra.kind = exp.getKind();
-            }
-            extra.source = Shade.SOURCES.UNIFORM;
-            //extra.setter = generateUniformSetter(node);
-            extra.dependencies = exp.getUniformDependencies();
+    function handleUniformExpression(node, context) {
+            var exp = ANNO(node),
+                extra;
 
-            context.usedParameters.uexp[newUniformName] = extra;
+            if (exp.isUniformExpression() && !(exp.getSource() == Shade.SOURCES.UNIFORM)) {
+                var uniformName = node.property.name;
 
-            return {
-                type: Syntax.Identifier,
-                name: newUniformName,
-                extra: extra
+                if (context.usedParameters.uexp.hasOwnProperty(uniformName)) { // Reuse
+                    extra = context.usedParameters.uexp[uniformName];
+                    return {
+                        type: Syntax.Identifier,
+                        name: uniformName,
+                        extra: extra
+                    }
+                }
+
+                // Generate new uniform expression
+                extra = {};
+
+                if(!context.uniformExpressions.hasOwnProperty(uniformName)) {
+                    throw new Error("Internal: No information about uniform expression available: " + Shade.toJavaScript(node));
+                }
+                extra.setter = generateUniformSetter(context.uniformExpressions[uniformName]);
+
+                //console.log(uniformName, extra.setter);
+
+                extra.type = exp.getType();
+                if (exp.isObject()) {
+                    extra.kind = exp.getKind();
+                }
+                extra.source = Shade.SOURCES.UNIFORM;
+                extra.dependencies = exp.getUniformDependencies();
+
+                context.usedParameters.uexp[uniformName] = extra;
+
+                return {
+                    type: Syntax.Identifier,
+                    name: uniformName,
+                    extra: extra
+                }
             }
         }
 
+    function generateUniformSetter(expressionInfo) {
+        var source = "return " + expressionInfo.code + ";";// console.log(result); return result;";
+        return new Function("env", source);
     }
 
 
