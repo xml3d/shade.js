@@ -20,20 +20,30 @@ function createTest(dir, file) {
 
 
     it(comments[0].value.trim() + ' (' + file + ')', function () {
-        var aast = Shade.parseAndInferenceExpression(ast, {
+        var opt = {
             inject: contextData,
             entry: "global.shade",
             propagateConstants: true,
             validate: true,
             sanitize: true,
             extractUniformExpressions: true
-        });
+        }
+        var aast = Shade.parseAndInferenceExpression(ast, opt);
         var result = codegen.generate(aast);
         var actual = result.trim();
         var expected = comments[1].value.trim();
+
+        // Test code
         expected = expected.replace(/\r\n/g,"\n");
-        //console.log(actual);
         actual.should.eql(expected);
+
+        // Test uniform expressions
+        var expressions = JSON.parse(comments[2].value.trim());
+        actual = opt.uniformExpressions;
+        actual.should.eql(expressions);
+
+
+
     });
 }
 

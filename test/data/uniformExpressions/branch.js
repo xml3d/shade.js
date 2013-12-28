@@ -11,6 +11,18 @@ function shade(env) {
     return new Vec3(a);
 }
  */
+/*
+ {
+     "u1": {
+        "code": "Math.cos(-ufloat1[0])",
+        "dependencies": [ "ufloat1" ]
+     },
+     "u2": {
+        "code": "Math.sin(ufloat2[0])",
+        "dependencies": [ "ufloat2" ]
+     }
+ }
+ */
 function shade(env) {
     var a = Math.cos(-env.ufloat1);
     var b = 5.0;
