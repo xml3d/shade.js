@@ -14,11 +14,11 @@ function shade(env) {
 /*
  {
      "u1": {
-        "code": "Math.cos(-ufloat1[0])",
+        "code": "Math.cos(-env.ufloat1[0])",
         "dependencies": [ "ufloat1" ]
      },
      "u2": {
-        "code": "Math.sin(ufloat2[0])",
+        "code": "Math.sin(env.ufloat2[0])",
         "dependencies": [ "ufloat2" ]
      }
  }

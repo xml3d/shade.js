@@ -21,8 +21,9 @@ function createTest(dir, file) {
 
 
     it(comments[0].value.trim() + ' (' + file + ')', function () {
-        var aast = Shade.parseAndInferenceExpression(ast, {inject: contextData, entry: "global.shade", propagateConstants: true, validate: true, sanitize: false, extractUniformExpressions: true});
-        var result = new GLSLCompiler().compileFragmentShader(aast, {useStatic: true, omitHeader: true});
+        var options = {inject: contextData, entry: "global.shade", propagateConstants: true, validate: true, sanitize: false, extractUniformExpressions: true};
+        var aast = Shade.parseAndInferenceExpression(ast, options);
+        var result = new GLSLCompiler().compileFragmentShader(aast, {useStatic: true, omitHeader: true, uniformExpressions: options.uniformExpressions});
         var actual = result.source.trim();
         var expected = comments[1].value.trim();
         expected = expected.replace(/\r\n/g,"\n");

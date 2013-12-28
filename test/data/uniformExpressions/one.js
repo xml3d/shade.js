@@ -11,7 +11,7 @@ function shade(env) {
 /*
 {
     "u1": {
-        "code": "Math.cos(-ufloat1[0])",
+        "code": "Math.cos(-env.ufloat1[0])",
         "dependencies": [ "ufloat1" ]
     }
 }
