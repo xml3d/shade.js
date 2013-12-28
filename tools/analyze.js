@@ -34,7 +34,8 @@ var argv = require('optimist').argv,
                     entry: "global.shade",
                     propagateConstants: true,
                     extractUniformExpressions: true,
-                    throwOnError: false,
+                    transformSpaces: true,
+                    throwOnError: true,
                     sanitize: args.sanitize == undefined ? true :  args.sanitize,
                     validate: args.validate == undefined ? true :  args.validate
         };
