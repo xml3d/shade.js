@@ -28,13 +28,13 @@
 }
 // OUTPUT
 {
-    function global_interpolateNormals1(normal1, normal2, weight){
+    function global_interpolateNormals(normal1, normal2, weight){
         return normal1.mul(1 - weight).add(normal2.mul(weight));
     }
 
     function shade(env) {
         var normal_vns, viewNormal;
-        normal_vns = global_interpolateNormals1(env.normal1_vns, env.normal2_vns, env.weight);
+        normal_vns = global_interpolateNormals(env.normal1_vns, env.normal2_vns, env.weight);
         viewNormal = normal_vns;
         return env.color.mul(viewNormal.dot(1,0,0));
     }

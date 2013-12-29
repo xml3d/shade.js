@@ -28,7 +28,7 @@ function createTest(dir, file) {
         var expected = comments[1].value.trim();
         expected = expected.replace(/\r\n/g,"\n");
         //console.log(actual);
-        actual.should.eql(expected);
+        expected.should.eql(actual);
     });
 }
 

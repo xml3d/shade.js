@@ -31,7 +31,7 @@
 }
 // OUTPUT
 {
-    function global_awesomeClosure1(color, normal_vns){
+    function global_awesomeClosure(color, normal_vns){
         var viewNormal;
         viewNormal = normal_vns;
         return color.mul(viewNormal.dot(1,0,0));
@@ -41,6 +41,6 @@
         var normal_vns2, normal_vns;
         normal_vns = env.normal;
         normal_vns2 = env.normal_vns2.mul(1 - env.weight).add(env.normal_vns_vns.mul(env.weight));
-        return global_awesomeClosure1(env.color.mul(normal_vns), normal_vns2);
+        return global_awesomeClosure(env.color.mul(normal_vns), normal_vns2);
     }
 }

@@ -54,10 +54,6 @@
          */
         this.functionMap = extractAllFunctions(program, this);
 
-        var callNumber = 0;
-        this.getCallNumber = function() {
-            return callNumber++;
-        };
 
         /**
          * Cache of functions that types has already been derived.
@@ -105,16 +101,16 @@
             return null;
         },
         createFunctionInformationFor: function (name, args, opt) {
+            var ast, derived, globalName;
             opt = opt || {};
-            if (this.functionMap.has(name)) {
-                var ast = this.functionMap.get(name);
 
-                var derived = {};
-                derived.order = this.getCallNumber();
+            if (this.functionMap.has(name)) {
+                ast = this.functionMap.get(name);
+                globalName = opt.name || this.getSafeUniqueName(name.replace(/\./g, '_'));
+                derived = {};
                 derived.ast = this.analyseFunction(JSON.parse(JSON.stringify(ast)), args);
                 derived.info = derived.ast.extra.returnInfo;
-                derived.info.newName = opt.name || name.replace(/\./g, '_') + derived.order;
-                derived.ast.id.name = derived.info.newName;
+                derived.info.newName = derived.ast.id.name = globalName;
                 this.derivedFunctions.set(this.createSignatureFromNameAndArguments(name, args), derived);
                 return derived.info;
             }
@@ -245,7 +241,7 @@
 
 
     function addDerivedMethods(program, context) {
-        program.body = program.body.concat(context.derivedFunctions.values().sort(function(a,b) { return b.order - a.order; }).map(function(derived) {return derived.ast}));
+        program.body = program.body.concat(context.derivedFunctions.values().map(function(derived) {return derived.ast}));
         walk.traverse(program, {
             enter: function(node) {
                 if(node.type == Syntax.CallExpression) {

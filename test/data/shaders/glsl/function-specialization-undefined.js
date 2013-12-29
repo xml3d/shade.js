@@ -1,13 +1,13 @@
 // Functions should specialize also if parameters are undefined
 /*
 // Forward declarations
-vec4 global_createVec1 ( float a, float c );
+vec4 global_createVec ( float a, float c );
 
-vec4 global_createVec1 ( float a, float c ) {
+vec4 global_createVec ( float a, float c ) {
     return vec4(a, 2, c, 4);
 }
 void main ( void ) {
-    gl_FragColor = global_createVec1(0.1, 0.3);
+    gl_FragColor = global_createVec(0.1, 0.3);
     return;
 }
 */

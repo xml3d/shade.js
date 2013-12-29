@@ -22,6 +22,18 @@
          */
         this.scopeStack = opt.scope ? [opt.scope] : [  ];
 
+        /**
+         * Reserved keywords
+         * @type {Array.<string>}
+         */
+        this.blockedNames = opt.blockedNames || [];
+
+        /**
+         * Used names
+         * @type {Array.<string>}
+         */
+        this.usedNames = [];
+
 
         this.declaration = false;
     };
@@ -44,6 +56,21 @@
         },
         inDeclaration : function () {
             return this.declaration;
+        },
+        getSafeName: function(baseName) {
+            var index = 0, searchName = baseName;
+            while (this.blockedNames.indexOf(searchName) != -1) {
+                searchName = baseName + index++;
+            }
+            return searchName;
+        },
+        getSafeUniqueName: function(baseName) {
+            var index = 1, searchName = baseName;
+            while (!(this.usedNames.indexOf(searchName) == -1 && this.blockedNames.indexOf(searchName) == -1)) {
+                searchName = baseName + index++;
+            }
+            this.usedNames.push(searchName);
+            return searchName;
         }
 
     };
