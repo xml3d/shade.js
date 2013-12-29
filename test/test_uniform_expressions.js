@@ -2,8 +2,7 @@ var esprima = require('esprima');
 var Shade = require("..");
 var fs = require('fs');
 var should = require('should');
-var GLSLCompiler = require("../src/generate/glsl/compiler").GLSLCompiler;
-
+var codegen = require('escodegen');
 
 
 function createTest(dir, file) {
@@ -21,19 +20,35 @@ function createTest(dir, file) {
 
 
     it(comments[0].value.trim() + ' (' + file + ')', function () {
-        var options = {inject: contextData, entry: "global.shade", propagateConstants: true, validate: true, sanitize: false, extractUniformExpressions: true};
-        var aast = Shade.parseAndInferenceExpression(ast, options);
-        var result = new GLSLCompiler().compileFragmentShader(aast, {useStatic: true, omitHeader: true, uniformExpressions: options.uniformExpressions});
-        var actual = result.source.trim();
+        var opt = {
+            inject: contextData,
+            entry: "global.shade",
+            propagateConstants: true,
+            validate: true,
+            sanitize: true,
+            extractUniformExpressions: true
+        }
+        var aast = Shade.parseAndInferenceExpression(ast, opt);
+        var result = codegen.generate(aast);
+        var actual = result.trim();
         var expected = comments[1].value.trim();
+
+        // Test code
         expected = expected.replace(/\r\n/g,"\n");
-        //console.log(actual);
         actual.should.eql(expected);
+
+        // Test uniform expressions
+        var expressions = JSON.parse(comments[2].value.trim());
+        actual = opt.uniformExpressions;
+        actual.should.eql(expressions);
+
+
+
     });
 }
 
-describe('GLSL Shader Code:', function () {
-    var dir = __dirname + '/data/shaders/glsl/';
+describe('Uniform Expressions:', function () {
+    var dir = __dirname + '/data/uniformExpressions/';
     var files = fs.readdirSync(dir);
     files.filter(function(filename) { return filename.split('.').pop() == "js" }).forEach(function (file) {
         createTest(dir, file);

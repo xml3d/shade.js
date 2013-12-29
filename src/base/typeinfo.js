@@ -2,7 +2,8 @@
 
     var Shade = require("../interfaces.js"),
         Syntax = require('estraverse').Syntax,
-        Base = require("./index.js");
+        Base = require("./index.js"),
+        Set = require('analyses').Set;
 
     var TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS;
@@ -196,8 +197,44 @@
         setStaticValue : function(v) {
             var extra = this.getExtra();
             if (this.isNullOrUndefined())
-                throw("Null and undefined have predefined values.");
+                throw new Error("Null and undefined have predefined values.");
             extra.staticValue = v;
+        },
+        canUniformExpression: function() {
+            return this.hasStaticValue() || this.isUniformExpression();
+        },
+
+        isUniformExpression: function() {
+            var extra = this.getExtra();
+            return extra.hasOwnProperty("uniformDependencies")
+        },
+        setUniformDependencies: function() {
+            var extra = this.getExtra();
+            var dependencies = new Set();
+            var args = Array.prototype.slice.call(arguments);
+            args.forEach(function(arg) {
+               if(Array.isArray(arg))
+                   dependencies = Set.union(dependencies, arg);
+                else
+                   dependencies.add(arg);
+            });
+            extra.uniformDependencies = dependencies.values();
+        },
+        getUniformDependencies: function() {
+            var extra = this.getExtra();
+            return extra.uniformDependencies || [];
+        },
+        getUniformCosts: function() {
+            var extra = this.getExtra();
+            return extra.uniformCosts | 0;
+        },
+        setUniformCosts: function(costs) {
+            var extra = this.getExtra();
+            extra.uniformCosts = costs;
+        },
+        clearUniformDependencies: function() {
+            var extra = this.getExtra();
+            delete extra.uniformDependencies;
         },
         getStaticValue : function() {
             if (!this.hasStaticValue()) {

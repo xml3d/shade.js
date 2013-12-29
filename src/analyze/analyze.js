@@ -3,9 +3,17 @@
     var sanitizer = require("./sanitizer/sanitizer.js"),
         resolver =  require("../resolve/resolve.js"),
         staticTransformer = require("./constants/staticTransformer.js"),
+        uniformAnalysis = require("./uniformExpressions/uniformAnalysis.js"),
         validator = require("./validator.js"),
+        AnalysisContext = require("./analysiscontext.js"),
         inference = require("./typeinference/typeinference.js"),
-        spaceTransformer = require("../generate/space/transform.js").SpaceTransformer;
+        spaceTransformer = require("../generate/space/transform.js").SpaceTransformer,
+        Annotations = require("./../base/annotation.js"),
+        codegen = require("escodegen");
+
+
+
+    var ANNO = Annotations.ANNO;
 
     /**
      *
@@ -27,15 +35,30 @@
             // that is better analysable
             ast = opt.sanitize ? sanitizer.sanitize(ast, opt) : ast;
 
-            ast = inference.infer(ast, opt);
+            //console.log("Analyze", codegen.generate(ast), ast.type, opt.sanitize);
+            var context = new AnalysisContext(ast, function(ast, options) {
+                    // Calculate types and static values
+                    ast = inference.infer(ast, this, options);
+
+                    // Remove/Replace dead code and static expressions
+                    ast = staticTransformer.transform(ast, options);
+
+                    ast = opt.extractUniformExpressions ? uniformAnalysis.extract(ast, opt) : ast;
+                    //console.log(opt.uniformExpressions);
+
+                    return ast;
+
+            }, opt);
+
+            context.analyse();
+            if (opt.entry) {
+                context.injectCall(opt.entry, (opt.inject &&  opt.inject[opt.entry]) || []);
+            }
+            ast = context.getResult();
 
             ast = opt.implementation ? resolver.resolveClosuresPostTypeInference(ast, opt.implementation, processingData, opt) : ast;
 
-            // Remove/Replace dead code and static expressions
-            ast = staticTransformer.transform(ast, opt);
-
-            // Remove dead code and check for remaining code the completeness
-            // of annotations
+            // check for remaining code the completeness of annotations
             ast = opt.validate ? validator.validate(ast) : ast;
 
             if(opt.transformSpaces)
@@ -54,7 +77,6 @@
         };
 
     };
-
 
     ns.analyze = analyze;
 

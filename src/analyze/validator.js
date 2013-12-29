@@ -10,13 +10,15 @@
         TYPES = Shade.TYPES,
         ANNO = common.ANNO;
 
+    var activeFunction = "";
 
     var leaveNode = function(node) {
         var annotation = ANNO(node), right;
 
         if(!annotation.isValid()) {
             var errorInfo = annotation.getError();
-            var error = new Error(errorInfo.message);
+            var functionCall = activeFunction ? "In " + activeFunction + ": " : "";
+            var error = new Error(functionCall + errorInfo.message);
             error.loc = errorInfo.loc;
             throw error;
         }
@@ -34,6 +36,7 @@
         if(node.type == Syntax.AssignmentExpression) {
             right = ANNO(node.right);
             annotation.copy(right);
+            annotation.clearUniformDependencies();
 
             if (annotation.getType() == TYPES.ANY || annotation.isNullOrUndefined()) {
                 Shade.throwError(node, "No type could be calculated for ")
@@ -42,6 +45,7 @@
             var exp = ANNO(node.expression);
             annotation.copy(exp);
         }
+
 
     };
 
@@ -53,7 +57,12 @@
      */
     var validate = ns.validate = function (ast) {
         return estraverse.replace(ast, {
-            leave: leaveNode
+            leave: leaveNode,
+            enter: function (node) {
+                if (node.type == Syntax.FunctionDeclaration) {
+                    activeFunction = node.id.name;
+                }
+            }
         });
     }
 

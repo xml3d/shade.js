@@ -55,8 +55,13 @@
         Context.call(this, root, opt);
         this.usedParameters = {
             shader: {},
-            system: {}
+            system: {},
+            uexp: {}
         };
+
+        this.uniformExpressions = opt.uniformExpressions || {};
+
+
         this.systemParameters = {};
         this.blockedNames = [];
         this.topDeclarations = [];

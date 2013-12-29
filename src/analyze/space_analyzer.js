@@ -278,8 +278,8 @@
                     if (this.object.type == Syntax.Identifier && this.property.type == Syntax.Identifier) {
                         if(this.object.extra.global)
                             result.propagateSet.add("env." + this.property.name);
-                        else{
-                            throw new Error("Member Access of non 'env' object in space equation - not supported.");
+                        else if(this.object.name !== "uexp") { // FIXME
+                            throw new Error("Member Access of non 'env' object in space equation - not supported: " + codegen.generate(this));
                         }
                     }
                 }
@@ -319,7 +319,7 @@
                     if (this.object.type == Syntax.Identifier && this.property.type == Syntax.Identifier) {
                         if(this.object.extra.global)
                             result.propagateSet.add("env." + this.property.name);
-                        else{
+                        else if(this.object.name !== "uexp") { // FIXME
                             throw new Error("Member Access of non 'env' object in space equation - not supported.")
                         }
                         setSpaceInfo(this, "propagate", true);

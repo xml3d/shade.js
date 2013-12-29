@@ -1,6 +1,7 @@
 (function (ns) {
     var Base = require("./base/index.js");
     var CodeGen = require("escodegen");
+    var VecMath = require("./base/vecmath.js").VecMath;
 
 
     /**
@@ -717,6 +718,10 @@
         throw error;
     }
 
+    ns.toJavaScript = function(node) {
+        return CodeGen.generate(node);
+    };
+
     ns.Vec2 = Vec2;
     ns.Vec3 = Vec3;
     ns.Vec4 = Vec4;
@@ -724,5 +729,6 @@
     ns.Mat4 = Mat4;
     ns.Color = Color;
     ns.Shade = Shade;
+    ns.VecMath = VecMath;
 
 }(exports));

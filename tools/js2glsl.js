@@ -34,13 +34,14 @@ var argv = require('optimist').argv,
             entry: "global.shade",
             propagateConstants: false,
             validate: true,
-            sanitize: false,
+            sanitize: true,
             transformSpaces: true,
+            extractUniformExpressions: true,
             throwOnError: true
         };
         var aast = Shade.parseAndInferenceExpression(data, opt);
         //return require("../src/generate/glsl/generate.js").generate(aast);
-        return new GLSLCompiler().compileFragmentShader(aast, {useStatic: true});
+        return new GLSLCompiler().compileFragmentShader(aast, {useStatic: true, uniformExpressions: opt.uniformExpressions});
     }());
 
     if (args.p) {
