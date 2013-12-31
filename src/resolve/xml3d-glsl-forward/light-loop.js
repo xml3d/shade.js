@@ -121,7 +121,7 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
     var ambientColor = new Vec3(0,0,0);
     "AMBIENT_ENTRY";
     kdComplete = kdComplete.add(ambientColor);
-
+    kdComplete = kdComplete.mul(1 - this.ssaoMap.sample2D(this.normalizedCoords).r());
     return new Vec4(kdComplete.add(ksComplete), 1.0);
 
 }
