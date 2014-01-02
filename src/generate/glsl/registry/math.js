@@ -48,7 +48,7 @@
         ceil: { callExp: handleIntVersion },
         cos:  { callExp: handleMathCall() },
         exp: { callExp: handleMathCall() },
-        floor: { callExp: handleIntVersion },
+        floor: { callExp: handleMathCall() },
         // imul: { callExp: handleMathCall },
         log: { callExp: handleMathCall() },
         max: { callExp: handleMathCall() },

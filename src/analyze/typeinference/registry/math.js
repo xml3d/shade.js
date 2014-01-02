@@ -37,7 +37,7 @@
                     throw new Error("Parameter " + index + " has invalid type for Math." + name + ", expected 'number', but got " + param.getType());
             });
             var typeInfo = {
-                type: returnType || args[0].isVector() ? args[0].getType() : TYPES.NUMBER
+                type: returnType || args[0].isVector() ? TYPES.OBJECT : TYPES.NUMBER
             }
             args[0].isVector() && (typeInfo.kind = args[0].getKind());
 
