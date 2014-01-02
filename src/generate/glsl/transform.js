@@ -543,8 +543,20 @@
         var scope = context.createScope(node, context.getScope(), node.id.name);
         context.pushScope(scope);
 
+        var newParameterList = [];
         // Remove parameters of type undefined (these are not used anyway)
-        node.params = node.params.filter(function(a) { return !ANNO(a).isUndefined()});
+        node.params.forEach(function(a) {
+            // Don't declare undefined parameters
+            if(!ANNO(a).isUndefined()){
+                newParameterList.push(a);
+            } else {
+                var binding = scope.getBindingByName(a.name);
+                if(!binding.isUndefined()) {
+                    addDeclaration(a.name, binding, node.body);
+                }
+            }
+        });
+        node.params = newParameterList;
         return node;
     };
 
@@ -676,6 +688,38 @@
     function generateUniformSetter(expressionInfo) {
         var source = "return " + expressionInfo.code + ";";// console.log(result); return result;";
         return new Function("env", source);
+    }
+
+    function addDeclaration(name, typeInfo, target) {
+        var targetContainer, declaration;
+        switch (target.type) {
+            case Syntax.BlockStatement:
+                targetContainer = target.body;
+                break;
+            default:
+                throw new Error("Internal: addDeclaration to " + target.type);
+        }
+        if (targetContainer.length && targetContainer[0].type == Syntax.VariableDeclaration) {
+           declaration = targetContainer[0];
+           //console.log(declaration.declarations.push(declaration.declarations[0]));
+        } else {
+            declaration = {
+                type: Syntax.VariableDeclaration,
+                kind: "var",
+                declarations: []
+            }
+            targetContainer.unshift(declaration);
+        }
+        var declarator = {
+            type: Syntax.VariableDeclarator,
+            id: {
+                type: Syntax.Identifier,
+                name: name
+            },
+            init: null
+        };
+        ANNO(declarator).copy(typeInfo);
+        declaration.declarations.push(declarator);
     }
 
 
