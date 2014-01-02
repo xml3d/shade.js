@@ -445,16 +445,18 @@
                 var functionName = node.callee.name;
                 var func = scope.getBindingByName(functionName);
                 if (!func) {
-                    Shade.throwError(node, "ReferenceError: " + functionName + " is not defined");
+                    result.setInvalid(generateErrorInformation(node, "ReferenceError: ", functionName,  " is not defined"));
+                    return;
                 }
                 if(!func.isFunction()) {
-                    Shade.throwError(node, "TypeError: " + func.getTypeString() + " is not a function");
+                    result.setInvalid(generateErrorInformation(node, "TypeError: ", func.getTypeString(), " is not a function"));
+                    return;
                 }
                 try {
                     extra = context.callFunction(scope.getVariableIdentifier(functionName), args);
                     extra && result.setFromExtra(extra);
                 } catch(e) {
-                    result.setInvalid(generateErrorInformation(node, "Failure in function call: ", e.msg));
+                    result.setInvalid(generateErrorInformation(node, "Failure in function call: ", e.message));
                 }
                 return;
             }

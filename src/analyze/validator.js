@@ -17,7 +17,7 @@
 
         if(!annotation.isValid()) {
             var errorInfo = annotation.getError();
-            var functionCall = activeFunction ? "In " + activeFunction + ": " : "";
+            var functionCall = activeFunction ? "In " + activeFunction + "(): " : "";
             var error = new Error(functionCall + errorInfo.message);
             error.loc = errorInfo.loc;
             throw error;

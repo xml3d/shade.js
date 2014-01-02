@@ -269,7 +269,8 @@
                 }
                 return;
             }
-            var entry = $('<li><span class="text" >'+ text + '</span></li>');
+            var entry = $('<li><span class="text" ></span></li>');
+            entry.find(".text").text(text).html();
             if(error) entry.addClass("error");
             this.console.append(entry);
             this.console[0].scrollTop = this.console[0].scrollHeight;
