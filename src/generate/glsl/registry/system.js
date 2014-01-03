@@ -98,6 +98,23 @@
                 state.addHeader(SystemDefines.DERIVATE_EXTENSION);
                 return Tools.removeMemberFromExpression(node);
             }
+        },
+        dx: {
+            property: function (node, parent, context, state) {
+                state.addHeader(SystemDefines.DERIVATE_EXTENSION);
+                var result = Tools.removeMemberFromExpression(node);
+                result.name = "dFdx";
+                return result;
+            }
+        },
+        dy: {
+            property: function (node, parent, context, state) {
+                state.addHeader(SystemDefines.DERIVATE_EXTENSION);
+                var s = Tools.removeMemberFromExpression(node);
+                var result = Tools.removeMemberFromExpression(node);
+                result.name = "dFdy";
+                return result;
+            }
         }
 
     };

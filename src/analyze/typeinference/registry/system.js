@@ -31,12 +31,9 @@
 
     };
 
-
-    var OptionalMethods = {
-        fwidth: {
-            type: TYPES.FUNCTION,
-            evaluate: function (result, args) {
-                Tools.checkParamCount(result.node, "fwidth", [1], args.length);
+    function allowNumberOrVector(name) {
+        return function(result, args) {
+           Tools.checkParamCount(result.node, name, [1], args.length);
                 var arg = args[0];
                 if (arg.canNumber()) {
                     return {
@@ -49,8 +46,23 @@
                         kind: arg.getKind()
                     }
                 }
-                Shade.throwError(result.node, "IllegalArgumentError: first argument of this.fwidth is of type: " + arg.getTypeString());
-            }
+                Shade.throwError(result.node, "IllegalArgumentError: first argument of this." + name + " is of type: " + arg.getTypeString());
+        }
+    }
+
+
+    var OptionalMethods = {
+        fwidth: {
+            type: TYPES.FUNCTION,
+            evaluate: allowNumberOrVector("fwidth")
+        },
+        dx: {
+            type: TYPES.FUNCTION,
+            evaluate: allowNumberOrVector("dx")
+        },
+        dy: {
+            type: TYPES.FUNCTION,
+            evaluate: allowNumberOrVector("dy")
         }
     };
 
