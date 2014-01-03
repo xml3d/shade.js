@@ -239,6 +239,10 @@
 
                             case Syntax.ContinueStatement:
                                 lines.appendLine("continue;");
+                                return;
+                            case Syntax.BreakStatement:
+                                lines.appendLine("break;");
+                                return;
 
 
                             default:
