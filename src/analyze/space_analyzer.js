@@ -23,7 +23,7 @@
 
 
     var c_resultPointOk = true, c_resultNormalOk = true,
-        c_customFunctionPropagations = null;
+        c_customFunctionPropagations = null, c_debug = false;
 
     function analyze(functionAast, customFunctionPropagations) {
         var cfg = esgraph(functionAast.body, { omitExceptions: true });
@@ -343,7 +343,7 @@
                         PropagationRules[objectKind][method](callObject, args, recurse, result);
                         return;
                     }
-                    console.log("Unhandled: ", codegen.generate(this))
+                    c_debug && console.log("Unhandled: ", codegen.generate(this))
                 }else if(this.callee.type == Syntax.Identifier){
                     var id = this.callee.name;
                     var customEntry = c_customFunctionPropagations && c_customFunctionPropagations[id];
