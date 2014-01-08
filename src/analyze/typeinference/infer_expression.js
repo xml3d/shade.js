@@ -106,6 +106,9 @@
         NewExpression: function(node, parent, context) {
             var result = ANNO(node), staticValue;
 
+            // Be on the safe side, assume result is static independently of former annotations
+            result.setDynamicValue();
+
             var scope = context.getScope();
             var entry = scope.getBindingByName(node.callee.name);
             if (entry && entry.hasConstructor()) {
@@ -378,6 +381,8 @@
                 result.setInvalid(generateErrorInformation(node, "Not all arguments types of call expression could be evaluated"));
                 return;
             }
+            // Be on the safe side, assume result is static independently of former annotations
+            result.setDynamicValue();
 
             // Call on an object, e.g. Math.cos()
             if (node.callee.type == Syntax.MemberExpression) {
