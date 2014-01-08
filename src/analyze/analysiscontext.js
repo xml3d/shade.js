@@ -58,9 +58,9 @@
         /**
          * Cache of functions that types has already been derived.
          * Maps from signature to annotated ast
-         * @type {Map}
+         * @type {Object}
          */
-        this.derivedFunctions = new Map();
+        this.derivedFunctions = {};
 
         this.constants = null;
     };
@@ -93,8 +93,8 @@
             }, name);
         },
         getFunctionInformationBySignature: function (signature) {
-            if (this.derivedFunctions.has(signature)) {
-                var derivedFunction = this.derivedFunctions.get(signature);
+            if (this.derivedFunctions.hasOwnProperty(signature)) {
+                var derivedFunction = this.derivedFunctions[signature];
                 //console.log("Reuse", signature);
                 return derivedFunction.info;
             }
@@ -111,7 +111,7 @@
                 derived.ast = this.analyseFunction(JSON.parse(JSON.stringify(ast)), args);
                 derived.info = derived.ast.extra.returnInfo;
                 derived.info.newName = derived.ast.id.name = globalName;
-                this.derivedFunctions.set(this.createSignatureFromNameAndArguments(name, args), derived);
+                this.derivedFunctions[this.createSignatureFromNameAndArguments(name, args)] = derived;
                 return derived.info;
             }
             throw new Error("Could not resolve function " + name);
@@ -241,7 +241,10 @@
 
 
     function addDerivedMethods(program, context) {
-        program.body = program.body.concat(context.derivedFunctions.values().map(function(derived) {return derived.ast}));
+        for(var func in context.derivedFunctions) {
+            program.body.push(context.derivedFunctions[func].ast);
+        }
+
         walk.traverse(program, {
             enter: function(node) {
                 if(node.type == Syntax.CallExpression) {
