@@ -21,17 +21,30 @@
         return a;
     };
 
+
+
     ns.deepExtend = function(destination, source) {
         for (var property in source) {
-            if (Array.isArray(source[property])) {
-                destination[property] = destination[property] || [];
-                ns.deepExtend(destination[property], source[property]);
-            } else if (typeof source[property] === "object" && source[property] !== null) {
-                destination[property] = destination[property] || {};
-                ns.deepExtend(destination[property], source[property]);
+            var srcValue = source[property];
+            var dstValue = destination[property];
+            var copy;
+            if (Array.isArray(srcValue)) {
+                copy = dstValue || [];
+                ns.deepExtend(copy, srcValue);
+            } else if (typeof srcValue === "object" && srcValue !== null) {
+                copy = dstValue || {};
+                ns.deepExtend(copy, srcValue);
             } else {
-                destination[property] = source[property];
+                copy = srcValue;
             }
+            destination[property] = copy;
+        }
+        return destination;
+    };
+
+    ns.shallowExtend = function(destination, source) {
+        for (var property in source) {
+            destination[property] = source[property];
         }
         return destination;
     };

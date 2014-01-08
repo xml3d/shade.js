@@ -18,7 +18,7 @@
         this.node = node;
         this.node.extra = this.node.extra || {};
         if (extra) {
-            Base.deepExtend(this.node.extra, extra);
+            Base.shallowExtend(this.node.extra, extra);
         }
     }
 
@@ -289,7 +289,7 @@
             extra.error = null;
         },
         setFromExtra: function(extra){
-            Base.deepExtend(this.node.extra, extra);
+            Base.shallowExtend(this.node.extra, extra);
             // Set static object extra: This might be an object
             if (extra.staticValue != undefined) {
                 this.setStaticValue(TypeInfo.copyStaticValue(this, extra.staticValue));

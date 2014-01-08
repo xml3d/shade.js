@@ -190,7 +190,7 @@
             }
 
             sInfo.finalSpaces.forEach(function(space){
-                var expressionCopy = Base.deepExtend({}, child);
+                var expressionCopy = JSON.parse(JSON.stringify(child));
                 if(space != SpaceVectorType.OBJECT && !this.isSpacePropagrationPossible(sInfo, space)){
                     this.resolveSpaceUsage(expressionCopy, SpaceVectorType.OBJECT, nameMap);
                     expressionCopy.right = SpaceTransformTools.getSpaceTransformCall(expressionCopy.right, space);
