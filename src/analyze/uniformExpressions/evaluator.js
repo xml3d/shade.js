@@ -83,11 +83,21 @@
                     case Syntax.CallExpression:
                         if(node.callee.type == Syntax.MemberExpression) {
                             var object = node.callee.object;
+                            var args = node.arguments.map(function(arg) { return ANNO(arg);});
+
                             if(object.name && ~allowedMemberCalls.indexOf(object.name)) {
-                                var args = node.arguments.map(function(arg) { return ANNO(arg);});
                                 var dependencies = mergeUniformDependencies(args);
                                 if(dependencies) {
                                     result.setUniformDependencies(dependencies);
+                                    var costs = args.reduce(function(prev, next) { return prev + next.getUniformCosts(); }, 1);
+                                    result.setUniformCosts(costs)
+                                }
+                            } else {
+                                // TODO: CleanCode: Merge with above as soon as all differences are clear
+                                var objectAnno = ANNO(object);
+                                if(objectAnno.isUniformExpression()) {
+                                    var dependencies = mergeUniformDependencies(args);
+                                    result.setUniformDependencies(dependencies, objectAnno.getUniformDependencies());
                                     var costs = args.reduce(function(prev, next) { return prev + next.getUniformCosts(); }, 1);
                                     result.setUniformCosts(costs)
                                 }

@@ -39,7 +39,9 @@ var argv = require('optimist').argv,
                     sanitize: args.sanitize == undefined ? true :  args.sanitize,
                     validate: args.validate == undefined ? true :  args.validate
         };
-        return Shade.analyze(data, opt);
+        var result = Shade.analyze(data, opt);
+        // console.log(opt.uniformExpressions)
+        return result;
 
     }());
 
