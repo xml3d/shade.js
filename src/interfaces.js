@@ -699,7 +699,7 @@
     }
     Mat4.prototype.mulVec = function(x, y, z, w){
         var other = getVec4.apply(null, arguments);
-        return new Vec3(
+        return new Vec4(
             other.dot(this[0], this[1], this[2], this[3]),
             other.dot(this[4], this[5], this[6], this[7]),
             other.dot(this[8], this[9], this[10], this[11]),
