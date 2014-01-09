@@ -37,6 +37,7 @@
                 case Syntax.BinaryExpression:
                 case Syntax.LogicalExpression:
                 case Syntax.AssignmentExpression:
+                case Syntax.ConditionalExpression:
                     result = "( " + result + " )";
                     break;
             }
