@@ -22,12 +22,12 @@
 
 
     var DerivedParameters = {
-        coords: {
-            property: function (node) {
-                node.property.name = "gl_FragCoord";
-                return node.property;
-            }
-        },
+//        coords: {
+//            property: function (node) {
+//                node.property.name = "gl_FragCoord";
+//                return node.property;
+//            }
+//        },
         normalizedCoords: {
             property: function (node, parent, context, state) {
                 var parameterName = Tools.getNameForSystem(SystemDefines.CANVAS_DIMENSIONS);

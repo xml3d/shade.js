@@ -55,22 +55,22 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
 
             var lDirection = this.viewMatrix.mulVec(this.spotLightDirection[i].flip(), 0).xyz().normalize();
             var angle = L.dot(lDirection);
-            if(angle > this.spotLightCosFalloffAngle[i]){
-
+            if(angle > this.spotLightCosFalloffAngle[i]) {
                 var kd = new Vec3(0,0,0), ks = new Vec3(0,0,0);
                 "BRDF_ENTRY";
 
                 var c = 1.0;
                 if (this.spotLightCastShadow[i]) {
                     var wpos = this.viewInverseMatrix.mulVec(position, 1.0).xyz();
-                    var lsPos = this.spotLightMatrix[i].mulVec(new Vec4(wpos, 1));
-                    var lsDepth = lsPos.z() / lsPos.w() - this.spotLightShadowBias[i];
 
-                    var perspectiveDivPos = lsPos.xy().div(lsPos.w());
-                    var lightuv = perspectiveDivPos;
+                    var lsPos = this.spotLightMatrix[i].mulVec(new Vec4(wpos, 1));
+                    var perspectiveDivPos = lsPos.xyz().div(lsPos.w()).mul(0.5).add(0.5);
+                    var lsDepth = perspectiveDivPos.z() - this.spotLightShadowBias[i];
+
+                    var lightuv = perspectiveDivPos.xy();
                     var bitShift = new Vec4( 1.0 / ( 256.0 * 256.0 * 256.0 ), 1.0 / ( 256.0 * 256.0 ), 1.0 / 256.0, 1.0 );
 
-                    var texSize = new Vec2(2048.0, 2048.0);
+                    var texSize = new Vec2(Math.max(this.coords.x(), this.coords.y()));
                     var texelSize = new Vec2(1.0, 1.0).div(texSize);
                     var f = Math.fract(lightuv.mul(texSize).add(0.5));
                     var centroidUV = Math.floor(lightuv.mul(texSize).add(0.5));
@@ -121,11 +121,15 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
     var ambientColor = new Vec3(0,0,0);
     "AMBIENT_ENTRY";
     kdComplete = kdComplete.add(ambientColor);
+    var emissiveColor = new Vec3(0, 0, 0);
+    "EMISSIVE_ENTRY"
     if (this.ssaoMap) {
         kdComplete = kdComplete.mul(1 - this.ssaoMap.sample2D(this.normalizedCoords).r());
     }
-    return new Vec4(kdComplete.add(ksComplete), 1.0);
-
+    var refractColor = new Vec3(0, 0, 0);
+    var reflectColor = new Vec3(0, 0, 0);
+    "REFRACT_REFLECT_ENTRY"
+    return new Vec4(emissiveColor.add(kdComplete.add(ksComplete)).add(refractColor).add(reflectColor), 1.0);
 }
 
 }(exports));

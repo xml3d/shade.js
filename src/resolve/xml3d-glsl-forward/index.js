@@ -100,6 +100,37 @@
         return result;
     }
 
+    function injectEmissiveEntry(ccNames, state) {
+        var result = {
+            type: Syntax.BlockStatement,
+            body: []
+        };
+        for(var i = 0; i < ccNames.length; ++i){
+            var fName, ccName = ccNames[i];
+            if(fName = getColorClosureInject(ccName, "getEmissive", state)){
+                result.body.push(getInjectAddition("emissiveColor", fName, [], ccName, i));
+            }
+        }
+        return result;
+    }
+
+    function injectRefractReflectEntry(ccNames, state){
+        var result = {
+            type: Syntax.BlockStatement,
+            body: []
+        };
+        for(var i = 0; i < ccNames.length; ++i){
+            var fName, ccName = ccNames[i];
+            if(fName = getColorClosureInject(ccName, "getRefract", state)){
+                result.body.push(getInjectAddition("refractColor", fName, ["position"], ccName, i));
+            }
+            if(fName = getColorClosureInject(ccName, "getReflect", state)){
+                result.body.push(getInjectAddition("reflectColor", fName, ["position"], ccName, i));
+            }
+        }
+        return result;
+    }
+
     function injectColorClosureCalls(lightLoopFunction, ccNames, state){
         var result = Traversal.replace(lightLoopFunction.body, {
             enter: function(node, parent){
@@ -107,6 +138,8 @@
                     switch(node.expression.value){
                         case "BRDF_ENTRY": return injectBrdfEntry(ccNames, state);
                         case "AMBIENT_ENTRY": return injectAmbientEntry(ccNames, state);
+                        case "EMISSIVE_ENTRY": return injectEmissiveEntry(ccNames, state);
+                        case "REFRACT_REFLECT_ENTRY": return injectRefractReflectEntry(ccNames, state);
                     };
 
                 }

@@ -78,6 +78,11 @@
     }
 
     ns.ColorClosures = {
+        "emissive" : {
+            input: [
+                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR}
+            ]
+        },
         "diffuse" : {
             input: [
                 { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR},
@@ -115,6 +120,19 @@
                 { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0},
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0}
+            ]
+        },
+        "reflect" : {
+            input: [
+                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 1 },
+            ]
+        },
+        "refract" : {
+            input: [
+                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 1 },
+                { type: Types.NUMBER, semantic: Semantics.UNKNOWN, defaultValue: 1 },
             ]
         }
     }
@@ -174,6 +192,7 @@
             else if(arg instanceof Vec4) cnt = 4;
             else if(arg instanceof Mat3) cnt = 9;
             else if(arg instanceof Mat4) cnt = 16;
+            else if(Array.isArray(arg) || (typeof arg === "object" && "BYTES_PER_ELEMENT" in arg)) cnt = arg.length;
 
             if(cnt == 1)
                 dest[idx++] = arg || 0;
