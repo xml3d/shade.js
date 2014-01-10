@@ -4,7 +4,7 @@
 
 
     var isVariableName = function (node, parent) {
-        return node.type == Syntax.Identifier && !((parent.type == Syntax.MemberExpression && parent.property == node) || parent.type == Syntax.FunctionDeclaration || parent.type == Syntax.NewExpression ||  (parent.type == Syntax.CallExpression && parent.callee == node));
+        return node.type == Syntax.Identifier && !((parent.type == Syntax.MemberExpression && parent.property == node) || parent.type == Syntax.FunctionDeclaration || (parent.type == Syntax.NewExpression && parent.callee == node) ||  (parent.type == Syntax.CallExpression && parent.callee == node));
     };
 
     var isVariableReference = function (node, parent) {
