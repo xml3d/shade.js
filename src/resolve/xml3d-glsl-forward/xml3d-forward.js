@@ -76,8 +76,8 @@
         ns.ward = {
             getSpecular: function getSpecular(L, V, color, N, T, ax, ay){
                 var H = L.add(V).normalize();
-                var B = N.cross(T);
-                var NdotV = Math.saturate(N.dot(V));
+                var B = N.cross(T).normalize();
+                var NdotV = N.dot(V);
                 var NdotL = Math.saturate(N.dot(L));
                 var NdotH = N.dot(H);
                 var HdotT = H.dot(T);
