@@ -34,6 +34,12 @@
     var leaveVisitor = function (node, parent, variables, controller) {
         if (node.type == Syntax.MemberExpression) {
             var object = ANNO(node.object);
+            if (node.object.type == Syntax.Identifier && object.isUniformExpression()) {
+                if(variables.hasOwnProperty(node.object.name)) {
+                //console.log("Found: " + node.object.name, variables[node.object.name]);
+                    node.object = variables[node.object.name].code;
+                }
+            }
             if (object.isGlobal() && node.property.type == Syntax.Identifier) {
                 var property = ANNO(node.property);
 
