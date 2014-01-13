@@ -5,7 +5,7 @@ var map = require('es6-map-shim');
 var Shade = require("..");
 var fs = require('fs');
 var should = require('should');
-var semantics = require("../src/analyze/semantics.js");
+var semantics = require("../src/analyze/semantics/semantics.js");
 
 var Set = analyses.Set;
 

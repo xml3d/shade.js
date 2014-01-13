@@ -3,13 +3,16 @@
     // dependencies
     var walker = require('walkes');
     var worklist = require('analyses');
-    var common = require("../base/common.js");
+    var common = require("../../base/common.js");
     var codegen = require('escodegen');
-    var Tools = require("./settools.js");
+    var Tools = require("./../settools.js");
+    var esgraph = require('esgraph');
+
 
     // shortcuts
     var Syntax = common.Syntax;
     var Set = worklist.Set;
+    var ANNO = common.ANNO;
 
     // defines
 
@@ -30,12 +33,17 @@
      * @param {FlowNode} start
      * @returns {Map}
      */
-    function semantics(cfg, start) {
-        return worklist(cfg, transferFunction, {
+    function compute(body, start) {
+
+        var cfg = esgraph(body, { omitExceptions: true });
+
+        var result = worklist(cfg, transferFunction, {
             direction: 'backward',
-            start: start,
+            start: new Set(),
             merge: worklist.merge(mergeSemantics)
         });
+        //Tools.printMap(result, cfg);
+        return body;
     }
 
     /**
@@ -256,19 +264,21 @@
         return false;
     }
 
-    function declare(type, astNode, variables) {
+    function declare(semantic, astNode, variables) {
         walker(astNode, {
             Identifier: function () {
+                ANNO(this).setSemantic(semantic);
                 addMerged(variables, {
                     name: this.name,
-                    type: type
+                    type: semantic
                 });
             },
             MemberExpression: function () {
                 if (this.object.type == Syntax.Identifier && this.property.type == Syntax.Identifier) {
+                    ANNO(this).setSemantic(semantic);
                     addMerged(variables, {
                         name: getName(this),
-                        type: type
+                        type: semantic
                     });
                 }
             }
@@ -289,7 +299,7 @@
         }
     }
 
-    semantics.Semantic = Semantic;
-    module.exports = semantics;
+    compute.Semantic = Semantic;
+    module.exports = compute;
 
 }(module));

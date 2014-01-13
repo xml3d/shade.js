@@ -5,6 +5,7 @@
         staticTransformer = require("./constants/staticTransformer.js"),
         uniformAnalysis = require("./uniformExpressions/uniformAnalysis.js"),
         validator = require("./validator.js"),
+        semantics = require("./semantics/semantics.js"),
         AnalysisContext = require("./analysiscontext.js"),
         inference = require("./typeinference/typeinference.js"),
         spaceTransformer = require("../generate/space/transform.js").SpaceTransformer,
@@ -45,6 +46,8 @@
 
                     ast = opt.extractUniformExpressions ? uniformAnalysis.extract(ast, opt) : ast;
                     //console.log(opt.uniformExpressions);
+
+                    ast = opt.semanticAnalysis ?  semantics(ast, opt) : ast;
 
                     return ast;
 

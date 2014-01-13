@@ -13,7 +13,7 @@ var common = require("../src/base/common.js");
 
 var fs = require('fs');
 
-var semantics = require("../src/analyze/semantics.js")
+var semantics = require("../src/analyze/semantics/semantics.js")
 var Set = analyses.Set;
 var Syntax = common.Syntax;
 

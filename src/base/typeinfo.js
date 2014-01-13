@@ -337,6 +337,12 @@
                 return !!this.getStaticValue();
             }
             return undefined;
+        },
+        setSemantic: function(sem) {
+            this.getExtra().semantic = sem;
+        },
+        getSemantic: function(sem) {
+            return this.getExtra().semantic;
         }
 
     }
