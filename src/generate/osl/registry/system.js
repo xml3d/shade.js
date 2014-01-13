@@ -13,7 +13,30 @@
                 result.name = "filterwidth";
                 return result;
             }
+        },
+        dx: {
+            property: function (node, parent, context, state) {
+                var result = Tools.removeMemberFromExpression(node);
+                result.name = "Dx";
+                return result;
+            }
+        },
+        dy: {
+            property: function (node, parent, context, state) {
+                var result = Tools.removeMemberFromExpression(node);
+                result.name = "Dy";
+                return result;
+            }
+        },
+        cameraPosition: {
+            property: function (node, parent, context, state) {
+                var result = Tools.removeMemberFromExpression(node);
+                result.name = "I";
+                return result;
+            }
         }
+
+
 
     };
 

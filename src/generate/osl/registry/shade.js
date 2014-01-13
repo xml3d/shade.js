@@ -5,12 +5,23 @@
     var Tools = require('../../tools.js');
     var assert = require('assert');
 
-    function createOSLClosure(node, closureName) {
-        var color = node.arguments.shift(), callee = node.callee;
+    function createSimpleClosure(closureName, node) {
+        return  {
+                type: Syntax.CallExpression,
+                callee: {
+                    type: Syntax.Identifier,
+                    name: closureName
+                },
+                arguments: node.arguments,
+                extra: {
+                    type: Shade.TYPES.OBJECT,
+                    kind: Shade.OBJECT_KINDS.COLOR_CLOSURE
+                }
+            }
+    }
 
-        assert(callee.type == Syntax.MemberExpression);
-
-        var closure = {
+    function createScaledClosure(color, closureName, node) {
+        return {
             type: Syntax.BinaryExpression,
             operator: "*",
             left: {
@@ -34,16 +45,29 @@
                 kind: Shade.OBJECT_KINDS.COLOR_CLOSURE
             }
         };
+    }
+
+    function createOSLClosure(node, closureName, color) {
+        var callee = node.callee;
+
+        assert(callee.type == Syntax.MemberExpression);
+
+        var closure = color ? createScaledClosure(color, closureName, node) :  createSimpleClosure(closureName, node);
+
         if (callee.object.type == Syntax.NewExpression)
             return closure;
 
-        assert.equal(callee.object.type, Syntax.BinaryExpression);
+        //assert.equal(callee.object.type, Syntax.BinaryExpression);
 
         return {
             type: Syntax.BinaryExpression,
             operator: "+",
             left: callee.object,
-            right: closure
+            right: closure,
+            extra: {
+                type: Shade.TYPES.OBJECT,
+                kind: Shade.OBJECT_KINDS.COLOR_CLOSURE
+            }
         }
 
     }
@@ -52,7 +76,8 @@
         diffuse: {
             callExp: function(node) {
                 var closureName = node.arguments.length == 3 ? "oren_nayar" : "diffuse";
-                return createOSLClosure(node, closureName);
+                var color = node.arguments.shift();
+                return createOSLClosure(node, closureName, color);
             }
         },
         phong: {
@@ -60,7 +85,28 @@
         },
         cookTorrance: {
             callExp: function(node) {
-                return createOSLClosure(node, "microfacet_beckmann_refraction");
+                var args = node.arguments;
+                var color = args.shift();
+                // Remove eta
+                args[1] = args[2];
+                args.pop();
+                return createOSLClosure(node, "microfacet_beckmann", color);
+            }
+        },
+        ward: {
+           callExp: function(node) {
+               var color = node.arguments.shift();
+               return createOSLClosure(node, "ward", color);
+            }
+        },
+        reflect: {
+          callExp: function(node) {
+                return createOSLClosure(node, "reflection", node.arguments.pop());
+            }
+        },
+         refract: {
+          callExp: function(node) {
+                return createOSLClosure(node, "refraction",  node.arguments.pop());
             }
         }
 
