@@ -63,6 +63,7 @@
             type: TYPES.FUNCTION,
             name: "phong",
             evaluate: function(result, args, ctx) {
+                // TODO: Check arguments based on interface description
                 checkArgumentIsColor(result.node, args, 0, this.name);
                 checkArgumentIsNormal(result.node, args, 1, this.name);
 
@@ -72,6 +73,7 @@
                         throw new Error("Third argument (shininess) of Shade.phong must evaluate to a number. Found: " + shininess.str());
                     }
                 }
+
                 return {
                     type: TYPES.OBJECT,
                     kind: KINDS.COLOR_CLOSURE
@@ -82,10 +84,50 @@
             type: TYPES.FUNCTION,
             name: "cookTorrance",
             evaluate: function(result, args, ctx) {
+                // TODO: Check arguments based on interface description
                 checkArgumentIsColor(result.node, args, 0, this.name);
                 checkArgumentIsNormal(result.node, args, 1, this.name);
 
-                // TODO: Check other arguments
+                return {
+                    type: TYPES.OBJECT,
+                    kind: KINDS.COLOR_CLOSURE
+                };
+            }
+        },
+        ward: {
+            type: TYPES.FUNCTION,
+            name: "ward",
+            evaluate: function(result, args, ctx) {
+                // TODO: Check arguments based on interface description
+                checkArgumentIsColor(result.node, args, 0, this.name);
+                checkArgumentIsNormal(result.node, args, 1, this.name);
+                checkArgumentIsNormal(result.node, args, 2, this.name);
+
+                return {
+                    type: TYPES.OBJECT,
+                    kind: KINDS.COLOR_CLOSURE
+                };
+            }
+        },
+        reflect: {
+            type: TYPES.FUNCTION,
+            name: "reflect",
+            evaluate: function(result, args, ctx) {
+                // TODO: Check arguments based on interface description
+                checkArgumentIsNormal(result.node, args, 0, this.name);
+
+                return {
+                    type: TYPES.OBJECT,
+                    kind: KINDS.COLOR_CLOSURE
+                };
+            }
+        },
+        refract: {
+            type: TYPES.FUNCTION,
+            name: "refract",
+            evaluate: function(result, args, ctx) {
+                // TODO: Check arguments based on interface description
+                checkArgumentIsNormal(result.node, args, 0, this.name);
 
                 return {
                     type: TYPES.OBJECT,
