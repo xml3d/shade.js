@@ -100,8 +100,8 @@
                             continue;
                         cb(destName, override && override[srcName] !== undefined ? override[srcName] : base[srcName]);
                         if (parameters.shader[destName].kind === Shade.OBJECT_KINDS.TEXTURE) {
-                            cb(destName + "_width", override && override[srcName] !== undefined ? override[srcName].width : base[srcName][0].width);
-                            cb(destName + "_height", override && override[srcName] !== undefined ? override[srcName].height : base[srcName][0].height)
+                            cb(destName + "_width", override && override[srcName] !== undefined ? override[srcName].width : base[srcName] && base[srcName][0].width || 0);
+                            cb(destName + "_height", override && override[srcName] !== undefined ? override[srcName].height : base[srcName] && base[srcName][0].height || 0)
                         }
                     }
                 }
