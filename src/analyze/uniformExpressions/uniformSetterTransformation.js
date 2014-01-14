@@ -71,7 +71,7 @@
 
         if (node.type == Syntax.CallExpression) {
             if (isVecMathCall(node)) {
-                node.callee.object.name = "this.VecMath";
+                node.callee.object.name = "Math";
             }
         }
 
