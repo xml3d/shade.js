@@ -85,10 +85,16 @@
             evaluate: function (result, args) {
                 Tools.checkParamCount(result.node, "Math.clamp", [3], args.length);
 
-                if (args.every(function (e) {
-                    return e.canNumber();
-                })) {
-                    return { type: TYPES.NUMBER }
+                if(args[1].canNumber() && args[2].canNumber()){
+                    var typeInfo = {};
+                    if(args[0].canNumber()) {
+                        typeInfo.type = TYPES.NUMBER;
+                    }
+                    else if (args[0].isVector()) {
+                        typeInfo.type = args[0].getType();
+                        typeInfo.kind = args[0].getKind();
+                    }
+                    return typeInfo;
                 }
                 Shade.throwError(result.node, "Math.clamp not supported with argument types: " + args.map(function (arg) {
                     return arg.getTypeString();
