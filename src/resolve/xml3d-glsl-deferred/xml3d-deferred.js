@@ -54,14 +54,14 @@
 
         ns.reflect = {
             inputSpaces: [
-                SpaceVectorType.WORLD_NORMAL,
+                SpaceVectorType.VIEW_NORMAL,
                 SpaceVectorType.OBJECT
             ]
         }
 
         ns.refract = {
             inputSpaces: [
-                SpaceVectorType.WORLD_NORMAL,
+                SpaceVectorType.VIEW_NORMAL,
                 SpaceVectorType.OBJECT,
                 SpaceVectorType.OBJECT
             ]
