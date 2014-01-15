@@ -45,7 +45,7 @@
 
             var arguments = [];
              for(i = 0; i < swizzle.length; ++i){
-                arguments.push(Vec.createArrayAccess(node.callee.object, indices[i]));
+                arguments.push(Vec.createArrayAccess(node.callee.object, VecBase.swizzleToIndex(swizzle.charAt(i))));
             }
 
             var replace = {

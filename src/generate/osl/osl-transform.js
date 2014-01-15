@@ -99,7 +99,6 @@
             var oldName = node.name;
             var newName = this.context.getVariableName(oldName);
             if(newName) {
-                console.log("From map");
                 node.name = newName;
                 return node;
             }

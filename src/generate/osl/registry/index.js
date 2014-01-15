@@ -20,7 +20,6 @@
         System : require("./system.js"),
         Vec2 : require("./vec2.js"),
         Vec3 : require("./vec3.js"),
-//        Color: require("./vec3.js"),
         Vec4 : require("./vec4.js"),
 //        Mat3 : require("./mat3.js"),
 //        Mat4 : require("./mat4.js"),
@@ -120,7 +119,6 @@
 
         registerGlobals: function() {
             this.registerObject("Math", objects.Math);
-//            this.registerObject("Color",  objects.Color);
             this.registerObject("Vec2", objects.Vec2);
             this.registerObject("Vec3", objects.Vec3);
             this.registerObject("Vec4", objects.Vec4);

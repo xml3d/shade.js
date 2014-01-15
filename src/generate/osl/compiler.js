@@ -9,7 +9,7 @@
     var OSLKeywords = ["time", "color", "break", "closure", "color", "continue", "do", "else", "emit", "float", "for", "if", "illuminance",
                   "illuminate", "int", "matrix", "normal", "output", "point", "public", "return", "string", "struct", "vector", "void", "while"];
 
-    var OSLGlobals = ["P", "I", "N", "Ng", "dPdu", "dPdv", "u", "v", "time", "dtime", "dPdtime", "Ci"];
+    var OSLGlobals = ["P", "I", "N", "Ng", "dPdu", "dPdv", "u", "v", "time", "dtime", "dPdtime", "Ci", "Color", "noise"];
 
     var OSLCompiler = function (opt) {
         this.options = opt || {};

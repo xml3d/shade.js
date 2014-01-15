@@ -14,6 +14,28 @@
         Kinds = Shade.OBJECT_KINDS;
 
 
+    function handleInlineDeclaration(node, opt) {
+        if(!node)
+            return "";
+        if (node.type == Syntax.VariableDeclaration) {
+            var result = node.declarations.reduce(function (declString, declaration) {
+                var decl = toOSLType(declaration.extra) + " " + declaration.id.name;
+                if (declaration.init) {
+                    decl += " = " + handler.expression(declaration.init);
+                }
+                return declString + decl;
+            }, "");
+            return result;
+        }
+
+        // GLSL allows only declaration in init, but since this is a new scope, it should be fine
+        if (node.type == Syntax.AssignmentExpression) {
+            return toOSLType(node.extra) + " " + handler.expression(node.left) + " = " + handler.expression(node.right);
+        }
+        Shade.throwError(node, "Internal error in GLSL::handleInlineDeclaration, found " + node.type);
+    }
+
+
     function getParameterInitializer(typeInfo) {
         if(!typeInfo) return "?";
         switch (typeInfo.type) {
@@ -183,7 +205,7 @@
 
                 case Syntax.ForStatement:
                     controller.skip();
-                    lines.appendLine("for (" + handleInlineDeclaration(node.init, opt) + "; " + handler.expression(node.test) + "; " + handler.expression(node.update) + ") {");
+                    lines.appendLine("for (" + handleInlineDeclaration(node.init) + "; " + handler.expression(node.test) + "; " + handler.expression(node.update) + ") {");
                     lines.changeIndention(1);
                     this.traverse(node.body);
                     lines.changeIndention(-1);
