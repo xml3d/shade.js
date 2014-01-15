@@ -408,6 +408,7 @@
         "float3" : {
             "add" : handleAddSubOperation,
             "sub" : handleAddSubOperation,
+            "cross" : handleAddSubOperation,
             "mul" : handleScaleOperator,
             "div" : handleScaleOperator,
             "normalize" : handleScaleOperator
