@@ -104,9 +104,16 @@
                 return createOSLClosure(node, "reflection", node.arguments.pop());
             }
         },
-         refract: {
+        refract: {
           callExp: function(node) {
                 return createOSLClosure(node, "refraction",  node.arguments.pop());
+            }
+        },
+        scatter: {
+          callExp: function(node) {
+               var color = node.arguments.shift();
+               node.arguments.splice(1,1);
+               return createOSLClosure(node, "westin_backscatter", color);
             }
         }
 

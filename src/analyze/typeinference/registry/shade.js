@@ -134,6 +134,20 @@
                     kind: KINDS.COLOR_CLOSURE
                 };
             }
+        },
+        scatter: {
+            type: TYPES.FUNCTION,
+            name: "scatter",
+            evaluate: function(result, args, ctx) {
+                // TODO: Check arguments based on interface description
+                checkArgumentIsColor(result.node, args, 0, this.name);
+                checkArgumentIsNormal(result.node, args, 1, this.name);
+
+                return {
+                    type: TYPES.OBJECT,
+                    kind: KINDS.COLOR_CLOSURE
+                };
+            }
         }
 
     };
