@@ -108,7 +108,7 @@
                 N = this.viewInverseMatrix.mulVec(N, 0).xyz();
                 var I = this.viewInverseMatrix.mulVec(position, 1.0).xyz().sub(this.cameraPosition).normalize();
                 var reflection3D = I.reflect(N).normalize();
-                var reflection2D = new Vec2((Math.atan2(reflection3D.x(), -reflection3D.z()) + Math.PI) / (2 * Math.PI), (Math.asin(reflection3D.y()) + Math.PI / 2.0) / Math.PI);
+                var reflection2D = new Vec2((Math.atan2(-reflection3D.z(), reflection3D.x()) + Math.PI) / (2 * Math.PI), (Math.asin(reflection3D.y()) + Math.PI / 2.0) / Math.PI);
                 return Math.pow(this.environment.sample2D(reflection2D).rgb(), new Vec3(2.2)).mul(factor);
             }
         };
@@ -118,7 +118,7 @@
                 N = this.viewInverseMatrix.mulVec(N, 0).xyz();
                 var I = this.viewInverseMatrix.mulVec(position, 1.0).xyz().sub(this.cameraPosition).normalize();
                 var refraction3D = I.refract(N, eta).normalize();
-                var refraction2D = new Vec2((Math.atan2(refraction3D.x(), -refraction3D.z()) + Math.PI) / (2 * Math.PI), (Math.asin(refraction3D.y()) + Math.PI / 2.0) / Math.PI);
+                var refraction2D = new Vec2((Math.atan2(-refraction3D.z(), refraction3D.x()) + Math.PI) / (2 * Math.PI), (Math.asin(refraction3D.y()) + Math.PI / 2.0) / Math.PI);
                 return Math.pow(this.environment.sample2D(refraction2D).rgb(), new Vec3(2.2)).mul(factor);
             }
         };
