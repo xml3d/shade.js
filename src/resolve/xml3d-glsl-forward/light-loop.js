@@ -70,7 +70,7 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
                     var lightuv = perspectiveDivPos.xy();
                     var bitShift = new Vec4( 1.0 / ( 256.0 * 256.0 * 256.0 ), 1.0 / ( 256.0 * 256.0 ), 1.0 / 256.0, 1.0 );
 
-                    var texSize = new Vec2(Math.max(this.coords.x(), this.coords.y()));
+                    var texSize = new Vec2(Math.max(this.coords.x(), this.coords.y())).mul(4);
                     var texelSize = new Vec2(1.0, 1.0).div(texSize);
                     var f = Math.fract(lightuv.mul(texSize).add(0.5));
                     var centroidUV = Math.floor(lightuv.mul(texSize).add(0.5));
