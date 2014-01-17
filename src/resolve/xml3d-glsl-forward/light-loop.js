@@ -70,7 +70,7 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
                     var lightuv = perspectiveDivPos.xy();
                     var bitShift = new Vec4( 1.0 / ( 256.0 * 256.0 * 256.0 ), 1.0 / ( 256.0 * 256.0 ), 1.0 / 256.0, 1.0 );
 
-                    var texSize = new Vec2(Math.max(this.coords.x(), this.coords.y())).mul(4);
+                    var texSize = new Vec2(Math.max(this.coords.x(), this.coords.y())).mul(2);
                     var texelSize = new Vec2(1.0, 1.0).div(texSize);
                     var f = Math.fract(lightuv.mul(texSize).add(0.5));
                     var centroidUV = Math.floor(lightuv.mul(texSize).add(0.5));
@@ -129,7 +129,7 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
     var refractColor = new Vec3(0, 0, 0);
     var reflectColor = new Vec3(0, 0, 0);
     "REFRACT_REFLECT_ENTRY"
-    return new Vec4(emissiveColor.add(kdComplete.add(ksComplete)).add(refractColor).add(reflectColor), 1.0);
+    return Math.pow(new Vec4(emissiveColor.add(kdComplete.add(ksComplete)).add(refractColor).add(reflectColor), 1.0), new Vec4(1/2.2));
 }
 
 }(exports));
