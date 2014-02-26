@@ -197,6 +197,10 @@
                 throw new Error("Reference error: " + name + " is not defined.")
             }
             if (v.isInitialized() && v.getType() !== typeInfo.getType()) {
+                 if(node) {
+                    typeInfo.setInvalid(ErrorHandler.generateErrorInformation(node, ErrorHandler.ERROR_TYPES.SHADEJS_ERROR, name, "may not change it's type"));
+                    return;
+                }
                 throw new Error("Variable may not change it's type: " + name);
             }
             if (!v.isInitialized()) {
