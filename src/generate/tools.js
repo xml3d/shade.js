@@ -144,22 +144,82 @@
             ANNO(replace).copy(ANNO(node));
             return replace;
         },
+        createSwizzleOperator: function(vecCount, swizzle, operator, node, args, parent){
+            var singular = swizzle.length == 1;
+            var argObject = singular ? node.arguments[0] : Vec.generateVecFromArgs(swizzle.length, node.arguments);
+            var replace = {
+                type: Syntax.NewExpression,
+                callee: {
+                   type: Syntax.Identifier,
+                   name: "Vec" + vecCount
+                },
+                arguments: []
+            };
+            var indices = [];
+            for(var i = 0; i < swizzle.length; ++i){
+                var idx = VecBase.swizzleToIndex(swizzle.charAt(i));
+                indices[idx] = i;
+            }
+            for(var i = 0; i < vecCount; ++i){
+                var thisValue = {
+                    type: Syntax.MemberExpression,
+                    object: node.callee.object,
+                    property: {
+                        type: Syntax.Identifier,
+                        name: VecBase.indexToSwizzle(i)
+                    }
+                };
+                if(indices[i] !== undefined){
+                    replace.arguments[i] = {
+                        type: Syntax.BinaryExpression,
+                        operator: operator,
+                        left: thisValue,
+                        right: singular ? argObject : {
+                            type: Syntax.MemberExpression,
+                            object: argObject,
+                            property: {
+                                type: Syntax.Identifier,
+                                name: VecBase.indexToSwizzle(indices[i])
+                            }
+                        }
+                    }
+                }
+                else{
+                   replace.arguments[i] = thisValue
+                }
+            }
+            ANNO(replace).copy(ANNO(node));
+            return replace;
+        },
 
-        attachSwizzles: function (instance, vecCount, callExp){
+        attachSwizzles: function (instance, vecCount, callExp, callOperatorExp){
             for(var s = 0; s < VecBase.swizzleSets.length; ++s){
                 for(var count = 1; count <= 4; ++count){
                     var max = Math.pow(vecCount, count);
                      for(var i = 0; i < max; ++i){
                         var val = i;
                         var key = "";
+                        var indices = [], withSetter = (count <= vecCount);
                         for(var  j = 0; j < count; ++j){
                             var idx = val % vecCount;
                             val = Math.floor(val / vecCount);
                             key+= VecBase.swizzleSets[s][idx];
+                            if(indices[idx])
+                                withSetter = false;
+                            else
+                                indices[idx] = true;
                         }
                         instance[key] = {
                             callExp: callExp.bind(null, vecCount, key)
                         };
+                        if(withSetter && callOperatorExp){
+                            for(var operator in VecBase.swizzleOperators){
+                                var opSymbol = VecBase.swizzleOperators[operator];
+                                instance[key + operator] = {
+                                    callExp: callOperatorExp.bind(null, vecCount, key, opSymbol)
+                                };
+                            }
+                        }
                     }
                 }
             }

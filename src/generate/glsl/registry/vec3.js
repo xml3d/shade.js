@@ -37,7 +37,7 @@
             callExp: Tools.Vec.createFunctionCall.bind(null, "cross", 3)
         }
     }
-    Tools.Vec.attachSwizzles(Vec3Instance, 3, Tools.Vec.createSwizzle);
+    Tools.Vec.attachSwizzles(Vec3Instance, 3, Tools.Vec.createSwizzle, Tools.Vec.createSwizzleOperator);
     Tools.Vec.attachOperators(Vec3Instance, 3, {
         add: '+',
         sub: '-',

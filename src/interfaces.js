@@ -256,9 +256,12 @@
             var funcArgs = "";
             var body = '  return getVec' + maskCount + '(' + args.join(", ") +');\n';
             if(generateSetter){
+                var assignSetters = [];
                 for(var j = 0; j < vecCount; ++j){
                     if(setterArgs[j] === undefined)
-                        setterArgs[j] = 'this[' + j + ']';
+                        assignSetters[j] = 'this[' + j + ']';
+                    else
+                        assignSetters[j] = setterArgs[j];
                 }
                 switch(maskCount){
                     case 2 : funcArgs = "x, y"; break;
@@ -269,7 +272,7 @@
                 body = "  if(arguments.length == 0)\n  " + body +
                        "  else{\n" +
                        "    var other=getVec" + maskCount + '.apply(null, arguments);\n' +
-                       "    return getVec" + vecCount + '(' + setterArgs.join(", ") + ');\n' +
+                       "    return getVec" + vecCount + '(' + assignSetters.join(", ") + ');\n' +
                        "  }\n";
             }
             var functionCode = 'function(' + funcArgs +  '){\n' + body + '}';
@@ -281,8 +284,36 @@
             catch(e){
                 console.error("Error Compiling Code:\n" + functionCode);
                 throw e;
-
             }
+            if(generateSetter){
+                addSwizzleOperator(prototype, vecCount, maskCount, keys, "Add", "+", setterArgs);
+                addSwizzleOperator(prototype, vecCount, maskCount, keys, "Sub", "-", setterArgs);
+                addSwizzleOperator(prototype, vecCount, maskCount, keys, "Mul", "*", setterArgs);
+                addSwizzleOperator(prototype, vecCount, maskCount, keys, "Div", "/", setterArgs);
+            }
+        }
+    }
+    function addSwizzleOperator(prototype, vecCount, maskCount, keys, methodName, operator, setterArgs){
+        var assignSetters = [];
+        for(var j = 0; j < vecCount; ++j){
+            var prefix = 'this[' + j + ']';
+            if(setterArgs[j] === undefined)
+                assignSetters[j] = prefix;
+            else
+                assignSetters[j] = prefix + " " + operator + " " + setterArgs[j];
+        }
+        var body =  "   var other=getVec" + maskCount + '.apply(null, arguments);\n' +
+                    "   return getVec" + vecCount + '(' + assignSetters.join(", ") + ');\n'
+
+        var functionCode = 'function(){\n' + body + '}';
+        try{
+            var result = eval("(" + functionCode + ")");
+            for(var j = 0; j < keys.length; ++j)
+                prototype[keys[j] + methodName] = result;
+        }
+        catch(e){
+            console.error("Error Compiling Code:\n" + functionCode);
+            throw e;
         }
     }
 

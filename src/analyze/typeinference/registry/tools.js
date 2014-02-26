@@ -145,20 +145,22 @@
                 return Vec.vecEvaluate(objectName, swizzle, swizzle.length, 0, result, args, ctx, callObject);
             }
         },
-        getSwizzleEvaluate: function(objectName, vecSize, swizzle){
-            var indices = [], withSetter = (swizzle.length <= vecSize);
-            for(var i = 0; withSetter && i < swizzle.length; ++i){
-                var idx = VecBase.swizzleToIndex(swizzle.charAt(i));
-                if(indices[idx])
-                    withSetter = false;
-                else
-                    indices[idx] = true;
-            }
+        swizzleOperatorEvaluate: function(objectName, vecSize, swizzle, operator, result, args, ctx, callObject) {
+            return Vec.vecEvaluate(objectName, swizzle + operator, vecSize, swizzle.length, result, args, ctx, callObject);
+        },
+        getSwizzleEvaluate: function(objectName, vecSize, swizzle, withSetter){
             return  {
                 type: TYPES.FUNCTION,
                 evaluate: Vec.swizzleEvaluate.bind(null, objectName, vecSize, swizzle, withSetter),
                 computeStaticValue: Vec.getStaticValue.bind(null, swizzle)
-        }
+            }
+        },
+        getSwizzleOperatorEvaluate: function(objectName, vecSize, swizzle, operator){
+            return  {
+                type: TYPES.FUNCTION,
+                evaluate: Vec.swizzleOperatorEvaluate.bind(null, objectName, vecSize, swizzle, operator),
+                computeStaticValue: Vec.getStaticValue.bind(null, swizzle + operator)
+            }
         },
         attachSwizzles: function (instance, objectName, vecCount){
             for(var s = 0; s < VecBase.swizzleSets.length; ++s){
@@ -167,12 +169,23 @@
                      for(var i = 0; i < max; ++i){
                         var val = i;
                         var key = "";
+
+                        var indices = [], withSetter = (count <= vecCount);
                         for(var  j = 0; j < count; ++j){
                             var idx = val % vecCount;
                             val = Math.floor(val / vecCount);
                             key+= VecBase.swizzleSets[s][idx];
+                            if(indices[idx])
+                                withSetter = false;
+                            else
+                                indices[idx] = true;
                         }
-                        instance[key] = Vec.getSwizzleEvaluate(objectName, vecCount, key);
+                        instance[key] = Vec.getSwizzleEvaluate(objectName, vecCount, key, withSetter);
+                        if(withSetter){
+                            for(var operator in VecBase.swizzleOperators){
+                                instance[key + operator] = Vec.getSwizzleOperatorEvaluate(objectName, vecCount, key, operator);
+                            }
+                        }
                     }
                 }
             }

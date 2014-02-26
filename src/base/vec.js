@@ -23,5 +23,12 @@
         ['r', 'g', 'b', 'a'],
         ['s', 't', 'p', 'q']
     ];
+    ns.swizzleOperators = {
+        'Add' : '+',
+        'Sub' : '-',
+        'Mul' : '*',
+        'Div' : '/'
+    }
+
 
 }(exports))
