@@ -15,7 +15,7 @@
     var leaveNode = function(node) {
         var annotation = ANNO(node), right;
 
-        if(!annotation.isValid()) {
+        if(activeFunction == "shade" && !annotation.isValid()) {
             var errorInfo = annotation.getError();
             var functionCall = activeFunction ? "In " + activeFunction + "(): " : "";
             var error = new Error(functionCall + errorInfo.message);
