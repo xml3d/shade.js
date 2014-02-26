@@ -135,6 +135,7 @@
                     result.setFromExtra(extra);
                 } catch (e) {
                     result.setInvalid(e);
+                    return;
                 }
                 if (constructor.computeStaticValue) {
                     try {
