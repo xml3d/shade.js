@@ -310,7 +310,7 @@
             if (node.left.type == Syntax.Identifier && !context.inDeclaration() && right.isValid()) {
                 var name = node.left.name;
                 var scope = context.getScope();
-                scope.updateTypeInfo(name, right);
+                scope.updateTypeInfo(name, right, node);
             }
         },
 

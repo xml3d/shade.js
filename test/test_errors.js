@@ -40,7 +40,7 @@ describe('Error:', function () {
         it("using a undefined variable", function () {
             var exp = "Math.cos(a);";
             var analyze = parseAndInferenceExpression.bind(null, exp);
-            analyze.should.throw("ReferenceError: a is not defined");
+            analyze.should.throw(/ReferenceError: a is not defined/);
         });
 
         it("calling new on undefined function", function () {

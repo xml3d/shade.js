@@ -5,7 +5,8 @@
         TYPES = Shade.TYPES,
         Annotation = require("./annotation.js").Annotation,
         TypeInfo = require("./typeinfo.js").TypeInfo,
-        Syntax = require('estraverse').Syntax;
+        Syntax = require('estraverse').Syntax,
+        ErrorHandler = require("./errors.js");
 
 
     /**
@@ -186,10 +187,14 @@
          * @param {string} name
          * @param {TypeInfo} typeInfo
          */
-        updateTypeInfo: function (name, typeInfo) {
+        updateTypeInfo: function (name, typeInfo, node) {
             var v = this.getBindingByName(name);
             if (!v) {
-                throw new Error("Variable was not declared in this scope: " + name);
+                if(node) {
+                    typeInfo.setInvalid(ErrorHandler.generateErrorInformation(node, ErrorHandler.ERROR_TYPES.REFERENCE_ERROR, name, "is not defined"));
+                    return;
+                }
+                throw new Error("Reference error: " + name + " is not defined.")
             }
             if (v.isInitialized() && v.getType() !== typeInfo.getType()) {
                 throw new Error("Variable may not change it's type: " + name);

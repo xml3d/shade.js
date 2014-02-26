@@ -153,7 +153,7 @@
 
                     if (declaration.init) {
                         var init = ANNO(declaration.init);
-                        scope.updateTypeInfo(variableName, init);
+                        scope.updateTypeInfo(variableName, init, declaration);
                         if (declaration.init.type == Syntax.AssignmentExpression) {
                             context.declareVariables(declaration.init, true);
                         }
@@ -169,7 +169,7 @@
                 }
                 var variableName = ast.left.name;
                 scope.declareVariable(variableName, true, ANNO(ast));
-                scope.updateTypeInfo(variableName, typeInfo);
+                scope.updateTypeInfo(variableName, typeInfo, ast);
                 if (ast.right.type == Syntax.AssignmentExpression) {
                     context.declareVariables(ast.right, true);
                 }
