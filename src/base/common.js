@@ -1,7 +1,8 @@
 (function (ns) {
 
     var ANNO = require("../base/annotation.js").ANNO,
-        estraverse = require('estraverse');
+        estraverse = require('estraverse'),
+        ErrorHandler = require("./errors.js");
 
 
     var Syntax = estraverse.Syntax;
@@ -58,7 +59,8 @@
 
             binding = scope.getBindingByName(name);
             if(binding == undefined && check) {
-                throw new Error("ReferenceError: " + name + " is not defined");
+                ANNO(node).setInvalid(ErrorHandler.generateErrorInformation(node, ErrorHandler.ERROR_TYPES.REFERENCE_ERROR, name, "is not defined"));
+                return ANNO(node);
             }
             if(binding) {
                 var result = ANNO(node, binding.getExtra());

@@ -1,46 +1,24 @@
 (function (ns) {
 
     // Dependencies
-    var common = require("./../../base/common.js"),
+    var common = require("../../base/common.js"),
         Shade = require("../../interfaces.js"),
         evaluator = require("../constants/evaluator.js"),
-        estraverse = require('estraverse');
+        estraverse = require('estraverse'),
+        ErrorHandler = require("../../base/errors.js");
 
     var codegen = require('escodegen');
 
     // Shortcuts
     var Syntax = common.Syntax,
         TYPES = Shade.TYPES,
-        ANNO = common.ANNO;
-
-
-    var ERROR_TYPES = {
-        TYPE_ERROR: "TypeError",
-        REFERENCE_ERROR: "ReferenceError",
-        NAN_ERROR: "NotANumberError",
-        SHADEJS_ERROR: "ShadeJSError"
-    };
+        ANNO = common.ANNO,
+        generateErrorInformation = ErrorHandler.generateErrorInformation,
+        ERROR_TYPES = ErrorHandler.ERROR_TYPES;
 
     var debug = false;
 
-    /**
-     * @param node
-     * @param {string} type
-     * @param {...*} message
-     * @returns {{message: string, loc: *}}
-     */
-    var generateErrorInformation = function(node, type, message) {
-        var args = Array.prototype.slice.call(arguments).splice(2),
-            loc = node.loc,
-            codeInfo = "";
 
-        codeInfo += codegen.generate(node);
-        if (loc && loc.start.line) {
-            codeInfo += " (Line " + loc.start.line + ")";
-        }
-        message = args.length ? args.join(" ") + ": " : "";
-        return { message: type + ": " + message + codeInfo, loc: loc};
-    };
 
     var handlers = {
 
