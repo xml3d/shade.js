@@ -26,12 +26,12 @@
 
     var checkArgumentIsColor = function(node, args, position, name) {
         if(!args[position] || !args[position].canColor())
-            Shade.throwError(node, "Argument "+ position + " of Shade." + name + " must evaluate to a color, found " + (args.length ? args[position].getTypeString() : "undefined"));
+            Shade.throwError(node, "Argument "+ position + " of Shade." + name + " must evaluate to a color, found " + (args[position] ? args[position].getTypeString() : "undefined"));
     };
 
     var checkArgumentIsNormal = function(node, args, position, name) {
         if(!args[position] || !args[position].canNormal())
-            Shade.throwError(node, "Argument "+ position + " of Shade." + name + " must evaluate to a normal, found " + (args.length ? args[position].getTypeString() : "undefined"));
+            Shade.throwError(node, "Argument "+ position + " of Shade." + name + " must evaluate to a normal, found " + (args[position] ? args[position].getTypeString() : "undefined"));
     };
 
     var ShadeObject = {
