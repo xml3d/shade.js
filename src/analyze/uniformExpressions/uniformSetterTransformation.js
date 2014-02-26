@@ -4,6 +4,20 @@
     var Syntax = walk.Syntax;
     var ANNO = require("../../base/annotation.js").ANNO;
 
+    var interfaces = require("../../interfaces.js");
+    var TYPES = interfaces.TYPES,
+        KINDS = interfaces.OBJECT_KINDS;
+
+    function getConstructor(kind){
+        switch(kind){
+            case KINDS.FLOAT2: return "Shade.Vec2"; break;
+            case KINDS.FLOAT3: return "Shade.Vec3"; break;
+            case KINDS.FLOAT4: return "Shade.Vec4"; break;
+            case KINDS.MATRIX3: return "Shade.Mat3"; break;
+            case KINDS.MATRIX4: return "Shade.Mat4"; break;
+            default: throw "Unsupported object kind in uniform expression argument: " + kind;
+        }
+    }
 
 
     function isMathCall(node) {
@@ -20,11 +34,28 @@
     var leaveVisitor = function (node, parent, variables, controller) {
         if (node.type == Syntax.MemberExpression) {
             var object = ANNO(node.object);
-            if (object.isGlobal() && node.property.type == Syntax.Identifier && ((parent == node) || parent.type != Syntax.MemberExpression)) {
+            if (node.object.type == Syntax.Identifier && object.isUniformExpression()) {
+                if(variables.hasOwnProperty(node.object.name)) {
+                //console.log("Found: " + node.object.name, variables[node.object.name]);
+                    node.object = variables[node.object.name].code;
+                }
+            }
+            if (object.isGlobal() && node.property.type == Syntax.Identifier) {
                 var property = ANNO(node.property);
-                // Is the accessed parameter is a scalar value, we have to
-                // access the first entry of the input array
-                if (!property.isObject()) {
+
+                if(property.isObject()){
+                    // Is the accessed parameter is a vector or matrix , we have to
+                    // wrap the typed array in the respective constructor
+                    var constructor = getConstructor(property.getKind());
+                    return {
+                        type: Syntax.NewExpression,
+                        callee: { type: Syntax.Identifier, name: constructor},
+                        arguments:  [node]
+                    }
+                }
+                else if((parent == node) || parent.type != Syntax.MemberExpression){
+                    // Is the accessed parameter is a scalar value, we have to
+                    // access the first entry of the input array
                     return {
                         type: Syntax.MemberExpression,
                         computed: true,
@@ -40,7 +71,7 @@
 
         if (node.type == Syntax.CallExpression) {
             if (isVecMathCall(node)) {
-                node.callee.object.name = "this.VecMath";
+                node.callee.object.name = "Math";
             }
         }
 
@@ -77,7 +108,23 @@
             }
         }
 
-        };
+        if (node.type == Syntax.ReturnStatement) {
+            var anno = ANNO(node.argument);
+            if(anno.isObject()){
+                node.argument = { type: Syntax.CallExpression,
+                    callee: {
+                        type: Syntax.MemberExpression,
+                        object: node.argument,
+                        property: {type: Syntax.Identifier,
+                            name: "_toFloatArray"
+                        }
+                    },
+                    arguments: []
+                };
+                return node;
+            }
+        }
+        }
 
     ns.transformUniformSetter = function (ast, variables) {
         return walk.replace(ast, { leave: function(node, parent) {

@@ -100,8 +100,8 @@
                             continue;
                         cb(destName, override && override[srcName] !== undefined ? override[srcName] : base[srcName]);
                         if (parameters.shader[destName].kind === Shade.OBJECT_KINDS.TEXTURE) {
-                            cb(destName + "_width", override && override[srcName] !== undefined ? override[srcName].width : base[srcName][0].width);
-                            cb(destName + "_height", override && override[srcName] !== undefined ? override[srcName].height : base[srcName][0].height)
+                            cb(destName + "_width", override && override[srcName] !== undefined ? override[srcName].width : base[srcName] && base[srcName][0].width || 0);
+                            cb(destName + "_height", override && override[srcName] !== undefined ? override[srcName].height : base[srcName] && base[srcName][0].height || 0)
                         }
                     }
                 }
@@ -664,7 +664,7 @@
                 if(!context.uniformExpressions.hasOwnProperty(uniformName)) {
                     throw new Error("Internal: No information about uniform expression available: " + Shade.toJavaScript(node));
                 }
-                extra.setter = generateUniformSetter(context.uniformExpressions[uniformName]);
+                extra.setter = generateUniformSetter(exp, context.uniformExpressions[uniformName]);
 
                 //console.log(uniformName, extra.setter);
 
@@ -685,8 +685,11 @@
             }
         }
 
-    function generateUniformSetter(expressionInfo) {
-        var source = "return " + expressionInfo.code + ";";// console.log(result); return result;";
+    function generateUniformSetter(uniformAnno, expressionInfo) {
+        var code = expressionInfo.code;
+        if(uniformAnno.isObject())
+            code = "(" + expressionInfo.code + ")._toFloatArray()";
+        var source = "return " + code + ";";
         return new Function("env", source);
     }
 

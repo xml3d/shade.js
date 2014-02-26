@@ -137,11 +137,20 @@
         }
     }
 
+    function isArray(v){
+        return v instanceof Array ||
+            v instanceof Float32Array ||
+            v instanceof Float64Array ||
+            v instanceof Int16Array ||
+            v instanceof Int32Array ||
+            v instanceof Int8Array;
+    }
+
 
     function constructFromMatrix(dest, matSize, args){
         if(args.length > 1){
             for(var i = 0; i < args.length; ++i){
-                if(args[i] instanceof Mat3 || args[i] instanceof Mat4)
+                if(args[i] instanceof Mat3 || args[i] instanceof Mat4 || args[i] instanceof Array)
                     throw "Constructing Matrix from Matrix can only take one argument";
             }
         }
@@ -153,6 +162,7 @@
 
             if(srcMat instanceof Mat3) srcSize = 3;
             else if(srcMat instanceof Mat4) srcSize = 4;
+            else if(isArray(srcMat)) srcSize = srcMat.length == 16 ? 4 : 3;
             else return false;
 
             for(var y = 0; y < matSize; y++)
@@ -186,13 +196,16 @@
 
         var idx = 0;
         for(var i = 0; idx < vecSize && i < arguments.length; ++i){
-            var arg= arguments[i], cnt = 1;
-            if(arg instanceof Vec2) cnt = 2;
+            var arg= arguments[i], cnt = 0;
+
+            if(!isNaN(arg)) cnt = 1;
+            else if(arg instanceof Vec2) cnt = 2;
             else if(arg instanceof Vec3) cnt = 3;
             else if(arg instanceof Vec4) cnt = 4;
             else if(arg instanceof Mat3) cnt = 9;
             else if(arg instanceof Mat4) cnt = 16;
             else if(Array.isArray(arg) || (typeof arg === "object" && "BYTES_PER_ELEMENT" in arg)) cnt = arg.length;
+            else return false;
 
             if(cnt == 1)
                 dest[idx++] = arg || 0;
@@ -291,6 +304,12 @@
         return obj;
     }
 
+    Vec2.prototype._toFloatArray = function(){
+        var res = new Float32Array(2);
+        var i = 2; while(i--) res[i] = this[i];
+        return res;
+    }
+
     Vec2.prototype.add = function(x, y) { // 0 arguments => identity or error?
         var add = getVec2.apply(null, arguments);
         return new Vec2(this[0] + add[0], this[1] + add[1]);
@@ -368,6 +387,12 @@
         var obj = new Vec3();
         Vec3.apply(obj, arguments);
         return obj;
+    }
+
+    Vec3.prototype._toFloatArray = function(){
+        var res = new Float32Array(3);
+        var i = 3; while(i--) res[i] = this[i];
+        return res;
     }
 
     Vec3.prototype.add = function(x, y, z) {
@@ -457,6 +482,12 @@
         var obj = new Vec4();
         Vec4.apply(obj, arguments);
         return obj;
+    }
+
+    Vec4.prototype._toFloatArray = function(){
+        var res = new Float32Array(4);
+        var i = 4; while(i--) res[i] = this[i];
+        return res;
     }
 
     Vec4.prototype.add = function(x, y, z, w) {
@@ -553,6 +584,12 @@
         return obj;
     }
 
+    Mat3.prototype._toFloatArray = function(){
+        var res = new Float32Array(9);
+        var i = 9; while(i--) res[i] = this[i];
+        return res;
+    }
+
     Mat3.prototype.add = function(m11, m12, m13, m21, m22, m23, m31, m32, m33) {
         var other = getMat3.apply(null, arguments);
         return new Mat3(this[0] + other[0], this[1] + other[1], this[2] + other[2],
@@ -614,6 +651,12 @@
         return obj;
     }
 
+    Mat4.prototype._toFloatArray = function(){
+        var res = new Float32Array(16);
+        var i = 16; while(i--) res[i] = this[i];
+        return res;
+    }
+
     Mat4.prototype.add = function(m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44) {
         var other = getMat4.apply(null, arguments);
         return new Mat3(this[0] + other[0], this[1] + other[1], this[2] + other[2], this[3] + other[3],
@@ -656,7 +699,7 @@
     }
     Mat4.prototype.mulVec = function(x, y, z, w){
         var other = getVec4.apply(null, arguments);
-        return new Vec3(
+        return new Vec4(
             other.dot(this[0], this[1], this[2], this[3]),
             other.dot(this[4], this[5], this[6], this[7]),
             other.dot(this[8], this[9], this[10], this[11]),

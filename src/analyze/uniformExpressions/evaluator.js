@@ -5,7 +5,8 @@
         common = require("./../../base/common.js"),
         Shade = require("../../interfaces.js"),
         codegen = require('escodegen'),
-        Set = require('analyses').Set;
+        Set = require('analyses').Set,
+        Tools = require('../../base/asttools.js');
 
 
     // Shortcuts
@@ -46,10 +47,7 @@
 
                     case Syntax.Identifier:
                         // Not a variable
-                        if(~[Syntax.MemberExpression, Syntax.FunctionDeclaration,Syntax.VariableDeclarator].indexOf(parent.type))
-                            return;
-
-                        if(parent.type == Syntax.NewExpression && parent.callee == node)
+                        if(!Tools.isVariableReference(node, parent))
                             return;
 
                         // Not a variable on the right side
@@ -83,13 +81,27 @@
                     case Syntax.CallExpression:
                         if(node.callee.type == Syntax.MemberExpression) {
                             var object = node.callee.object;
+                            var args = node.arguments.map(function(arg) { return ANNO(arg);});
+
                             if(object.name && ~allowedMemberCalls.indexOf(object.name)) {
-                                var args = node.arguments.map(function(arg) { return ANNO(arg);});
                                 var dependencies = mergeUniformDependencies(args);
                                 if(dependencies) {
                                     result.setUniformDependencies(dependencies);
                                     var costs = args.reduce(function(prev, next) { return prev + next.getUniformCosts(); }, 1);
                                     result.setUniformCosts(costs)
+                                }
+                            } else {
+                                // TODO: CleanCode: Merge with above as soon as all differences are clear
+                                var objectAnno = ANNO(object);
+                                if(objectAnno.isUniformExpression()) {
+                                    var dependencies = mergeUniformDependencies(args);
+                                    if (dependencies || args.length == 0) {
+                                        result.setUniformDependencies(dependencies, objectAnno.getUniformDependencies());
+                                        var costs = args.reduce(function(prev, next) { return prev + next.getUniformCosts(); }, 1);
+                                        result.setUniformCosts(costs)
+                                    }
+                                }  else {
+                                    // console.log("No exp:", Shade.toJavaScript(node))
                                 }
                             }
                         }

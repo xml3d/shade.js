@@ -131,6 +131,7 @@
         Texture: interfaces.Texture,
         Color: interfaces.Color,
         Mat3: interfaces.Mat3,
+        Mat4: interfaces.Mat4,
         WorkingSet: WorkingSet
 
 });

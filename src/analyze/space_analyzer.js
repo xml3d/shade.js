@@ -362,7 +362,8 @@
                 }
                 result.pointSpaceViolation = true;
                 result.normalSpaceViolation = true;
-                this.arguments.forEach(function(arg){ gatherObjectDependencies(arg, result)});
+                gatherObjectDependencies(this, result);
+                //this.arguments.forEach(function(arg){ gatherObjectDependencies(arg, result)});
             }
         });
     }
@@ -407,6 +408,7 @@
         "float3" : {
             "add" : handleAddSubOperation,
             "sub" : handleAddSubOperation,
+            "cross" : handleAddSubOperation,
             "mul" : handleScaleOperator,
             "div" : handleScaleOperator,
             "normalize" : handleScaleOperator
