@@ -34,10 +34,10 @@
             loc = node.loc,
             codeInfo = "";
 
-        if (loc && loc.start.line) {
-            codeInfo = ", Line " + loc.start.line;
-        }
         codeInfo += codegen.generate(node);
+        if (loc && loc.start.line) {
+            codeInfo += " (Line " + loc.start.line + ")";
+        }
         message = args.length ? args.join(" ") + ": " : "";
         return { message: type + ": " + message + codeInfo, loc: loc};
     };
@@ -254,7 +254,15 @@
                     }
                     else {
                         // NaN
-                        result.setInvalid(generateErrorInformation(node, ERROR_TYPES.NAN_ERROR));
+
+                       var message = "";
+                       // Special handling for undefined, as this is the main reason for this error
+                       if(left.isNullOrUndefined()) {
+                            message = codegen.generate(node.left) + " is undefined";
+                       } else if (right.isNullOrUndefined()) {
+                            message = codegen.generate(node.right) + " is undefined";
+                       }
+                        result.setInvalid(generateErrorInformation(node, ERROR_TYPES.NAN_ERROR, message));
                     }
                     break;
                 case "===":
