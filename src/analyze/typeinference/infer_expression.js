@@ -1,5 +1,6 @@
 (function (ns) {
 
+    // Dependencies
     var common = require("./../../base/common.js"),
         Shade = require("../../interfaces.js"),
         evaluator = require("../constants/evaluator.js"),
@@ -7,23 +8,38 @@
 
     var codegen = require('escodegen');
 
+    // Shortcuts
     var Syntax = common.Syntax,
         TYPES = Shade.TYPES,
         ANNO = common.ANNO;
 
+
+    var ERROR_TYPES = {
+        TYPE_ERROR: "TypeError",
+        REFERENCE_ERROR: "ReferenceError",
+        NAN_ERROR: "NotANumberError",
+        SHADEJS_ERROR: "ShadeJSError"
+    };
+
     var debug = false;
 
-    var generateErrorInformation = function() {
-        var args = Array.prototype.slice.call(arguments);
-        var node = args.shift(),
+    /**
+     * @param node
+     * @param {string} type
+     * @param {...*} message
+     * @returns {{message: string, loc: *}}
+     */
+    var generateErrorInformation = function(node, type, message) {
+        var args = Array.prototype.slice.call(arguments).splice(2),
             loc = node.loc,
-            msg = "";
+            codeInfo = "";
 
         if (loc && loc.start.line) {
-            msg = ", Line " + loc.start.line;
+            codeInfo = ", Line " + loc.start.line;
         }
-        msg += ": " + codegen.generate(node);
-        return { message: args.join(" ") + msg, loc: loc};
+        codeInfo += codegen.generate(node);
+        message = args.length ? args.join(" ") + ": " : "";
+        return { message: type + ": " + message + codeInfo, loc: loc};
     };
 
     var handlers = {
@@ -37,7 +53,7 @@
                     elementType.copy(element);
                 } else {
                     if (!elementType.setCommonType(elementType, element)) {
-                        result.setInvalid(generateErrorInformation(node, "shade.js does not support inhomogenous arrays: [", elements.map(function (e) {
+                        result.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, "shade.js does not support inhomogenous arrays: [", elements.map(function (e) {
                             return e.getTypeString()
                         }).join(", "), "]"));
                     }
@@ -132,7 +148,7 @@
                 }
             }
             else {
-                result.setInvalid(generateErrorInformation(node, "ReferenceError: " + node.callee.name + " is not defined"));
+                result.setInvalid(generateErrorInformation(node, ERROR_TYPES.REFERENCE_ERROR, node.callee.name, "is not defined"));
             }
         },
 
@@ -161,7 +177,7 @@
                     } else if (argument.canNumber()) {
                         result.setType(TYPES.NUMBER);
                     } else {
-                        result.setInvalid(generateErrorInformation(node, "NotANumberError"));
+                        result.setInvalid(generateErrorInformation(node, ERROR_TYPES.NAN_ERROR));
                     }
                     break;
                 case "~":
@@ -169,7 +185,7 @@
                 case "void":
                 case "delete":
                 default:
-                    result.setInvalid(generateErrorInformation(node, "NotSupportedError"));
+                    result.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, operator, "is not supported."));
             }
             if (argument.hasStaticValue()) {
                 result.setStaticValue(evaluator.getStaticValue(node));
@@ -237,7 +253,7 @@
                     }
                     else {
                         // NaN
-                        result.setInvalid(generateErrorInformation(node, "NotANumberError"));
+                        result.setInvalid(generateErrorInformation(node, ERROR_TYPES.NAN_ERROR));
                     }
                     break;
                 case "===":
@@ -263,7 +279,8 @@
                     }
                     break;
                 default:
-                    throw new Error("Operator not supported: " + operator);
+                    result.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, operator, "is not supported."));
+                    return;
             }
              if (left.hasStaticValue() && right.hasStaticValue()) {
                 //console.log(left.getStaticValue(), operator, right.getStaticValue());
@@ -289,7 +306,7 @@
                 }
             } else {
                 // e.g. var a = {}; a++;
-                result.setInvalid(generateErrorInformation(node, "NotANumberError"));
+                result.setInvalid(generateErrorInformation(node, ERROR_TYPES.NAN_ERROR));
             }
         },
 
@@ -322,7 +339,7 @@
                 return;
             }
 
-            //console.log("Member", node.object.name, node.property.name);
+            //console.log("Member", node.object.name, node.property.name, node.computed);
             if (node.computed) {
                 if (objectAnnotation.isArray()) {
                     // Property is computed, thus it could be a variable
@@ -335,8 +352,8 @@
                     return;
                 }
                 else {
-                    resultType.setInvalid(generateErrorInformation(node, "Cannot access member via computed value from object", objectAnnotation.getTypeString()));
-
+                    resultType.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, "no array access to object yet"));
+                    return;
                     //Shade.throwError(node, "TypeError: Cannot access member via computed value from object '" + objectAnnotation.getTypeString());
                 }
             }
@@ -347,7 +364,7 @@
             objectOfInterest || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + scope.str());
 
             if (!objectOfInterest.isValid() || objectOfInterest.getType() == TYPES.UNDEFINED) {  // e.g. var a = undefined; a.unknown;
-                resultType.setInvalid(generateErrorInformation(node, "TypeError: Cannot read property '" + propertyName + "' of undefined"));
+                resultType.setInvalid(generateErrorInformation(node, ERROR_TYPES.TYPE_ERROR, "Cannot read property '" + propertyName + "' of undefined"));
                 return;
             }
             if (objectOfInterest.getType() != TYPES.OBJECT) { // e.g. var a = 5; a.unknown;
@@ -356,8 +373,10 @@
             }
 
             var objectInfo = scope.getObjectInfoFor(objectOfInterest);
-            if(!objectInfo)
-                Shade.throwError(node, "Internal: Incomplete registration for object: " + objectOfInterest.getTypeString() + ", " + JSON.stringify(node.object));
+            if(!objectInfo) {
+                resultType.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, "Internal: Incomplete registration for object:", objectOfInterest.getTypeString(), ",", JSON.stringify(node.object)));
+                return;
+            }
 
             objectAnnotation.copy(objectOfInterest);
             if (!objectInfo.hasOwnProperty(propertyName)) {
@@ -378,7 +397,7 @@
                 extra, staticValue;
 
             if (!args.every(function (arg) {return arg.isValid() })) {
-                result.setInvalid(generateErrorInformation(node, "Not all arguments types of call expression could be evaluated"));
+                result.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, "Not all arguments types of call expression could be evaluated"));
                 return;
             }
             // Be on the safe side, assume result is static independently of former annotations
@@ -406,11 +425,10 @@
                 }
 
                 if (!memberExpression.isFunction()) { // e.g. Math.PI()
-                    result.setInvalid();
                     if (objectInfo.hasOwnProperty(propertyName)) {
-                      result.setError(generateErrorInformation(node, "TypeError: Property '" + propertyName + "' of object #<"+ objectReference.getTypeString() +"> is not a function"));
+                      result.setInvalid(generateErrorInformation(node, ERROR_TYPES.TYPE_ERROR, "Property '" + propertyName + "' of object #<"+ objectReference.getTypeString() +"> is not a function"));
                     } else {
-                      result.setError(generateErrorInformation(node, "TypeError: " + (object.type == Syntax.ThisExpression ? "'this'" : objectReference.getTypeString())+ " has no method '"+ propertyName + "'"));
+                      result.setInvalid(generateErrorInformation(node, ERROR_TYPES.TYPE_ERROR, (object.type == Syntax.ThisExpression ? "'this'" : objectReference.getTypeString())+ " has no method '"+ propertyName + "'"));
                     }
                     return;
                 }
@@ -450,24 +468,22 @@
                 var functionName = node.callee.name;
                 var func = scope.getBindingByName(functionName);
                 if (!func) {
-                    result.setInvalid(generateErrorInformation(node, "ReferenceError: ", functionName,  " is not defined"));
+                    result.setInvalid(generateErrorInformation(node, ERROR_TYPES.REFERENCE_ERROR, functionName,  "is not defined"));
                     return;
                 }
                 if(!func.isFunction()) {
-                    result.setInvalid(generateErrorInformation(node, "TypeError: ", func.getTypeString(), " is not a function"));
+                    result.setInvalid(generateErrorInformation(node, ERROR_TYPES.TYPE_ERROR, func.getTypeString(), "is not a function"));
                     return;
                 }
                 try {
                     extra = context.callFunction(scope.getVariableIdentifier(functionName), args);
                     extra && result.setFromExtra(extra);
                 } catch(e) {
-                    result.setInvalid(generateErrorInformation(node, "Failure in function call: ", e.message));
+                    result.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, "Failure in function call: ", e.message));
                 }
                 return;
             }
-
-            throw new Error("Unhandled CallExpression:" + node.callee.type);
-
+            result.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, "Internal:", "Unhandled CallExpression", node.callee.type));
         },
 
         VariableDeclarator: function (node, parent, context) {
@@ -537,10 +553,7 @@
             if(result.setCommonType(left, right)) {
                 return;
             }
-
-
-            result.setInvalid(generateErrorInformation(node, "Can't evaluate polymorphic logical expression"))
-
+            result.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, "Can't evaluate polymorphic logical expression"));
         },
 
         ConditionalExpression: function (node, parent, context) {
@@ -558,7 +571,7 @@
                 if (result.setCommonType(consequent, alternate)) {
                     result.setDynamicValue();
                 } else {
-                    result.setInvalid(generateErrorInformation(node, "Can't evaluate polymorphic conditional expression"))
+                    result.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, "Can't evaluate polymorphic conditional expression"))
                 }
             }
 
