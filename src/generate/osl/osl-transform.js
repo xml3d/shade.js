@@ -132,7 +132,21 @@
                     body: [ closureResult, { type: Syntax.ReturnStatement } ]
                 };
             } else {
-                throw new Error("Not implemented yet");
+                return  {
+                    type: Syntax.BlockStatement,
+                    body: [ {
+                        type: Syntax.AssignmentExpression,
+                        operator: "=",
+                        left: {
+                            type: Syntax.Identifier,
+                            name: "result"
+                        },
+                        right: {
+                            type: Syntax.Identifier,
+                            name: "background();"
+                        }
+                    }, { type: Syntax.ReturnStatement } ]
+                };;
             }
         },
 
