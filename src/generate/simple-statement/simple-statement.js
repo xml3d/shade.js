@@ -1,151 +1,24 @@
 (function (ns) {
-    /**
-     * Shade.js specific type inference that is also inferring
-     * virtual types {@link Shade.TYPES }
-     */
 
     var walk = require('estraverse'),
         assert = require("assert"),
         Base = require("../../base/index.js"),
         common = require("./../../base/common.js"),
         Shade = require("../../interfaces.js"),
-        StatementSplitTraverser = require("./statement-split-traverser");
+        TypeInfo = require("../../base/typeinfo.js").TypeInfo,
+        StatementSplitTraverser = require("../../analyze/sanitizer/statement-split-traverser");
+        Types = Shade.TYPES,
+        Kinds = Shade.OBJECT_KINDS;
 
     var Syntax = walk.Syntax;
     var VisitorOption = walk.VisitorOption;
 
 
-    var DeclarationSimplifier = function (opt) {
-        this.declarationStack = [];
-    };
-    Base.extend(DeclarationSimplifier.prototype, {
+    var SingleAssignmentSplitter = function(){
+        StatementSplitTraverser.call(this);
+    }
 
-        execute: function (root) {
-            walk.replace(root, {
-                enter: this.enterNode.bind(this),
-                leave: this.exitNode.bind(this)
-            });
-            return root;
-        },
-
-        enterNode: function (node, parent) {
-            switch(node.type){
-                case Syntax.FunctionExpression:
-                case Syntax.FunctionDeclaration:
-                case Syntax.Program:
-                    this.declarationStack.push([]);
-                    break;
-                case Syntax.VariableDeclarator:
-                    this.addDeclaredIdentifier(node.id.name);
-                    break;
-            }
-        },
-
-        exitNode: function (node, parent) {
-            switch(node.type){
-                case Syntax.FunctionExpression:
-                case Syntax.FunctionDeclaration:
-                case Syntax.Program:
-                    return this.addTopDeclaration(node, parent);
-                    break;
-                case Syntax.VariableDeclaration:
-                    return this.removeMidCodeDeclaration(node, parent);
-            }
-        },
-
-        removeMidCodeDeclaration: function(node, parent){
-            var newNode;
-            var isForInit = (parent.type == Syntax.ForStatement && parent.init == node);
-            if(isForInit){
-                newNode = {
-                    type: Syntax.SequenceExpression,
-                    expressions: [],
-                    loc: node.loc
-                }
-            }
-            else{
-                newNode = {
-                    type: Syntax.BlockStatement,
-                    body: [],
-                    loc: node.loc
-                }
-            }
-
-            var declarations = node.declarations;
-            for(var i = 0; i < declarations.length; ++i){
-                var declaration = declarations[i];
-                if(declaration.init){
-                    var expression = {
-                        type: Syntax.AssignmentExpression,
-                        operator: "=",
-                        left: declaration.id,
-                        right: declaration.init,
-                        loc: declaration.loc
-                    };
-                    if(isForInit)
-                        newNode.expressions.push(expression);
-                    else{
-                        var statement = {
-                            type: Syntax.ExpressionStatement,
-                            expression: expression,
-                            loc: declaration.loc
-                        }
-                        newNode.body.push(statement);
-                    }
-                }
-            }
-            if(isForInit && newNode.expressions.length == 1){
-                return newNode.expressions[0];
-            }
-            return newNode;
-        },
-
-        addTopDeclaration: function(node, parent){
-            var declarations = this.declarationStack.pop();
-            if(declarations.length > 0){
-                var declarationStatement = {
-                    type: Syntax.VariableDeclaration,
-                    declarations: [],
-                    kind: "var"
-                };
-                for(var i = 0; i < declarations.length; ++i){
-                    declarationStatement.declarations[i] = {
-                        type: Syntax.VariableDeclarator,
-                        id: { type: Syntax.Identifier, name: declarations[i] },
-                        init: null
-                    }
-                }
-                if(node.type == Syntax.Program)
-                    node.body.unshift(declarationStatement);
-                else if(node.body.body)
-                    node.body.body.unshift(declarationStatement);
-            }
-            return node;
-        },
-
-        addDeclaredIdentifier: function(name){
-            var topStack = this.declarationStack[this.declarationStack.length - 1];
-            if(topStack.indexOf(name) == -1)
-                topStack.push(name);
-        }
-
-
-    });
-
-    var StatementSimplifier = function (opt) {
-        opt = opt || {};
-
-        /**
-         * The root of the program AST
-         * @type {*}
-         */
-        this.statementIdentifierInfo = {};
-        this.scopes = [];
-        this.preContinueStatements = [];
-    };
-
-    Base.createClass(StatementSimplifier, StatementSplitTraverser, {
-
+    Base.createClass(SingleAssignmentSplitter, StatementSplitTraverser, {
         statementSplitEnter: function(node, parent){
             switch(node.type){
                 case Syntax.FunctionExpression:
@@ -179,7 +52,7 @@
         },
 
         assignmentEnter: function(node, parent){
-            if(parent.type == Syntax.ExpressionStatement || parent.type == Syntax.ForStatement)
+            if(parent.type == Syntax.ExpressionStatement)
                 return;
             if((node.left || node.argument).type != Syntax.Identifier)
                 throw Shade.throwError(node, "We only support nested assignments for simple identifiers, not objects or arrays.");
@@ -264,16 +137,7 @@
             this.assignmentsToBePrepended.push(node);
             return readReplace;
         }
+
     });
-
-
-    ns.sanitize = function (ast, opt) {
-        var declarationSimplifier = new DeclarationSimplifier(opt);
-        var statementSimplifier = new StatementSimplifier(opt);
-        ast = declarationSimplifier.execute(ast);
-        ast = statementSimplifier.execute(ast);
-        return ast;
-    };
-
 
 }(exports));

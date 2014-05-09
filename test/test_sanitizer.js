@@ -188,7 +188,7 @@ describe('Sanitizing:', function () {
         });
 
         describe('for for-statements', function () {
-            it("should NOT extract updates inside the update.", function () {
+            it.only("should NOT extract updates inside the update.", function () {
                 checkSanitized( "var b =0; for(var i=0; i<20; i++){b+=i;}",
                                 "var b,i;b=0;for(i=0;i<20;i++){b+=i;}",
                                 "b");
