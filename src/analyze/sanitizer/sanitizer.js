@@ -1,8 +1,4 @@
 (function (ns) {
-    /**
-     * Shade.js specific type inference that is also inferring
-     * virtual types {@link Shade.TYPES }
-     */
 
     var walk = require('estraverse'),
         assert = require("assert"),
@@ -128,24 +124,18 @@
             if(topStack.indexOf(name) == -1)
                 topStack.push(name);
         }
-
-
     });
-
     var StatementSimplifier = function (opt) {
-        opt = opt || {};
+        StatementSplitTraverser.call(this, opt);
+        this.skipExtraction.forInitUpdate = true;
 
-        /**
-         * The root of the program AST
-         * @type {*}
-         */
         this.statementIdentifierInfo = {};
-        this.scopes = [];
-        this.preContinueStatements = [];
     };
 
     Base.createClass(StatementSimplifier, StatementSplitTraverser, {
-
+        onGatherSplitInfo: function(){
+            this.statementIdentifierInfo = {};
+        },
         statementSplitEnter: function(node, parent){
             switch(node.type){
                 case Syntax.FunctionExpression:
@@ -179,7 +169,7 @@
         },
 
         assignmentEnter: function(node, parent){
-            if(parent.type == Syntax.ExpressionStatement || parent.type == Syntax.ForStatement)
+            if(parent.type == Syntax.ExpressionStatement)
                 return;
             if((node.left || node.argument).type != Syntax.Identifier)
                 throw Shade.throwError(node, "We only support nested assignments for simple identifiers, not objects or arrays.");

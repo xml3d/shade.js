@@ -6,12 +6,11 @@
         common = require("./../../base/common.js"),
         Shade = require("../../interfaces.js"),
         TypeInfo = require("../../base/typeinfo.js").TypeInfo,
+        ANNO = require("../../base/annotation.js").ANNO,
         Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS;
 
     var Syntax = walk.Syntax;
-    var VisitorOption = walk.VisitorOption;
-
 
     var StatementSplitTraverser = function (opt) {
         opt = opt || {};
@@ -20,9 +19,14 @@
          * The root of the program AST
          * @type {*}
          */
-        this.statementIdentifierInfo = {};
         this.scopes = [];
         this.preContinueStatements = [];
+        this.currentStatementTmpUsed = [];
+        this.assignmentsToBePrepended = [];
+
+        this.skipExtraction = {
+            forInitUpdate: false
+        }
     };
 
     Base.extend(StatementSplitTraverser.prototype, {
@@ -37,9 +41,9 @@
 
 
         gatherStatmentSplitInfo: function(node){
-            this.statementIdentifierInfo = {};
             this.currentStatementTmpUsed = [];
             this.assignmentsToBePrepended = [];
+            this.onGatherSplitInfo();
             return walk.replace(node, {
                 enter: this.statementSplitEnter.bind(this),
                 leave: this.statementSplitExit.bind(this)
@@ -49,6 +53,9 @@
             // Implemented by subclass
         },
         statementSplitExit: function(nodeParent){
+            // Implemented by subclass
+        },
+        onGatherSplitInfo: function(){
             // Implemented by subclass
         },
 
@@ -117,9 +124,17 @@
                 case Syntax.WhileStatement:
                     return this.performStatementSplit(node, [{prop: "test", pre: true, post: true}], "body");
                 case Syntax.ForStatement:
-                    return this.performStatementSplit(node, [{prop: "init", pre: true},
-                                                             {prop: "update", post: true},
-                                                             {prop: "test", pre: true, post: true}], "body");
+                    var extractions = [];
+
+                    if(!this.skipExtraction.forInitUpdate)
+                        extractions.push({prop: "init", pre: true, extract: true});
+
+                    extractions.push({prop: "test", pre: true, post: true});
+
+                    if(!this.skipExtraction.forInitUpdate)
+                        extractions.push({prop: "update", post: true, extract: true});
+
+                    return this.performStatementSplit(node, extractions, "body");
                 case Syntax.DoWhileStatement:
                     return this.performStatementSplit(node, [{prop: "test", post: true}], "body");
             }
@@ -184,6 +199,23 @@
             }
             return result;
         },
+
+        getStatementTmpUsedCount: function(){
+            return this.currentStatementTmpUsed.length;
+        },
+        reduceStatementTmpUsed: function(newCount){
+            this.currentStatementTmpUsed.length = newCount;
+        },
+
+        removeStatementTmpUsedAfter: function(name){
+            var idx = this.currentStatementTmpUsed.indexOf(name);
+            if(idx == -1) return;
+            idx++;
+            var removeCount = this.currentStatementTmpUsed.length - idx;
+            this.currentStatementTmpUsed.splice(idx, removeCount );
+        },
+
+
         _getTypedPrefix: function(type, kind){
             if(type === undefined)
                 return "_tmp";
@@ -209,12 +241,13 @@
             }
 
             var originalNode = node, returnNode = node;
-            for(var i = 0; i < subProperties.length; ++i){
+            var i = subProperties.length;
+            while(i--){
                 var property = subProperties[i].prop;
                 var target = originalNode;
                 if(property) target = originalNode[property];
                 if(property && subProperties[i].extract){
-                    this.statementIdentifierInfo = {};
+                    this.onGatherSplitInfo();
                     this.currentStatementTmpUsed = [];
                     this.assignmentsToBePrepended = target ? [target] : [];
                     originalNode[property] = null;
@@ -295,7 +328,8 @@
         },
 
         addTmpDeclaration: function(node){
-            var tmpDeclared = this.getScope().tmpDeclared;
+            var tmpDeclared = this.getScope().tmpDeclared,
+                tmpDeclaredTypes = this.getScope().tmpDeclaredTypes;
             if(tmpDeclared.length == 0)
                 return;
             var list;
@@ -314,12 +348,18 @@
                 };
                 list.unshift(declaration);
             }
-            for(var i = 0; i < tmpDeclared.length; ++i)
-                declaration.declarations.push ({
+            for(var i = 0; i < tmpDeclared.length; ++i){
+                var declarator = {
                     type : Syntax.VariableDeclarator,
                     id: { type: Syntax.Identifier, name: tmpDeclared[i] },
                     init: null
-                });
+                };
+                if(tmpDeclaredTypes[i].type !== undefined){
+                    ANNO(declarator).setType(tmpDeclaredTypes[i].type, tmpDeclaredTypes[i].kind);
+                }
+                declaration.declarations.push(declarator);
+            }
+
 
             this.popScope();
         }

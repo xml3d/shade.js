@@ -189,10 +189,12 @@
                     this.getScope().updateTypeInfo("_env", envAnnotation);
                 }
 
+                var overrideName = name.substr(name.indexOf(".")+1);
+
                 this.root.globalParameters[name] = entryParams;
                 this.callFunction(name, entryParams.map(function (param) {
                     return ANNO(param);
-                }), { name: "shade"});
+                }), { name: overrideName});
 
         }
 
