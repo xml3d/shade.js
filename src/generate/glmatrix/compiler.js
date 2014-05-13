@@ -1,0 +1,33 @@
+(function (ns) {
+
+    var Base = require("../../base/index.js"),
+        codegen = require("escodegen");
+
+    var Simplifier = require("../simple-statement/simple-statement.js");
+    var Transformer = require("./transform.js").GLMatrixTransformer;
+
+
+    var GLMatrixCompiler = function () {
+
+    };
+
+    Base.extend(GLMatrixCompiler.prototype, {
+
+        compileFragmentShader: function (aast, opt) {
+            opt = opt || {};
+
+            aast = Simplifier.simplifyStatements(aast, opt);
+
+            var transformed = new Transformer().transform(aast);
+
+            var code = generate(transformed.program, opt);
+
+            return code;
+        }
+
+    });
+
+
+    ns.GLMatrixCompiler = GLMatrixCompiler;
+
+}(exports));
