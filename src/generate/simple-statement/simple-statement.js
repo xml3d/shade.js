@@ -206,6 +206,7 @@
                 case Syntax.FunctionExpression:
                     return VisitorOption.Skip;
                 case Syntax.CallExpression:
+                case Syntax.NewExpression:
                     return this.callEnter(node, parent);
             }
         },
@@ -213,33 +214,56 @@
         statementSplitExit: function (node, parent) {
             switch(node.type){
                 case Syntax.CallExpression:
+                case Syntax.NewExpression:
                     return this.callExit(node, parent);
                     break;
             }
         },
 
         callEnter: function(node, parent){
-            if(parent.type == Syntax.AssignmentExpression)
-                return;
-
-            var nodeAnno = ANNO(node);
-            var type = nodeAnno.getType(), kind = nodeAnno.getKind();
-            if(!this.isObjectResult(type, kind))
-                return;
-
             node._usedIndex = this.getStatementTmpUsedCount();
-
         },
 
         callExit: function(node, parent){
-            if(parent.type == Syntax.AssignmentExpression)
-                return;
-            if(node._usedIndex === undefined) return;
-            this.reduceStatementTmpUsed(node._usedIndex);
-            delete node._usedIndex;
 
             var nodeAnno = ANNO(node);
             var type = nodeAnno.getType(), kind = nodeAnno.getKind();
+
+            if(node.type == Syntax.CallExpression){
+                var argumentInfo = this.getObjectArgsInfo(node);
+                if(argumentInfo){
+                    var argType = argumentInfo.type;
+                    var argKind = argumentInfo.kind;
+                    var tmpName = this.getFreeName(argType, argKind);
+                    var argAssignment = {
+                        type: Syntax.AssignmentExpression,
+                        operator: "=",
+                        left: {type: Syntax.Identifier, name: tmpName},
+                        right: {type: Syntax.NewExpression,
+                            callee: {type: Syntax.Identifier, name: this.getCalleeName(argType, argKind)},
+                            arguments: argumentInfo.args
+                        }
+                    };
+                    ANNO(argAssignment).setType(argType, argKind);
+                    ANNO(argAssignment.left).setType(argType, argKind);
+                    this.assignmentsToBePrepended.push(argAssignment);
+                    var tmpArgIdentifier = { type: Syntax.Identifier, name: tmpName};
+                    ANNO(tmpArgIdentifier).setType(argType, argKind);
+                    node.arguments.splice(argumentInfo.argIndex, argumentInfo.args.length, tmpArgIdentifier);
+
+                }
+            }
+            this.reduceStatementTmpUsed(node._usedIndex);
+            if(!this.isObjectResult(type, kind))
+                return;
+
+            if(parent.type == Syntax.AssignmentExpression)
+                return;
+
+
+            delete node._usedIndex;
+
+
             var tmpName = this.getFreeName(type, kind);
 
             var assignment = {
@@ -259,8 +283,115 @@
 
         isObjectResult: function(type, kind){
             return type == Types.OBJECT;
+        },
+
+        getCalleeName: function(type, kind){
+            switch(kind){
+                case Kinds.FLOAT2: return "Vec2";
+                case Kinds.FLOAT3: return "Vec3";
+                case Kinds.FLOAT4: return "Vec4";
+                case Kinds.MATRIX3: return "Mat3";
+                case Kinds.MATRIX4: return "Mat4";
+            }
+            throw new Error("Unknown Kind '" + kind + "', no callee available.");
+        },
+        getObjectArgsInfo: function(node){
+            var result = {
+                type: null,
+                kind: null,
+                argIndex: 0,
+                args: null
+            }
+            if(!getNodeArgumentTypeAndIndex(node, result))
+                return false;
+            return result;
+
         }
     });
+
+    function getNodeArgumentTypeAndIndex(node, result){
+        if(node.callee.type != Syntax.MemberExpression)
+            return false;
+        var objectKind = ANNO(node.callee.object).getKind();
+        if(objectKind == Kinds.ANY)
+            return false;
+        var objComponentCnt = getObjectComponentCount(objectKind);
+        var requiredComponents = getArgTypeandIndex(objComponentCnt, node.callee.property.name, result);
+        if(!requiredComponents)
+            return false;
+        var index = result.argIndex;
+        var providedComponents = 0;
+        var args = [];
+        while(index < node.arguments.length && providedComponents < requiredComponents){
+            var arg = node.arguments[index];
+            args.push(arg);
+            providedComponents += getObjectComponentCount(ANNO(arg).getKind());
+            index++;
+        }
+        if(providedComponents == 0)
+            return false;
+        if(providedComponents == requiredComponents && args.length == 1)
+            return false;
+        result.args = args;
+        return result;
+    }
+
+    function getObjectComponentCount(objectKind){
+        switch(objectKind){
+            case Kinds.FLOAT2: return 2;
+            case Kinds.FLOAT3: return 3;
+            case Kinds.FLOAT4: return 4;
+            case Kinds.MATRIX3: return 9;
+            case Kinds.MATRIX4: return 16;
+            default: return 1; // must be number
+        }
+    }
+    function getObjectKindByComponentCount(componentCount){
+        switch(componentCount){
+            case 2: return Kinds.FLOAT2;
+            case 3: return Kinds.FLOAT3;
+            case 4: return Kinds.FLOAT4;
+            case 9: return Kinds.MATRIX3;
+            case 16: return Kinds.MATRIX4;
+        }
+        throw new Error("Unknown Object Count '" + componentCount + "', no kind available.");
+    }
+
+    function getArgTypeandIndex(objComponentCnt, methodName, result){
+        var inputComponentCnt = 0, offsetIndex = 0;
+        switch(methodName){
+            case 'add':
+            case 'sub':
+            case 'mul':
+            case 'div':
+            case 'mod':
+            case 'reflect':
+            case 'cross':
+            case 'dot' :    inputComponentCnt = objComponentCnt;
+                            break;
+            case 'length' : inputComponentCnt = 1;
+                            break;
+            case 'normalize' :
+            case 'flip' :
+                            inputComponentCnt = 0;
+                            break;
+            case 'mulVec':  inputComponentCnt = (objComponentCnt == 16 ? 4 : 3);
+                            break;
+            case 'col':     inputComponentCnt = (objComponentCnt == 16 ? 4 : 3);
+                            offsetIndex = 1;
+                            break;
+            default:
+                var swizzleMatches = methodName.match(/^([xyzwrgbastpq]{1,4})(Add|Sub|Mul|Div)?$/);
+                if(swizzleMatches){
+                    inputComponentCnt = swizzleMatches[1].length;
+                }
+        };
+        if(inputComponentCnt <= 1) return 0;
+        result.type = Types.OBJECT;
+        result.kind = getObjectKindByComponentCount(inputComponentCnt);
+        result.argIndex = offsetIndex;
+        return inputComponentCnt;
+    }
 
     ns.simplifyStatements = function (aast, opt) {
         var funcArgWriteDuplicator = new FunctionArgWriteDuplicator(opt);
