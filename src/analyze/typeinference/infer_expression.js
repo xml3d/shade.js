@@ -322,7 +322,7 @@
 
         MemberExpression: function (node, parent, context) {
             var resultType = context.getTypeInfo(node),
-                objectAnnotation = ANNO(node.object),
+                objectAnnotation = context.getTypeInfo(node.object),
                 propertyAnnotation = ANNO(node.property),
                 scope = context.getScope();
 
