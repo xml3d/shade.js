@@ -207,7 +207,9 @@
                     return VisitorOption.Skip;
                 case Syntax.CallExpression:
                 case Syntax.NewExpression:
-                    return this.callEnter(node, parent);
+                case Syntax.MemberExpression:
+                    node._usedIndex = this.getStatementTmpUsedCount();
+                    return;
             }
         },
 
@@ -216,12 +218,31 @@
                 case Syntax.CallExpression:
                 case Syntax.NewExpression:
                     return this.callExit(node, parent);
-                    break;
+                case Syntax.MemberExpression:
+                    return this.memberExit(node, parent)
             }
         },
 
-        callEnter: function(node, parent){
-            node._usedIndex = this.getStatementTmpUsedCount();
+        memberExit: function(node, parent){
+            var nodeAnno = ANNO(node);
+            var type = nodeAnno.getType(), kind = nodeAnno.getKind();
+
+            var usedIndex = node._usedIndex;
+            delete node._usedIndex;
+
+            if(parent.type == Syntax.AssignmentExpression)
+                return;
+
+            // Extract array access:
+            if(node.computed && ANNO(node.object).getType() == Types.ARRAY && this.isObjectResult(type, kind)){
+                this.reduceStatementTmpUsed(usedIndex);
+
+                var identifierNode = this.addAssignment(type, kind, node);
+                return identifierNode;
+            }
+
+
+
         },
 
         callExit: function(node, parent){
@@ -229,31 +250,25 @@
             var nodeAnno = ANNO(node);
             var type = nodeAnno.getType(), kind = nodeAnno.getKind();
 
+            var usedIndex = node._usedIndex;
+            delete node._usedIndex;
+
             if(node.type == Syntax.CallExpression){
                 var argumentInfo = this.getObjectArgsInfo(node);
                 if(argumentInfo){
                     var argType = argumentInfo.type;
                     var argKind = argumentInfo.kind;
-                    var tmpName = this.getFreeName(argType, argKind);
-                    var argAssignment = {
-                        type: Syntax.AssignmentExpression,
-                        operator: "=",
-                        left: {type: Syntax.Identifier, name: tmpName},
-                        right: {type: Syntax.NewExpression,
-                            callee: {type: Syntax.Identifier, name: this.getCalleeName(argType, argKind)},
-                            arguments: argumentInfo.args
-                        }
+
+                    var newNode = {type: Syntax.NewExpression,
+                        callee: {type: Syntax.Identifier, name: this.getCalleeName(argType, argKind)},
+                        arguments: argumentInfo.args
                     };
-                    ANNO(argAssignment).setType(argType, argKind);
-                    ANNO(argAssignment.left).setType(argType, argKind);
-                    this.assignmentsToBePrepended.push(argAssignment);
-                    var tmpArgIdentifier = { type: Syntax.Identifier, name: tmpName};
-                    ANNO(tmpArgIdentifier).setType(argType, argKind);
+                    ANNO(newNode).setType(argType, argKind);
+                    var tmpArgIdentifier = this.addAssignment(argType, argKind, newNode);
                     node.arguments.splice(argumentInfo.argIndex, argumentInfo.args.length, tmpArgIdentifier);
 
                 }
             }
-            this.reduceStatementTmpUsed(node._usedIndex);
             if(!this.isObjectResult(type, kind))
                 return;
 
@@ -261,23 +276,27 @@
                 return;
 
 
-            delete node._usedIndex;
+            this.reduceStatementTmpUsed(usedIndex);
 
+            var identifierNode = this.addAssignment(type, kind, node);
+            return identifierNode;
+        },
 
+        addAssignment: function(type, kind, right){
             var tmpName = this.getFreeName(type, kind);
 
             var assignment = {
                 type: Syntax.AssignmentExpression,
                 operator: "=",
                 left: {type: Syntax.Identifier, name: tmpName},
-                right: node
+                right: right
             };
-            ANNO(assignment).copy(ANNO(node));
-            ANNO(assignment.left).copy(ANNO(node));
+            ANNO(assignment).copy(ANNO(right));
+            ANNO(assignment.left).copy(ANNO(right));
             this.assignmentsToBePrepended.push(assignment);
 
             var identifierNode = {type: Syntax.Identifier, name: tmpName};
-            ANNO(identifierNode).copy(ANNO(node));
+            ANNO(identifierNode).copy(ANNO(right));
             return identifierNode;
         },
 

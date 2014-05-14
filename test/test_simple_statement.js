@@ -12,7 +12,10 @@ var getSimplifiedCode = function (str, args) {
     var argNames = [], argTypes = [];
     for(var name in args){
         argNames.push(name);
-        argTypes.push({ "extra": { "type": "object", "kind": args[name] } })
+        if(typeof args[name] == "object")
+            argTypes.push({ "extra" : args[name]});
+        else
+            argTypes.push({ "extra": { "type": "object", "kind": args[name] } })
     }
     var argsString = argNames.join(",");
     str = wrapFunction(str, argsString);
@@ -159,6 +162,22 @@ describe.only('Statement Simplifier:', function () {
     it("should do nothing in case of flip, normalize and empty length", function() {
         checkSimplified("var res = a.flip().normalize().length();",
             "var res,_vec3Tmp0;_vec3Tmp0=a.flip();_vec3Tmp0=_vec3Tmp0.normalize();res=_vec3Tmp0.length();");
+    });
+
+    it("should correctly handle temp variables in certain situations", function() {
+        checkSimplified("var res = Math.min(b.dot(1,2,3),c.dot(1,2,3) )",
+            "var res,_vec3Tmp0,_vec3Tmp1;_vec3Tmp0=new Vec3(1,2,3);_vec3Tmp1=new Vec3(1,2,3);res=Math.min(b.dot(_vec3Tmp0),c.dot(_vec3Tmp1));");
+    });
+
+    it("should correctly handle array access", function() {
+        checkSimplified("var res = a[0];",
+            "var res;res=a[0];",
+            {"a" : {type: "array", elements: {type : "object", kind: "float3"}}});
+    });
+    it("should correctly handle nested array access", function() {
+        checkSimplified("var res = a[0].mul(a[1]);",
+            "var res,_vec3Tmp0,_vec3Tmp1;_vec3Tmp0=a[0];_vec3Tmp1=a[1];res=_vec3Tmp0.mul(_vec3Tmp1);",
+            {"a" : {type: "array", elements: {type : "object", kind: "float3"}}});
     });
 
 });
