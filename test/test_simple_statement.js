@@ -42,7 +42,7 @@ var checkSimplified = function( code, sanitizedCode, args){
 };
 
 
-describe.only('Statement Simplifier:', function () {
+describe('Statement Simplifier:', function () {
     it("should handle basic nested vec3 operators", function () {
         checkSimplified("var res = a.add(b).mul(c)",
                         "var res,_vec3Tmp0;_vec3Tmp0=a.add(b);res=_vec3Tmp0.mul(c);");

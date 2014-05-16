@@ -49,7 +49,8 @@ function createTest(dir, file) {
 describe.only('GLMatrix Compilation:', function () {
 
     var dir = __dirname + '/data/glmatrix/';
-    //createTest(dir, "functioncall.js");
+
+//    createTest(dir, "swizzles.js");
 
     var files = fs.readdirSync(dir);
     files.forEach(function (file) {

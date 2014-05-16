@@ -18,9 +18,9 @@
 
             aast = Simplifier.simplifyStatements(aast, opt);
 
-            var transformed = new Transformer().transform(aast);
+            aast = new Transformer().transform(aast);
 
-            var code = codegen.generate(transformed, opt);
+            var code = codegen.generate(aast, opt);
 
             return code;
         }

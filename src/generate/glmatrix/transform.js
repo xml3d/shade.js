@@ -79,11 +79,29 @@
 
         var glObject = getGlMatrixObject(objectAnno.getKind());
         if(nodeAnno.getType() != Types.OBJECT && glObject){
-            var glMethodName = getScalarGlMethodName(glObject, methodName);
-            var arguments = [node.callee.object];
-            arguments.push.apply(arguments, node.arguments);
-            return getCallExpression(glObject, glMethodName, arguments);
+            var componentIndex = getComponentIndex(methodName);
+            var result;
+            if(componentIndex !== undefined){
+                result = getArrayAccessAst(node.callee.object, componentIndex);
+            }
+            else{
+                var glMethodName = getScalarGlMethodName(glObject, methodName);
+                var arguments = [node.callee.object];
+                arguments.push.apply(arguments, node.arguments);
+                result = getCallExpression(glObject, glMethodName, arguments);
+            }
+            ANNO(result).copy(ANNO(node));
+            return result;
         }
+    }
+    function getComponentIndex(methodName){
+        switch(methodName){
+            case "x": return 0;
+            case "y": return 1;
+            case "z": return 2;
+            case "w": return 3;
+        }
+        return undefined;
     }
 
     function leaveAssignmentExpression(node, parent){
@@ -119,7 +137,7 @@
                 type: Syntax.Literal,
                 value: 0,
                 raw: "0"
-            })
+            });
         }
         var expectedArgLength = 1 + getComponents(destAnno);
 
@@ -128,8 +146,9 @@
             arguments.push(Base.deepExtend({},arguments[arguments.length-1]));
         }
 
-        return getCallExpression(glObject, "set", arguments);
-
+        var result = getCallExpression(glObject, "set", arguments);
+        ANNO(result).copy(ANNO(node));
+        return result;
     }
 
     function leaveAssignmentCall(node, parent){
@@ -140,16 +159,38 @@
         var arguments = [node.left, node.right.callee.object];
         arguments.push.apply(arguments, node.right.arguments);
         var method = getObjectGlMethodName(glObject, methodName);
-        return getCallExpression(glObject, methodName, arguments);
-
+        return getCallExpression(glObject, method, arguments);
     }
 
     function leaveAssignmentCopy(node, parent){
-        var destAnno = ANNO(node.left);
+        var destAnno = ANNO(node);
         var glObject = getGlMatrixObject(destAnno.getKind());
+        var arguments = [];
 
-        var arguments = [node.left, node.right];
-        return getCallExpression(glObject, "copy", arguments);
+        if(isArrayAccess(node.left)){
+            arguments.push(node.left.object);
+            arguments.push(node.left.property);
+            arguments.push(node.right);
+            return getCallExpression(glObject, "pasteArray", arguments);
+        }
+        else{
+            arguments.push(node.left);
+            if(isArrayAccess(node.right)){
+                arguments.push(node.right.object);
+                arguments.push(node.right.property);
+                return getCallExpression(glObject, "copyArray", arguments);
+            }
+            else{
+                arguments.push(node.right);
+                return getCallExpression(glObject, "copy", arguments);
+            }
+        }
+
+    }
+
+
+    function isArrayAccess(node){
+        return node.type == Syntax.MemberExpression && ANNO(node.object).isArray();
     }
 
 
