@@ -13,14 +13,14 @@
 
     Base.extend(GLMatrixCompiler.prototype, {
 
-        compileFragmentShader: function (aast, opt) {
+        compile: function (aast, opt) {
             opt = opt || {};
 
             aast = Simplifier.simplifyStatements(aast, opt);
 
             var transformed = new Transformer().transform(aast);
 
-            var code = generate(transformed.program, opt);
+            var code = codegen.generate(transformed, opt);
 
             return code;
         }
