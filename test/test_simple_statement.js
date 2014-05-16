@@ -42,7 +42,7 @@ var checkSimplified = function( code, sanitizedCode, args){
 };
 
 
-describe('Statement Simplifier:', function () {
+describe.only('Statement Simplifier:', function () {
     it("should handle basic nested vec3 operators", function () {
         checkSimplified("var res = a.add(b).mul(c)",
                         "var res,_vec3Tmp0;_vec3Tmp0=a.add(b);res=_vec3Tmp0.mul(c);");
@@ -114,10 +114,7 @@ describe('Statement Simplifier:', function () {
         checkSimplified("var res = a.mod(5).dot(2);",
             "var res,_vec3Tmp0,_vec3Tmp1;_vec3Tmp0=new Vec3(5);_vec3Tmp0=a.mod(_vec3Tmp0);_vec3Tmp1=new Vec3(2);res=_vec3Tmp0.dot(_vec3Tmp1);");
     });
-    it("should correctly handle swizzles with scalar input", function() {
-        checkSimplified("var res = a.x(5).xy(2).zyx(5);",
-            "var res,_vec3Tmp0,_vec2Tmp0,_vec3Tmp1;_vec3Tmp0=a.x(5);_vec2Tmp0=new Vec2(2);_vec3Tmp0=_vec3Tmp0.xy(_vec2Tmp0);_vec3Tmp1=new Vec3(5);res=_vec3Tmp0.zyx(_vec3Tmp1);");
-    });
+
 
     it("should correctly handle scalars for vec2", function() {
         checkSimplified("var res = a.mul(4).div(4)",
@@ -178,6 +175,32 @@ describe('Statement Simplifier:', function () {
         checkSimplified("var res = a[0].mul(a[1]);",
             "var res,_vec3Tmp0,_vec3Tmp1;_vec3Tmp0=a[0];_vec3Tmp1=a[1];res=_vec3Tmp0.mul(_vec3Tmp1);",
             {"a" : {type: "array", elements: {type : "object", kind: "float3"}}});
+    });
+    it("should correctly handle array write", function() {
+        checkSimplified("a[0] = b.mul(2);",
+            "var _vec3Tmp0;_vec3Tmp0=new Vec3(2);_vec3Tmp0=b.mul(_vec3Tmp0);a[0]=_vec3Tmp0;",
+            {"a" : {type: "array", elements: {type : "object", kind: "float3"}}, "b" : "float3"});
+    });
+
+    it("should correctly convert reading swizzles", function() {
+        checkSimplified("var res = a.zxx()",
+            "var res;res=new Vec3(a.z(),a.x(),a.x());");
+    });
+    it("should correctly convert reading swizzles with scalar output", function() {
+        checkSimplified("var res = a.r()",
+            "var res;res=a.x();");
+    });
+    it("should correctly convert writing swizzles", function() {
+        checkSimplified("var res = a.zx(2,5)",
+            "var res,_vec2Tmp0;_vec2Tmp0=new Vec2(2,5);res=new Vec3(_vec2Tmp0.y(),a.y(),_vec2Tmp0.x());");
+    });
+    it("should correctly convert writing swizzles with operators", function() {
+        checkSimplified("var res = a.yzAdd(4,7)",
+            "var res,_vec2Tmp0;_vec2Tmp0=new Vec2(4,7);res=new Vec3(a.x(),a.y()+_vec2Tmp0.x(),a.z()+_vec2Tmp0.y());");
+    });
+    it("should correctly convert writing swizzles with operators and scalar input", function() {
+        checkSimplified("var res = a.xAdd(5)",
+            "var res;res=new Vec3(a.x()+5,a.y(),a.z());");
     });
 
 });
