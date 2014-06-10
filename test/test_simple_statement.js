@@ -80,6 +80,11 @@ describe('Statement Simplifier:', function () {
                         "var res,t,_vec3Tmp0;res=a;t=new Vec3(2);_vec3Tmp0=b.mul(c);for(;t.dot(_vec3Tmp0)>0.5;){res=res.mul(d);t=t.div(d);_vec3Tmp0=b.mul(c);}");
     });
 
+    it("should handle nested staements inside return statements", function () {
+        checkSimplified("return a.add(b).mul(c)",
+                        "var _vec3Tmp0;_vec3Tmp0=a.add(b);_vec3Tmp0=_vec3Tmp0.mul(c);return _vec3Tmp0;");
+    });
+
     it("should avoid writing to function arguments", function () {
         checkSimplified("a = b;",
                         "var _dest_a;_dest_a=a;_dest_a=b;");

@@ -74,6 +74,11 @@ describe('Sanitizing:', function () {
                                 "var a,b;b=5;a=b;",
                                 "a");
             });
+            it("should separate assignments into single expressions within return statements ", function () {
+                checkSanitized( "var a, b; return a = b = 5;",
+                                "var a,b;b=5;a=b;return a;",
+                                "a");
+            });
             it("should introduce temporary identifier for complicated nesting of assignments", function () {
                 checkSanitized( "var a = 5; var a = a + (a=25);",
                                 "var a,_tmp0;a=5;_tmp0=a;a=25;a=_tmp0+a;", "a");
