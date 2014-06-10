@@ -1,4 +1,4 @@
-// Env Space Propagation
+// Swizzles with glMatrix
 /*
 [
     { "type": "object", "kind": "float3" },

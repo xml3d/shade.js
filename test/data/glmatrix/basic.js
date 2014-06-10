@@ -1,4 +1,4 @@
-// Env Space Propagation
+// Basic glMatrix functionality
 /*
 [
     { "type": "object", "kind": "float3" },

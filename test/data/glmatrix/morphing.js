@@ -1,4 +1,4 @@
-// Env Space Propagation
+// Morphing with glMatrix
 /*
 [
     { "type": "array", "elements" : { "type" : "object", "kind": "float3" } },
