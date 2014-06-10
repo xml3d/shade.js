@@ -24,13 +24,17 @@
         }
     });
 
-    var SnippetEntry = function(method){
+    var SnippetEntry = function(code){
         this.inputInfo = [];
         this.outputInfo = [];
-        if(typeof(method) == "function"){
-            method = method.toString();
+        var fullAst;
+        if(typeof(code) == "function"){
+            code = "METHOD=" + code.toString();
+            fullAst = Shade.getSanitizedAst(code, {}).body[0].expression.right;
         }
-        var fullAst = Shade.getSanitizedAst(method, {});
+        else{
+            fullAst = Shade.getSanitizedAst(Base.deepExtend({}, code));
+        }
         this.ast = fullAst.body[0];
     }
 
@@ -44,6 +48,15 @@
             var input = new SnippetInput(type, arrayAccess);
             input.setTransferInput(transferOperatorIndex, transferOutputIndex);
             this.inputInfo.push(input);
+        },
+        addLostOutput: function(type, name){
+            var output = new SnippetOutput(type, name);
+            this.outputInfo.push(output);
+        },
+        addFinalOutput: function(type, name, index){
+            var output = new SnippetOutput(type, name);
+            output.setFinalOutputIndex(index);
+            this.outputInfo.push(output);
         }
     });
 
@@ -75,22 +88,15 @@
         }
     });
 
-    var SnippetOutput = function(type, name, transfered) {
+    var SnippetOutput = function(type, name) {
         this.type = type;
         this.name = name;
-        this.transfered = transfered;
         this.finalOutputIndex = undefined;
-        this.lostOutputIndex = undefined;
     }
 
     Base.extend(SnippetOutput.prototype, {
         setFinalOutputIndex: function(index){
             this.finalOutputIndex = index;
-            this.lostOutputIndex = undefined;
-        },
-        setLostOutputIndex: function(index){
-            this.finalOutputIndex = undefined;
-            this.lostOutputIndex = index;
         },
         isFinal: function(){
             return this.finalOutputIndex !== undefined;
@@ -98,5 +104,6 @@
     });
 
     ns.SnippetList = SnippetList;
+    ns.SnippetEntry = SnippetEntry;
 
 }(exports));
