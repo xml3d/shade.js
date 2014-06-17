@@ -168,6 +168,13 @@
             var extra = this.getExtra();
             extra.global = global;
         },
+        isOutput: function(){
+            return !!this.getExtra().output;
+        },
+        setOutput: function (output) {
+            var extra = this.getExtra();
+            extra.output = output;
+        },
         canNumber: function () {
             return this.isNumber() || this.isInt() || this.isBool();
         },
