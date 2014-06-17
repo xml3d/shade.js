@@ -1,0 +1,15 @@
+{
+    "global.main": [
+        {
+            "extra" : {
+                "type": "object", "kind": "any", "global": true,
+                "info": {
+                    "result": { "type": "object", "kind": "float3", "source": "vertex", "output": true },
+                    "value1": { "type": "object", "kind": "float3", "source": "vertex" },
+                    "value2": { "type": "object", "kind": "float3", "source": "vertex" }
+                }
+            }
+        }
+    ]
+}
+

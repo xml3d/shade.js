@@ -26,8 +26,8 @@
      * for code generation
      * @constructor
      */
-    var GLASTTransformer = function (root, mainId, opt) {
-        this.context = new Context(root, mainId, opt);
+    var GLASTTransformer = function (root, mainId, vertexShader, opt) {
+        this.context = new Context(root, mainId, vertexShader, opt);
     };
 
     function createUniformDependencyMap(uniformExpressions) {

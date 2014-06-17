@@ -51,7 +51,8 @@
      * @extends {Context}
      * @constructor
      */
-    var GLTransformContext = function(root, entry, opt) {
+    var GLTransformContext = function(root, entry, vertexShader, opt) {
+        opt.mainFunction = entry;
         Context.call(this, root, opt);
         this.usedParameters = {
             shader: {},
@@ -61,7 +62,7 @@
 
         this.uniformExpressions = opt.uniformExpressions || {};
 
-
+        this.vertexShader = vertexShader;
         this.systemParameters = {};
         this.blockedNames = [];
         this.topDeclarations = [];
