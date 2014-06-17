@@ -77,7 +77,7 @@
         },
 
         getSanitizedAst: function(str, opt){
-            var ast = parser.parse(str, {raw: true, loc: opt.loc || false });
+            var ast = this.parse(str, opt);
             return sanitizer.sanitize(ast, opt);
         },
 

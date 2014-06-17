@@ -42,7 +42,13 @@
                 context.envName = getFreeName("env", context);
             }
             var ast = connectSnippets(snippetList, context);
-            return getProgram(ast, context);
+            ast = getProgram(ast, context);
+            var result = {
+                ast: ast,
+                argTypes: null
+            };
+            addArgTypes(result, context);
+            return result;
         }
     });
 
@@ -70,11 +76,10 @@
 
     function connectSnippets(snippetList, context){
         var ast = { type: Syntax.BlockStatement, body: []};
-        var i = snippetList.entries.length;
-        while(i--){
+        for(var i = 0; i < snippetList.entries.length; ++i){
             var entry = snippetList.entries[i];
             var snippedContext = {
-                outputMap: createOutputMap(entry, context),
+                outputMap: createOutputMap(entry, i, context),
                 inputMap: createInputMap(entry, context),
                 temporaryMap: {}
             };
@@ -104,7 +109,7 @@
             params.push({type: Syntax.Identifier, name: iterMax});
             body = { type: Syntax.BlockStatement,
                 body: [
-                    {type: Syntax.VariableDeclaration, declarations: [
+                    {type: Syntax.VariableDeclaration, "kind": "var", declarations: [
                         {type: Syntax.VariableDeclarator,
                             id: {type: Syntax.Identifier, name: context.iterateIdentifier},
                             init: {type: Syntax.Identifier, name: iterMax}
@@ -127,8 +132,51 @@
             body: body
         }]};
     }
+    function addArgTypes(result, context){
+        var argTypes = [];
+        if(context.mode == SNIPPET_CONVERTER_MODE.GLSL_VS){
+
+            var attribs = {};
+            var outputIndices = {},
+                inputIndicies = {};
+
+            for(var i = 0; i < context.outputNameMap.length; ++i){
+                var entry = context.outputNameMap[i];
+                var type = Base.deepExtend({}, entry.type);
+                type.source = "vertex";
+                type.output = true;
+                attribs[entry.name] = type;
+                outputIndices[entry.name] = i;
+            }
+            for(var i = 0; i < context.directInputNameMap.length; ++i){
+                var entry = context.directInputNameMap[i];
+                var type = Base.deepExtend({}, entry.type);
+                type.source = entry.iterate ? "vertex" : "uniform";
+                attribs[entry.name] = type;
+                inputIndicies[entry.name] = i;
+            }
+            var env = { "extra" : {"type": "object", "kind": "any", "global": true, "info": attribs }};
+            argTypes.push(env);
+            result.outputIndices = outputIndices;
+            result.inputIndicies = inputIndicies;
+        }
+        else{
+            for(var i = 0; i < context.outputNameMap.length; ++i){
+                argTypes.push({extra: {type: "array", elements: Base.deepExtend({}, context.outputNameMap[i].type) }});
+            }
+            for(var i = 0; i < context.directInputNameMap.length; ++i){
+                argTypes.push({extra: {type: "array", elements: Base.deepExtend({}, context.directInputNameMap[i].type) }});
+            }
+            argTypes.push({ extra: {type: "int"}});
+        }
+
+        result.argTypes = argTypes;
+    }
+
     function addBodyDeclarations(body, context){
-        var decl = {type: Syntax.VariableDeclaration,
+        if(context.declareNames.length == 0)
+            return;
+        var decl = {type: Syntax.VariableDeclaration, "kind": "var",
             declarations: []};
         for(var i = 0; i < context.declareNames.length; ++i){
             var name = context.declareNames[i];
@@ -141,7 +189,7 @@
 
     function addSnippedAst(dest, entry, snippedContext, context){
         var astBody = walk.replace(entry.ast.body, {
-            exit: function(node, parent){
+            leave: function(node, parent){
                 switch(node.type){
                     case Syntax.Identifier : return handleIdentifierExit(node, parent, snippedContext, context);
                     case Syntax.VariableDeclarator: return handleDeclaratorExit(node, parent, snippedContext, context);
@@ -202,7 +250,7 @@
     function createResultAssignment(name, value, snippedContext){
         return {
             type: Syntax.ExpressionStatement, expression: {
-                type: Syntax.AssignmentExpression,
+                type: Syntax.AssignmentExpression, operator: "=",
                 left: Base.deepExtend({}, snippedContext.outputMap[name]),
                 right: value
             }
@@ -233,7 +281,7 @@
             var index = info.directInputIndex;
             if(!context.directInputNameMap[index]){
                context.directInputNameMap[index] = {
-                    name: name,
+                    name: getFreeName(name, context),
                     type: info.type,
                     iterate: info.iterate
                };
@@ -248,24 +296,29 @@
         return ast
     }
 
-    function createOutputMap(entry, context){
+    function createOutputMap(entry, operatorIndex, context){
         var result = {};
         var outputInfo = entry.outputInfo;
         for(var i = 0; i < outputInfo.length; ++i){
             var info = outputInfo[i];
             var paramName = outputInfo[i].name;
-            result[paramName] = getOutputAst(paramName, info, context);
+            result[paramName] = getOutputAst(paramName, info, operatorIndex, i, context);
         }
         return result;
     }
 
-    function getOutputAst(name, info, context){
+    function getOutputAst(name, info, operatorIndex, outputIndex, context){
         var actualName, final;
         if(info.isFinal()){
             final = true;
             actualName = context.outputNameMap[info.finalOutputIndex].name;
         }else{
             actualName = getFreeName(name, context);
+            context.transferInputNameMap[operatorIndex + "_" + outputIndex] = {
+                name: actualName,
+                finalOutput: false
+            };
+            context.declareNames.push(actualName);
         }
         var ast = {type: Syntax.Identifier, name: actualName};
         if(final){
@@ -291,7 +344,7 @@
     }
 
     function getFreeName(name, context){
-        var test = name, i = 0;
+        var test = name, i = 1;
         while(context.blockedNames.indexOf(test) != -1){
             test = name + "_" + (++i);
         }

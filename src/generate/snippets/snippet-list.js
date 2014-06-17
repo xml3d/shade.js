@@ -5,6 +5,7 @@
         Base = require("../../base/index.js"),
         common = require("./../../base/common.js"),
         Shade = require("../../interfaces.js"),
+        ShadeRoot = require("../../shade.js"),
         TypeInfo = require("../../base/typeinfo.js").TypeInfo,
         StatementSplitTraverser = require("../../analyze/sanitizer/statement-split-traverser"),
         Types = Shade.TYPES,
@@ -30,22 +31,22 @@
         var fullAst;
         if(typeof(code) == "function"){
             code = "METHOD=" + code.toString();
-            fullAst = Shade.getSanitizedAst(code, {}).body[0].expression.right;
+            fullAst = ShadeRoot.getSanitizedAst(code, {}).body[0].expression.right;
         }
         else{
-            fullAst = Shade.getSanitizedAst(Base.deepExtend({}, code));
+            fullAst = ShadeRoot.getSanitizedAst(Base.deepExtend({}, code), {});
         }
-        this.ast = fullAst.body[0];
+        this.ast = fullAst;
     }
 
     Base.extend(SnippetEntry.prototype, {
-        addDirectInput: function(type, arrayAccess, directInputIndex){
-            var input = new SnippetInput(type, arrayAccess);
+        addDirectInput: function(type, iterate, arrayAccess, directInputIndex){
+            var input = new SnippetInput(type, iterate, arrayAccess);
             input.setDirectInput(directInputIndex);
             this.inputInfo.push(input);
         },
         addTransferInput: function(type, arrayAccess, transferOperatorIndex, transferOutputIndex){
-            var input = new SnippetInput(type, arrayAccess);
+            var input = new SnippetInput(type, true, arrayAccess);
             input.setTransferInput(transferOperatorIndex, transferOutputIndex);
             this.inputInfo.push(input);
         },
