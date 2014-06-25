@@ -1,4 +1,4 @@
-// Basic glMatrix functionality
+// Connection of Morph Snippets
 snippets = {
     morph : function(value, valueAdd, weight) {
         return value.add(valueAdd.mul(weight));

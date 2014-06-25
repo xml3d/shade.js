@@ -14,8 +14,10 @@
         analyzer = require("./analyze/analyze.js"),
         SpaceVectorType = interfaces.SpaceVectorType,
         SpaceType = interfaces.SpaceType,
-        VectorType = interfaces.VectorType;
-
+        VectorType = interfaces.VectorType,
+        SnippetList = require("./generate/snippets/snippet-list.js").SnippetList,
+        SnippetEntry = require("./generate/snippets/snippet-list.js").SnippetEntry,
+        SnippetConnector = require("./generate/snippets/snippet-connector");
 
     var WorkingSet = function(){
         this.ast = null;
@@ -120,6 +122,43 @@
         toJavaScript: function(aast, opt){
             return codegen.generate(aast, opt);
         },
+        getSnippetAst: function(code){
+            var fullAst;
+            if(typeof(code) == "function"){
+                code = "METHOD=" + code.toString();
+                fullAst = this.getSanitizedAst(code, {}).body[0].expression.right;
+            }
+            else{
+                fullAst = this.getSanitizedAst(Base.deepExtend({}, code), {});
+            }
+            return fullAst;
+        },
+
+        compileJsProgram: function(snippetList, defaultIteration){
+            var ast = SnippetConnector.connectSnippets(snippetList, {
+                mode: defaultIteration ? SnippetConnector.MODE.JS_ITERATE : SnippetConnector.MODE.JS_NO_ITERATE});
+            // TODO: Do the rest of the compilation
+        },
+
+        compileVertexShader: function(snippetList, systemParams){
+            var result = SnippetConnector.connectSnippets(snippetList, { mode: SnippetConnector.MODE.GLSL_VS });
+
+            var aast = this.parseAndInferenceExpression(result.ast, {
+                entry: "global.main",
+                validate: true,
+                inject: {
+                    "this": systemParams,
+                    "global.main": result.argTypes
+                }
+            });
+
+            var compiled = new GLSLCompiler().compileVertexShader(aast, {});
+            return {
+                code: compiled.source,
+                inputIndicies: result.inputIndicies
+            }
+        },
+
 
         TYPES : interfaces.TYPES,
         OBJECT_KINDS : interfaces.OBJECT_KINDS,
@@ -132,7 +171,9 @@
         Color: interfaces.Color,
         Mat3: interfaces.Mat3,
         Mat4: interfaces.Mat4,
-        WorkingSet: WorkingSet
+        WorkingSet: WorkingSet,
+        SnippetList: SnippetList,
+        SnippetEntry: SnippetEntry
 
 });
     /**

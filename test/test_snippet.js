@@ -19,7 +19,7 @@ function createSnippetList(connection, snippetFunctions){
     for(var i = 0; i < connection.length; ++i){
         var entry = connection[i];
         var code = snippetFunctions[entry.code];
-        var snippetEntry = new SnippetEntry(code);
+        var snippetEntry = new SnippetEntry(Shade.getSnippetAst(code));
         addEntryInput(snippetEntry, entry);
         addEntryOutput(snippetEntry, entry);
         list.addEntry(snippetEntry);
@@ -105,7 +105,7 @@ function createTest(dir, file) {
     });
 }
 
-describe('Snippet Connection:', function () {
+describe.only('Snippet Connection:', function () {
 
     var dir = __dirname + '/data/snippet/';
 

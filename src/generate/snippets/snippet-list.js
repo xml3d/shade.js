@@ -3,17 +3,7 @@
     var walk = require('estraverse'),
         assert = require("assert"),
         Base = require("../../base/index.js"),
-        common = require("./../../base/common.js"),
-        Shade = require("../../interfaces.js"),
-        ShadeRoot = require("../../shade.js"),
-        TypeInfo = require("../../base/typeinfo.js").TypeInfo,
-        StatementSplitTraverser = require("../../analyze/sanitizer/statement-split-traverser"),
-        Types = Shade.TYPES,
-        Kinds = Shade.OBJECT_KINDS,
-        ANNO = require("../../base/annotation.js").ANNO;
-
-    var Syntax = walk.Syntax;
-    var VisitorOption = walk.VisitorOption;
+        common = require("./../../base/common.js");
 
     var SnippetList = function(){
         this.entries = [];
@@ -25,21 +15,16 @@
         }
     });
 
-    var SnippetEntry = function(code){
+    var SnippetEntry = function(ast){
         this.inputInfo = [];
         this.outputInfo = [];
-        var fullAst;
-        if(typeof(code) == "function"){
-            code = "METHOD=" + code.toString();
-            fullAst = ShadeRoot.getSanitizedAst(code, {}).body[0].expression.right;
-        }
-        else{
-            fullAst = ShadeRoot.getSanitizedAst(Base.deepExtend({}, code), {});
-        }
-        this.ast = fullAst;
+        this.ast = ast || null;
     }
 
     Base.extend(SnippetEntry.prototype, {
+        setAst: function(ast){
+            this.ast = ast;
+        },
         addDirectInput: function(type, iterate, arrayAccess, directInputIndex){
             var input = new SnippetInput(type, iterate, arrayAccess);
             input.setDirectInput(directInputIndex);
