@@ -155,7 +155,7 @@
             var compiled = new GLSLCompiler().compileVertexShader(aast, {});
             return {
                 code: compiled.source,
-                inputIndicies: result.inputIndicies
+                inputIndices: result.inputIndices
             }
         },
 

@@ -32,7 +32,7 @@
             CONST: "const",
             UNIFORM: "uniform",
             VARYING: "varying",
-            ATTRIBUTE: "attribtue"
+            ATTRIBUTE: "attribute"
         }
     }
 

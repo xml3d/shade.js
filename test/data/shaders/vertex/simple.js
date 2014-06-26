@@ -1,7 +1,7 @@
 // Shader for system without derivatives
 /*
-attribtue vec3 _env_value2;
-attribtue vec3 _env_value1;
+attribute vec3 _env_value2;
+attribute vec3 _env_value1;
 varying vec3 _env_result;
 void main ( void ) {
     _env_result = ( _env_value1 + _env_value2 );

@@ -101,7 +101,7 @@ function createTest(dir, file) {
         expectedCode = codegen.generate(outputGLSL);
         compiledCode.should.eql(expectedCode);
         resultGLSL.argTypes.should.deep.equal(glslInfo.argTypes);
-        resultGLSL.inputIndicies.should.deep.equal(glslInfo.inputIndicies);
+        resultGLSL.inputIndices.should.deep.equal(glslInfo.inputIndices);
     });
 }
 

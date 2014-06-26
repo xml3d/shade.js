@@ -138,7 +138,7 @@
 
             var attribs = {};
             var outputIndices = {},
-                inputIndicies = {};
+                inputIndices = {};
 
             for(var i = 0; i < context.outputNameMap.length; ++i){
                 var entry = context.outputNameMap[i];
@@ -153,12 +153,12 @@
                 var type = Base.deepExtend({}, entry.type);
                 type.source = entry.iterate ? "vertex" : "uniform";
                 attribs[entry.name] = type;
-                inputIndicies[entry.name] = i;
+                inputIndices[entry.name] = i;
             }
             var env = { "extra" : {"type": "object", "kind": "any", "global": true, "info": attribs }};
             argTypes.push(env);
             result.outputIndices = outputIndices;
-            result.inputIndicies = inputIndicies;
+            result.inputIndices = inputIndices;
         }
         else{
             for(var i = 0; i < context.outputNameMap.length; ++i){
@@ -238,10 +238,24 @@
         else{
             var result = { type: Syntax.BlockStatement, body: [] };
             var properties = node.argument.properties;
+            var addReturn = null;
             for(var i = 0; i < properties.length; ++i){
                 var prop = properties[i];
                 var outputName = prop.key.name || prop.key.value;
-                result.body.push(createResultAssignment(outputName, prop.value, snippedContext));
+                if(outputName == "_glPosition"){
+                    if(context.mode == SNIPPET_CONVERTER_MODE.GLSL_VS){
+                        addReturn = prop.value;
+                    }
+                }
+                else{
+                    result.body.push(createResultAssignment(outputName, prop.value, snippedContext));
+                }
+            }
+            if(addReturn){
+                result.body.push({
+                    type: Syntax.ReturnStatement,
+                    argument: addReturn
+                })
             }
             return result;
         }
