@@ -152,10 +152,15 @@
                 }
             });
 
+            var inputIndices = {};
+            for(var inputName in result.inputIndices){
+                inputIndices["_env_" + inputName] =  result.inputIndices[inputName];
+            }
+
             var compiled = new GLSLCompiler().compileVertexShader(aast, {});
             return {
                 code: compiled.source,
-                inputIndices: result.inputIndices
+                inputIndices: inputIndices
             }
         },
 
