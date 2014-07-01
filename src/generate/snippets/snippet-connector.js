@@ -150,6 +150,7 @@
             }
             for(var i = 0; i < context.directInputNameMap.length; ++i){
                 var entry = context.directInputNameMap[i];
+                if(!entry) continue;
                 var type = Base.deepExtend({}, entry.type);
                 type.source = entry.iterate ? "vertex" : "uniform";
                 attribs[entry.name] = type;
@@ -294,11 +295,15 @@
         else{
             var index = info.directInputIndex;
             if(!context.directInputNameMap[index]){
-               context.directInputNameMap[index] = {
+                var type = info.type;
+                if(info.arrayAccess){
+                    type = {type: "array", elements: type, staticSize: info.arraySize };
+                }
+                context.directInputNameMap[index] = {
                     name: getFreeName(name, context),
-                    type: info.type,
+                    type: type,
                     iterate: info.iterate
-               };
+                };
             }
             actualName = context.directInputNameMap[index].name;
         }

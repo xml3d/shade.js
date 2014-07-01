@@ -25,13 +25,23 @@
         setAst: function(ast){
             this.ast = ast;
         },
-        addDirectInput: function(type, iterate, arrayAccess, directInputIndex){
-            var input = new SnippetInput(type, iterate, arrayAccess);
+        addVertexInput: function(type, directInputIndex){
+            var input = new SnippetInput(type, true, false);
             input.setDirectInput(directInputIndex);
             this.inputInfo.push(input);
         },
-        addTransferInput: function(type, arrayAccess, transferOperatorIndex, transferOutputIndex){
-            var input = new SnippetInput(type, true, arrayAccess);
+        addUniformInput: function(type, directInputIndex){
+            var input = new SnippetInput(type, false, false);
+            input.setDirectInput(directInputIndex);
+            this.inputInfo.push(input);
+        },
+        addUniformArray: function(type, directInputIndex, arraySize){
+            var input = new SnippetInput(type, false, true);
+            input.setDirectInput(directInputIndex, arraySize);
+            this.inputInfo.push(input);
+        },
+        addTransferInput: function(type, transferOperatorIndex, transferOutputIndex){
+            var input = new SnippetInput(type, true, false);
             input.setTransferInput(transferOperatorIndex, transferOutputIndex);
             this.inputInfo.push(input);
         },
@@ -54,12 +64,14 @@
         this.transferOperatorIndex = undefined;
         this.transferOutputIndex = undefined;
         this.directInputIndex = undefined;
+        this.arraySize = undefined;
     }
 
     Base.extend(SnippetInput.prototype, {
-        setDirectInput: function(directInputIndex){
+        setDirectInput: function(directInputIndex, arraySize){
             this.transferOperatorIndex = this.transferOutputIndex = undefined;
             this.directInputIndex = directInputIndex;
+            this.arraySize = arraySize;
         },
         setTransferInput: function(transferOperatorIndex, transferOutputIndex){
             this.transferOperatorIndex = transferOperatorIndex;

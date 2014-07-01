@@ -31,10 +31,15 @@ function addEntryInput(dest, src){
     for(var i = 0; i < src.input.length; ++i){
         var entry = src.input[i];
         if(entry.directInputIndex !== undefined){
-            dest.addDirectInput(entry.type, entry.iterate, entry.arrayAccess, entry.directInputIndex);
+            if(entry.iterate)
+                dest.addVertexInput(entry.type, entry.directInputIndex);
+            else if(entry.arraySize)
+                dest.addUniformArray(entry.type, entry.directInputIndex, entry.arraySize);
+            else
+                dest.addUniformInput(entry.type, entry.directInputIndex);
         }
         else{
-            dest.addTransferInput(entry.type, entry.arrayAccess, entry.transferOperator, entry.transferOutput);
+            dest.addTransferInput(entry.type, entry.transferOperator, entry.transferOutput);
         }
     }
 }

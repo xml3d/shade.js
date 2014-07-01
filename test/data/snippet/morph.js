@@ -10,11 +10,11 @@ snippets = {
         "code": "morph",
         "input": [
             { "type": {"type": "object", "kind" : "float3" },
-              "iterate" : true, "arrayAccess": false,  "directInputIndex" : 0 },
+              "iterate" : true, "directInputIndex" : 0 },
             { "type": {"type": "object", "kind" : "float3" },
-              "iterate" : true, "arrayAccess": false,  "directInputIndex" : 1 },
+              "iterate" : true,  "directInputIndex" : 1 },
             { "type": {"type": "number"},
-              "iterate" : false, "arrayAccess": false,  "directInputIndex" : 2 }
+              "iterate" : false, "directInputIndex" : 2 }
         ],
         "output" : [
             {   "type" : {"type": "object", "kind" : "float3" }, "name" : "result"}
@@ -24,11 +24,11 @@ snippets = {
         "code": "morph",
         "input": [
             { "type": {"type": "object", "kind" : "float3" },
-              "iterate" : true, "arrayAccess": false,  "transferOperator" : 0,  "transferOutput" : 0  },
+              "iterate" : true,  "transferOperator" : 0,  "transferOutput" : 0  },
             { "type": {"type": "object", "kind" : "float3" },
-              "iterate" : true, "arrayAccess": false,  "directInputIndex" : 3 },
+              "iterate" : true, "directInputIndex" : 3 },
             { "type": {"type": "number"},
-              "iterate" : false, "arrayAccess": false,  "directInputIndex" : 4 }
+              "iterate" : false, "directInputIndex" : 4 }
         ],
         "output" : [
             {   "type" : {"type": "object", "kind" : "float3" }, "name" : "result", "finalOutputIndex": 0 }
