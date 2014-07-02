@@ -503,6 +503,16 @@
         if (!objectReference.isArray()) {
             Shade.throwError(node, "In shade.js, [] access is only allowed on arrays.");
         }
+        var propertyType =  context.getTypeInfo(node.property);
+        if(!propertyType.canInt()){
+            node.property = {
+                type: Syntax.CallExpression,
+                callee: {type: "Identifier", name: "int"},
+                arguments: [ node.property]
+            }
+            ANNO(node.property).setType(Types.INT);
+        }
+        return node;
     };
 
 
