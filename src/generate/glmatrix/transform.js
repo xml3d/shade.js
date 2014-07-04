@@ -267,6 +267,7 @@
             case "max": return "max";
             case "min" : return "min";
             case "length": return "setLength";
+            case "normalize" : return "normalize";
         }
         throw new Error("Unknown glMatrix method with object output: '" + methodName + "'");
     }
