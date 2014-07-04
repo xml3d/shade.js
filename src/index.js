@@ -7,6 +7,7 @@
         sanitizer = require("./analyze/sanitizer/sanitizer.js"),
         Base = require("./base/index.js"),
         GLSLCompiler = require("./generate/glsl/compiler.js").GLSLCompiler,
+        GLMatrixCompiler = require("./generate/glmatrix/compiler.js").GLMatrixCompiler,
         LightPassGenerator = require("./generate/light-pass/light-pass-generator.js"),
         resolver = require("./resolve/resolve.js"),
         SpaceTransformer = require("./generate/space/transform.js").SpaceTransformer,
@@ -134,10 +135,23 @@
             return fullAst;
         },
 
-        compileJsProgram: function(snippetList, defaultIteration){
-            var ast = SnippetConnector.connectSnippets(snippetList, {
+        compileJsProgram: function(snippetList, systemParams, defaultIteration){
+            var result = SnippetConnector.connectSnippets(snippetList, {
                 mode: defaultIteration ? SnippetConnector.MODE.JS_ITERATE : SnippetConnector.MODE.JS_NO_ITERATE});
-            // TODO: Do the rest of the compilation
+
+            var aast = this.parseAndInferenceExpression(result.ast, {
+                entry: "global.main",
+                validate: true,
+                inject: {
+                    "this": systemParams,
+                    "global.main": result.argTypes
+                }
+            });
+
+            var compiled = new GLMatrixCompiler().compile(aast, {});
+            return {
+                code: compiled
+            }
         },
 
         compileVertexShader: function(snippetList, systemParams){
