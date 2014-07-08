@@ -166,7 +166,10 @@
                 argTypes.push({extra: {type: "array", elements: Base.deepExtend({}, context.outputNameMap[i].type) }});
             }
             for(var i = 0; i < context.directInputNameMap.length; ++i){
-                argTypes.push({extra: {type: "array", elements: Base.deepExtend({}, context.directInputNameMap[i].type) }});
+                var type = Base.deepExtend({}, context.directInputNameMap[i].type);
+                if(!context.directInputNameMap[i].arrayAccess)
+                    type = {type: "array", elements: type };
+                argTypes.push({extra: type });
             }
             argTypes.push({ extra: {type: "int"}});
         }
@@ -302,7 +305,8 @@
                 context.directInputNameMap[index] = {
                     name: getFreeName(name, context),
                     type: type,
-                    iterate: info.iterate
+                    iterate: info.iterate,
+                    arrayAccess: info.arrayAccess
                 };
             }
             actualName = context.directInputNameMap[index].name;
