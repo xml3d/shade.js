@@ -18,7 +18,12 @@
         VectorType = interfaces.VectorType,
         SnippetList = require("./generate/snippets/snippet-list.js").SnippetList,
         SnippetEntry = require("./generate/snippets/snippet-list.js").SnippetEntry,
-        SnippetConnector = require("./generate/snippets/snippet-connector");
+        SnippetConnector = require("./generate/snippets/snippet-connector"),
+        GlMatrix = require("./contrib/gl-matrix.js");
+
+
+    require("./contrib/gl-matrix-extend.js").extend(GlMatrix);
+
 
     var WorkingSet = function(){
         this.ast = null;
@@ -192,7 +197,8 @@
         Mat4: interfaces.Mat4,
         WorkingSet: WorkingSet,
         SnippetList: SnippetList,
-        SnippetEntry: SnippetEntry
+        SnippetEntry: SnippetEntry,
+        Math: GlMatrix
 
 });
     /**
