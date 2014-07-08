@@ -32,7 +32,7 @@ function createTest(dir, file) {
     });
 }
 
-describe.only('GLSL Vertex Code:', function () {
+describe('GLSL Vertex Code:', function () {
     var dir = __dirname + '/data/shaders/vertex/';
     var files = fs.readdirSync(dir);
     files.filter(function(filename) { return filename.split('.').pop() == "js" }).forEach(function (file) {

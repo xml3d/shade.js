@@ -20,6 +20,7 @@
 // OUTPUT
 {
     function main_glmatrix(res, value, valueAdd, weight, iterateCount) {
+        var vec2 = Shade.Math.vec2, vec3 = Shade.Math.vec3, vec4 = Shade.Math.vec4, mat3 = Shade.Math.mat3, mat4 = Shade.Math.mat4;
         var i, valueIt = vec3.create(), valueAddIt = vec3.create(), weightIt, _tmp0, _vec3Tmp0 = vec3.create();
         i = iterateCount;
         _tmp0 = i;

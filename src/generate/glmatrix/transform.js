@@ -54,11 +54,42 @@
                             return leaveCallExpression(node, parent);
                         case Syntax.AssignmentExpression:
                             return leaveAssignmentExpression(node);
+                        case Syntax.FunctionDeclaration:
+                        case Syntax.FunctionDeclaration:
+                            return leaveFunction(node, parent);
                     }
                 }
             });
         }
     });
+
+    function leaveFunction(node, parent){
+        var declarators = [];
+        addMathLinkDeclaration(declarators, "vec2");
+        addMathLinkDeclaration(declarators, "vec3");
+        addMathLinkDeclaration(declarators, "vec4");
+        addMathLinkDeclaration(declarators, "mat3");
+        addMathLinkDeclaration(declarators, "mat4");
+        var declaration = {
+            type: Syntax.VariableDeclaration, kind: "var",
+            declarations: declarators
+        };
+        node.body.body.unshift(declaration);
+        return node;
+    }
+
+    function addMathLinkDeclaration(dest, name){
+        dest.push({ type: Syntax.VariableDeclarator,
+            id: {type: Syntax.Identifier, name: name},
+            init: {
+                type: Syntax.MemberExpression, computed: false,
+                object: { type: Syntax.MemberExpression, computed: false,
+                        object: { type: Syntax.Identifier, name: "Shade"},
+                        property: { type: Syntax.Identifier, name: "Math"}},
+                property: {type: Syntax.Identifier, name: name}
+            }
+        });
+    }
 
     function leaveVariableDeclarator(node, parent){
         var nodeAnno = ANNO(node);
@@ -156,10 +187,7 @@
         var glObject = getGlMatrixObject(objectAnno.getKind());
         var methodName = node.right.callee.property.name;
 
-        var arguments = [node.left, node.right.callee.object];
-        arguments.push.apply(arguments, node.right.arguments);
-        var method = getObjectGlMethodName(glObject, methodName);
-        return getCallExpression(glObject, method, arguments);
+        return getObjectGlMethodCall(objectAnno.getKind(), methodName, node.left, node.right.callee.object, node.right.arguments);
     }
 
     function leaveAssignmentCopy(node, parent){
@@ -258,18 +286,32 @@
         throw new Error("Unknown glMatrix method with scalar output: '" + methodName + "'");
     }
 
-    function getObjectGlMethodName(glObject, methodName){
+    function getObjectGlMethodCall(objectKind, methodName, destObj, srcObj, arguments){
+        var actualKind = objectKind, method, srcAfterArgs = false;
         switch(methodName){
-            case "add": return "add";
-            case "sub": return "sub";
-            case "mul": return "mul";
-            case "div": return "div";
-            case "max": return "max";
-            case "min" : return "min";
-            case "length": return "setLength";
-            case "normalize" : return "normalize";
+            case "add": method = "add"; break;
+            case "sub": method = "sub"; break;
+            case "mul": method = "mul"; break;
+            case "div": method = "div"; break;
+            case "max": method = "max"; break;
+            case "min" : method = "min"; break;
+            case "length": method = "setLength"; break;
+            case "normalize" : method = "normalize"; break;
+            case "mulVec" : switch(objectKind){
+                    case Kinds.MATRIX3: actualKind= Kinds.FLOAT3; method = "transformMat3"; break;
+                    case Kinds.MATRIX4: actualKind= Kinds.FLOAT4; method = "transformMat4"; break;
+                }
+                srcAfterArgs = true;
+            break;
+            default:
+                throw new Error("Unknown glMatrix method with object output: '" + methodName + "'");
         }
-        throw new Error("Unknown glMatrix method with object output: '" + methodName + "'");
+        var args = [destObj];
+        if(!srcAfterArgs) args.push(srcObj);
+        args.push.apply(args, arguments);
+        if(srcAfterArgs) args.push(srcObj);
+        var glObject = getGlMatrixObject(actualKind);
+        return getCallExpression(glObject, method, args);
     }
 
     // Exports

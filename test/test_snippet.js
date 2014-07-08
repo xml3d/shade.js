@@ -110,7 +110,7 @@ function createTest(dir, file) {
     });
 }
 
-describe.only('Snippet Connection:', function () {
+describe('Snippet Connection:', function () {
 
     var dir = __dirname + '/data/snippet/';
 
