@@ -310,6 +310,29 @@
             }
             return this.getType();
         },
+        /**
+         * Get the internal type as JavaScript type
+         * @returns {string}
+         */
+        getJavaScriptTypeString: function() {
+            //noinspection FallthroughInSwitchStatementJS
+            switch (this.getType()) {
+                case TYPES.INT:
+                case TYPES.FLOAT:
+                case TYPES.NUMBER:
+                    return "number";
+                case TYPES.OBJECT:
+                case TYPES.ARRAY:
+                    return "object";
+                case TYPES.STRING:
+                    return "string";
+                case TYPES.UNDEFINED:
+                    return "undefined";
+                default:
+                    // TODO: For debug we use this now, should throw an exception
+                    return "?" + this.getType();
+            }
+        },
         setSource: function(source) {
             var extra = this.getExtra();
             extra.source = source;

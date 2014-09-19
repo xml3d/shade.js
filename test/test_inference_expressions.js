@@ -39,7 +39,7 @@ describe('Inference:', function () {
                 var exp = parseAndInferenceExpression("'Hallo'");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.STRING);
-                exp.extra.should.have.property("staticValue", "'Hallo'");
+                exp.extra.should.have.property("staticValue", "Hallo");
             });
             it("should annotate the type of the 'undefined' literal", function () {
                 var exp = parseAndInferenceExpression("undefined");
@@ -92,6 +92,12 @@ describe('Inference:', function () {
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.INT);
                 exp.extra.should.have.property("staticValue", -1);
+            });
+             it("should annotate typeof number => string", function () {
+                var exp = parseAndInferenceExpression("typeof 5");
+                exp.should.have.property("extra");
+                exp.extra.should.have.property("type", TYPES.STRING);
+                exp.extra.should.have.property("staticValue", "number");
             });
         });
 
@@ -184,6 +190,19 @@ describe('Inference:', function () {
                     exp.extra.should.have.property("type", TYPES.BOOLEAN);
                     exp.extra.should.have.property("staticValue", false);
                 });
+                it("should annotate string == string ⇒ boolean (true)", function () {
+                    var exp = parseAndInferenceExpression("'hallo' == 'hallo'");
+                    exp.should.have.property("extra");
+                    exp.extra.should.have.property("type", TYPES.BOOLEAN);
+                    exp.extra.should.have.property("staticValue", true);
+                });
+                it("should annotate string == string ⇒ boolean (false)", function () {
+                    var exp = parseAndInferenceExpression("'hallo' == 'hallo2'");
+                    exp.should.have.property("extra");
+                    exp.extra.should.have.property("type", TYPES.BOOLEAN);
+                    exp.extra.should.have.property("staticValue", false);
+                });
+
 
             })
         });

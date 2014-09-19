@@ -43,6 +43,7 @@
             var number = parseFloat(value);
             if (!isNaN(number))
                 return number;
+            value = node.value;
             switch(value) {
                 case "true": return true;
                 case "false": return false;
@@ -54,6 +55,9 @@
             return ANNO(node).getStaticValue();
         }
         if (node.type === Syntax.UnaryExpression) {
+            if (node.operator == "typeof") {
+                return ANNO(node).getStaticValue();
+            }
             if(UnaryFunctions.hasOwnProperty(node.operator)) {
                 return UnaryFunctions[node.operator](getStaticValue(node.argument));
             }

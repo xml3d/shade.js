@@ -149,6 +149,12 @@ describe('Inference:', function () {
             exp.extra.should.have.property("type", TYPES.INT);
             exp.extra.should.not.have.property("staticValue");
         });
+        it("UnaryExpression: typeof", function () {
+            var program = parseAndInferenceExpression("var a = 5; typeof a;");
+            var exp = program.body[1].expression;
+            exp.extra.should.have.property("type", TYPES.STRING);
+            exp.extra.should.have.property("staticValue", "number");
+        });
         it("BinaryExpression", function () {
             var program = parseAndInferenceExpression("var a = 5; 2-a;");
             var exp = program.body[1].expression;

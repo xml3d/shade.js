@@ -1,5 +1,6 @@
 (function (ns) {
 
+    // Dependencies
     var sanitizer = require("./sanitizer/sanitizer.js"),
         resolver =  require("../resolve/resolve.js"),
         staticTransformer = require("./constants/staticTransformer.js"),
@@ -13,11 +14,11 @@
         codegen = require("escodegen");
 
 
-
+    // Shortcuts
     var ANNO = Annotations.ANNO;
 
     /**
-     *
+     * This is the main analysis
      * @param {Object} ast
      * @param {Object|null} opt
      * @returns {Object}

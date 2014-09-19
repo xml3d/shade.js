@@ -159,8 +159,13 @@
                         result.setInvalid(generateErrorInformation(node, ERROR_TYPES.NAN_ERROR));
                     }
                     break;
-                case "~":
                 case "typeof":
+                    result.setType(TYPES.STRING);
+                    if(argument.isValid())
+                        result.setStaticValue(argument.getJavaScriptTypeString());
+                    return;
+
+                case "~":
                 case "void":
                 case "delete":
                 default:
