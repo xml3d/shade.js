@@ -1,15 +1,25 @@
 # shade.js
 
-Repository for common activities regarding a compiler framework for Xflow and XML3D.
+Shade.js is a material description language and a compiler framework.
+It compiles procedural material descriptions based on s subset of JavaScript to GLSL and OSL.
+The aim of shade.js is to simplify creating new materials and being able to share materials between different rendering
+frameworks.
+Here, we have a strong focus on WebGL frameworks.
+That's why we have chosen JavaScript as the base language and why the whole compiler framework is written in JavaScript
+as well.
 
-The aim is to provide programmable custom shading and xflow kernels that can be cross-compiled to several back-ends, including River Trail kernel and GLSL shaders. The front-end language is JavaScript.
+shade.js is integrated into [xml3d.js](https://github.com/xml3d/xml3d.js).
+For the some scientific background and technical details refer to [our paper](http://xml3d.org/xml3d/papers/shade.js/).
+The whole project is still in an early alpha phase, so please have some patient until everything works as expected.
 
 
 ## Install
 
-Run
+Install all dependencies with [npm](http://npmjs.org)
 
-  npm install
+```
+npm install
+```
 
 from the root directory
 
@@ -17,21 +27,32 @@ from the root directory
 
 Using the node environment, just include index.js from the root directory:
 
-  require("index.js")
+```javascript
+require("index.js")
+```
 
 To built a version to run in the browser, run the build script from the build directory:
 
-  node build/build.js
+```
+node build/build.js
+```
 
 
-## Running tests
+## Tests
 
-First
+We use the [mocha](http://visionmedia.github.io/mocha/) test framework for testing.
 
- npm install -g mocha
+### Installation
+```
+npm install -g mocha
+```
 
-then run
+### Run Tests
 
- mocha
+Run
+
+```
+mocha
+```
 
 from the root directory
