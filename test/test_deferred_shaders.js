@@ -51,7 +51,7 @@ function createTest(dir, file) {
 function compareObject(obj, expected, path){
     for(var i in expected){
         var subPath = path + i + "/";
-        obj.should.have.property(i, undefined, "ColorClosure Sig Check at " + subPath);
+        obj.should.have.property(i);//, undefined, "ColorClosure Sig Check at " + subPath);
         if(typeof expected[i] == "object"){
             obj.should.be.type("object", "ColorClosure Sig Check at " + subPath);
             compareObject(obj[i], expected[i], subPath);

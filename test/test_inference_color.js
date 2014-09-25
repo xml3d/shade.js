@@ -78,7 +78,7 @@ describe('Inference:', function () {
                 // expr
                 callExpression.should.have.property("extra");
                 callExpression.extra.should.have.property("type", TYPES.OBJECT);
-                callExpression.extra.should.have.property("kind", TYPES.FLOAT3);
+                callExpression.extra.should.have.property("kind", KINDS.FLOAT3);
             });
 
 

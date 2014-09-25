@@ -1,1 +1,1 @@
-module.exports = require('./src/shade.js');
+module.exports = require('./src/index.js');

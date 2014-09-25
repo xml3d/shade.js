@@ -18,8 +18,8 @@ describe('Shade',   function(){
             var result = Shade.extractParameters("function shade(p) { p.b; return p.a; }");
             result.should.have.property("shaderParameters");
             var shaderParameters = result.shaderParameters;
-            shaderParameters.should.include('b');
-            shaderParameters.should.include('a');
+            shaderParameters.should.containEql('b');
+            shaderParameters.should.containEql('a');
             shaderParameters.should.have.length(2);
             result.systemParameters.should.be.empty;
         });
@@ -27,8 +27,8 @@ describe('Shade',   function(){
             var result = Shade.extractParameters("function f(a, p) {p.b;}; function shade(p) { var c = 2; f(c, p); return p.a; }");
             result.should.have.property("shaderParameters");
             var shaderParameters = result.shaderParameters;
-            shaderParameters.should.include('b');
-            shaderParameters.should.include('a');
+            shaderParameters.should.containEql('b');
+            shaderParameters.should.containEql('a');
             shaderParameters.should.have.length(2);
             result.systemParameters.should.be.empty;
         });
@@ -36,8 +36,8 @@ describe('Shade',   function(){
             var result = Shade.extractParameters("function f(a, p) {p.b; f(a,p);}; function shade(p) { var c = 2; f(c, p); return p.a; }");
             result.should.have.property("shaderParameters");
             var shaderParameters = result.shaderParameters;
-            shaderParameters.should.include('b');
-            shaderParameters.should.include('a');
+            shaderParameters.should.containEql('b');
+            shaderParameters.should.containEql('a');
             shaderParameters.should.have.length(2);
             result.systemParameters.should.be.empty;
         });
@@ -46,13 +46,13 @@ describe('Shade',   function(){
             var result = Shade.extractParameters("function f(a, p, that) {p.b; that.w; f(a,p, this.s);}; function shade(p) { var c = 2; f(c, p, this); this.x; return p.a; }");
             result.should.have.property("shaderParameters");
             var shaderParameters = result.shaderParameters;
-            shaderParameters.should.include('b');
-            shaderParameters.should.include('a');
+            shaderParameters.should.containEql('b');
+            shaderParameters.should.containEql('a');
             shaderParameters.should.have.length(2);
             var systemParameters = result.systemParameters;
             // systemParameters.should.include('w'); TODO
-            systemParameters.should.include('x');
-            systemParameters.should.include('s');
+            systemParameters.should.containEql('x');
+            systemParameters.should.containEql('s');
             systemParameters.should.have.length(2);
         });
     })

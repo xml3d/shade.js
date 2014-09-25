@@ -11,7 +11,7 @@ if(!fs.existsSync(outpath))
     fs.mkdirSync(path.dirname(outpath));
 
 var stream = fs.createWriteStream(outpath);
-var b = browserify();
+var b = browserify({debug: true });
 b.add(base);
-b.bundle({debug: true}).pipe(stream);
+b.bundle().pipe(stream);
 
