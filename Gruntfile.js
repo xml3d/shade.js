@@ -33,6 +33,16 @@ exports = module.exports = function (grunt) {
             }
         },
 
+        concat: {
+            options: {
+                banner: '/*! shade.js v<%= pkg.version %> | (c) 2013-<%= grunt.template.today("yyyy") %> DFKI GmbH and contributors, www.dfki.de | https://raw.githubusercontent.com/xml3d/shade.js/master/LICENSE */'
+             },
+             dist: {
+                src: ['<%= releaseName %>'],
+                dest: '<%= releaseName %>'
+             }
+        },
+
         uglify: {
             "<%= releaseName %>": "<%= releaseName %>"
         },
@@ -58,10 +68,12 @@ exports = module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-contrib-watch");
     grunt.loadNpmTasks("grunt-contrib-uglify");
+    grunt.loadNpmTasks("grunt-contrib-concat");
     grunt.loadNpmTasks("grunt-mocha-test");
     grunt.loadNpmTasks("grunt-browserify");
 
-    grunt.registerTask("build", ["browserify:debug", "browserify:release", "uglify"]);
+    grunt.registerTask("build", ["browserify:debug", "browserify:release", "uglify", "concat:dist"]);
+    grunt.registerTask("dev", ["browserify:debug"]);
     grunt.registerTask("test", ["mochaTest:test"]);
 
     grunt.registerTask("prepublish", ["clean", "test", "build"]);
