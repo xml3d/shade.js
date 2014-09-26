@@ -25,16 +25,16 @@ from the root directory
 
 ## Build
 
-Using the node environment, just include index.js from the root directory:
+Using the node environment, just include index.js from the src directory:
 
 ```javascript
-require("index.js")
+require("src/index.js")
 ```
 
 To built a version to run in the browser, run the build script from the build directory:
 
 ```
-node build/build.js
+grunt build
 ```
 
 
@@ -56,3 +56,9 @@ mocha
 ```
 
 from the root directory
+
+or
+
+```
+grunt test
+```
