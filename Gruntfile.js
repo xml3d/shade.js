@@ -39,7 +39,7 @@ exports = module.exports = function (grunt) {
 
         mochaTest: {
             test: {
-                src: ["<%= testDir %>/**/*.js"],
+                src: ["<%= testDir %>/*.js"],
                 options: {
                     "check-leaks": true,
                     reporter: "spec"
@@ -47,40 +47,10 @@ exports = module.exports = function (grunt) {
             }
         },
 
-        karma: {
-            options: {
-                files: ["<%= testDir %>/**/*.js"],
-                frameworks: ["mocha"],
-                browsers: ["Chrome", "Firefox"],
-                preprocessors: {
-                    "test/**/*.js": ["browserify"]
-                },
-                reporters: ["progress"],
-                port: 9999
-            },
-            test: {
-                options: {
-                    background: true
-                }
-            },
-            singleRun: {
-                options: {
-                    singleRun: true
-                }
-            }
-        },
-
-        groc: {
-            src: ["<%= libDir %>/**/*.js", "README.md"],
-            options: {
-                "out": "<%= docDir %>/"
-            }
-        },
-
         watch: {
             test: {
                 files: ["<%= libDir %>/**/*.js", "<%= testDir %>/*.js"],
-                tasks: ["karma:test:run", "test-node"]
+                tasks: ["test"]
             }
         }
     });
@@ -90,16 +60,9 @@ exports = module.exports = function (grunt) {
     grunt.loadNpmTasks("grunt-contrib-uglify");
     grunt.loadNpmTasks("grunt-mocha-test");
     grunt.loadNpmTasks("grunt-browserify");
-    // grunt.loadNpmTasks("grunt-karma");
-    grunt.loadNpmTasks("grunt-groc");
 
     grunt.registerTask("build", ["browserify:debug", "browserify:release", "uglify"]);
-
-    //grunt.registerTask("test", ["mochaTest:test", "karma:singleRun"]);
     grunt.registerTask("test", ["mochaTest:test"]);
-    grunt.registerTask("test-watch", ["karma:test:start", "watch:test"]);
 
-    grunt.registerTask("docs", ["groc"]);
-
-    grunt.registerTask("prepublish", ["clean", "test", "build", "docs"]);
+    grunt.registerTask("prepublish", ["clean", "test", "build"]);
 };
