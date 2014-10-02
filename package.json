@@ -1,37 +1,40 @@
 {
-  "name": "shade.js",
-  "description": "A compiler framework to compile shade.js material descriptions to GLSL",
-  "homepage": "http://www.xml3d.org/xml3d/papers/shade.js/",
-  "version": "0.1.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/xml3d/shade.js"
-  },
-  "bugs": {
-    "url": "https://github.com/xml3d/shade.js/issues"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "esprima": "1.0.2",
-    "eswalker": "*",
-    "escodegen": "*",
-    "estraverse": "1.3.2",
-    "walkes": "https://github.com/ksons/walkes/tarball/master",
-    "optimist": "*",
-    "esgraph": "https://github.com/ksons/esgraph/tarball/master",
-    "analyses": "https://github.com/ksons/analyses/tarball/master",
-    "es6-map-shim": "*"
-  },
-  "devDependencies": {
-    "browserify": "5.2.0",
-    "grunt": "0.4.5",
-    "grunt-browserify": "3.0.1",
-    "grunt-contrib-clean": "0.6.0",
-    "grunt-contrib-concat": "^0.5.0",
-    "grunt-contrib-uglify": "0.6.0",
-    "grunt-contrib-watch": "0.6.1",
-    "grunt-groc": "0.5.0",
-    "mocha": "1.20.0",
-    "should": "4.0.4"
-  }
+    "name": "shade.js",
+    "description": "A compiler framework to compile shade.js material descriptions to GLSL",
+    "homepage": "http://www.xml3d.org/xml3d/papers/shade.js/",
+    "version": "0.1.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/xml3d/shade.js"
+    },
+    "bugs": {
+        "url": "https://github.com/xml3d/shade.js/issues"
+    },
+    "license": "MIT",
+    "dependencies": {
+        "esprima": "1.0.2",
+        "eswalker": "*",
+        "escodegen": "*",
+        "estraverse": "1.3.2",
+        "walkes": "https://github.com/ksons/walkes/tarball/master",
+        "optimist": "*",
+        "esgraph": "https://github.com/ksons/esgraph/tarball/master",
+        "analyses": "https://github.com/ksons/analyses/tarball/master",
+        "es6-map-shim": "*"
+    },
+    "devDependencies": {
+        "browserify": "5.2.0",
+        "grunt": "0.4.5",
+        "grunt-browserify": "3.0.1",
+        "grunt-contrib-clean": "0.6.0",
+        "grunt-contrib-concat": "^0.5.0",
+        "grunt-contrib-uglify": "0.6.0",
+        "grunt-contrib-watch": "0.6.1",
+        "grunt-groc": "0.5.0",
+        "mocha": "1.20.0",
+        "should": "4.0.4"
+    },
+    "scripts": {
+        "test": "grunt test"
+    }
 }
