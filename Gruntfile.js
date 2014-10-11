@@ -19,17 +19,23 @@ exports = module.exports = function (grunt) {
 
         browserify: {
             debug: {
-                src: "build/shade.js",
+                src: "<%= libDir %>/index.js",
                 dest: "<%= pkg.name %>",
                 options: {
                     browserifyOptions: {
-                        debug: true
+                        debug: true,
+                        standalone: "Shade"
                     }
                 }
             },
             release: {
                 src: "<%= libDir %>/index.js",
-                dest: "<%= releaseName %>"
+                dest: "<%= releaseName %>",
+                options: {
+                    browserifyOptions: {
+                        standalone: "Shade"
+                    }
+                }
             }
         },
 
