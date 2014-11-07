@@ -7,7 +7,7 @@ var Shade = require("..");
 var walk = require('estraverse');
 var Syntax = walk.Syntax;
 var fs = require('fs');
-var should = require('chai').Should();
+var should = require('should');
 var Compiler = require("../src/generate/glmatrix/compiler.js").GLMatrixCompiler;
 
 var SnippetList = require("../src/generate/snippets/snippet-list").SnippetList;
@@ -97,7 +97,7 @@ function createTest(dir, file) {
         var compiledCode = codegen.generate(resultJs.ast);
         var expectedCode = codegen.generate(outputJs);
         compiledCode.should.eql(expectedCode);
-        resultJs.argTypes.should.deep.equal(jsInfo.argTypes);
+        resultJs.argTypes.should.eql(jsInfo.argTypes);
 
 
         snippetList = createSnippetList(connection, snippetsFunctions);
@@ -105,8 +105,8 @@ function createTest(dir, file) {
         compiledCode = codegen.generate(resultGLSL.ast);
         expectedCode = codegen.generate(outputGLSL);
         compiledCode.should.eql(expectedCode);
-        resultGLSL.argTypes.should.deep.equal(glslInfo.argTypes);
-        resultGLSL.inputIndices.should.deep.equal(glslInfo.inputIndices);
+        resultGLSL.argTypes.should.eql(glslInfo.argTypes);
+        resultGLSL.inputIndices.should.eql(glslInfo.inputIndices);
     });
 }
 
