@@ -322,7 +322,7 @@
 
         MemberExpression: function (node, parent, context) {
             var resultType = context.getTypeInfo(node),
-                objectAnnotation = ANNO(node.object),
+                objectAnnotation = context.getTypeInfo(node.object),
                 propertyAnnotation = ANNO(node.property),
                 scope = context.getScope();
 
@@ -336,8 +336,8 @@
                 if (objectAnnotation.isArray()) {
                     // Property is computed, thus it could be a variable
                     var propertyType =  context.getTypeInfo(node.property);
-                    if (!propertyType.canInt()) {
-                        Shade.throwError(node, "Expected 'int' type for array accessor");
+                    if (!propertyType.canNumber()) {
+                        Shade.throwError(node, "Expected 'int' or 'number' type for array accessor");
                     }
                     var elementInfo = objectAnnotation.getArrayElementType();
                     resultType.setType(elementInfo.type, elementInfo.kind);

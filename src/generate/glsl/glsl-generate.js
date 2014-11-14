@@ -32,7 +32,7 @@
             CONST: "const",
             UNIFORM: "uniform",
             VARYING: "varying",
-            ATTRIBUTE: "attribtue"
+            ATTRIBUTE: "attribute"
         }
     }
 
@@ -102,12 +102,16 @@
         }
     }
 
-    var toGLSLStorage = function(info) {
+    var toGLSLStorage = function(info, vertexShader) {
         if (!info.source)
             return null;
-        if (info.source == Sources.VERTEX)
-            return GLSL.Storage.VARYING;
-        if (info.source == Sources.UNIFORM)
+        if (info.source == Sources.VERTEX){
+            if(vertexShader && !info.output)
+                return GLSL.Storage.ATTRIBUTE;
+            else
+                return GLSL.Storage.VARYING;
+        }
+         if (info.source == Sources.UNIFORM)
             return GLSL.Storage.UNIFORM;
         if (info.source == Sources.CONSTANT)
             return GLSL.Storage.CONST;
@@ -144,13 +148,13 @@
 
     });*/
 
-    var generate = function (ast, opt) {
+    var generate = function (ast, vertexshader, opt) {
 
         opt = opt || {};
 
         var lines = createLineStack();
 
-        traverse(ast, lines, opt);
+        traverse(ast, lines, vertexshader, opt);
 
         return lines.join("\n");
     }
@@ -169,7 +173,7 @@
         }
     }
 
-    function traverse(ast, lines, opt) {
+    function traverse(ast, lines, vertexShader, opt) {
         var insideMain = false;
 
 
@@ -204,7 +208,7 @@
 
                             case Syntax.VariableDeclarator :
                                 // console.log("Meep!");
-                                var decl = handleVariableDeclaration(node, insideMain, opt);
+                                var decl = handleVariableDeclaration(node, insideMain, vertexShader, opt);
                                 lines.appendLine(decl);
                                 return;
 
@@ -312,8 +316,8 @@
         return extra.staticValue;
     };
 
-    function handleVariableDeclaration(node, writeStorageQualifier, opt) {
-        var storageQualifier = !writeStorageQualifier ? toGLSLStorage(node.extra) : null;
+    function handleVariableDeclaration(node, writeStorageQualifier, vertexShader, opt) {
+        var storageQualifier = !writeStorageQualifier ? toGLSLStorage(node.extra, vertexShader) : null;
         var result = storageQualifier ? storageQualifier + " " : "";
         result += toGLSLType(node.extra) + " " + node.id.name;
         if (node.extra.elements) {

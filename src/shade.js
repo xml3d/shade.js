@@ -16,6 +16,7 @@
         SpaceVectorType = interfaces.SpaceVectorType,
         SpaceType = interfaces.SpaceType,
         VectorType = interfaces.VectorType,
+        SnippetConverter = require("./generate/snippets/snippet-converter.js").SnippetConverter,
         SnippetList = require("./generate/snippets/snippet-list.js").SnippetList,
         SnippetEntry = require("./generate/snippets/snippet-list.js").SnippetEntry,
         SnippetConnector = require("./generate/snippets/snippet-connector"),
@@ -128,6 +129,7 @@
         toJavaScript: function(aast, opt){
             return codegen.generate(aast, opt);
         },
+        
         getSnippetAst: function(code){
             var fullAst;
             if(typeof(code) == "function"){
@@ -137,9 +139,12 @@
             else{
                 fullAst = this.getSanitizedAst(Base.deepExtend({}, code), {});
             }
+//            new SnippetConverter().convertShaderToSnippedAst(fullAst);
             return fullAst;
         },
+        
 
+        
         compileJsProgram: function(snippetList, systemParams, defaultIteration){
             var result = SnippetConnector.connectSnippets(snippetList, {
                 mode: defaultIteration ? SnippetConnector.MODE.JS_ITERATE : SnippetConnector.MODE.JS_NO_ITERATE});
@@ -198,6 +203,7 @@
         WorkingSet: WorkingSet,
         SnippetList: SnippetList,
         SnippetEntry: SnippetEntry,
+        SnippetConverter: SnippetConverter,
         Math: GlMatrix
 
 });

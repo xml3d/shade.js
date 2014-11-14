@@ -26,8 +26,8 @@
      * for code generation
      * @constructor
      */
-    var GLASTTransformer = function (root, mainId, opt) {
-        this.context = new Context(root, mainId, opt);
+    var GLASTTransformer = function (root, mainId, vertexShader, opt) {
+        this.context = new Context(root, mainId, vertexShader, opt);
     };
 
     function createUniformDependencyMap(uniformExpressions) {
@@ -299,10 +299,10 @@
                context.addHeader("#extension GL_EXT_draw_buffers : require");
                fragColors = {type: Syntax.BlockStatement, body: []};
                node.argument.elements.forEach(function(element, index) {
-                    fragColors.body.push(createGLFragColor(Tools.castToVec4(element, scope), index));
+                    fragColors.body.push(createGLFragColor(Tools.castToVec4(element, scope), index, context));
                });
             } else {
-                fragColors = createGLFragColor(Tools.castToVec4(node.argument, scope));
+                fragColors = createGLFragColor(Tools.castToVec4(node.argument, scope), undefined, context);
             }
             return {
                 type: Syntax.BlockStatement,
@@ -336,13 +336,24 @@
         //console.log(node);
     };
 
-    function createGLFragColor(result, index) {
+    function createGLFragColor(result, index, context) {
+        var name;
+        if(context.vertexShader){
+            name = "gl_Position";
+        }
+        else if(index !== undefined){
+            name = "gl_FragData[" + index + "]";
+        }
+        else{
+            name = "gl_FragColor";
+        }
+
         return {
             type: Syntax.AssignmentExpression,
             operator: "=",
             left: {
                 type: Syntax.Identifier,
-                name: (index !== undefined ? "gl_FragData[" + index + "]" : "gl_FragColor")
+                name: name
             },
             right: result
         };
@@ -492,6 +503,16 @@
         if (!objectReference.isArray()) {
             Shade.throwError(node, "In shade.js, [] access is only allowed on arrays.");
         }
+        var propertyType =  context.getTypeInfo(node.property);
+        if(!propertyType.canInt()){
+            node.property = {
+                type: Syntax.CallExpression,
+                callee: {type: "Identifier", name: "int"},
+                arguments: [ node.property]
+            }
+            ANNO(node.property).setType(Types.INT);
+        }
+        return node;
     };
 
 

@@ -14,7 +14,7 @@
         compileFragmentShader: function (aast, opt) {
             opt = opt || {};
 
-            var transformer = new Transformer(aast, "global.shade", opt);
+            var transformer = new Transformer(aast, "global.shade", false, opt);
 
             //console.log(JSON.stringify(aast, 0, " "));
 
@@ -23,7 +23,23 @@
             //console.log(JSON.stringify(aast, 0, " "));
 
             opt.headers = transformed.headers;
-            var code = generate(transformed.program, opt);
+            var code = generate(transformed.program, false, opt);
+
+            return {source: code, uniformSetter: transformed.uniformSetter};
+        },
+        compileVertexShader: function (aast, opt) {
+            opt = opt || {};
+
+            var transformer = new Transformer(aast, "global.main", true, opt);
+
+            //console.log(JSON.stringify(aast, 0, " "));
+
+            var transformed = transformer.transform(aast);
+
+            //console.log(JSON.stringify(aast, 0, " "));
+
+            opt.headers = transformed.headers;
+            var code = generate(transformed.program, true, opt);
 
             return {source: code, uniformSetter: transformed.uniformSetter};
         }

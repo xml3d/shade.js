@@ -10,12 +10,10 @@
         TYPES = Shade.TYPES,
         ANNO = common.ANNO;
 
-    var activeFunction = "";
-
     var leaveNode = function(node) {
         var annotation = ANNO(node), right;
 
-        if(activeFunction == "shade" && !annotation.isValid()) {
+        if(!annotation.isValid()) {
             var errorInfo = annotation.getError();
             var error = new Error(errorInfo.message);
             error.loc = errorInfo.loc;
@@ -56,12 +54,7 @@
      */
     var validate = ns.validate = function (ast) {
         return estraverse.replace(ast, {
-            leave: leaveNode,
-            enter: function (node) {
-                if (node.type == Syntax.FunctionDeclaration) {
-                    activeFunction = node.id.name;
-                }
-            }
+            leave: leaveNode
         });
     }
 
