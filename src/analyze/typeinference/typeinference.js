@@ -21,7 +21,6 @@
 
     // shortcuts
     var Syntax = common.Syntax;
-    var Map = common.Map;
     var Set = worklist.Set;
     var FunctionAnnotation = Annotations.FunctionAnnotation;
     var ANNO = Annotations.ANNO;

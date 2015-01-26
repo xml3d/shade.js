@@ -91,7 +91,6 @@
 
     ns.Syntax = Syntax;
     ns.VisitorOption = estraverse.VisitorOption;
-    ns.Map = require('es6-map-shim').Map;
 
     ns.ANNO = ANNO;
     ns.getObjectReferenceFromNode = ns.getTypeInfo;

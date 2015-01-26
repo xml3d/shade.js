@@ -13,8 +13,6 @@
     var walk = require('estraverse');
     var Syntax = walk.Syntax;
     var ANNO = common.ANNO;
-    var Map = common.Map;
-    var Set = analyses.Set;
 
 
     /**

@@ -14,8 +14,7 @@
 
 
     // Shortcuts
-    var Map = common.Map,
-        Syntax = common.Syntax,
+    var Syntax = common.Syntax,
         FunctionAnnotation = Annotations.FunctionAnnotation,
         ANNO = Annotations.ANNO;
 

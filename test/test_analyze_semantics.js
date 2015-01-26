@@ -1,7 +1,6 @@
 var esprima = require('esprima');
 var esgraph = require('esgraph');
 var analyses = require('analyses');
-var map = require('es6-map-shim');
 var Shade = require("..");
 var fs = require('fs');
 var should = require('should');
