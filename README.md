@@ -1,6 +1,4 @@
-# shade.js
-
-[![Build Status](https://travis-ci.org/xml3d/shade.js.svg?branch=develop)](https://travis-ci.org/xml3d/shade.js)
+# shade.js [![Build Status](https://img.shields.io/travis/xml3d/shade.js/develop.svg)](https://travis-ci.org/xml3d/shade.js)  [![Build Status](https://img.shields.io/npm/l/shade.js.svg)](http://opensource.org/licenses/MIT)
 
 Shade.js is a material description language and a compiler framework.
 It compiles procedural material descriptions based on s subset of JavaScript to GLSL and OSL.
