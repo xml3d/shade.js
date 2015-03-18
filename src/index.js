@@ -1,4 +1,6 @@
 (function (ns) {
+    require('es6-map/implement');
+
     var parser = require('esprima'),
         codegen = require('escodegen'),
         parameters = require("./analyze/parameters.js"),

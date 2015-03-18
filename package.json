@@ -20,7 +20,7 @@
         "optimist": "*",
         "esgraph": "https://github.com/ksons/esgraph/tarball/master",
         "analyses": "https://github.com/ksons/analyses/tarball/master",
-        "es6-map-shim": "*"
+        "es6-map": "*"
     },
     "devDependencies": {
         "browserify": "5.2.0",
