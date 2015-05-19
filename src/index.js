@@ -206,6 +206,6 @@
     /**
      * Library version:
      */
-    ns.version = '0.0.1';
+    ns.version = '0.1.0';
 
 }(exports));
