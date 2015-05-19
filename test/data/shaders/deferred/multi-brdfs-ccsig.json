@@ -1,0 +1,17 @@
+[
+    {
+        "args" : [
+            { "texIdx" : 0, "componentIdx" : 0, "storeType" : "float" },
+            { "texIdx" : 0, "componentIdx" : 1, "storeType" : "float3" },
+            { "texIdx" : 1, "componentIdx" : 0, "storeType" : "float" },
+            { "texIdx" : 3, "componentIdx" : 0, "storeType" : "float3" },
+            { "texIdx" : 2, "componentIdx" : 0, "storeType" : "float3" },
+            { "texIdx" : 2, "componentIdx" : 3, "storeType" : "float" },
+            { "texIdx" : 1, "componentIdx" : 1, "storeType" : "float3" }
+        ],
+        "colorClosures": [
+            { "name": "diffuse",  "argIndices" : [3,4,5] },
+            { "name": "phong",  "argIndices" : [6,4,5] }
+        ]
+    }
+]

@@ -1,0 +1,52 @@
+{
+    "global.shade": [
+        {
+            "extra": {
+                "type": "object",
+                "kind": "any",
+                "global": "true",
+                "info": {
+                     "texcoord": {
+                        "type": "object",
+                        "kind": "float2",
+                        "source": "vertex"
+                    },
+                    "time": {
+                        "source": "uniform",
+                        "type": "number"
+                    },
+                    "ucolorA": {
+                        "source": "uniform",
+                        "type": "object",
+                        "kind": "float3"
+                    },
+                    "ucolorB": {
+                        "source": "uniform",
+                        "type": "object",
+                        "kind": "float3"
+                    },
+                    "ucolorC": {
+                        "source": "uniform",
+                        "type": "object",
+                        "kind": "float3"
+                    },
+                    "ucolorD": {
+                        "source": "uniform",
+                        "type": "object",
+                        "kind": "float3"
+                    },
+                    "ucolorTransform1": {
+                        "source": "uniform",
+                        "type": "object",
+                        "kind": "matrix4"
+                    },
+                    "ucolorTransform2": {
+                        "source": "uniform",
+                        "type": "object",
+                        "kind": "matrix4"
+                    }
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+{
+    "global.main": [
+        {
+            "extra" : {
+                "type": "object", "kind": "any", "global": true,
+                "info": {
+                    "result": { "type": "object", "kind": "float3", "source": "vertex", "output": true },
+                    "value": { "type": "object", "kind": "float3", "source": "vertex" },
+                    "valueAdd": { "type": "object", "kind": "float3", "source": "vertex" },
+                    "weight": { "type": "number", "source": "uniform" },
+                    "valueAdd_2": { "type": "object", "kind": "float3", "source": "vertex" },
+                    "weight_2": { "type": "number", "source": "uniform" }
+                }
+            }
+        }
+    ]
+}
+

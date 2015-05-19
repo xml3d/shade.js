@@ -1,0 +1,20 @@
+{
+    "global.shade": [
+        {
+            "extra": {
+                "type": "object",
+                "kind": "any",
+                "global": "true",
+                "info": {
+                    "time": {
+                        "type": "number"
+                    } ,
+                    "channel0": {
+                        "type": "undefined"
+                    }
+                }
+            }
+
+        }
+    ]
+}

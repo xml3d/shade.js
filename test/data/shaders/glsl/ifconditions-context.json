@@ -1,0 +1,18 @@
+{
+    "global.shade": [
+        {
+            "extra": {
+                "type": "object",
+                "kind": "any",
+                "global": "true",
+                "info": {
+                    "ufloat": {
+                        "type": "float",
+                        "source": "uniform"
+                    }
+                }
+            }
+        }
+    ]
+}
+

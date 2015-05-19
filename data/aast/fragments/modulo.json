@@ -1,0 +1,36 @@
+{"type": "Program", "body": [
+    {
+        "type": "ExpressionStatement",
+        "expression": {
+            "type": "BinaryExpression",
+            "operator": "%",
+            "left": {
+                "type": "Literal",
+                "value": 5,
+                "raw": "5"
+            },
+            "right": {
+                "type": "CallExpression",
+                "callee": {
+                    "type": "MemberExpression",
+                    "computed": false,
+                    "object": {
+                        "type": "Identifier",
+                        "name": "Math"
+                    },
+                    "property": {
+                        "type": "Identifier",
+                        "name": "cos"
+                    }
+                },
+                "arguments": [
+                    {
+                        "type": "Literal",
+                        "value": 9,
+                        "raw": "9"
+                    }
+                ]
+            }
+        }
+    }
+]}
