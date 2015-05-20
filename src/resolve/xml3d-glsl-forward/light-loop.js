@@ -60,7 +60,7 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
                 "BRDF_ENTRY";
 
                 var c = 1.0;
-                if (this.spotLightCastShadow[i]) {
+                if (this.spotLightShadowMap.length && this.spotLightCastShadow[i]) {
                     var wpos = this.viewInverseMatrix.mulVec(position, 1.0).xyz();
 
                     var lsPos = this.spotLightMatrix[i].mulVec(new Vec4(wpos, 1));
