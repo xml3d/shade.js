@@ -4,7 +4,12 @@
     var Syntax = require('estraverse').Syntax;
     var Tools = require("../../tools.js");
 
-    var ShadeInstance = {}
+    var ShadeInstance = {
+        mix: { callExp: function(node, args) {
+            node.callee = Tools.removeMemberFromExpression(node.callee);
+            return node;
+        }}
+    }
 
     Tools.extend(ns, {
         id: "Shade",

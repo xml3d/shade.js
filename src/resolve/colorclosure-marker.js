@@ -20,7 +20,6 @@
         if (node.object.name == "Shade" || object.isOfKind(Shade.OBJECT_KINDS.COLOR_CLOSURE)) {
             var closureName = node.property.name;
             if (!Shade.ColorClosures.hasOwnProperty(closureName)) {
-                console.error("No closure for name'", closureName, "'");
                 return;
             };
             result.setType(Shade.TYPES.OBJECT, Shade.OBJECT_KINDS.COLOR_CLOSURE);
