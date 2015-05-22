@@ -65,6 +65,9 @@
     Base.extend(ns, {
 
         parse: function(ast, opt) {
+            if (typeof ast == 'function') {
+                ast = ast.toString();
+            }
             if (typeof ast == 'string') {
                 return parser.parse(ast, {raw: true, loc: opt.loc || false });
             }
@@ -74,17 +77,14 @@
         /**
          * Analyze the given source and extract all used shader and system parameters
          *
-         * @param {function|string} input The function of source code to analyze
+         * @param {object} input The AST of the source code to analyze
          * @param opt Options
          * @returns {{shaderParameters: Array, systemParameters: Array}}
          */
-        extractParameters: function (input, opt) {
-            if (typeof input == 'function') {
-                input = input.toString();
-            }
-            var ast = parser.parse(input);
+        extractParameters: function (ast, opt) {
             return parameters.extractParameters(ast, opt);
         },
+
 
         getSanitizedAst: function(str, opt){
             var ast = this.parse(str, opt);
