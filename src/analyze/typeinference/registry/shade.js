@@ -64,15 +64,26 @@
         }
     });
 
+    ShadeObject.mix = {
+        type: TYPES.FUNCTION, name: "mix", evaluate: function () {
+            return {
+                type: TYPES.OBJECT, kind: KINDS.COLOR_CLOSURE
+            };
+        }
+
+    };
+
     Base.extend(ns, {
         id: "Shade",
         kind: KINDS.COLOR_CLOSURE,
         object: {
-            constructor: ShadeConstructor,
-            static: null
+            constructor: null,
+            static: ShadeObject
         },
         instance: ShadeObject
 
     });
+
+
 
 }(exports));
