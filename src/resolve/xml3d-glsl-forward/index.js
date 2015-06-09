@@ -133,6 +133,35 @@
         return result;
     }
 
+    function injectTransparency(ccNames, state) {
+        var result = {
+            type: Syntax.BlockStatement,
+            body: []
+        };
+        state.isTransparent = true;
+        for(var i = 0; i < ccNames.length; ++i){
+            var fName, ccName = ccNames[i];
+            if(fName = getColorClosureInject(ccName, "getTransparency", state)) {
+                result.body.push(getInjectAddition("transparency", fName, ["position"], ccName, i));
+            }
+        }
+        // if no transparency closure force opaque
+        if (result.body.length === 0) {
+            result.body.push({
+                type: Syntax.ExpressionStatement,
+                expression: {
+                    type: Syntax.AssignmentExpression,
+                    operator: "=",
+                    left: {type: Syntax.Identifier, name: "transparency"},
+                    right: {type: Syntax.Identifier, name: "opaque"}
+                }
+            });
+            state.isTransparent = false;
+        }
+
+        return result;
+    }
+
     function injectColorClosureCalls(lightLoopFunction, ccNames, state){
         var result = Traversal.replace(lightLoopFunction.body, {
             enter: function(node, parent){
@@ -142,6 +171,7 @@
                         case "AMBIENT_ENTRY": return injectAmbientEntry(ccNames, state);
                         case "EMISSIVE_ENTRY": return injectEmissiveEntry(ccNames, state);
                         case "REFRACT_REFLECT_ENTRY": return injectRefractReflectEntry(ccNames, state);
+                        case "TRANSPARENCY": return injectTransparency(ccNames, state);
                     };
 
                 }
@@ -261,6 +291,8 @@
         state.newFunctions.forEach(function(newFunction) {
             state.program.body.unshift(newFunction);
         })
+
+        processData["isTransparent"] = !!state.isTransparent;
 
         return ast;
     }

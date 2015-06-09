@@ -129,7 +129,10 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
     var refractColor = new Vec3(0, 0, 0);
     var reflectColor = new Vec3(0, 0, 0);
     "REFRACT_REFLECT_ENTRY"
-    return Math.pow(new Vec4(emissiveColor.add(kdComplete.add(ksComplete)).add(refractColor).add(reflectColor), 1.0), new Vec4(1/2.2));
+    var opaque = new Vec3(1, 1, 1);
+    var transparency = new Vec3(0, 0, 0);
+    "TRANSPARENCY"
+    return new Vec4(Math.pow(new Vec3(emissiveColor.add(kdComplete.add(ksComplete)).add(refractColor).add(reflectColor)), new Vec3(1/2.2)), transparency.x());
 }
 
 }(exports));

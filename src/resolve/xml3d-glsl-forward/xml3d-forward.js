@@ -123,4 +123,10 @@
             }
         };
 
+        ns.transparent = {
+            getTransparency: function getTransparency(position, alpha) {
+                return new Vec3(alpha);
+            }
+        };
+
 }(exports));
