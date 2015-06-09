@@ -60,7 +60,7 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
                 "BRDF_ENTRY";
 
                 var c = 1.0;
-                if (this.spotLightShadowMap.length && this.spotLightCastShadow[i]) {
+                if (this.spotLightShadowMap && this.spotLightCastShadow[i]) {
                     var wpos = this.viewInverseMatrix.mulVec(position, 1.0).xyz();
 
                     var lsPos = this.spotLightMatrix[i].mulVec(new Vec4(wpos, 1));
@@ -70,31 +70,35 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
                     var lightuv = perspectiveDivPos.xy();
                     var bitShift = new Vec4( 1.0 / ( 256.0 * 256.0 * 256.0 ), 1.0 / ( 256.0 * 256.0 ), 1.0 / 256.0, 1.0 );
 
-                    var texSize = new Vec2(Math.max(this.coords.x(), this.coords.y())).mul(2);
-                    var texelSize = new Vec2(1.0, 1.0).div(texSize);
+                    var depth = this.spotLightShadowMap[i].sample2D(lightuv).dot(bitShift);
+                    if(lsDepth >= depth) {
+                        c = 0.0;
+                    }
+                    /*var texSize = Math.max(this.width, this.height) * 2;
+                    var texelSize = 1 / texSize;
                     var f = Math.fract(lightuv.mul(texSize).add(0.5));
                     var centroidUV = Math.floor(lightuv.mul(texSize).add(0.5));
                     centroidUV = centroidUV.div(texSize);
 
-                    var lb = this.spotLightShadowMap[i].sample2D(centroidUV.add(texelSize.mul(new Vec2(0.0, 0.0)))).dot(bitShift);
+                    var lb = this.spotLightShadowMap[i].sample2D(centroidUV).dot(bitShift);
                     if (lb >= lsDepth)
                         lb = 1.0;
                     else
                         lb = 0.0;
 
-                    var lt = this.spotLightShadowMap[i].sample2D(centroidUV.add(texelSize.mul(new Vec2(0.0, 1.0)))).dot(bitShift)
+                    var lt = this.spotLightShadowMap[i].sample2D(centroidUV.add(new Vec2(0.0, 1.0).mul(texelSize))).dot(bitShift);
                     if (lt >= lsDepth)
                         lt = 1.0;
                     else
                         lt = 0.0;
 
-                    var rb = this.spotLightShadowMap[i].sample2D(centroidUV.add(texelSize.mul(new Vec2(1.0, 0.0)))).dot(bitShift);
+                    var rb = this.spotLightShadowMap[i].sample2D(centroidUV.add(new Vec2(1.0, 0.0).mul(texelSize))).dot(bitShift);
                     if (rb >= lsDepth)
                         rb = 1.0;
                     else
                         rb = 0.0;
 
-                    var rt = this.spotLightShadowMap[i].sample2D(centroidUV.add(texelSize.mul(new Vec2(1.0, 1.0)))).dot(bitShift);
+                    var rt = this.spotLightShadowMap[i].sample2D(centroidUV.add(new Vec2(1.0, 1.0).mul(texelSize))).dot(bitShift);
                     if (rt >= lsDepth)
                         rt = 1.0;
                     else
@@ -102,7 +106,7 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
 
                     var a = Math.mix(lb, lt, f.y());
                     var b = Math.mix(rb, rt, f.y());
-                    c = Math.mix(a, b, f.x());
+                    c = Math.mix(a, b, f.x());*/
                 }
 
                 var softness = 1.0;
@@ -123,9 +127,9 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
     kdComplete = kdComplete.add(ambientColor);
     var emissiveColor = new Vec3(0, 0, 0);
     "EMISSIVE_ENTRY"
-    if (this.ssaoMap) {
+    /*if (this.ssaoMap) {
         kdComplete = kdComplete.mul(1 - this.ssaoMap.sample2D(this.normalizedCoords).r());
-    }
+    } */
     var refractColor = new Vec3(0, 0, 0);
     var reflectColor = new Vec3(0, 0, 0);
     "REFRACT_REFLECT_ENTRY"
