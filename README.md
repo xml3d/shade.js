@@ -161,6 +161,54 @@ Shade.ward(color, normal, tangent, ax, ay) {
 }
 ```
 
+### Vectors
+
+shade.js has built-in  2, 3 and 4 component vectors. All vectors are immutable.
+
+#### Construction
+
+```javascript
+    var a = new Vec2();  // Construct new vector with 2 components
+    assert(a.x () == a.y() == 0);
+    
+    var b = new Vec2(1, 2);  // Construct vector and initialize components
+    assert(a.x() == 1);
+    assert(a.y() == 2);
+
+    var c = new Vec3(1);  // Construct vector and initialize with single value
+    assert(a.x() == a.y() == a.z() == 1);
+
+```    
+
+#### Swizzles
+Accessing the components of the vectors is very similar to GLSL:
+
+```javascript
+    var a = new Vec4(1, 2, 3, 4);  // Components can be accessed using sets x/y/z/w or r/g/b/a, s/t/p/q
+    assert(a.x() == a.r() == a.s() == 1);
+    assert(a.y() == a.g() == a.t() == 2);
+    assert(a.z() == a.b() == a.p() == 3);
+    assert(a.w() == a.a() == a.q() == 4);
+    
+    // Access subsets of the vector
+    a.x(); // == 1
+    a.xy(); // == Vec2(1, 2);
+    a.xyz(); // == Vec3(1, 2, 3);
+    a.xyzw(); // == Vec4(1, 2, 3, 4);
+
+    // Mix access
+    a.xxx(); // == Vec3(1, 1, 1);
+    a.xyxy(); // == Vec4(1, 2, 1, 2);
+    a.xyxy(); // == Vec4(1, 2, 1, 2);
+    a.bgr(); // == Vec4(3, 2, 1);
+    a.xr(); // fails: Do not mix access sets
+    
+    // Chain access
+    a.abgr().abgr();  // Vec4(1, 2, 3, 4);
+
+```    
+
+
 
 ## Tests
 
