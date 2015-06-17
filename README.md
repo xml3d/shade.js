@@ -13,6 +13,8 @@ For the some scientific background and technical details refer to [our paper](ht
 The whole project is still in an early alpha phase, so please have some patient until everything works as expected.
 
 
+Try it online: http://xml3d.org/xml3d/shade-studio/
+
 ## Install
 
 Install all dependencies with [npm](http://npmjs.org)
