@@ -77,9 +77,9 @@
             getSpecular: function getSpecular(L, V, color, N, T, ax, ay){
                 var H = L.add(V).normalize();
                 var B = N.cross(T).normalize();
-                var NdotV = N.dot(V);
-                var NdotL = Math.saturate(N.dot(L));
-                var NdotH = N.dot(H);
+                var NdotV = Math.saturate(N.dot(V));
+                var NdotL = Math.saturate(N.dot(L)) + 0.001;
+                var NdotH = N.dot(H) + 0.001;
                 var HdotT = H.dot(T);
                 var HdotB = H.dot(B);
 
