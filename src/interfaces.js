@@ -134,6 +134,11 @@
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 1 },
                 { type: Types.NUMBER, semantic: Semantics.UNKNOWN, defaultValue: 1 },
             ]
+        },
+        "transparent" : {
+            input: [
+                { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0 }
+            ]
         }
     }
 

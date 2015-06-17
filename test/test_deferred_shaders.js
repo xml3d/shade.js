@@ -68,7 +68,7 @@ function compareObject(obj, expected, path){
 }
 
 
-describe('GLSL Deferred Shader Code:', function () {
+xdescribe('GLSL Deferred Shader Code:', function () {
     var dir = __dirname + '/data/shaders/deferred/';
     //createTest(dir, "basic.js");
 

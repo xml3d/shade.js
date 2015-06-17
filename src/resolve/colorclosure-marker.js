@@ -14,23 +14,15 @@
         }
     }
 
-    function handleNewExpression(node) {
-        if (node.callee.name == "Shade") {
-            var result = ANNO(node);
-            result.setType(Shade.TYPES.OBJECT, Shade.OBJECT_KINDS.COLOR_CLOSURE);
-        }
-    }
-
     function handleMemberExpression(node) {
         var object = ANNO(node.object);
         var result = ANNO(node);
-        if (object.isOfKind(Shade.OBJECT_KINDS.COLOR_CLOSURE)) {
+        if (node.object.name == "Shade" || object.isOfKind(Shade.OBJECT_KINDS.COLOR_CLOSURE)) {
             var closureName = node.property.name;
             if (!Shade.ColorClosures.hasOwnProperty(closureName)) {
-                console.error("No closure for name'", closureName, "'");
                 return;
             };
-            result.copy(object);
+            result.setType(Shade.TYPES.OBJECT, Shade.OBJECT_KINDS.COLOR_CLOSURE);
         }
     }
 
@@ -40,8 +32,6 @@
                  switch (node.type) {
                     case Syntax.CallExpression:
                         return handleCallExpression(node);
-                    case Syntax.NewExpression:
-                        return handleNewExpression(node);
                     case Syntax.MemberExpression:
                         return handleMemberExpression(node);
                 }

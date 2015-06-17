@@ -122,7 +122,9 @@
                 case Syntax.IfStatement:
                     return this.performStatementSplit(node, [{prop: "test", pre: true}]);
                 case Syntax.ReturnStatement:
-                    return this.performStatementSplit(node, [{prop: "argument", pre: true}]);
+                    if(node.argument)
+                        return this.performStatementSplit(node, [{prop: "argument", pre: true}]);
+                    break;
                 case Syntax.WhileStatement:
                     return this.performStatementSplit(node, [{prop: "test", pre: true, post: true}], "body");
                 case Syntax.ForStatement:
