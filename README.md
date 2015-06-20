@@ -52,6 +52,7 @@ The entry of a material description is the ```shade``` function:
       
       return new Vec3(1, 0.5, 0); // either return a RGB color
       return new Vec4(1, 0.5, 0, 1); // or return a RGBA color
+      return; // or discard the pixel
       
       // or return a color closure
       return Shade.diffuse(...);
