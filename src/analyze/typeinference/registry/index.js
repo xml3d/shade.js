@@ -1,6 +1,6 @@
 (function (ns) {
 
-    var Scope = require("../../../base/scope.js"),
+    var Scope = require("../../../type-system/scope.js"),
         Base = require("../../../base/index.js");
 
 

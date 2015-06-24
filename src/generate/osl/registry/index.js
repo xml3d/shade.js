@@ -1,6 +1,6 @@
 (function(ns) {
 
-    var Scope = require("../../../base/scope.js"),
+    var Scope = require("../../../type-system/scope.js"),
         TransformContext = require("../../base/context.js").TransformContext,
         Base = require("../../../base/index.js"),
         Shade = require("../../../interfaces.js"),

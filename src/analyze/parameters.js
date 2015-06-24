@@ -1,7 +1,7 @@
 (function (ns) {
 
     var walk = require('estraverse'),
-        Scope = require("./../base/scope.js"),
+        Scope = require("./../type-system/scope.js"),
         Syntax = walk.Syntax;
 
     var derivedSystemParameters = {

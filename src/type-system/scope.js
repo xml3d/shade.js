@@ -1,12 +1,12 @@
 (function(ns){
 
-    var Base = require("./index.js"),
+    var Base = require("./../base/index.js"),
         Shade = require("../interfaces.js"),
         TYPES = Shade.TYPES,
-        Annotation = require("./annotation.js").Annotation,
-        TypeInfo = require("./typeinfo.js").TypeInfo,
+        Annotation = require("./../base/annotation.js").Annotation,
+        TypeInfo = require("./../base/typeinfo.js").TypeInfo,
         Syntax = require('estraverse').Syntax,
-        ErrorHandler = require("./errors.js");
+        ErrorHandler = require("./../base/errors.js");
 
 
     /**
