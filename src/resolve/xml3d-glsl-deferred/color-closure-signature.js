@@ -3,7 +3,7 @@
     var Base = require("../../base/index.js"),
         Traversal = require('estraverse'),
         Syntax = Traversal.Syntax,
-        ANNO = require("./../../base/annotation.js").ANNO,
+        ANNO = require("./../../type-system/annotation.js").ANNO,
         DeferredInfo = require("./xml3d-deferred.js");
 
     var Shade = require("../../interfaces.js"),

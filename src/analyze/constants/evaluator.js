@@ -1,7 +1,7 @@
 (function(ns){
 
     var Syntax = require('estraverse').Syntax,
-        ANNO = require("../../base/annotation.js").ANNO,
+        ANNO = require("../../type-system/annotation.js").ANNO,
         Shade = require("../../interfaces.js");
 
 

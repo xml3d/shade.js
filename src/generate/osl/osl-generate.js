@@ -6,7 +6,7 @@
     var Shade = require("./../../interfaces.js");
     var AbstractGenerator = require("../base/base-generator.js").AbstractGenerator;
     var ExpressionHandler = require('../base/expression-handler.js').ExpressionHandler;
-    var FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
+    var FunctionAnnotation = require("./../../type-system/annotation.js").FunctionAnnotation;
 
 
     // Shortcuts

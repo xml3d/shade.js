@@ -5,7 +5,7 @@
  */
 
 var Traversal = require('estraverse');
-var ANNO = require("../base/annotation.js").ANNO;
+var ANNO = require("../type-system/annotation.js").ANNO;
 var Shade = require("../interfaces.js");
 
 var Syntax = Traversal.Syntax;

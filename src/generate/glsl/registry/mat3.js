@@ -3,7 +3,7 @@
     var Shade = require("../../../interfaces.js");
     var Syntax = require('estraverse').Syntax;
     var Tools = require("../../tools.js");
-    var ANNO = require("../../../base/annotation.js").ANNO;
+    var ANNO = require("../../../type-system/annotation.js").ANNO;
 
     var TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS;

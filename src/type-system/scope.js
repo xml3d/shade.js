@@ -1,11 +1,12 @@
+// External dependencies
 var util = require("util");
 var extend = require("lodash.assign");
+var Syntax = require('estraverse').Syntax;
 
-var Base = require("./../base/index.js"),
-    Shade = require("../interfaces.js"),
-    Annotation = require("./../base/annotation.js").Annotation,
+// Internal dependencies
+var Shade = require("../interfaces.js"),
+    Annotation = require("./annotation.js").Annotation,
     TypeInfo = require("./typeinfo.js").TypeInfo,
-    Syntax = require('estraverse').Syntax,
     ErrorHandler = require("./errors.js");
 
 
@@ -98,7 +99,7 @@ var Scope = function (node, parent, opt) {
     /** @type {Object.<string, {initialized: boolean, annotation: Annotation}>} */
     this.scope.bindings = this.scope.bindings || {};
     if (opt.bindings) {
-        Base.extend(this.scope.bindings, opt.bindings);
+        extend(this.scope.bindings, opt.bindings);
     }
 
     this.scope.name = opt.name || node.name || "<anonymous>";

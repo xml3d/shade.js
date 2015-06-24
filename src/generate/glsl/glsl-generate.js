@@ -1,13 +1,13 @@
 (function (ns) {
 
     // Dependencies
-    var FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
+    var FunctionAnnotation = require("./../../type-system/annotation.js").FunctionAnnotation;
     var Shade = require("./../../interfaces.js");
     var walk = require('estraverse');
     var ExpressionHandler = require('../base/expression-handler.js').ExpressionHandler,
         Syntax = walk.Syntax,
         VisitorOption = walk.VisitorOption,
-        ANNO = require("../../base/annotation.js").ANNO;
+        ANNO = require("../../type-system/annotation.js").ANNO;
 
 
     // Shortcuts

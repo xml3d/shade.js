@@ -2,7 +2,7 @@
 
     var Shade = require("../../../interfaces.js"),
         Base = require("../../../base/index.js"),
-        Annotations = require("../../../base/annotation.js"),
+        Annotations = require("../../../type-system/annotation.js"),
         Tools = require("./tools.js");
 
     var TYPES = Shade.TYPES,

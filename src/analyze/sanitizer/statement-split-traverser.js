@@ -6,7 +6,7 @@
         common = require("./../../base/common.js"),
         Shade = require("../../interfaces.js"),
         TypeInfo = require("../../type-system/typeinfo.js").TypeInfo,
-        ANNO = require("../../base/annotation.js").ANNO,
+        ANNO = require("../../type-system/annotation.js").ANNO,
         Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS;
 

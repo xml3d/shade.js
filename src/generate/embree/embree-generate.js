@@ -1,11 +1,11 @@
 (function (ns) {
 
-    var FunctionAnnotation = require("./../../base/annotation.js").FunctionAnnotation;
+    var FunctionAnnotation = require("./../../type-system/annotation.js").FunctionAnnotation;
     var Shade = require("./../../interfaces.js");
     var walk = require('estraverse'),
         Syntax = walk.Syntax,
         VisitorOption = walk.VisitorOption,
-        ANNO = require("../../base/annotation.js").ANNO;
+        ANNO = require("../../type-system/annotation.js").ANNO;
 
     var Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS,

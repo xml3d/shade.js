@@ -9,7 +9,7 @@
         StatementSplitTraverser = require("../../analyze/sanitizer/statement-split-traverser"),
         Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS,
-        ANNO = require("../../base/annotation.js").ANNO;
+        ANNO = require("../../type-system/annotation.js").ANNO;
 
     var Syntax = walk.Syntax;
     var VisitorOption = walk.VisitorOption;

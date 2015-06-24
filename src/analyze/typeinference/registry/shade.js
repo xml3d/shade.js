@@ -4,7 +4,7 @@
         TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS,
         Base = require("../../../base/index.js"),
-        Annotations = require("../../../base/annotation.js");
+        Annotations = require("../../../type-system/annotation.js");
 
 
     var ShadeConstructor =  {

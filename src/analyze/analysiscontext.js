@@ -4,7 +4,7 @@
     var Context = require("../base/context.js");
     var common = require("../base/common.js");
     var Base = require("../base/index.js");
-    var Annotations = require("./../base/annotation.js");
+    var Annotations = require("./../type-system/annotation.js");
     var assert = require('assert');
     var walk = require('estraverse');
     var InferenceScope = require("./typeinference/registry/").InferenceScope;

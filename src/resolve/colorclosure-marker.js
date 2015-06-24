@@ -4,7 +4,7 @@
         Syntax = Traversal.Syntax,
         parser = require('esprima'),
         Shade = require("../interfaces.js"),
-        ANNO = require("./../base/annotation.js").ANNO;
+        ANNO = require("./../type-system/annotation.js").ANNO;
 
     function handleCallExpression(node) {
         var callee = ANNO(node.callee);

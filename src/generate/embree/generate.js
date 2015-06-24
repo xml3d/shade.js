@@ -67,7 +67,7 @@
     traverse = require('estraverse').traverse;
     var TYPES = require("../../interfaces.js").TYPES;
     var KINDS = require("../../interfaces.js").OBJECT_KINDS;
-    var Annotation = require("../../base/annotation.js").Annotation;
+    var Annotation = require("../../type-system/annotation.js").Annotation;
 
 
     Syntax = {

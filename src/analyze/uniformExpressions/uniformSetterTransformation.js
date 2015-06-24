@@ -2,7 +2,7 @@
 
     var walk = require('estraverse');
     var Syntax = walk.Syntax;
-    var ANNO = require("../../base/annotation.js").ANNO;
+    var ANNO = require("../../type-system/annotation.js").ANNO;
 
     var interfaces = require("../../interfaces.js");
     var TYPES = interfaces.TYPES,

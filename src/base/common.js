@@ -1,6 +1,6 @@
 (function (ns) {
 
-    var ANNO = require("../base/annotation.js").ANNO,
+    var ANNO = require("../type-system/annotation.js").ANNO,
         estraverse = require('estraverse'),
         ErrorHandler = require("../type-system/errors.js");
 

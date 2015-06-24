@@ -2,7 +2,7 @@
 
     var Base = require("../../base/index.js"),
         common = require("../../base/common.js"),
-        FunctionAnnotation = require("../../base/annotation.js").FunctionAnnotation,
+        FunctionAnnotation = require("../../type-system/annotation.js").FunctionAnnotation,
         Shade = require("./../../interfaces.js"),
         Types = Shade.TYPES,
         analyses = require('analyses'),

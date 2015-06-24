@@ -5,7 +5,7 @@
         Syntax = Traversal.Syntax,
         parser = require('esprima'),
         Shade = require("../../interfaces.js"),
-        ANNO = require("./../../base/annotation.js").ANNO,
+        ANNO = require("./../../type-system/annotation.js").ANNO,
         sanitizer = require("./../../analyze/sanitizer/sanitizer.js"),
         ColorClosureSignature = require("./color-closure-signature.js").ColorClosureSignature;
 

@@ -10,7 +10,7 @@
         AnalysisContext = require("./analysiscontext.js"),
         inference = require("./typeinference/typeinference.js"),
         spaceTransformer = require("../generate/space/transform.js").SpaceTransformer,
-        Annotations = require("./../base/annotation.js"),
+        Annotations = require("./../type-system/annotation.js"),
         codegen = require("escodegen");
 
 

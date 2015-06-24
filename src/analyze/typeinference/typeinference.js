@@ -11,7 +11,7 @@
     var annotateRight = require("./infer_expression.js").annotateRight;
     var InferenceScope = require("./registry/").InferenceScope;
     var System = require("./registry/system.js");
-    var Annotations = require("./../../base/annotation.js");
+    var Annotations = require("./../../type-system/annotation.js");
     var walk = require('estraverse');
     var Tools = require("../settools.js");
     var Shade = require("../../interfaces.js");
