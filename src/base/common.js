@@ -2,7 +2,7 @@
 
     var ANNO = require("../base/annotation.js").ANNO,
         estraverse = require('estraverse'),
-        ErrorHandler = require("./errors.js");
+        ErrorHandler = require("../type-system/errors.js");
 
 
     var Syntax = estraverse.Syntax;

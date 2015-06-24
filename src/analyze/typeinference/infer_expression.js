@@ -5,7 +5,7 @@
         Shade = require("../../interfaces.js"),
         evaluator = require("../constants/evaluator.js"),
         estraverse = require('estraverse'),
-        ErrorHandler = require("../../base/errors.js");
+        ErrorHandler = require("../../type-system/errors.js");
 
     var codegen = require('escodegen');
 

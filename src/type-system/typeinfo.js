@@ -18,7 +18,7 @@ var TypeInfo = function (node, extra) {
     if (extra) {
         Base.shallowExtend(this.node.extra, extra);
     }
-}
+};
 
 TypeInfo.createForContext = function (node, ctx) {
     var result = new TypeInfo(node);
@@ -34,7 +34,7 @@ TypeInfo.createForContext = function (node, ctx) {
         }
     }
     return result;
-}
+};
 
 /**
  * @param {TypeInfo} typeInfo
@@ -59,7 +59,7 @@ TypeInfo.copyStaticValue = function (typeInfo, value) {
         default:
             throw new Error("Can't copy static value of kind: " + typeInfo.getKind());
     }
-}
+};
 
 TypeInfo.prototype = {
     getExtra: function () {
@@ -194,7 +194,7 @@ TypeInfo.prototype = {
             return true;
         }
         if (a.canNumber() && b.canNumber()) {
-            this.setType(TYPES.NUMBER)
+            this.setType(TYPES.NUMBER);
             return true;
         }
         return false;
@@ -375,11 +375,11 @@ TypeInfo.prototype = {
     setSemantic: function (sem) {
         this.getExtra().semantic = sem;
     },
-    getSemantic: function (sem) {
+    getSemantic: function () {
         return this.getExtra().semantic;
     }
 
-}
+};
 
 
 module.exports.TypeInfo = TypeInfo;

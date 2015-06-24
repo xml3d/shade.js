@@ -1,11 +1,15 @@
+var util = require("util");
+var extend = require("lodash.assign");
+
 var Base = require("./../base/index.js"),
     Shade = require("../interfaces.js"),
-    TYPES = Shade.TYPES,
     Annotation = require("./../base/annotation.js").Annotation,
     TypeInfo = require("./typeinfo.js").TypeInfo,
     Syntax = require('estraverse').Syntax,
-    ErrorHandler = require("./../base/errors.js");
+    ErrorHandler = require("./errors.js");
 
+
+var TYPES = require("./constants.js").TYPES;
 
 /**
  *
@@ -25,8 +29,9 @@ var Binding = function (binding, registry) {
     }
 };
 
+util.inherits(Binding, TypeInfo);
 
-Base.createClass(Binding, TypeInfo, {
+extend(Binding.prototype, {
     hasConstructor: function () {
         return !!this.getConstructor();
     },
@@ -73,7 +78,7 @@ Base.createClass(Binding, TypeInfo, {
     }
 
 
-})
+});
 
 
 /**
@@ -100,7 +105,7 @@ var Scope = function (node, parent, opt) {
 
 };
 
-Base.extend(Scope.prototype, {
+extend(Scope.prototype, {
     setRegistry: function (registry) {
         this.registry = registry;
     },

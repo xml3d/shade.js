@@ -1,25 +1,6 @@
 (function(ns){
 
-    ns.extend = function(a, b) {
-        for ( var prop in b) {
-            var g = b.__lookupGetter__(prop), s = b.__lookupSetter__(prop);
-            if (g||s) {
-                if (g) {
-                    a.__defineGetter__(prop, g);
-                }
-                if (s) {
-                    a.__defineSetter__(prop, s);
-                }
-            } else {
-                if (b[prop] === undefined) {
-                    delete a[prop];
-                } else if (prop !== "constructor" || a !== window) {
-                    a[prop] = b[prop];
-                }
-            }
-        }
-        return a;
-    };
+    ns.extend = require("lodash.assign");
 
 
 
