@@ -4,17 +4,16 @@ var extend = require("lodash.assign");
 var Syntax = require('estraverse').Syntax;
 
 // Internal dependencies
-var Shade = require("../interfaces.js"),
-    Annotation = require("./annotation.js").Annotation,
-    TypeInfo = require("./typeinfo.js").TypeInfo,
-    ErrorHandler = require("./errors.js");
-
-
+var Shade = require("../interfaces.js"); // TODO(ksons): Eliminate this dependency
+var ErrorHandler = require("./errors.js");
+var Annotation = require("./annotation.js").Annotation;
+var TypeInfo = require("./typeinfo.js").TypeInfo;
 var TYPES = require("./constants.js").TYPES;
 
 /**
- *
+ * TODO(ksons): Eliminate this class
  * @param binding
+ * @param registry
  * @extends TypeInfo
  * @constructor
  */
@@ -83,6 +82,7 @@ extend(Binding.prototype, {
 
 
 /**
+ * @param {Object} node AST node that defines the scope
  * @param {Scope|null} parent
  * @param opt
  * @constructor
@@ -92,7 +92,7 @@ var Scope = function (node, parent, opt) {
 
     /** @type (Scope|null) */
     this.parent = parent || opt.parent || null;
-    this.registry = opt.registry || (parent ? parent.registery : {});
+    this.registry = opt.registry || (parent ? parent.registry : {});
 
     this.scope = node.scope = node.scope || {};
 
@@ -102,7 +102,7 @@ var Scope = function (node, parent, opt) {
         extend(this.scope.bindings, opt.bindings);
     }
 
-    this.scope.name = opt.name || node.name || "<anonymous>";
+    this.scope.name = opt.name || node.name || "|anonymous|";
 
 };
 
@@ -175,14 +175,13 @@ extend(Scope.prototype, {
             }
         }
 
-        var init = {
+        bindings[name] = {
             initialized: false,
             initPosition: position,
             extra: {
                 type: TYPES.UNDEFINED
             }
         };
-        bindings[name] = init;
         return true;
     },
 
@@ -190,6 +189,7 @@ extend(Scope.prototype, {
      *
      * @param {string} name
      * @param {TypeInfo} typeInfo
+     * @param {Object} node AST node the new type info originates from
      */
     updateTypeInfo: function (name, typeInfo, node) {
         var v = this.getBindingByName(name);

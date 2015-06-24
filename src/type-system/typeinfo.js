@@ -1,11 +1,15 @@
-var Shade = require("../interfaces.js"),
-    Syntax = require('estraverse').Syntax,
-    Base = require("./../base/index.js"),
-    Set = require('analyses').Set;
+// External dependencies
+var Syntax = require('estraverse').Syntax;
+var Set = require('analyses').Set;
+var extend = require("lodash.assign");
 
-var TYPES = Shade.TYPES,
-    KINDS = Shade.OBJECT_KINDS;
+// Internal dependencies
+var Shade = require("../interfaces.js"); // TODO(ksons): Eliminate this dependency
+var TYPES = require("./constants.js").TYPES;
+var Annotation = require("./annotation.js").Annotation;
 
+// TODO(ksons): New mechanism for predefined types
+var KINDS = Shade.OBJECT_KINDS;
 
 /**
  * @param {*} node Carrier object for the type info, only node.extra gets polluted
@@ -16,7 +20,7 @@ var TypeInfo = function (node, extra) {
     this.node = node;
     this.node.extra = this.node.extra || {};
     if (extra) {
-        Base.shallowExtend(this.node.extra, extra);
+        extend(this.node.extra, extra);
     }
 };
 
@@ -300,7 +304,7 @@ TypeInfo.prototype = {
         extra.error = null;
     },
     setFromExtra: function (extra) {
-        Base.shallowExtend(this.node.extra, extra);
+        extend(this.node.extra, extra);
         // Set static object extra: This might be an object
         if (extra.staticValue != undefined) {
             this.setStaticValue(TypeInfo.copyStaticValue(this, extra.staticValue));
