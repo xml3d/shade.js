@@ -4,7 +4,7 @@
         Context = require("../../../base/context.js"),
         Base = require("../../../base/index.js"),
         Shade = require("../../../interfaces.js"),
-        TypeInfo = require("../../../base/typeinfo.js").TypeInfo,
+        TypeInfo = require("../../../type-system/typeinfo.js").TypeInfo,
         common = require("../../../base/common.js");
 
 

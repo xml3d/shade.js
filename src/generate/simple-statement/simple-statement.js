@@ -5,7 +5,7 @@
         Base = require("../../base/index.js"),
         common = require("./../../base/common.js"),
         Shade = require("../../interfaces.js"),
-        TypeInfo = require("../../base/typeinfo.js").TypeInfo,
+        TypeInfo = require("../../type-system/typeinfo.js").TypeInfo,
         StatementSplitTraverser = require("../../analyze/sanitizer/statement-split-traverser"),
         Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS,

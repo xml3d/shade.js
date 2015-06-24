@@ -17,7 +17,7 @@
     var Shade = require("../../interfaces.js");
     var walkes = require('walkes');
     var validator = require('../validator');
-    var TypeInfo = require("../../base/typeinfo.js").TypeInfo;
+    var TypeInfo = require("../../type-system/typeinfo.js").TypeInfo;
 
     // shortcuts
     var Syntax = common.Syntax;

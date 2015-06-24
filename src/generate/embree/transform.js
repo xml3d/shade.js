@@ -3,7 +3,7 @@
     var Base = require("../../base/index.js"),
         common = require("../../base/common.js"),
         FunctionAnnotation = require("../../base/annotation.js").FunctionAnnotation,
-        TypeInfo = require("../../base/typeinfo.js").TypeInfo,
+        TypeInfo = require("../../type-system/typeinfo.js").TypeInfo,
         Shade = require("./../../interfaces.js"),
         Types = Shade.TYPES,
         Kinds = Shade.OBJECT_KINDS,

@@ -3,7 +3,7 @@
     var Syntax = require('estraverse').Syntax;
     var Base = require("../base/index.js");
     var ANNO = require("../base/annotation.js").ANNO;
-    var TypeInfo = require("../base/typeinfo.js").TypeInfo;
+    var TypeInfo = require("../type-system/typeinfo.js").TypeInfo;
     var Shade = require("../interfaces.js");
     var VecBase = require("../base/vec.js");
 
