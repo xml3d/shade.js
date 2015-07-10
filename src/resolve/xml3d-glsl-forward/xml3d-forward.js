@@ -77,9 +77,9 @@
             getSpecular: function getSpecular(L, V, color, N, T, ax, ay){
                 var H = L.add(V).normalize();
                 var B = N.cross(T).normalize();
-                var NdotV = N.dot(V);
-                var NdotL = Math.saturate(N.dot(L));
-                var NdotH = N.dot(H);
+                var NdotV = Math.saturate(N.dot(V));
+                var NdotL = Math.saturate(N.dot(L)) + 0.001;
+                var NdotH = N.dot(H) + 0.001;
                 var HdotT = H.dot(T);
                 var HdotB = H.dot(B);
 
@@ -120,6 +120,12 @@
                 var refraction3D = I.refract(N, eta).normalize();
                 var refraction2D = new Vec2((Math.atan2(-refraction3D.z(), refraction3D.x()) + Math.PI) / (2 * Math.PI), (Math.asin(refraction3D.y()) + Math.PI / 2.0) / Math.PI);
                 return Math.pow(this.environment.sample2D(refraction2D).rgb(), new Vec3(2.2)).mul(factor);
+            }
+        };
+
+        ns.transparent = {
+            getTransparency: function getTransparency(position, alpha) {
+                return new Vec3(alpha);
             }
         };
 

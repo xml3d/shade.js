@@ -4,7 +4,8 @@
         TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS,
         Base = require("../../../base/index.js"),
-        Tools = require("./tools.js");
+        Annotations = require("../../../base/annotation.js");
+
 
     var ShadeConstructor =  {
         type: TYPES.OBJECT,
@@ -12,11 +13,10 @@
         /**
          * @param {Annotation} result
          * @param {Array.<Annotation>} args
-         * @param {Context} ctx
          */
-        evaluate: function(result, args, context, objectReference, root) {
+        evaluate: function(result, args) {
             if (args.length > 0)
-                throw new Error("Shade.emission expects no parameters.");
+                throw new Error("Shade constructor expects no parameters.");
             return {
                 type: TYPES.OBJECT,
                 kind: KINDS.COLOR_CLOSURE
@@ -24,130 +24,51 @@
         }
     };
 
-    var checkArgumentIsColor = function(node, args, position, name) {
-        if(!args[position] || !args[position].canColor())
-            Shade.throwError(node, "Argument "+ position + " of Shade." + name + " must evaluate to a color, found " + (args[position] ? args[position].getTypeString() : "undefined"));
-    };
+    var ShadeObject = {};
 
-    var checkArgumentIsNormal = function(node, args, position, name) {
-        if(!args[position] || !args[position].canNormal())
-            Shade.throwError(node, "Argument "+ position + " of Shade." + name + " must evaluate to a normal, found " + (args[position] ? args[position].getTypeString() : "undefined"));
-    };
+    Object.keys(Shade.ColorClosures).forEach(function (closureName) {
+        var params = Shade.ColorClosures[closureName].input;
+        ShadeObject[closureName] = {
+            type: TYPES.FUNCTION, name: closureName, evaluate: function (result, args /*, context, objectReference, root */) {
+                for (var i = 0; i < params.length; i++) {
+                    var required = new Annotations.Annotation({}, params[i]);
+                    if (i >= args.length) {
+                        if (params[i].defaultValue != undefined) {
+                            continue;
+                        }
+                        Shade.throwError(result.node, "Argument " + (i + 1) + " of Shade." + closureName + " is required but not given.");
+                    } else {
+                        // TODO(ksons): Need a more generic canCastTo method in type system
+                        switch (params[i].semantic) {
+                            case Shade.SEMANTICS.COLOR:
+                                if (!args[i].canColor()) {
+                                    Shade.throwError(result.node, "Argument " + (i + 1) + " of Shade." + closureName + " must evaluate to a color, found " + args[i].getTypeString());
+                                }
+                                break;
+                            case Shade.SEMANTICS.NORMAL:
+                                if (!args[i].canNormal()) {
+                                    Shade.throwError(result.node, "Argument " + (i + 1) + " of Shade." + closureName + " must evaluate to a normal, found " + args[i].getTypeString());
+                                }
+                                break;
+                            default:
+                            // TODO(ksons): More type checks
 
-    var ShadeObject = {
-        emission: {
-            type: TYPES.FUNCTION,
-            evaluate: function(result, args, context, objectReference, root) {
-                if (args.length > 0)
-                    throw new Error("Shade.emission expects no parameters.");
-                return {
-                    type: TYPES.OBJECT,
-                    kind: KINDS.COLOR_CLOSURE
-                };
-            }
-        },
-        diffuse: {
-            type: TYPES.FUNCTION,
-            name: "diffuse",
-            evaluate: function(result, args, context, objectReference, root) {
-                checkArgumentIsColor(result.node, args, 0, this.name);
-                checkArgumentIsNormal(result.node, args, 1, this.name);
-
-                return {
-                    type: TYPES.OBJECT,
-                    kind: KINDS.COLOR_CLOSURE
-                };
-            }
-        },
-        phong: {
-            type: TYPES.FUNCTION,
-            name: "phong",
-            evaluate: function(result, args, ctx) {
-                // TODO: Check arguments based on interface description
-                checkArgumentIsColor(result.node, args, 0, this.name);
-                checkArgumentIsNormal(result.node, args, 1, this.name);
-
-                if (args.length > 2) {
-                    var shininess = args[2];
-                    if(!shininess.canNumber()) {
-                        throw new Error("Third argument (shininess) of Shade.phong must evaluate to a number. Found: " + shininess.str());
+                        }
                     }
                 }
-
                 return {
-                    type: TYPES.OBJECT,
-                    kind: KINDS.COLOR_CLOSURE
+                    type: TYPES.OBJECT, kind: KINDS.COLOR_CLOSURE
                 };
-            }
-        },
-        cookTorrance: {
-            type: TYPES.FUNCTION,
-            name: "cookTorrance",
-            evaluate: function(result, args, ctx) {
-                // TODO: Check arguments based on interface description
-                checkArgumentIsColor(result.node, args, 0, this.name);
-                checkArgumentIsNormal(result.node, args, 1, this.name);
 
-                return {
-                    type: TYPES.OBJECT,
-                    kind: KINDS.COLOR_CLOSURE
-                };
             }
-        },
-        ward: {
-            type: TYPES.FUNCTION,
-            name: "ward",
-            evaluate: function(result, args, ctx) {
-                // TODO: Check arguments based on interface description
-                checkArgumentIsColor(result.node, args, 0, this.name);
-                checkArgumentIsNormal(result.node, args, 1, this.name);
-                checkArgumentIsNormal(result.node, args, 2, this.name);
+        }
+    });
 
-                return {
-                    type: TYPES.OBJECT,
-                    kind: KINDS.COLOR_CLOSURE
-                };
-            }
-        },
-        reflect: {
-            type: TYPES.FUNCTION,
-            name: "reflect",
-            evaluate: function(result, args, ctx) {
-                // TODO: Check arguments based on interface description
-                checkArgumentIsNormal(result.node, args, 0, this.name);
-
-                return {
-                    type: TYPES.OBJECT,
-                    kind: KINDS.COLOR_CLOSURE
-                };
-            }
-        },
-        refract: {
-            type: TYPES.FUNCTION,
-            name: "refract",
-            evaluate: function(result, args, ctx) {
-                // TODO: Check arguments based on interface description
-                checkArgumentIsNormal(result.node, args, 0, this.name);
-
-                return {
-                    type: TYPES.OBJECT,
-                    kind: KINDS.COLOR_CLOSURE
-                };
-            }
-        },
-        scatter: {
-            type: TYPES.FUNCTION,
-            name: "scatter",
-            evaluate: function(result, args, ctx) {
-                // TODO: Check arguments based on interface description
-                checkArgumentIsColor(result.node, args, 0, this.name);
-                checkArgumentIsNormal(result.node, args, 1, this.name);
-
-                return {
-                    type: TYPES.OBJECT,
-                    kind: KINDS.COLOR_CLOSURE
-                };
-            }
+    ShadeObject.mix = {
+        type: TYPES.FUNCTION, name: "mix", evaluate: function () {
+            return {
+                type: TYPES.OBJECT, kind: KINDS.COLOR_CLOSURE
+            };
         }
 
     };
@@ -156,11 +77,13 @@
         id: "Shade",
         kind: KINDS.COLOR_CLOSURE,
         object: {
-            constructor: ShadeConstructor,
-            static: null
+            constructor: null,
+            static: ShadeObject
         },
         instance: ShadeObject
 
     });
+
+
 
 }(exports));

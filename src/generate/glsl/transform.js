@@ -460,12 +460,13 @@
         if(!objectInfo) {// Every object needs an info, otherwise we did something wrong
             Shade.throwError(node, "Internal Error: No object registered for: " + objectReference.getTypeString() + JSON.stringify(node.object));
         }
-        if (!objectInfo.hasOwnProperty(propertyName))
-            Shade.throwError(node, "Internal Error: Object of type " + objectReference.getTypeString() + " has no property '" + propertyName +"'");
 
-        var propertyHandler = objectInfo[propertyName];
-        if (typeof propertyHandler.property == "function") {
-            return propertyHandler.property(node, parent, scope, context);
+        // There is a specual handling defined for the object
+        if (objectInfo.hasOwnProperty(propertyName)) {
+            var propertyHandler = objectInfo[propertyName];
+            if (typeof propertyHandler.property == "function") {
+                return propertyHandler.property(node, parent, scope, context);
+            }
         }
 
         var usedParameters = context.usedParameters;

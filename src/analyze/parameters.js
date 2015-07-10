@@ -2,7 +2,6 @@
 
     var walk = require('estraverse'),
         Scope = require("./../base/scope.js"),
-        resolver = require("../resolve/resolve.js"),
         Syntax = walk.Syntax;
 
     var derivedSystemParameters = {
@@ -133,9 +132,6 @@
         var functionName = opt.context || "global.shade";
         var parameterPosition = opt.param || 0;
 
-        if(opt.implementation) {
-            program = resolver.resolveClosuresPreTypeInference(program, opt.implementation, opt);
-        }
         return findParametersInFunction(functionName, program, parameterPosition);
     };
 

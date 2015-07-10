@@ -1,5 +1,6 @@
 (function (ns) {
 
+    var assert = require("assert");
     var ClosuresImpl = require("./xml3d-forward.js"),
         LightLoop = require("./light-loop.js").LightLoop,
         Traversal = require('estraverse'),
@@ -8,6 +9,7 @@
         Shade = require("../../interfaces.js"),
         ANNO = require("./../../base/annotation.js").ANNO,
         sanitizer = require("./../../analyze/sanitizer/sanitizer.js");
+    var replacer = require("../colorclosure-replacer.js");
 
     var SpaceTransformTools = require("../../generate/space/space-transform-tools.js"),
         ColorClosureTools = require("../colorclosure-tools.js");
@@ -131,6 +133,35 @@
         return result;
     }
 
+    function injectTransparency(ccNames, state) {
+        var result = {
+            type: Syntax.BlockStatement,
+            body: []
+        };
+        state.isTransparent = true;
+        for(var i = 0; i < ccNames.length; ++i){
+            var fName, ccName = ccNames[i];
+            if(fName = getColorClosureInject(ccName, "getTransparency", state)) {
+                result.body.push(getInjectAddition("transparency", fName, ["position"], ccName, i));
+            }
+        }
+        // if no transparency closure force opaque
+        if (result.body.length === 0) {
+            result.body.push({
+                type: Syntax.ExpressionStatement,
+                expression: {
+                    type: Syntax.AssignmentExpression,
+                    operator: "=",
+                    left: {type: Syntax.Identifier, name: "transparency"},
+                    right: {type: Syntax.Identifier, name: "opaque"}
+                }
+            });
+            state.isTransparent = false;
+        }
+
+        return result;
+    }
+
     function injectColorClosureCalls(lightLoopFunction, ccNames, state){
         var result = Traversal.replace(lightLoopFunction.body, {
             enter: function(node, parent){
@@ -140,6 +171,7 @@
                         case "AMBIENT_ENTRY": return injectAmbientEntry(ccNames, state);
                         case "EMISSIVE_ENTRY": return injectEmissiveEntry(ccNames, state);
                         case "REFRACT_REFLECT_ENTRY": return injectRefractReflectEntry(ccNames, state);
+                        case "TRANSPARENCY": return injectTransparency(ccNames, state);
                     };
 
                 }
@@ -189,40 +221,7 @@
         return lightLoopFunctionName;
     }
 
-    function handleCallExpression(node, state, colorClosureList) {
-        var callee = ANNO(node.callee);
-        // console.log("Call", node.callee.property, callee.getTypeString(), node.callee.object)
-        if(callee.isOfKind(Shade.OBJECT_KINDS.COLOR_CLOSURE)) {
-            colorClosureList.push({ name: node.callee.property.name, args: node.arguments });
-        }
-    }
 
-    function handleMemberExpression(node, state, parent) {
-        var object = ANNO(node.object);
-        if (object.isOfKind(Shade.OBJECT_KINDS.COLOR_CLOSURE)) {
-            var closureName = node.property.name;
-            if (!ClosuresImpl.hasOwnProperty(closureName)) {
-                console.error("No implementation for closure '", closureName, "'");
-                return;
-            };
-        }
-    }
-
-    function getClosureList(returnAast, state){
-        var colorClosureList = [];
-        Traversal.traverse(returnAast, {
-            leave: function(node, parent){
-                 switch (node.type) {
-                    case Syntax.CallExpression:
-                        return handleCallExpression(node, state, colorClosureList);
-                    case Syntax.MemberExpression:
-                        return handleMemberExpression(node, state, parent);
-                }
-            }
-        });
-        colorClosureList.sort(function (a, b){ return a.name < b.name ? -1 : a.name > b.name ? 1 : 0 });
-        return colorClosureList;
-    }
 
     function generateLightLoopCall(lightLoopFunction, colorClosureList, state){
         var args = [];
@@ -255,24 +254,10 @@
         var list = getClosureList(returnAast, state);
         if(list.length == 0)
             return;
-        var lightLoopFunction = getLightLoopFunction(list, state);
-        var lighLoopCall = generateLightLoopCall(lightLoopFunction, list, state);
+
         returnAast.argument = lighLoopCall;
     }
 
-
-    function replaceReturnStatements(programAast, state){
-        var result = Traversal.replace(programAast, {
-            enter: function(node, parent){
-                 switch (node.type) {
-                    case Syntax.ReturnStatement:
-                        this.skip();
-                        return handleReturnStatement(node, state);
-                }
-            }
-        });
-        return result;
-    }
 
     function getEnvParameter(property){
         return { type: Syntax.MemberExpression,
@@ -295,11 +280,19 @@
                                  left: getEnvParameter("ambientIntensity"),
                                  right: {type: Syntax.Literal, value: 0} };
 
-        ast = replaceReturnStatements(ast, state);
+        ast = replacer(ast, function(closures) {
+            assert(closures.length);
+            var lightLoopFunction = getLightLoopFunction(closures, state);
+            var lighLoopCall = generateLightLoopCall(lightLoopFunction, closures, state);
+            //console.log("here", arguments);
+            return lighLoopCall;
+        });
 
         state.newFunctions.forEach(function(newFunction) {
             state.program.body.unshift(newFunction);
         })
+
+        processData["isTransparent"] = !!state.isTransparent;
 
         return ast;
     }
