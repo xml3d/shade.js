@@ -112,7 +112,7 @@
             this.registerObject("Mat4", objects.Mat4);
             this.registerObject("Space", objects.Space);
 
-            this.declareVariable("gl_FragCoord", false);
+            this.declare("gl_FragCoord", false);
             this.updateTypeInfo("gl_FragCoord", new TypeInfo({
                 extra: {
                     type: Types.OBJECT,

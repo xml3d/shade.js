@@ -1,7 +1,9 @@
 // External dependencies
 var util = require("util");
+var assert = require("assert");
 var extend = require("lodash.assign");
 var Syntax = require('estraverse').Syntax;
+var Map = require('es6-map');
 
 // Internal dependencies
 var Shade = require("../interfaces.js"); // TODO(ksons): Eliminate this dependency
@@ -9,77 +11,6 @@ var ErrorHandler = require("./errors.js");
 var Annotation = require("./annotation.js").Annotation;
 var TypeInfo = require("./typeinfo.js").TypeInfo;
 var TYPES = require("./constants.js").TYPES;
-
-/**
- * TODO(ksons): Eliminate this class
- * @param binding
- * @param registry
- * @extends TypeInfo
- * @constructor
- */
-var Binding = function (binding, registry) {
-    TypeInfo.call(this, binding);
-    if (this.node.ref) {
-        if (!registry[this.node.ref])
-            throw Error("No object has been registered for: " + this.node.ref);
-        this.globalObject = registry[this.node.ref].object;
-        if (this.globalObject) {
-            this.setType(TYPES.OBJECT);
-        }
-    }
-};
-
-util.inherits(Binding, TypeInfo);
-
-extend(Binding.prototype, {
-    hasConstructor: function () {
-        return !!this.getConstructor();
-    },
-    getConstructor: function () {
-        return this.globalObject && this.globalObject.constructor;
-    },
-    isInitialized: function () {
-        return this.node.initialized;
-    },
-    setInitialized: function (v) {
-        this.node.initialized = v;
-    },
-    hasStaticValue: function () {
-        return this.globalObject ? true : TypeInfo.prototype.hasStaticValue.call(this);
-    },
-    getStaticValue: function () {
-        if (!this.hasStaticValue()) {
-            throw new Error("Node has no static value: " + this.node);
-        }
-        return this.globalObject ? this.globalObject.staticValue : TypeInfo.prototype.getStaticValue.call(this);
-    },
-    isGlobal: function () {
-        return this.node.info && this.node.info._global || TypeInfo.prototype.isGlobal.call(this);
-    },
-    getType: function () {
-        return this.globalObject ? TYPES.OBJECT : TypeInfo.prototype.getType.call(this);
-    },
-    getStaticProperties: function () {
-        if (this.globalObject)
-            return this.globalObject.static;
-        return null;
-    },
-    getInfoForSignature: function (signature) {
-        var extra = this.getExtra();
-        if (!extra.signatures)
-            return null;
-        return extra.signatures[signature];
-    },
-    setInfoForSignature: function (signature, info) {
-        var extra = this.getExtra();
-        if (!extra.signatures)
-            extra.signatures = {};
-        return extra.signatures[signature] = info;
-    }
-
-
-});
-
 
 /**
  * @param {Object} node AST node that defines the scope
@@ -90,20 +21,21 @@ extend(Binding.prototype, {
 var Scope = function (node, parent, opt) {
     opt = opt || {};
 
+    if (parent) {
+        assert.ok(parent instanceof Scope);
+    }
+
     /** @type (Scope|null) */
-    this.parent = parent || opt.parent || null;
+    this.parent = parent || null;
+
     this.registry = opt.registry || (parent ? parent.registry : {});
 
     this.scope = node.scope = node.scope || {};
 
     /** @type {Object.<string, {initialized: boolean, annotation: Annotation}>} */
     this.scope.bindings = this.scope.bindings || {};
-    if (opt.bindings) {
-        extend(this.scope.bindings, opt.bindings);
-    }
 
     this.scope.name = opt.name || node.name || "|anonymous|";
-
 };
 
 extend(Scope.prototype, {
@@ -164,7 +96,7 @@ extend(Scope.prototype, {
         return scope.str() + "." + name;
     },
 
-    declareVariable: function (name, fail, position) {
+    declare: function (name, fail, position) {
         var bindings = this.getBindings();
         fail = (fail == undefined) ? true : fail;
         if (bindings[name]) {
@@ -304,6 +236,76 @@ extend(Scope.prototype, {
         // then we get the information from it's kind
         return this.registry && this.registry.getInstanceForKind(obj.getKind()) || null;
     }
+
+});
+
+/**
+ * TODO(ksons): Eliminate this class
+ * @param binding
+ * @param registry
+ * @extends TypeInfo
+ * @constructor
+ */
+var Binding = function (binding, registry) {
+    TypeInfo.call(this, binding);
+    if (this.node.ref) {
+        if (!registry[this.node.ref])
+            throw Error("No object has been registered for: " + this.node.ref);
+        this.globalObject = registry[this.node.ref].object;
+        if (this.globalObject) {
+            this.setType(TYPES.OBJECT);
+        }
+    }
+};
+
+util.inherits(Binding, TypeInfo);
+
+extend(Binding.prototype, {
+    hasConstructor: function () {
+        return !!this.getConstructor();
+    },
+    getConstructor: function () {
+        return this.globalObject && this.globalObject.constructor;
+    },
+    isInitialized: function () {
+        return this.node.initialized;
+    },
+    setInitialized: function (v) {
+        this.node.initialized = v;
+    },
+    hasStaticValue: function () {
+        return this.globalObject ? true : TypeInfo.prototype.hasStaticValue.call(this);
+    },
+    getStaticValue: function () {
+        if (!this.hasStaticValue()) {
+            throw new Error("Node has no static value: " + this.node);
+        }
+        return this.globalObject ? this.globalObject.staticValue : TypeInfo.prototype.getStaticValue.call(this);
+    },
+    isGlobal: function () {
+        return this.node.info && this.node.info._global || TypeInfo.prototype.isGlobal.call(this);
+    },
+    getType: function () {
+        return this.globalObject ? TYPES.OBJECT : TypeInfo.prototype.getType.call(this);
+    },
+    getStaticProperties: function () {
+        if (this.globalObject)
+            return this.globalObject.static;
+        return null;
+    },
+    getInfoForSignature: function (signature) {
+        var extra = this.getExtra();
+        if (!extra.signatures)
+            return null;
+        return extra.signatures[signature];
+    },
+    setInfoForSignature: function (signature, info) {
+        var extra = this.getExtra();
+        if (!extra.signatures)
+            extra.signatures = {};
+        return extra.signatures[signature] = info;
+    }
+
 
 });
 

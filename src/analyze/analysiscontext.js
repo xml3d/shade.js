@@ -137,7 +137,7 @@
             addDerivedMethods(this.root, this);
             return this.root;
         },
-        declareVariables: function (ast, inDeclaration) {
+        declare: function (ast, inDeclaration) {
             var scope = this.getScope(), context = this;
             if (ast.type == Syntax.VariableDeclaration) {
                 var declarations = ast.declarations;
@@ -148,13 +148,13 @@
                         throw new Error("Dynamic variable names are not yet supported");
                     }
                     var variableName = declaration.id.name;
-                    scope.declareVariable(variableName, true, result);
+                    scope.declare(variableName, true, result);
 
                     if (declaration.init) {
                         var init = ANNO(declaration.init);
                         scope.updateTypeInfo(variableName, init, declaration);
                         if (declaration.init.type == Syntax.AssignmentExpression) {
-                            context.declareVariables(declaration.init, true);
+                            context.declare(declaration.init, true);
                         }
                     } else {
                         result.setType(Shade.TYPES.UNDEFINED);
@@ -167,10 +167,10 @@
                     throw new Error("Dynamic variable names are not yet supported");
                 }
                 var variableName = ast.left.name;
-                scope.declareVariable(variableName, true, ANNO(ast));
+                scope.declare(variableName, true, ANNO(ast));
                 scope.updateTypeInfo(variableName, typeInfo, ast);
                 if (ast.right.type == Syntax.AssignmentExpression) {
-                    context.declareVariables(ast.right, true);
+                    context.declare(ast.right, true);
                 }
             }
             return true;
@@ -217,7 +217,7 @@
                     var localName = node.id.name;
                     var parentScope = context.getScope();
                     var anno = new FunctionAnnotation(node);
-                    parentScope.declareVariable(localName);
+                    parentScope.declare(localName);
                     parentScope.updateTypeInfo(localName, anno);
 
                     var newScope = new InferenceScope(node, parentScope, {name: localName });
@@ -282,7 +282,7 @@
 
     function registerSystemInformation(scope, opt) {
         var thisInfo = (opt.inject && opt.inject.this) || null;
-        scope.declareVariable("this");
+        scope.declare("this");
         scope.updateTypeInfo("this", System.getThisTypeInfo(thisInfo));
     }
 

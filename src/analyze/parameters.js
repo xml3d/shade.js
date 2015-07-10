@@ -68,7 +68,7 @@
                 switch (type) {
                     case Syntax.FunctionDeclaration:
                         var parentContext = contextStack[contextStack.length - 1];
-                        parentContext.declareVariable(node.id.name, false);
+                        parentContext.declare(node.id.name, false);
                         context = new Scope(node, parentContext, {name: node.id.name });
                         contextStack.push(context);
                         if (context.str() == functionName) {

@@ -164,7 +164,7 @@
 
                 annotateRight(context, this.astNode, propagateConstants ? input : null );
 
-                this.decl = this.decl || context.declareVariables(this.astNode);
+                this.decl = this.decl || context.declare(this.astNode);
 
                 //context.computeConstants(this.astNode, input);
 

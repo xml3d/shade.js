@@ -58,7 +58,7 @@
             this.registerObject("Space", objects.Space);
             this.registerObject("Mat3", objects.Mat3);
             this.registerObject("Mat4", objects.Mat4);
-            this.declareVariable("_env");
+            this.declare("_env");
         }
 
     });
