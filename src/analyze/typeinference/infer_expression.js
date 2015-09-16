@@ -1,6 +1,7 @@
 (function (ns) {
 
-    // Dependencies
+	// Dependencies
+    var assert = require("assert");
     var common = require("../../base/common.js"),
         Shade = require("../../interfaces.js"),
         evaluator = require("../constants/evaluator.js"),
@@ -28,7 +29,7 @@
             result.setType(TYPES.ARRAY);
             elements.forEach(function (element, index) {
                 if (!index) {
-                    elementType.copy(element);
+                    elementType.copyFrom(element);
                 } else {
                     if (!elementType.setCommonType(elementType, element)) {
                         result.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, "shade.js does not support inhomogenous arrays: [", elements.map(function (e) {
@@ -43,7 +44,7 @@
          * @param node
          */
         Literal: function (node) {
-            var value = node.raw !== undefined ? node.raw : node.value,
+			var value = node.raw !== undefined ? node.raw : node.value,
                 result = ANNO(node);
 
             var number = parseFloat(value);
@@ -62,7 +63,7 @@
                 result.setType(TYPES.STRING);
             }
             if (!result.isNull()) {
-                result.setStaticValue(evaluator.getStaticValue(node));
+                result.setConstantValue(evaluator.getConstantValue(node));
             }
         },
 
@@ -72,7 +73,7 @@
         ExpressionStatement: function (node) {
             var result = ANNO(node),
                 expression = ANNO(node.expression);
-            result.copy(expression);
+            result.copyFrom(expression);
         },
 
 
@@ -98,37 +99,28 @@
          * the scope and evaluate based on annotated parameters
          */
         NewExpression: function(node, parent, context) {
-            var result = ANNO(node), staticValue;
+            var result = ANNO(node), staticValue, scope = context.getScope();
 
             // Be on the safe side, assume result is static independently of former annotations
             result.setDynamicValue();
 
-            var scope = context.getScope();
-            var entry = scope.getBindingByName(node.callee.name);
-            if (entry && entry.hasConstructor()) {
-                var constructor = entry.getConstructor();
-                var args = context.getTypeInfo(node.arguments);
-                try {
-                    var extra = constructor.evaluate(result, args, scope);
-                    result.setFromExtra(extra);
-                } catch (e) {
-                    result.setInvalid(e);
-                    return;
-                }
-                if (constructor.computeStaticValue) {
-                    try {
-                        staticValue = constructor.computeStaticValue(result, context.getTypeInfo(node.arguments), scope);
-                        if (staticValue !== undefined) {
-                            result.setStaticValue(staticValue);
-                        }
-                    } catch (e) {
-                        result.setDynamicValue();
-                    }
-                }
-            }
-            else {
-                result.setInvalid(generateErrorInformation(node, ERROR_TYPES.REFERENCE_ERROR, node.callee.name, "is not defined"));
-            }
+            var func = scope.type(node.callee);
+			if (!func.isFunction()) {  // e.g. var a = undefined; a.unknown;
+				result.setInvalid(generateErrorInformation(node, ERROR_TYPES.TYPE_ERROR, node.callee.name, "is not a function"));
+				return;
+			}
+
+			var constructor = func.constructor;
+			assert(typeof constructor == "function");
+			var args = context.getTypeInfo(node.arguments);
+			try {
+				var extra = constructor(result, args, scope);
+				result.setFromExtra(extra);
+			} catch (e) {
+				result.setInvalid(e);
+				return;
+			}
+
         },
 
 
@@ -145,7 +137,7 @@
                 case "!":
                     result.setType(TYPES.BOOLEAN);
                     if (argument.canObject()) {
-                        result.setStaticValue(false); // !obj == false
+                        result.setConstantValue(false); // !obj == false
                         return;
                     }
                     break;
@@ -162,7 +154,7 @@
                 case "typeof":
                     result.setType(TYPES.STRING);
                     if(argument.isValid())
-                        result.setStaticValue(argument.getJavaScriptTypeString());
+                        result.setConstantValue(argument.getJavaScriptTypeString());
                     return;
 
                 case "~":
@@ -171,8 +163,8 @@
                 default:
                     result.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, operator, "is not supported."));
             }
-            if (argument.hasStaticValue()) {
-                result.setStaticValue(evaluator.getStaticValue(node));
+            if (argument.hasConstantValue()) {
+                result.setConstantValue(evaluator.getConstantValue(node));
             } else {
                 result.setDynamicValue();
             }
@@ -253,7 +245,7 @@
                     result.setType(TYPES.BOOLEAN);
                     if (left.isUndefined() || right.isUndefined()) {
                         value = left.isUndefined() && right.isUndefined();
-                        result.setStaticValue(operator == "===" ? value : !value);
+                        result.setConstantValue(operator == "===" ? value : !value);
                         return;
                     }
                     break;
@@ -266,7 +258,7 @@
                     result.setType(TYPES.BOOLEAN);
                     if (left.isUndefined() || right.isUndefined()) {
                         value = left.isUndefined() && right.isUndefined();
-                        result.setStaticValue(operator == "!=" ? !value : value);
+                        result.setConstantValue(operator == "!=" ? !value : value);
                         return;
                     }
                     break;
@@ -274,9 +266,9 @@
                     result.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, operator, "is not supported."));
                     return;
             }
-             if (left.hasStaticValue() && right.hasStaticValue()) {
-                //console.log(left.getStaticValue(), operator, right.getStaticValue());
-                result.setStaticValue(evaluator.getStaticValue(node));
+             if (left.hasConstantValue() && right.hasConstantValue()) {
+                //console.log(left.getConstantValue(), operator, right.getConstantValue());
+                result.setConstantValue(evaluator.getConstantValue(node));
             } else {
                 result.setDynamicValue();
             }
@@ -286,12 +278,12 @@
             var argument = context.getTypeInfo(node.argument),
                 result = ANNO(node);
             if(argument.canNumber()) {
-                result.copy(argument);
-                if(node.prefix && argument.hasStaticValue()) {
+                result.copyFrom(argument);
+                if(node.prefix && argument.hasConstantValue()) {
                     if(node.operator == "++") {
-                        result.setStaticValue(argument.getStaticValue()+1)
+                        result.setConstantValue(argument.getConstantValue()+1)
                     } else if(node.operator == "--") {
-                        result.setStaticValue(argument.getStaticValue()-1)
+                        result.setConstantValue(argument.getConstantValue()-1)
                     } else {
                         throw new Error("Operator not supported: " + node.operator);
                     }
@@ -306,7 +298,7 @@
             var right = context.getTypeInfo(node.right),
                 result = ANNO(node);
 
-            result.copy(right);
+            result.copyFrom(right);
             result.setDynamicValue();
             result.clearUniformDependencies();
 
@@ -351,7 +343,7 @@
             }
             var propertyName = node.property.name;
 
-            var objectOfInterest = common.getObjectReferenceFromNode(node.object, scope);
+            var objectOfInterest = scope.type(node.object);
 
             objectOfInterest || Shade.throwError(node,"ReferenceError: " + node.object.name + " is not defined. Context: " + scope.str());
 
@@ -364,22 +356,21 @@
                 return;
             }
 
-            var objectInfo = scope.getObjectInfoFor(objectOfInterest);
-            if(!objectInfo) {
-                resultType.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, "Internal: Incomplete registration for object:", objectOfInterest.getTypeString(), ",", JSON.stringify(node.object)));
-                return;
-            }
+			objectAnnotation.copyFrom(objectOfInterest);
+			//console.error("Member OOI", objectOfInterest, objectOfInterest.hasProperty(propertyName))
 
-            objectAnnotation.copy(objectOfInterest);
-            if (!objectInfo.hasOwnProperty(propertyName)) {
-                resultType.setType(TYPES.UNDEFINED);
-                propertyAnnotation.setType(TYPES.UNDEFINED);
-                return;
-            }
 
-            var propertyTypeInfo = objectInfo[propertyName];
-            propertyAnnotation.setFromExtra(propertyTypeInfo);
-            resultType.copy(propertyAnnotation);
+			if (!objectOfInterest.hasProperty(propertyName)) {
+				resultType.setType(TYPES.UNDEFINED);
+				propertyAnnotation.setType(TYPES.UNDEFINED);
+				return;
+			}
+
+			var propertyTypeInfo = objectOfInterest.getPropertyInfo(propertyName);
+			propertyAnnotation.copyFrom(propertyTypeInfo);
+			resultType.copyFrom(propertyAnnotation);
+
+
         },
 
         CallExpression: function (node, parent, context) {
@@ -388,75 +379,72 @@
                 args = context.getTypeInfo(node.arguments),
                 extra, staticValue;
 
-            if (!args.every(function (arg) {return arg.isValid() })) {
-                result.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, "Not all arguments types of call expression could be evaluated"));
-                return;
-            }
-            // Be on the safe side, assume result is static independently of former annotations
-            result.setDynamicValue();
+			if (!args.every(function (arg) {
+					return arg.isValid()
+				})) {
+				result.setInvalid(generateErrorInformation(node, ERROR_TYPES.SHADEJS_ERROR, "Not all arguments types of call expression could be evaluated"));
+				return;
+			}
+			// Be on the safe side, assume result is static independently of former annotations
+			result.setDynamicValue();
 
-            // Call on an object, e.g. Math.cos()
-            if (node.callee.type == Syntax.MemberExpression) {
+			// Call on an object, e.g. Math.cos()
+			if (node.callee.type == Syntax.MemberExpression) {
 
-                var memberExpression = context.getTypeInfo(node.callee);
-                if(!memberExpression.isValid()) {
-                    result.setInvalid();
-                    return;
-                }
+				var memberExpression = context.getTypeInfo(node.callee);
+				if (!memberExpression.isValid()) {
+					result.setInvalid();
+					return;
+				}
 
-                var object = node.callee.object,
-                    propertyName = node.callee.property.name;
+				var object = node.callee.object,
+					propertyName = node.callee.property.name;
 
-                var objectReference = context.getTypeInfo(object);
-                if(!objectReference)  {
-                    Shade.throwError(node, "Internal: No object info for: " + object);
-                }
-                var objectInfo = scope.getObjectInfoFor(objectReference);
-                if(!objectInfo) { // Every object needs an info, otherwise we did something wrong
-                    Shade.throwError(node, "Internal Error: No object registered for: " + objectReference.getTypeString() + JSON.stringify(node.object));
-                }
+				var objectReference = scope.type(object);
+				if (!objectReference.isValid()) { // This should already have been handled by parent MemberExpression
+					throwError(node, "Internal: No object info for: " + object);
+				}
 
-                if (!memberExpression.isFunction()) { // e.g. Math.PI()
-                    if (objectInfo.hasOwnProperty(propertyName)) {
-                      result.setInvalid(generateErrorInformation(node, ERROR_TYPES.TYPE_ERROR, "Property '" + propertyName + "' of object #<"+ objectReference.getTypeString() +"> is not a function"));
-                    } else {
-                      result.setInvalid(generateErrorInformation(node, ERROR_TYPES.TYPE_ERROR, (object.type == Syntax.ThisExpression ? "'this'" : objectReference.getTypeString())+ " has no method '"+ propertyName + "'"));
-                    }
-                    return;
-                }
+				if (!memberExpression.isFunction()) { // e.g. Math.PI()
+					if (objectReference.hasProperty(propertyName)) {
+						result.setInvalid(generateErrorInformation(node, ERROR_TYPES.TYPE_ERROR, "Property '" + propertyName + "' of object #<" + objectReference.getTypeString() + "> is not a function"));
+						Shade.throwError(node, memberExpression.getTypeString() + " is not a function")
+					} else {
+						var msg = (object.type == Syntax.ThisExpression ? "'this'" : objectReference.getTypeString()) + " has no method '" + propertyName + "'";
+						result.setInvalid(generateErrorInformation(node, ERROR_TYPES.TYPE_ERROR, msg));
+						Shade.throwError(node, codegen.generate(node.callee) + " is not a function");
+					}
+					return;
+				}
+
+				var propertyHandler = objectReference.getPropertyInfo(propertyName).info;
+
+				if (typeof propertyHandler.evaluate != "function") {
+					throwError(node, "Internal: no handler registered for function '" + propertyName + "'");
+				}
+				// Evaluate type of call
+
+				try {
+					extra = propertyHandler.evaluate(result, args, scope, objectReference);
+					result.setFromExtra(extra);
+				} catch (e) {
+					result.setInvalid(generateErrorInformation(node, e.message));
+					return;
+				}
+
+				// If we have a type, evaluate static value
+				if (typeof propertyHandler.computeStaticValue != "function") {
+					debug && console.warn("No static evaluation exists for function", codegen.generate(node));
+					return;
+				}
+				staticValue = propertyHandler.computeStaticValue(result, args, scope, objectReference);
+				if (staticValue !== undefined) {
+					result.setConstantValue(staticValue);
+				}
+				return;
 
 
-                if (!objectInfo.hasOwnProperty(propertyName)) {
-                    result.setType(TYPES.UNDEFINED);
-                    return;
-                }
-                var propertyHandler = objectInfo[propertyName];
-
-                if (typeof propertyHandler.evaluate != "function") {
-                    Shade.throwError(node, "Internal: no handler registered for '" + propertyName + "'");
-                }
-                // Evaluate type of call
-
-                try {
-                    extra = propertyHandler.evaluate(result, args, scope, objectReference, context);
-                    result.setFromExtra(extra);
-                } catch (e) {
-                    result.setInvalid(generateErrorInformation(node, e.message));
-                    return;
-                }
-
-                // If we have a type, evaluate static value
-                if (typeof propertyHandler.computeStaticValue != "function") {
-                    debug && console.warn("No static evaluation exists for function", codegen.generate(node));
-                    return;
-                }
-                staticValue = propertyHandler.computeStaticValue(result, args, scope, objectReference, context);
-                if (staticValue !== undefined) {
-                    result.setStaticValue(staticValue);
-                }
-                return;
-
-            }  else if (node.callee.type == Syntax.Identifier) {
+			}  else if (node.callee.type == Syntax.Identifier) {
                 var functionName = node.callee.name;
                 var func = scope.getBindingByName(functionName);
                 if (!func) {
@@ -482,8 +470,9 @@
             var init = node.init ? context.getTypeInfo(node.init) : null,
                 result = ANNO(node);
             if(init) {
-                ANNO(node.init).copy(init);
-                result.copy(init);
+				// TODO: Do we need this?
+                ANNO(node.init).copyFrom(init);
+                result.copyFrom(init);
             }
         },
 
@@ -504,39 +493,39 @@
 
             if (operator === "||") {
                 if (leftBool === false) {
-                    result.copy(right);
+                    result.copyFrom(right);
                     return;
                 }
                 if (leftBool === true) {
-                    result.copy(left);
+                    result.copyFrom(left);
                     return;
                 }
                 // Left is dynamic, let's check right
                 if (rightBool === false) {
                     // Now the result type is always the one of the left value
-                    result.copy(left);
+                    result.copyFrom(left);
                     return;
                 }
             } else if (operator === "&&") {
                 if (leftBool === false) {
                     // T(x) == false => x && y == x
-                    result.copy(left);
+                    result.copyFrom(left);
                     return;
                 }
                 if (leftBool === true) {
-                    result.copy(right);
+                    result.copyFrom(right);
                     return;
                 }
                 // Left is dynamic, let's check right
                 if (rightBool === true) {
                     // Now the result type is always the one of the left value
-                    result.copy(left);
+                    result.copyFrom(left);
                     return;
                 }
                 if (rightBool === false) {
                     // Now the result must be false
                     result.setType(TYPES.BOOLEAN);
-                    result.setStaticValue(false);
+                    result.setConstantValue(false);
                     return;
                 }
             }
@@ -556,9 +545,9 @@
 
             var testResult = test.getStaticTruthValue();
             if(testResult === true) {
-                result.copy(consequent);
+                result.copyFrom(consequent);
             } else if (testResult === false) {
-                result.copy(alternate);
+                result.copyFrom(alternate);
             } else {
                 if (result.setCommonType(consequent, alternate)) {
                     result.setDynamicValue();

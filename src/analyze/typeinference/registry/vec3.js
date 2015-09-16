@@ -1,67 +1,34 @@
-(function(ns){
+var Tools = require("./tools.js");
+var Shade = require("../../../interfaces.js");
 
-    var Shade = require("../../../interfaces.js"),
-        TYPES = Shade.TYPES,
-        KINDS = Shade.OBJECT_KINDS,
-        Tools = require("./tools.js");
+var Vec3 = function Vec3(node, arguments) {
+	return Tools.Vec.constructorEvaluate("Vec3", 3)(node, arguments);
+};
 
-    var Vector3Constructor =  {
-        type: TYPES.OBJECT,
-        kind: KINDS.FLOAT3,
-        /**
-         * @param {Annotation} result
-         * @param {Array.<Annotation>} args
-         * @param {Context} ctx
-         */
-        evaluate: Tools.Vec.constructorEvaluate.bind(null, "Vec3", 3),
-        computeStaticValue: Tools.Vec.constructorComputeStaticValue.bind(null, "Vec3")
+Vec3.prototype = {
+	length: Tools.Vec.optionalZeroEvaluate.bind(null, "Vec3", "length", 3, 1, 1)
+};
 
-    };
-
-    var Vector3StaticObject = {
-    };
-
-    var Vector3Instance = {
-        length: {
-            type: TYPES.FUNCTION,
-            evaluate: Tools.Vec.optionalZeroEvaluate.bind(null,"Vec3", "length", 3, 1, 1)
-        }
-    };
-    Tools.Vec.attachSwizzles(Vector3Instance, "Vec3", 3);
-    Tools.Vec.attachVecMethods(Vector3Instance, "Vec3", 3, 3, ['add', 'sub', 'mul', 'div', 'mod', 'reflect', "cross"]);
-    Tools.Vec.attachVecMethods(Vector3Instance, "Vec3", 1, 3, ['dot']);
-    Tools.Vec.attachVecMethods(Vector3Instance, "Vec3", 3, 0, ['normalize', 'flip']);
-
-    Vector3Instance["refract"] = {
-        type: TYPES.FUNCTION,
-        evaluate: function (result, args, ctx) {
-            if (args.length < 2)
-                Shade.throwError(result.node, "Not enough parameters for refract.");
-
-            var eta = args.pop();
-            if (!eta || !eta.canNumber())
-                Shade.throwError(result.node, "Invalid parameter for refract, expected a number got " + eta.getTypeString());
-
-            Tools.Vec.checkVecArguments(Vector3Instance + "." + "refract", 3, false, 0, result, args);
-
-            var typeInfo = {
-                type: TYPES.OBJECT,
-                kind: KINDS.FLOAT3
-            };
-
-            return typeInfo;
-        }
-    };
-
-    Tools.extend(ns, {
-        id: "Vec3",
-        kind: KINDS.FLOAT3,
-        object: {
-            constructor: Vector3Constructor,
-            static: Vector3StaticObject
-        },
-        instance: Vector3Instance
-    });
+Tools.Vec.attachSwizzles(Vec3.prototype, "Vec3", 3);
+Tools.Vec.attachVecMethods(Vec3.prototype, "Vec3", 3, 3, ['add', 'sub', 'mul', 'div', 'mod', 'reflect', 'cross']);
+Tools.Vec.attachVecMethods(Vec3.prototype, "Vec3", 1, 3, ['dot']);
+Tools.Vec.attachVecMethods(Vec3.prototype, "Vec3", 3, 0, ['normalize', 'flip']);
 
 
-}(exports));
+Vec3.prototype.refract = function (result, args) {
+	if (args.length < 2)
+		Shade.throwError(result.node, "Not enough parameters for refract.");
+
+	var eta = args.pop();
+	if (!eta || !eta.canNumber())
+		Shade.throwError(result.node, "Invalid parameter for refract, expected a number got " + eta.getTypeString());
+
+	Tools.Vec.checkVecArguments("Vec3.refract", 3, false, 0, result, args);
+
+	return {
+		type: "object",
+		kind: "Vec3"
+	};
+};
+
+module.exports = Vec3;

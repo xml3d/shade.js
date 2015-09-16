@@ -23,9 +23,9 @@
 
     var Kinds = ns.OBJECT_KINDS = {
         ANY: "any",
-        FLOAT2: "float2", // virtual kinds
-        FLOAT3: "float3", // virtual kinds
-        FLOAT4: "float4", // virtual kinds
+        VEC2: "Vec2", // virtual kinds
+        VEC3: "Vec3", // virtual kinds
+        VEC4: "Vec4", // virtual kinds
         NORMAL: "normal",
         MATRIX3: "matrix3",
         MATRIX4: "matrix4",

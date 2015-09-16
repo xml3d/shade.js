@@ -53,6 +53,7 @@ describe('Inference:', function () {
         describe('UnaryExpressions', function () {
             it("should annotate !boolean => boolean", function () {
                 var exp = parseAndInferenceExpression("!true");
+				console.log(exp.extra)
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.BOOLEAN);
                 exp.extra.should.have.property("staticValue", false);

@@ -57,13 +57,14 @@
             if(name == 'undefined')
                 return ANNO(node);
 
-            binding = scope.getBindingByName(name);
+            binding = scope.get(name);
             if(binding == undefined && check) {
                 ANNO(node).setInvalid(ErrorHandler.generateErrorInformation(node, ErrorHandler.ERROR_TYPES.REFERENCE_ERROR, name, "is not defined"));
                 return ANNO(node);
             }
             if(binding) {
-                var result = ANNO(node, binding.getExtra());
+                var result = ANNO(node);
+                result.copyFrom(binding);
                 // A variable is dynamic per default. Only if it's listed in constant
                 // we can assume a static value
                 result.setDynamicValue();

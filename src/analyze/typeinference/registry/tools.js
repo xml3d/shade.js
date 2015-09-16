@@ -5,9 +5,9 @@
         KINDS = Shade.OBJECT_KINDS,
         VecBase = require("../../../base/vec.js");
 
-    var allArgumentsAreStatic = function (args) {
+    var allArgumentsAreConstant = function (args) {
         return args.every(function (arg) {
-            return arg.hasStaticValue()
+            return arg.hasConstantValue()
         });
     }
 
@@ -30,8 +30,8 @@
                 ns.checkParamCount(result.node, name, validArgCounts, args.length);
                 var typeInfo =  args.length ? obj : { type: TYPES.NUMBER };
 
-                if (staticValueFunction && callObject.hasStaticValue() && args.every(function(a) {return a.hasStaticValue(); })) {
-                    typeInfo.staticValue = staticValueFunction(callObject.getStaticValue(), args);
+                if (staticValueFunction && callObject.hasConstantValue() && args.every(function(a) {return a.hasConstantValue(); })) {
+                    typeInfo.staticValue = staticValueFunction(callObject.getConstantValue(), args);
                 }
                 return typeInfo;
             }
@@ -43,17 +43,17 @@
     var Vec = {
         TYPES: {
             1: { type: TYPES.NUMBER },
-            2: { type: TYPES.OBJECT, kind: KINDS.FLOAT2 },
-            3: { type: TYPES.OBJECT, kind: KINDS.FLOAT3 },
-            4: { type: TYPES.OBJECT, kind: KINDS.FLOAT4 }
+            2: { type: TYPES.OBJECT, kind: "Vec2" },
+            3: { type: TYPES.OBJECT, kind: "Vec3" },
+            4: { type: TYPES.OBJECT, kind: "Vec4" }
         },
         getType: function(destVector){
             return Vec.TYPES[destVector];
         },
-        getStaticValue: function(methodName, result, args, ctx, callObject){
-            if(callObject.hasStaticValue() && allArgumentsAreStatic(args)){
-                var object = callObject.getStaticValue();
-                var callArgs = args.map(function(a) {return a.getStaticValue(); });
+        getConstantValue: function(methodName, result, args, ctx, callObject){
+            if(callObject.hasConstantValue() && allArgumentsAreConstant(args)){
+                var object = callObject.getConstantValue();
+                var callArgs = args.map(function(a) {return a.getConstantValue(); });
                 var method = object[methodName];
                 if(method)
                     return method.apply(object, callArgs);
@@ -152,14 +152,14 @@
             return  {
                 type: TYPES.FUNCTION,
                 evaluate: Vec.swizzleEvaluate.bind(null, objectName, vecSize, swizzle, withSetter),
-                computeStaticValue: Vec.getStaticValue.bind(null, swizzle)
+                computeStaticValue: Vec.getConstantValue.bind(null, swizzle)
             }
         },
         getSwizzleOperatorEvaluate: function(objectName, vecSize, swizzle, operator){
             return  {
                 type: TYPES.FUNCTION,
                 evaluate: Vec.swizzleOperatorEvaluate.bind(null, objectName, vecSize, swizzle, operator),
-                computeStaticValue: Vec.getStaticValue.bind(null, swizzle + operator)
+                computeStaticValue: Vec.getConstantValue.bind(null, swizzle + operator)
             }
         },
         attachSwizzles: function (instance, objectName, vecCount){
@@ -200,13 +200,13 @@
             }
         },
 
-        getStaticValueFromConstructor: function(objectName, args){
+        getConstantValueFromConstructor: function(objectName, args){
             var argArray = [];
             var isStatic = true;
             args.forEach(function (param) {
-                isStatic = isStatic && param.hasStaticValue();
+                isStatic = isStatic && param.hasConstantValue();
                 if (isStatic)
-                    argArray.push(param.getStaticValue());
+                    argArray.push(param.getConstantValue());
             });
 
             if (isStatic) {
@@ -217,13 +217,17 @@
             return undefined;
         },
 
-        constructorEvaluate: function(objectName, vecSize, result, args, ctx) {
-            Vec.checkVecArguments(objectName, vecSize, true, 0, result, args);
-            return Vec.getType(vecSize);
-        },
-        constructorComputeStaticValue: function(objectName, result, args, ctx) {
-            return Vec.getStaticValueFromConstructor(objectName, args);
-        }
+        constructorEvaluate: function(objectName, vecSize) {
+			var constructor = function (result, args) {
+				Vec.checkVecArguments(objectName, vecSize, true, 0, result, args);
+				var result = Vec.getType(vecSize);
+				result.constantValue = Vec.getConstantValueFromConstructor(objectName, args);
+				return result;
+			}
+			constructor.proto = {};
+			return constructor;
+		}
+
 
     };
 
@@ -290,7 +294,7 @@
                 Shade.throwError(result.node, "Invalid parameter for " + qualifiedName + ", first parameter must be a number.");
             }
 
-            // TODO: Vec.getStaticValue(typeInfo, "col", args, callObject);
+            // TODO: Vec.getConstantValue(typeInfo, "col", args, callObject);
 
             return typeInfo;
         }
@@ -299,7 +303,7 @@
 
     ns.Vec = Vec;
     ns.Mat = Mat;
-    ns.allArgumentsAreStatic = allArgumentsAreStatic;
+    ns.allArgumentsAreStatic = allArgumentsAreConstant;
 
 
 }(exports));

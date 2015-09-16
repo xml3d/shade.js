@@ -4,6 +4,8 @@
         Base = require("../../../base/index.js"),
         Annotations = require("../../../type-system/annotation.js"),
         Tools = require("./tools.js");
+    var TypeInfo = require("../../../type-system/typeinfo.js").TypeInfo;
+
 
     var TYPES = Shade.TYPES,
         KINDS = Shade.OBJECT_KINDS,
@@ -68,7 +70,7 @@
 
     ns.getThisTypeInfo = function(systemInfo) {
         systemInfo = systemInfo || { type: TYPES.OBJECT, kind: KINDS.ANY, info: {}};
-        var thisAnnotation = ANNO({}, systemInfo);
+        var thisAnnotation = new TypeInfo(systemInfo);
         // Add those parameters that can be calculated from system inputs
         var objectInfo = thisAnnotation.getNodeInfo();
         if (!objectInfo) {

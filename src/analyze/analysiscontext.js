@@ -9,7 +9,7 @@
     var walk = require('estraverse');
     var InferenceScope = require("./typeinference/registry/").InferenceScope;
     var System = require("./typeinference/registry/system.js");
-    var Shade = require("../interfaces.js");
+	var Shade = require("../interfaces.js");
         var codegen = require("escodegen");
 
 
@@ -266,7 +266,7 @@
         for (var i = 0; i < params.length; i++) {
             var funcParam = ANNO(params[i]);
             if (i < types.length) {
-                funcParam.setFromExtra(types[i].getExtra());
+                funcParam.setFromExtra(types[i].extra);
                 funcParam.setDynamicValue();
             } else {
                 funcParam.setType(Shade.TYPES.UNDEFINED);

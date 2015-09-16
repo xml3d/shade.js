@@ -69,8 +69,10 @@ extend(FunctionAnnotation.prototype, {
 module.exports = {
     Annotation: Annotation,
     FunctionAnnotation: FunctionAnnotation,
-    ANNO: function (object, extra) {
-        return new Annotation(object, extra)
+    ANNO: function (node) {
+		node.extra = node.extra || { type: TYPES.ANY };
+
+        return new TypeInfo(node.extra);
     }
 };
 
