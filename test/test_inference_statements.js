@@ -21,12 +21,12 @@ describe('Inference:', function () {
             bindings.should.have.property("i");
             var i = bindings.i;
             i.extra.should.have.property("type", TYPES.INT);
-            i.extra.should.not.have.property("staticValue");
+            i.extra.should.not.have.property("constantValue");
 
             bindings.should.have.property("j");
             var j = bindings.j;
             j.extra.should.have.property("type", TYPES.NUMBER);
-            j.extra.should.not.have.property("staticValue");
+            j.extra.should.not.have.property("constantValue");
             j.should.have.property("initialized", true);
 
         });

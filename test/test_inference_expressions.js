@@ -15,37 +15,37 @@ describe('Inference:', function () {
                 var exp = parseAndInferenceExpression("8");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.INT);
-                exp.extra.should.have.property("staticValue", 8);
+                exp.extra.should.have.property("constantValue", 8);
             });
             it("should annotate the type of a NUMBER literal", function () {
                 var exp = parseAndInferenceExpression("7.0");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.NUMBER);
-                exp.extra.should.have.property("staticValue", 7.0);
+                exp.extra.should.have.property("constantValue", 7.0);
             });
             it("should annotate the type of a number literal", function () {
                 var exp = parseAndInferenceExpression("7.2");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.NUMBER);
-                exp.extra.should.have.property("staticValue", 7.2);
+                exp.extra.should.have.property("constantValue", 7.2);
             });
             it("should annotate the type of a boolean literal", function () {
                 var exp = parseAndInferenceExpression("true");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.BOOLEAN);
-                exp.extra.should.have.property("staticValue", true);
+                exp.extra.should.have.property("constantValue", true);
             });
             it("should annotate the type of a string literal", function () {
                 var exp = parseAndInferenceExpression("'Hallo'");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.STRING);
-                exp.extra.should.have.property("staticValue", "Hallo");
+                exp.extra.should.have.property("constantValue", "Hallo");
             });
             it("should annotate the type of the 'undefined' literal", function () {
                 var exp = parseAndInferenceExpression("undefined");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.UNDEFINED);
-                exp.extra.should.not.have.property("staticValue");
+                exp.extra.should.not.have.property("constantValue");
             });
 
         });
@@ -53,52 +53,51 @@ describe('Inference:', function () {
         describe('UnaryExpressions', function () {
             it("should annotate !boolean => boolean", function () {
                 var exp = parseAndInferenceExpression("!true");
-				console.log(exp.extra)
-                exp.should.have.property("extra");
+				exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.BOOLEAN);
-                exp.extra.should.have.property("staticValue", false);
+                exp.extra.should.have.property("constantValue", false);
             });
             it("should annotate !number => boolean", function () {
                 var exp = parseAndInferenceExpression("!8.5");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.BOOLEAN);
-                exp.extra.should.have.property("staticValue", false);
+                exp.extra.should.have.property("constantValue", false);
             });
             it("should annotate !int => boolean", function () {
                 var exp = parseAndInferenceExpression("!0");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.BOOLEAN);
-                exp.extra.should.have.property("staticValue", true);
+                exp.extra.should.have.property("constantValue", true);
             });
             it("should annotate +int => int", function () {
                 var exp = parseAndInferenceExpression("+8");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.INT);
-                exp.extra.should.have.property("staticValue", 8);
+                exp.extra.should.have.property("constantValue", 8);
             });
             it("should annotate -int => int", function () {
                 var exp = parseAndInferenceExpression("-8");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.INT);
-                exp.extra.should.have.property("staticValue", -8);
+                exp.extra.should.have.property("constantValue", -8);
             });
             it("should annotate -number => number", function () {
                 var exp = parseAndInferenceExpression("-8.0");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.NUMBER);
-                exp.extra.should.have.property("staticValue", -8.0);
+                exp.extra.should.have.property("constantValue", -8.0);
             });
             it("should annotate -boolean => int", function () {
                 var exp = parseAndInferenceExpression("-true");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.INT);
-                exp.extra.should.have.property("staticValue", -1);
+                exp.extra.should.have.property("constantValue", -1);
             });
              it("should annotate typeof number => string", function () {
                 var exp = parseAndInferenceExpression("typeof 5");
                 exp.should.have.property("extra");
                 exp.extra.should.have.property("type", TYPES.STRING);
-                exp.extra.should.have.property("staticValue", "number");
+                exp.extra.should.have.property("constantValue", "number");
             });
         });
 
@@ -108,43 +107,43 @@ describe('Inference:', function () {
                     var exp = parseAndInferenceExpression("8 + 8");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.INT);
-                    exp.extra.should.have.property("staticValue", 16);
+                    exp.extra.should.have.property("constantValue", 16);
                 });
                 it("should annotate int + int => int", function () {
                     var exp = parseAndInferenceExpression("8 * 8");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.INT);
-                    exp.extra.should.have.property("staticValue", 64);
+                    exp.extra.should.have.property("constantValue", 64);
                 });
                 it("should annotate int / int => number", function () {
                     var exp = parseAndInferenceExpression("8 / 16");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.NUMBER);
-                    exp.extra.should.have.property("staticValue", 0.5);
+                    exp.extra.should.have.property("constantValue", 0.5);
                 });
                 it("should annotate number + int ⇒ number", function () {
                     var exp = parseAndInferenceExpression("8.4 + 8");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.NUMBER);
-                    exp.extra.should.have.property("staticValue", 16.4);
+                    exp.extra.should.have.property("constantValue", 16.4);
                 });
                 it("should annotate int + number ⇒ number", function () {
                     var exp = parseAndInferenceExpression("8 + 8.4");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.NUMBER);
-                    exp.extra.should.have.property("staticValue", 16.4);
+                    exp.extra.should.have.property("constantValue", 16.4);
                 });
                 it("should annotate number + number ⇒ number", function () {
                     var exp = parseAndInferenceExpression("8.2 + 8.4");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.NUMBER);
-                    exp.extra.should.have.property("staticValue", 16.6);
+                    exp.extra.should.have.property("constantValue", 16.6);
                 });
                 it("should annotate number % number ⇒ number", function () {
                     var exp = parseAndInferenceExpression("5.5 % 1.0");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.NUMBER);
-                    exp.extra.should.have.property("staticValue", 0.5);
+                    exp.extra.should.have.property("constantValue", 0.5);
                 });
 
             });
@@ -153,55 +152,55 @@ describe('Inference:', function () {
                     var exp = parseAndInferenceExpression("8.2 == 8.4");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.BOOLEAN);
-                    exp.extra.should.have.property("staticValue", false);
+                    exp.extra.should.have.property("constantValue", false);
                 });
                 it("should annotate exp < exp ⇒ boolean", function () {
                     var exp = parseAndInferenceExpression("8.2 < 8.4");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.BOOLEAN);
-                    exp.extra.should.have.property("staticValue", true);
+                    exp.extra.should.have.property("constantValue", true);
                 });
                 it("should annotate undefined === number ⇒ boolean", function () {
                     var exp = parseAndInferenceExpression("undefined === 1.0");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.BOOLEAN);
-                    exp.extra.should.have.property("staticValue", false);
+                    exp.extra.should.have.property("constantValue", false);
                 });
                 it("should annotate undefined !== number ⇒ boolean", function () {
                     var exp = parseAndInferenceExpression("undefined !== 1.0");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.BOOLEAN);
-                    exp.extra.should.have.property("staticValue", true);
+                    exp.extra.should.have.property("constantValue", true);
                 });
                 it("should annotate undefined == number ⇒ boolean", function () {
                     var exp = parseAndInferenceExpression("undefined === 1.0");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.BOOLEAN);
-                    exp.extra.should.have.property("staticValue", false);
+                    exp.extra.should.have.property("constantValue", false);
                 });
                 it("should annotate undefined != number ⇒ boolean", function () {
                     var exp = parseAndInferenceExpression("undefined !== 1.0");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.BOOLEAN);
-                    exp.extra.should.have.property("staticValue", true);
+                    exp.extra.should.have.property("constantValue", true);
                 });
                 it("should annotate undefined > number ⇒ boolean", function () {
                     var exp = parseAndInferenceExpression("undefined > 1.0");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.BOOLEAN);
-                    exp.extra.should.have.property("staticValue", false);
+                    exp.extra.should.have.property("constantValue", false);
                 });
                 it("should annotate string == string ⇒ boolean (true)", function () {
                     var exp = parseAndInferenceExpression("'hallo' == 'hallo'");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.BOOLEAN);
-                    exp.extra.should.have.property("staticValue", true);
+                    exp.extra.should.have.property("constantValue", true);
                 });
                 it("should annotate string == string ⇒ boolean (false)", function () {
                     var exp = parseAndInferenceExpression("'hallo' == 'hallo2'");
                     exp.should.have.property("extra");
                     exp.extra.should.have.property("type", TYPES.BOOLEAN);
-                    exp.extra.should.have.property("staticValue", false);
+                    exp.extra.should.have.property("constantValue", false);
                 });
 
 

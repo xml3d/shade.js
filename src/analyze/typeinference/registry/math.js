@@ -143,14 +143,12 @@ var MathObject = {
 		},
 		computeStaticValue: evaluateStatic("step")
 	},
-	fract: {
-		type: TYPES.FUNCTION,
-		evaluate: function () {
-			//Tools.Vec.anyVecArgumentEvaluate.bind(null, "fract"),
+	fract: function () {
 
-		},
-		computeStaticValue: evaluateStatic("fract")
+			//Tools.Vec.anyVecArgumentEvaluate.bind(null, "fract"),
+		   //computeStaticValue: evaluateStatic("fract")
 	},
+
 	mix: {
 		type: TYPES.FUNCTION,
 		evaluate: function (result, args, ctx) {

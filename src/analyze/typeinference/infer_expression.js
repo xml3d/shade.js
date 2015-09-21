@@ -87,7 +87,7 @@
                 argument = context.getTypeInfo(node.argument);
 
             if (argument) {
-                result.copy(argument);
+                result.copyFrom(argument);
             } else {
                 result.setType(TYPES.UNDEFINED);
             }
@@ -417,13 +417,12 @@
 					return;
 				}
 
-				var propertyHandler = objectReference.getPropertyInfo(propertyName).info;
+				var propertyHandler = objectReference.getPropertyInfo(propertyName);
 
-				if (typeof propertyHandler.evaluate != "function") {
-					throwError(node, "Internal: no handler registered for function '" + propertyName + "'");
+				if (!propertyHandler.canEvaluate()) {
+					Shade.throwError(node, "Internal: no handler registered for function '" + propertyName + "'");
 				}
 				// Evaluate type of call
-
 				try {
 					extra = propertyHandler.evaluate(result, args, scope, objectReference);
 					result.setFromExtra(extra);
@@ -432,8 +431,13 @@
 					return;
 				}
 
+				// If the evaluation methods already computed a constant value, we can skip that part
+				if(result.hasConstantValue()) {
+					return;
+				}
+
 				// If we have a type, evaluate static value
-				if (typeof propertyHandler.computeStaticValue != "function") {
+				if (!propertyHandler.canComputeStaticValue()) {
 					debug && console.warn("No static evaluation exists for function", codegen.generate(node));
 					return;
 				}

@@ -117,7 +117,7 @@
         },
         analyseFunction: function(funcDecl, params) {
             var functionScope = new InferenceScope(funcDecl, this.getScope(), {name: funcDecl.id.name });
-            var functionAnnotation = new FunctionAnnotation(funcDecl);
+            var functionAnnotation = ANNO(funcDecl);
 
             //console.error("analyseFunction:", functionScope.str());
 
@@ -213,14 +213,16 @@
 
         walk.replace(prg, {
             enter: function (node) {
+
                 if (node.type == Syntax.FunctionDeclaration) {
                     var localName = node.id.name;
                     var parentScope = context.getScope();
-                    var anno = new FunctionAnnotation(node);
+                    var anno = ANNO(node);
+                    anno.setType(Shade.TYPES.FUNCTION);
                     parentScope.declare(localName);
                     parentScope.updateTypeInfo(localName, anno);
 
-                    var newScope = new InferenceScope(node, parentScope, {name: localName });
+                    var newScope = new InferenceScope(node, parentScope, {name: localName});
                     result.set(newScope.str(), node);
                     context.pushScope(newScope);
                 }
@@ -229,9 +231,8 @@
                 var replace;
                 if (node.type == Syntax.FunctionDeclaration) {
                     context.popScope();
-                    replace = { type: Syntax.EmptyStatement };
+                    return {type: Syntax.EmptyStatement};
                 }
-                return replace;
             }
         });
         prg.body = prg.body.filter(function (a) {

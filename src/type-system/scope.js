@@ -32,18 +32,18 @@ var Scope = function (node, parent, opt) {
     this.scope = node.scope = node.scope || {};
 
     /** @type {Map} */
-    this.scope.bindings = new Map();
+    this.scope.bindings = {};
 
-    this.name = opt.name || node.name || "|anonymous|";
+    this.scope.name = opt.name || node.name || "|anonymous|";
 };
 
 extend(Scope.prototype, {
     declares: function (identifier) {
-        return this.getBindings().has(identifier);
+        return this.getBindings().hasOwnProperty(identifier);
     },
 
     getName: function () {
-        return this.name;
+        return this.scope.name;
     },
 
     getRootContext: function () {
@@ -57,7 +57,7 @@ extend(Scope.prototype, {
     },
 
     updateReturnInfo: function (annotation) {
-        this.scope.returnInfo = annotation.extra;
+        this.scope.returnInfo = annotation.info;
     },
     getReturnInfo: function () {
         return this.scope.returnInfo || {type: TYPES.UNDEFINED};
@@ -69,7 +69,8 @@ extend(Scope.prototype, {
      */
     get: function (name) {
         if(this.declares(name)) {
-            return new TypeInfo(this.getBindings().get(name).extra);
+			var binding = this.getBindings()[name];
+            return new TypeInfo(binding.extra);
         }
         if (this.parent)
             return this.parent.get(name);
@@ -95,8 +96,7 @@ extend(Scope.prototype, {
      * @returns {Scope|null}
      */
     getContextForName: function (name) {
-        var bindings = this.getBindings();
-        if (bindings.get(name) !== undefined)
+        if (this.declares(name))
             return this;
         if (this.parent)
             return this.parent.getContextForName(name);
@@ -113,7 +113,7 @@ extend(Scope.prototype, {
     declare: function (name, fail, position) {
         var bindings = this.getBindings();
         fail = (fail == undefined) ? true : fail;
-        if (bindings.get(name)) {
+        if (bindings.hasOwnProperty(name)) {
             if (fail) {
                 throw new Error(name + " was already declared in this scope.")
             } else {
@@ -121,13 +121,13 @@ extend(Scope.prototype, {
             }
         }
 
-        bindings.set(name,  {
+        bindings[name] =  {
             initialized: false,
             initPosition: position,
             extra: {
                 type: TYPES.UNDEFINED
             }
-        });
+        };
         return true;
     },
 
@@ -140,23 +140,23 @@ extend(Scope.prototype, {
     /**
      *
      * @param {string} name
-     * @param {TypeInfo} typeInfo
+     * @param {TypeInfo} newTypeInfo
      * @param {Object} node AST node the new type info originates from
      */
-    updateTypeInfo: function (name, typeInfo, node) {
+    updateTypeInfo: function (name, newTypeInfo, node) {
         if (!this.declares(name)) {
             if (node) {
-                typeInfo.setInvalid(ErrorHandler.generateErrorInformation(node, ErrorHandler.ERROR_TYPES.REFERENCE_ERROR, name, "is not defined"));
+                newTypeInfo.setInvalid(ErrorHandler.generateErrorInformation(node, ErrorHandler.ERROR_TYPES.REFERENCE_ERROR, name, "is not defined"));
                 return;
             }
             throw new Error("Reference error: " + name + " is not defined.")
         }
-        var v = this.getBindings().get(name);
+        var v = this.getBindings()[name];
         var type = new TypeInfo(v.extra);
 
-        if (v.initialized && v.getType() !== typeInfo.getType()) {
+        if (v.initialized && type.getType() !== newTypeInfo.getType()) {
             if (node) {
-                typeInfo.setInvalid(ErrorHandler.generateErrorInformation(node, ErrorHandler.ERROR_TYPES.SHADEJS_ERROR, name, "may not change it's type"));
+                newTypeInfo.setInvalid(ErrorHandler.generateErrorInformation(node, ErrorHandler.ERROR_TYPES.SHADEJS_ERROR, name, "may not change it's type"));
                 return;
             }
             throw new Error("Variable may not change it's type: " + name);
@@ -167,7 +167,7 @@ extend(Scope.prototype, {
                 v.node.initPosition.copy(typeInfo);*/ // FIXME(ksons)
         }
 
-        type.copyFrom(typeInfo);
+        type.copyFrom(newTypeInfo);
         type.setDynamicValue();
         v.initialized = !type.isUndefined();
     },

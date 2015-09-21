@@ -169,6 +169,11 @@
                     newDeclarations.push(declaration);
                 }
             });
+            if (!newDeclarations.length) {
+                return {
+                    type: Syntax.EmptyStatement
+                }
+            }
             node.declarations = newDeclarations;
             return node;
         },

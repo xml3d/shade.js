@@ -31,7 +31,7 @@
         }
         if(node.type == Syntax.AssignmentExpression) {
             right = ANNO(node.right);
-            annotation.copy(right);
+            annotation.copyFrom(right);
             annotation.clearUniformDependencies();
 
             if (annotation.getType() == TYPES.ANY || annotation.isNullOrUndefined()) {

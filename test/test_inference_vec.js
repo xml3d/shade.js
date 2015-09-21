@@ -10,7 +10,7 @@ var parseAndInferenceExpression = function (str, ctx) {
 }
 
 describe('Inference:', function () {
-    describe.only('Object Registry', function () {
+    describe('Object Registry', function () {
        describe('for Vec2', function () {
 
 		   it("find constructor", function () {

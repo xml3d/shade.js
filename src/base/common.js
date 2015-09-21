@@ -75,8 +75,8 @@
                     });
 
                     if (propagatedConstant.length) {
-                        binding.setStaticValue(propagatedConstant[0].constant);
-                        result.setStaticValue(propagatedConstant[0].constant);
+                        binding.setConstantValue(propagatedConstant[0].constant);
+                        result.setConstantValue(propagatedConstant[0].constant);
                     }
                 }
                 return binding;

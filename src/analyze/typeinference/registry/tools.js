@@ -47,16 +47,19 @@
             3: { type: TYPES.OBJECT, kind: "Vec3" },
             4: { type: TYPES.OBJECT, kind: "Vec4" }
         },
-        getType: function(destVector){
+        getType: function (destVector) {
             return Vec.TYPES[destVector];
         },
-        getConstantValue: function(methodName, result, args, ctx, callObject){
-            if(callObject.hasConstantValue() && allArgumentsAreConstant(args)){
+        getConstantValue: function (methodName, result, args, ctx, callObject) {
+            if (callObject.hasConstantValue() && allArgumentsAreConstant(args)) {
                 var object = callObject.getConstantValue();
-                var callArgs = args.map(function(a) {return a.getConstantValue(); });
+                var callArgs = args.map(function (a) {
+                    return a.getConstantValue();
+                });
                 var method = object[methodName];
-                if(method)
+                if (method) {
                     return method.apply(object, callArgs);
+                }
             }
         },
         checkAnyVecArgument: function(astNode, methodName, arg){
@@ -110,7 +113,7 @@
 
             return typeInfo;
         },
-        anyVecArgumentEvaluate: function(methodName, result, args, ctx, callObject){
+        anyVecArgumentEvaluate: function (methodName, result, args, ctx, callObject) {
             ns.checkParamCount(result.node, methodName, [1], args.length);
             var arg = args[0];
 
@@ -132,7 +135,6 @@
                 Vec.checkVecArguments(qualifiedName, srcVecSize, true, 0, result, args);
                 Base.extend(typeInfo, Vec.getType(destVecSize));
             }
-
             return typeInfo;
         },
 
@@ -220,7 +222,7 @@
         constructorEvaluate: function(objectName, vecSize) {
 			var constructor = function (result, args) {
 				Vec.checkVecArguments(objectName, vecSize, true, 0, result, args);
-				var result = Vec.getType(vecSize);
+				var result = Base.extend({}, Vec.getType(vecSize));
 				result.constantValue = Vec.getConstantValueFromConstructor(objectName, args);
 				return result;
 			}

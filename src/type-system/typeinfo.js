@@ -59,16 +59,16 @@ TypeInfo.createForContext = function (node, ctx) {
  * @param {Object?} value
  */
 TypeInfo.copyStaticValue = function (typeInfo, value) {
-    value = value || typeInfo.getStaticValue();
+    value = value || typeInfo.getConstantValue();
     // We don't have to copy primitive types
     if (!typeInfo.isObject())
         return value;
     switch (typeInfo.getKind()) {
-        case KINDS.FLOAT2:
+        case "Vec2":
             return new Shade.Vec2(value);
-        case KINDS.FLOAT3:
+        case "Vec3":
             return new Shade.Vec3(value);
-        case KINDS.FLOAT4:
+        case "Vec4":
             return new Shade.Vec4(value);
         case KINDS.MATRIX3:
             return new Shade.Mat3(value);
@@ -201,7 +201,7 @@ TypeInfo.prototype = {
     },
     setCommonType: function (a, b) {
         if (a.equals(b)) {
-            this.copy(a);
+            this.copyFrom(a);
             return true;
         }
         if (a.canNumber() && b.canNumber()) {
@@ -270,7 +270,7 @@ TypeInfo.prototype = {
     },
 
     setDynamicValue: function () {
-        delete this.info.staticValue;
+        delete this.info.constantValue;
     },
     setCall: function (call) {
         var extra = this.info;
@@ -315,8 +315,8 @@ TypeInfo.prototype = {
     setFromExtra: function (extra) {
         extend(this.info, extra);
         // Set static object extra: This might be an object
-        if (extra.staticValue != undefined) {
-            this.setStaticValue(TypeInfo.copyStaticValue(this, extra.staticValue));
+        if (extra.constantValue != undefined) {
+            this.setConstantValue(TypeInfo.copyStaticValue(this, extra.constantValue));
         }
     },
 
@@ -339,13 +339,31 @@ TypeInfo.prototype = {
             var property = predefinedType.properties ? predefinedType.properties[name] : (predefinedType.prototype ? predefinedType.prototype[name] : null);
 			if (property) {
 				if (typeof property == "function") {
-					return new TypeInfo({type: "function"});
+					return new TypeInfo({type: "function", evaluate: property });
 				}
                 return new TypeInfo(property);
             }
             return null;
         }
         return null;
+    },
+
+    canEvaluate: function () {
+        return this.isFunction() && typeof this.info.evaluate == "function";
+    },
+
+    evaluate: function (typeInfo, args, scope, objectReference) {
+        assert(this.canEvaluate());
+        return this.info.evaluate(typeInfo, args, scope, objectReference);
+    },
+
+    canComputeStaticValue: function () {
+        return this.isFunction() && typeof this.info.computeStaticValue == "function";
+    },
+
+    computeStaticValue: function (typeInfo, args, scope, objectReference) {
+        assert(this.canComputeStaticValue());
+        return this.info.computeStaticValue(typeInfo, args, scope, objectReference);
     },
 
     getNodeInfo: function () {
@@ -408,8 +426,8 @@ TypeInfo.prototype = {
             return true;
         // In all other cases, it depends on the value,
         // thus we can only evaluate this for static objects
-        if (this.hasStaticValue()) {
-            return !!this.getStaticValue();
+        if (this.hasConstantValue()) {
+            return !!this.getConstantValue();
         }
         return undefined;
     },
@@ -418,6 +436,12 @@ TypeInfo.prototype = {
     },
     getSemantic: function () {
         return this.info.semantic;
+    },
+	getReturnInfo: function () {
+        return this.info.returnInfo;
+    },
+    setReturnInfo: function (info) {
+        this.info.returnInfo = info;
     }
 
 };
