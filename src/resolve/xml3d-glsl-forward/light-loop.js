@@ -55,7 +55,7 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
 
             var lDirection = this.viewMatrix.mulVec(this.spotLightDirection[i].flip(), 0).xyz().normalize();
             var angle = L.dot(lDirection);
-            if(angle > this.spotLightCosFalloffAngle[i]) {
+            if(angle > this.spotLightCosCutoffAngle[i]) {
                 var kd = new Vec3(0,0,0), ks = new Vec3(0,0,0);
                 "BRDF_ENTRY";
 
@@ -110,9 +110,9 @@ ns.LightLoop = function LightLoop(position, ambientIntensity){
                 }
 
                 var softness = 1.0;
-                if(angle < this.spotLightCosSoftFalloffAngle[i])
-                    softness = (angle - this.spotLightCosFalloffAngle[i]) /
-                        (this.spotLightCosSoftFalloffAngle[i] -  this.spotLightCosFalloffAngle[i]);
+                if(angle < this.spotLightCosSoftCutoffAngle[i])
+                    softness = (angle - this.spotLightCosCutoffAngle[i]) /
+                        (this.spotLightCosSoftCutoffAngle[i] -  this.spotLightCosCutoffAngle[i]);
 
                 atten = 1.0 / (this.spotLightAttenuation[i].x() + this.spotLightAttenuation[i].y() * dist + this.spotLightAttenuation[i].z() * dist * dist);
                 kd = kd.mul(this.spotLightIntensity[i]).mul(atten * softness * c);
