@@ -4,6 +4,7 @@
     var Context = require("../base/context.js");
     var common = require("../base/common.js");
     var Base = require("../base/index.js");
+    var TypeInfo = require("./../type-system/typeinfo.js").TypeInfo;
     var Annotations = require("./../type-system/annotation.js");
     var assert = require('assert');
     var walk = require('estraverse');
@@ -148,7 +149,7 @@
                         throw new Error("Dynamic variable names are not yet supported");
                     }
                     var variableName = declaration.id.name;
-                    scope.declare(variableName, true, result);
+                    scope.declare(variableName, true, declaration);
 
                     if (declaration.init) {
                         var init = ANNO(declaration.init);
@@ -184,15 +185,15 @@
                 // This is a big hack, need better injection mechanism
                 var envObject = entryParams[0];
                 if (envObject && envObject.extra) {
-                    var envAnnotation = new Annotations.Annotation({}, envObject.extra);
-                    this.getScope().updateTypeInfo("_env", envAnnotation);
+                    var envAnnotation = new TypeInfo(envObject.extra);
+                    this.getScope().declare("_env", envAnnotation);
                 }
 
                 var overrideName = name.substr(name.indexOf(".")+1);
 
                 this.root.globalParameters[name] = entryParams;
                 this.callFunction(name, entryParams.map(function (param) {
-                    return ANNO(param);
+                    return new TypeInfo(param.extra);
                 }), { name: overrideName});
 
         }
@@ -267,7 +268,7 @@
         for (var i = 0; i < params.length; i++) {
             var funcParam = ANNO(params[i]);
             if (i < types.length) {
-                funcParam.setFromExtra(types[i].extra);
+                funcParam.copyFrom(types[i]);
                 funcParam.setDynamicValue();
             } else {
                 funcParam.setType(Shade.TYPES.UNDEFINED);

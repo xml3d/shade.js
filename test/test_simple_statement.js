@@ -8,7 +8,7 @@ var wrapFunction = function(str, argsString){
 }
 
 var getSimplifiedCode = function (str, args) {
-    args = args || { a : "float3", "b" : "float3", "c": "float3", "d" : "float3"};
+    args = args || { a : "Vec3", "b" : "Vec3", "c": "Vec3", "d" : "Vec3"};
     var argNames = [], argTypes = [];
     for(var name in args){
         argNames.push(name);

@@ -14,8 +14,7 @@ var TYPES = require("./constants.js").TYPES;
 var KINDS = Shade.OBJECT_KINDS;
 
 /**
- * @param {*} node Carrier object for the type info, only node.extra gets polluted
- * @param {Object?} extra
+ * @param {*} info Carrier object for the type info, only node.extra gets polluted
  * @constructor
  */
 var TypeInfo = function (info) {
@@ -174,7 +173,7 @@ TypeInfo.prototype = {
         return this.isOfType(TYPES.OBJECT);
     },
     isVector: function () {
-        return this.isObject() && this.isOfKind(KINDS.FLOAT2) || this.isOfKind(KINDS.FLOAT3) || this.isOfKind(KINDS.FLOAT4);
+        return this.isObject() && this.isOfKind("Vec2") || this.isOfKind("Vec3") || this.isOfKind("Vec4");
     },
     isGlobal: function () {
         return !!this.info.global;

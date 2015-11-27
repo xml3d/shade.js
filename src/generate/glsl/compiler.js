@@ -2,8 +2,9 @@
 
     var Base = require("../../base/index.js");
 
-    var Transformer = require("./transform.js").GLASTTransformer;
+    var Transformer = require("./transform.js");
     var generate = require("./glsl-generate.js").generate;
+
 
     var GLSLCompiler = function () {
 
@@ -16,6 +17,7 @@
 
             var transformer = new Transformer(aast, "global.shade", false, opt);
 
+            //console.log(require("escodegen").generate(aast));
             //console.log(JSON.stringify(aast, 0, " "));
 
             var transformed = transformer.transform(aast);

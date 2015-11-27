@@ -1,15 +1,10 @@
-(function(ns) {
+var TypeSystem = require("../../../type-system/type-system.js");
 
     var Scope = require("../../../type-system/scope.js"),
         Context = require("../../../base/context.js"),
         Base = require("../../../base/index.js"),
-        Shade = require("../../../interfaces.js"),
-        TypeInfo = require("../../../type-system/typeinfo.js").TypeInfo,
         common = require("../../../base/common.js");
 
-
-    var Types = Shade.TYPES,
-        Kinds = Shade.OBJECT_KINDS;
 
     var objects = {
         Shade : require("./shade.js"),
@@ -95,13 +90,21 @@
      */
     var GLTransformScope = function(node, parentScope, opt) {
         Scope.call(this, node, parentScope, opt);
-        this.setRegistry(Registry);
     };
 
     Base.createClass(GLTransformScope, Scope, {
 
         registerGlobals: function() {
-            this.registerObject("Math", objects.Math);
+
+            this.declarePredefined("Math", TypeSystem.getPredefinedObject("Math"));
+		    this.declarePredefined("Vec2", TypeSystem.getPredefinedObject("Vec2"));
+		    this.declarePredefined("Vec3", TypeSystem.getPredefinedObject("Vec3"));
+		    this.declarePredefined("Vec4", TypeSystem.getPredefinedObject("Vec4"));
+
+            //console.log(TypeSystem.getPredefinedObject("Vec3"));
+            //this.declarePredefined("Vec3", TypeSystem.getPredefinedObject("Vec3"));
+
+            /*this.registerObject("Math", objects.Math);
             this.registerObject("Color",  objects.Color);
             this.registerObject("Vec2", objects.Vec2);
             this.registerObject("Vec3", objects.Vec3);
@@ -118,13 +121,12 @@
                     type: Types.OBJECT,
                     kind: Kinds.FLOAT3
                 }
-            }));
+            }));*/
         }
     });
 
 
 
-    ns.GLTransformScope = GLTransformScope;
-    ns.GLTransformContext = GLTransformContext;
+    module.exports = {GLTransformScope : GLTransformScope,
+    GLTransformContext : GLTransformContext}
 
-}(exports));

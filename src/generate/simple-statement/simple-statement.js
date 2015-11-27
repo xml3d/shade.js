@@ -8,7 +8,6 @@
         TypeInfo = require("../../type-system/typeinfo.js").TypeInfo,
         StatementSplitTraverser = require("../../analyze/sanitizer/statement-split-traverser"),
         Types = Shade.TYPES,
-        Kinds = Shade.OBJECT_KINDS,
         ANNO = require("../../type-system/annotation.js").ANNO;
 
     var Syntax = walk.Syntax;
@@ -304,12 +303,12 @@
                 left: {type: Syntax.Identifier, name: tmpName},
                 right: right
             };
-            ANNO(assignment).copy(ANNO(right));
-            ANNO(assignment.left).copy(ANNO(right));
+            ANNO(assignment).copyFrom(ANNO(right));
+            ANNO(assignment.left).copyFrom(ANNO(right));
             this.assignmentsToBePrepended.push(assignment);
 
             var identifierNode = {type: Syntax.Identifier, name: tmpName};
-            ANNO(identifierNode).copy(ANNO(right));
+            ANNO(identifierNode).copyFrom(ANNO(right));
             return identifierNode;
         },
 
@@ -334,18 +333,8 @@
     });
 
     function getCalleeName(kind) {
-        switch(kind) {
-            case Kinds.FLOAT2:
-                return "Vec2";
-            case Kinds.FLOAT3:
-                return "Vec3";
-            case Kinds.FLOAT4:
-                return "Vec4";
-            case Kinds.MATRIX3:
-                return "Mat3";
-            case Kinds.MATRIX4:
-                return "Mat4";
-        }
+        if (kind) return kind;
+
         throw new Error("Unknown Kind '" + kind + "', no callee available.");
     };
 
@@ -459,7 +448,7 @@
         if(node.callee.type != Syntax.MemberExpression)
             return false;
         var objectKind = ANNO(node.callee.object).getKind();
-        if(objectKind == Kinds.ANY)
+        if(objectKind == "any")
             return false;
         var objComponentCnt = getObjectComponentCount(objectKind);
         var requiredComponents = getArgTypeandIndex(objComponentCnt, node.callee.property.name, result);
@@ -485,15 +474,15 @@
 
     function getObjectComponentCount(objectKind) {
         switch(objectKind) {
-            case Kinds.FLOAT2:
+            case "Vec2":
                 return 2;
-            case Kinds.FLOAT3:
+            case "Vec3":
                 return 3;
-            case Kinds.FLOAT4:
+            case "Vec4":
                 return 4;
-            case Kinds.MATRIX3:
+            case "Mat3":
                 return 9;
-            case Kinds.MATRIX4:
+            case "Mat4":
                 return 16;
             default:
                 return 1; // must be number
@@ -503,15 +492,15 @@
     function getObjectKindByComponentCount(componentCount) {
         switch(componentCount) {
             case 2:
-                return Kinds.FLOAT2;
+                return "Vec2";
             case 3:
-                return Kinds.FLOAT3;
+                return "Vec3";
             case 4:
-                return Kinds.FLOAT4;
+                return "Vec4";
             case 9:
-                return Kinds.MATRIX3;
+                return "Mat3";
             case 16:
-                return Kinds.MATRIX4;
+                return "Mat4";
         }
         throw new Error("Unknown Object Count '" + componentCount + "', no kind available.");
     }

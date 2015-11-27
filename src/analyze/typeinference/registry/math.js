@@ -143,10 +143,19 @@ var MathObject = {
 		},
 		computeStaticValue: evaluateStatic("step")
 	},
-	fract: function () {
+	fract:  {
+			type: TYPES.FUNCTION,
+			evaluate: function (result, args, ctx) {
+				Tools.checkParamCount(result.node, "Shade.fract", [1], args.length);
 
-			//Tools.Vec.anyVecArgumentEvaluate.bind(null, "fract"),
-		   //computeStaticValue: evaluateStatic("fract")
+				if (Tools.allArgumentsCanNumber(args)) {
+					return {type: TYPES.NUMBER}
+				}
+				Error.throwError(result.node, "Shade.step not supported with argument types: " + args.map(function (arg) {
+					return arg.getTypeString();
+				}).join(", "));
+		},
+		computeStaticValue: evaluateStatic("fract")
 	},
 
 	mix: {

@@ -37,7 +37,7 @@ var generateExpression = function(exp, params, thisParams) {
             }
         ]
     };
-    var aast = Shade.parseAndInferenceExpression(exp, { inject: contextData, foldConstants: false });
+    var aast = Shade.parseAndInferenceExpression(exp, { inject: contextData, foldConstants: false});
     return new GLSLCompiler().compileFragmentShader(aast, {omitHeader: true}).source;
 }
 
@@ -59,16 +59,16 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("var x = true;");
             code.should.match(/bool x = true;/);
         });
-        it("Color with 3 parameters", function() {
-            var code = generateExpression("var x = new Color(0.1, 0.1, 0.1);");
+        it("Vec3 with 3 parameters", function() {
+            var code = generateExpression("var x = new Vec3(0.1, 0.1, 0.1);");
             code.should.match(/vec3 x = vec3\(0.1, 0.1, 0.1\);/);
         });
-        it("Color with 1 parameter", function() {
-            var code = generateExpression("var x = new Color(0.1);");
+        it("Vec with 1 parameter", function() {
+            var code = generateExpression("var x = new Vec3(0.1);");
             code.should.match(/vec3 x = vec3\(0.1\);/);
         });
-        it("Color without parameter", function() {
-            var code = generateExpression("var x = new Color();");
+        it("Vec without parameter", function() {
+            var code = generateExpression("var x = new Vec3();");
             code.should.match(/vec3 x = vec3\(0\.0\);/);
         });
     });
@@ -86,7 +86,7 @@ describe('GLSL Code generation,', function () {
             code.should.match(/bool x;\s*x = true;/);
         });
         it("Color with 3 parameters", function() {
-            var code = generateExpression("var x; x = new Color(0.1, 0.2, 0.3);");
+            var code = generateExpression("var x; x = new Vec3(0.1, 0.2, 0.3);");
             code.should.match(/vec3 x;\s*x = vec3\(0.1, 0.2, 0.3\);/);
         });
     });

@@ -66,9 +66,9 @@
             var cnt;
 
             if(arg.canNumber()) cnt = 1;
-            else if(arg.isOfKind(KINDS.FLOAT2)) cnt = 2;
-            else if(arg.isOfKind(KINDS.FLOAT3)) cnt = 3;
-            else if(arg.isOfKind(KINDS.FLOAT4)) cnt = 4;
+            else if(arg.isOfKind("Vec2")) cnt = 2;
+            else if(arg.isOfKind("Vec3")) cnt = 3;
+            else if(arg.isOfKind("Vec4")) cnt = 4;
             else Shade.throwError(astNode, "Invalid parameter for " + methodName + ", type '" +
                     arg.getTypeString() + "' is not supported");
             return cnt;
@@ -89,11 +89,11 @@
             for(var i = argStart; idx < vecSize && i < args.length; ++i){
                 var arg= args[i], cnt;
                 if(arg.canNumber()) cnt = 1;
-                else if(arg.isOfKind(KINDS.FLOAT2)) cnt = 2;
-                else if(arg.isOfKind(KINDS.FLOAT3)) cnt = 3;
-                else if(arg.isOfKind(KINDS.FLOAT4)) cnt = 4;
-                else if(arg.isOfKind(KINDS.MATRIX3)) cnt = 9;
-                else if(arg.isOfKind(KINDS.MATRIX4)) cnt = 16;
+                else if(arg.isOfKind("Vec2")) cnt = 2;
+                else if(arg.isOfKind("Vec3")) cnt = 3;
+                else if(arg.isOfKind("Vec4")) cnt = 4;
+                else if(arg.isOfKind("Mat3")) cnt = 9;
+                else if(arg.isOfKind("Mat4")) cnt = 16;
                 else Shade.throwError(result.node, "Invalid parameter for " + methodName + ", type '" + arg.getTypeString() + "' is not supported");
                 idx += cnt;
             }
@@ -106,6 +106,7 @@
         },
 
         vecEvaluate: function(objectName, methodName, destVecSize, srcVecSize, result, args, ctx, callObject){
+            console.log("vecEvaluate", objectName, methodName, destVecSize, srcVecSize, args)
             Vec.checkVecArguments(objectName + "." + methodName, srcVecSize, false, 0, result, args);
 
             var typeInfo = {};

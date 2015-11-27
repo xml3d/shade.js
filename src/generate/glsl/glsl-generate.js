@@ -65,11 +65,11 @@
         switch (info.type) {
             case Types.OBJECT:
                 switch (info.kind) {
-                    case Kinds.FLOAT4:
+                    case "Vec4":
                         return "vec4";
-                    case Kinds.FLOAT3:
+                    case "Vec3":
                         return "vec3";
-                    case Kinds.FLOAT2:
+                    case "Vec2":
                         return "vec2";
                     case Kinds.TEXTURE:
                         return "sampler2D";
@@ -80,7 +80,7 @@
                     case Kinds.COLOR_CLOSURE:
                         return "vec4";
                     default:
-                        return "<undefined>";
+                        throw new Error("Missing GLSL support for:" + info.kind);
                 }
             case Types.ARRAY:
                 return toGLSLType(info.elements, options);
@@ -240,6 +240,9 @@
                                 lines.changeIndention(-1);
                                 lines.appendLine("}");
                                 return VisitorOption.Skip;
+
+                            case Syntax.NewStatement:
+
 
                             case Syntax.ContinueStatement:
                                 lines.appendLine("continue;");

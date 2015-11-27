@@ -141,7 +141,7 @@ extend(Scope.prototype, {
      *
      * @param {string} name
      * @param {TypeInfo} newTypeInfo
-     * @param {Object} node AST node the new type info originates from
+     * @param {Object?} node AST node the new type info originates from
      */
     updateTypeInfo: function (name, newTypeInfo, node) {
         if (!this.declares(name)) {
@@ -161,10 +161,9 @@ extend(Scope.prototype, {
             }
             throw new Error("Variable may not change it's type: " + name);
         }
-        if (!v.initialized) {
+        if (!v.initialized && v.initPosition) {
             // Annotate the declaration, if one is given
-            /*if (v.node.initPosition)
-                v.node.initPosition.copy(typeInfo);*/ // FIXME(ksons)
+            ANNO(v.initPosition).copyFrom(newTypeInfo);
         }
 
         type.copyFrom(newTypeInfo);
@@ -187,11 +186,8 @@ extend(Scope.prototype, {
         var bindings = this.getBindings();
         for (var i = 0; i < params.length; i++) {
             var parameter = params[i];
-            var annotation = new Annotation(parameter);
-
-            var binding = new TypeInfo({});
-            binding.copy(annotation);
-            bindings[parameter.name] = { extra: binding };
+            this.declare(parameter.name);
+            this.updateTypeInfo(parameter.name, new TypeInfo(parameter.extra));
         }
     },
 
