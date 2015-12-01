@@ -87,6 +87,12 @@ extend(Scope.prototype, {
 			assert(definition instanceof TypeInfo);
             return definition;
         }
+        if (node.type == Syntax.ThisExpression) {
+            var definition = this.get("this");
+			assert(definition instanceof TypeInfo);
+            //console.log("def", definition)
+            return definition;
+        }
         //console.log("type no varable", node)
         return ANNO(node);
     },
@@ -164,6 +170,7 @@ extend(Scope.prototype, {
         if (!v.initialized && v.initPosition) {
             // Annotate the declaration, if one is given
             ANNO(v.initPosition).copyFrom(newTypeInfo);
+            ANNO(v.initPosition).setDynamicValue();
         }
 
         type.copyFrom(newTypeInfo);
@@ -230,29 +237,9 @@ extend(Scope.prototype, {
             }
         }
         return result;
-    },
-
-    getObjectInfoFor: function (obj) {
-        if (!obj.isObject())
-            return null;
-
-        // There are three ways to get the properties of an object
-
-        // 1. Object is static and has registered it's properties via reference
-        var staticProperties = obj.getStaticProperties();
-        if (staticProperties)
-            return staticProperties;
-
-        // 1: Object is generic (any), then it carries it's information itself
-        if (obj.isOfKind(Shade.OBJECT_KINDS.ANY)) {
-            return obj.getNodeInfo();
-        }
-
-
-        // 3. Last chance: The object is an instance of a registered type,
-        // then we get the information from it's kind
-        return this.registry && this.registry.getInstanceForKind(obj.getKind()) || null;
     }
+
+
 
 });
 

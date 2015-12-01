@@ -71,9 +71,9 @@
                         return "vec3";
                     case "Vec2":
                         return "vec2";
-                    case Kinds.TEXTURE:
+                    case "Texture":
                         return "sampler2D";
-                    case Kinds.MATRIX3:
+                    case "Mat3":
                         return "mat3";
                     case Kinds.MATRIX4:
                         return "mat4";
@@ -215,7 +215,7 @@
                             case Syntax.AssignmentExpression:
                             case Syntax.ExpressionStatement:
                                 lines.appendLine(handler.expression(node) + ";")
-                                return VisitorOption.Skip;;
+                                return VisitorOption.Skip;
 
                             case Syntax.IfStatement:
                                 lines.appendLine("if(" + handler.expression(node.test, opt) + ") {");
@@ -298,7 +298,7 @@
     }
 
     function generateFunctionSignature(node) {
-        var func = new FunctionAnnotation(node);
+        var func = new FunctionAnnotation(node.extra);
         var methodStart = [toGLSLType(func.getReturnInfo(), { allowUndefined: true })];
         methodStart.push(node.id.name, '(');
         if (!(node.params && node.params.length)) {

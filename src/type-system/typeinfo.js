@@ -69,9 +69,9 @@ TypeInfo.copyStaticValue = function (typeInfo, value) {
             return new Shade.Vec3(value);
         case "Vec4":
             return new Shade.Vec4(value);
-        case KINDS.MATRIX3:
+        case "Mat3":
             return new Shade.Mat3(value);
-        case KINDS.MATRIX4:
+        case "Mat4":
             return new Shade.Mat4(value);
         default:
             throw new Error("Can't copy static value of kind: " + typeInfo.getKind());
@@ -90,7 +90,7 @@ TypeInfo.prototype = {
     getKind: function () {
         if (!(this.isObject() || this.isFunction()))
             return null;
-        return this.info.kind || KINDS.ANY;
+        return this.info.kind || null;
     },
 
     getUserData: function () {
@@ -320,8 +320,13 @@ TypeInfo.prototype = {
     },
 
 	hasProperty: function (name) {
-        if (this.isObject() && this.getKind()) {
-            var obj = TypeSystem.getPredefinedObject(this.getKind());
+        if (this.isObject() || this.isFunction) {
+             var obj;
+             if(this.getKind()) {
+                 obj = TypeSystem.getPredefinedObject(this.getKind());
+             } else {
+                obj = this.info;
+             }
             return (obj.properties && obj.properties.hasOwnProperty(name)) || (obj.prototype && obj.prototype.hasOwnProperty(name));
         }
         return false;
@@ -332,19 +337,22 @@ TypeInfo.prototype = {
         return this.isObject && this.getKind();
     },
 
-	getPropertyInfo: function (name) {
-        if (this.isPredefinedObject()) {
+    getPropertyInfo: function (name) {
+        assert(this.hasProperty(name));
+        if (this.getKind()) { // Predefined object
             var predefinedType = TypeSystem.getPredefinedObject(this.getKind());
             var property = predefinedType.properties ? predefinedType.properties[name] : (predefinedType.prototype ? predefinedType.prototype[name] : null);
-			if (property) {
-				if (typeof property == "function") {
-					return new TypeInfo({type: "function", evaluate: property });
-				}
+            if (property) {
+                if (typeof property == "function") {
+                    return new TypeInfo({type: "function", evaluate: property});
+                }
                 return new TypeInfo(property);
             }
-            return null;
+        } else {
+            return new TypeInfo(this.info.properties[name]);
         }
         return null;
+
     },
 
     canEvaluate: function () {

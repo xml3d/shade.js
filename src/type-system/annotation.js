@@ -9,13 +9,12 @@ var TypeInfo = require("./typeinfo.js").TypeInfo;
 
 
 /**
- * @param {object} node
- * @param {object} extra
+ * @param {object} info
  * @extends TypeInfo
  * @constructor
  */
-var Annotation = function (node, extra) {
-    TypeInfo.call(this, node, extra);
+var Annotation = function (info) {
+    TypeInfo.call(this, info);
 };
 
 util.inherits(Annotation, TypeInfo);
@@ -38,13 +37,12 @@ extend(Annotation.prototype, {
 
 
 /**
- * @param {object} node
- * @param {object} extra
+ * @param {object} info
  * @extends Annotation
  * @constructor
  */
-var FunctionAnnotation = function (node, extra) {
-    Annotation.call(this, node, extra);
+var FunctionAnnotation = function (info) {
+    Annotation.call(this, info);
     this.setType(TYPES.FUNCTION);
 };
 
@@ -53,10 +51,10 @@ util.inherits(FunctionAnnotation, Annotation);
 
 extend(FunctionAnnotation.prototype, {
     getReturnInfo: function () {
-        return this.getExtra().returnInfo;
+        return this.info.returnInfo;
     },
     setReturnInfo: function (info) {
-        this.getExtra().returnInfo = info;
+        this.info.returnInfo = info;
     },
     isUsed: function () {
         return !!this.getExtra().used;

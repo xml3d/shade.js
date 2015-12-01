@@ -2,7 +2,6 @@
 
     var Shade = require("../../../interfaces.js"),
         TYPES = Shade.TYPES,
-        KINDS = Shade.OBJECT_KINDS,
         Tools = require("./tools.js");
 
     var ColorClosureInstance = {
@@ -11,7 +10,7 @@
             evaluate: function() {
                 return {
                     type: TYPES.OBJECT,
-                    kind: KINDS.COLOR_CLOSURE
+                    kind: "Closure"
                 };
             }
         },
@@ -20,7 +19,7 @@
             evaluate: function() {
                 return {
                     type: TYPES.OBJECT,
-                    kind: KINDS.COLOR_CLOSURE
+                    kind: "Closure"
                 };
             }
         }
@@ -28,7 +27,7 @@
 
     Tools.extend(ns, {
         id: "ColorClosure",
-        kind: KINDS.COLOR_CLOSURE,
+        kind: "Closure",
         object: {
             constructor: null,
             static: null

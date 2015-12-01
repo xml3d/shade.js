@@ -106,7 +106,7 @@
         },
 
         vecEvaluate: function(objectName, methodName, destVecSize, srcVecSize, result, args, ctx, callObject){
-            console.log("vecEvaluate", objectName, methodName, destVecSize, srcVecSize, args)
+            //console.log("vecEvaluate", objectName, methodName, destVecSize, srcVecSize, args)
             Vec.checkVecArguments(objectName + "." + methodName, srcVecSize, false, 0, result, args);
 
             var typeInfo = {};

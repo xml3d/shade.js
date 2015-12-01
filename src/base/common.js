@@ -83,7 +83,7 @@
 
             }
         } else if (node.type == Syntax.ThisExpression) {
-            binding = scope.getBindingByName('this');
+            binding = scope.get("this");
         }
         return binding || ANNO(node);
     };

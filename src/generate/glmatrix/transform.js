@@ -238,20 +238,20 @@
         if(type == Types.NUMBER || type == Types.INT)
             return 1;
         switch(kind){
-            case Kinds.FLOAT2: return 2;
-            case Kinds.FLOAT3: return 3;
-            case Kinds.FLOAT4: return 4;
-            case Kinds.MATRIX3: return 9;
+            case "Vec2": return 2;
+            case "Vec3": return 3;
+            case "Vec4": return 4;
+            case "Mat3": return 9;
             case Kinds.MATRIX4: return 16;
         }
     }
 
     function getGlMatrixObject(kind){
         switch(kind){
-            case Kinds.FLOAT2: return "vec2";
-            case Kinds.FLOAT3: return "vec3";
-            case Kinds.FLOAT4: return "vec4";
-            case Kinds.MATRIX3: return "mat3";
+            case "Vec2": return "vec2";
+            case "Vec3": return "vec3";
+            case "Vec4": return "vec4";
+            case "Mat3": return "mat3";
             case Kinds.MATRIX4: return "mat4";
         }
         return null;
@@ -296,8 +296,8 @@
             case "length": method = "setLength"; break;
             case "normalize" : method = "normalize"; break;
             case "mulVec" : switch(objectKind){
-                    case Kinds.MATRIX3: actualKind= Kinds.FLOAT3; method = "transformMat3"; break;
-                    case Kinds.MATRIX4: actualKind= Kinds.FLOAT4; method = "transformMat4"; break;
+                    case "Mat3": actualKind= "Vec3"; method = "transformMat3"; break;
+                    case Kinds.MATRIX4: actualKind= "Vec4"; method = "transformMat4"; break;
                 }
                 srcAfterArgs = true;
             break;

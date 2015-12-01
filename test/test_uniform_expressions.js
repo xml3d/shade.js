@@ -47,7 +47,7 @@ function createTest(dir, file) {
     });
 }
 
-describe('Uniform Expressions:', function () {
+xdescribe('Uniform Expressions:', function () {
     var dir = __dirname + '/data/uniformExpressions/';
     var files = fs.readdirSync(dir);
     files.filter(function(filename) { return filename.split('.').pop() == "js" }).forEach(function (file) {

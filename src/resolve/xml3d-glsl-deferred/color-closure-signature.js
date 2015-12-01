@@ -140,10 +140,10 @@
             object: { type: Syntax.Identifier, name: "_env"},
             property: { type: Syntax.Identifier, name: "position"}
         }
-        // ANNO(positionLookup).setType(Types.OBJECT, Kinds.FLOAT3);
+        // ANNO(positionLookup).setType(Types.OBJECT, "Vec3");
         // ANNO(positionLookup.object).setType(Types.OBJECT, Kinds.ANY);
         // ANNO(positionLookup.object).setGlobal(true);
-        getCachedArgument(ccSig, {type: Types.OBJECT, kind: Kinds.FLOAT3}, positionLookup, argCache, argAast,
+        getCachedArgument(ccSig, {type: Types.OBJECT, kind: "Vec3"}, positionLookup, argCache, argAast,
             SpaceVectorType.VIEW_POINT);
     }
 
@@ -179,9 +179,9 @@
         }
         else if(closureInputType.type == Types.OBJECT){
             switch(closureInputType.kind){
-                case Kinds.FLOAT2: return ArgStorageType.FLOAT2;
-                case Kinds.FLOAT3: return ArgStorageType.FLOAT3;
-                case Kinds.FLOAT4: return ArgStorageType.FLOAT4;
+                case "Vec2": return ArgStorageType.FLOAT2;
+                case "Vec3": return ArgStorageType.FLOAT3;
+                case "Vec4": return ArgStorageType.FLOAT4;
                 default:
                     throw new Error("Deferred input of this kind not supported: " + closureInputType.kind);
             };
@@ -337,7 +337,7 @@
             vecArgs.push(zeroLiteral);
         }
         var result = { type: Syntax.NewExpression, callee: { type: Syntax.Identifier, name: "Vec4"}, arguments: vecArgs};
-        // ANNO(result).setType(Types.OBJECT, Kinds.FLOAT4);
+        // ANNO(result).setType(Types.OBJECT, "Vec4");
         return result;
     }
 

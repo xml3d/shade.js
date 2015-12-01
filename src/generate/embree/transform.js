@@ -46,7 +46,7 @@
             ctx.updateTypeInfo("gl_FragCoord", new TypeInfo({
                 extra: {
                     type: Types.OBJECT,
-                    kind: Kinds.FLOAT3
+                    kind: "Vec3"
                 }
             }));
 
@@ -579,10 +579,10 @@
     function castToVec4(ast, context) {
         var exp = TypeInfo.createForContext(ast, context);
 
-        if (exp.isOfKind(Kinds.FLOAT4) || exp.isOfKind(Kinds.COLOR_CLOSURE))
+        if (exp.isOfKind("Vec4") || exp.isOfKind("Closure"))
             return ast;
 
-        if (exp.isOfKind(Kinds.FLOAT3)) {
+        if (exp.isOfKind("Vec3")) {
             return {
                 type: Syntax.CallExpression,
                 callee: {
@@ -598,10 +598,10 @@
     function castToColor(ast, context) {
         var exp = TypeInfo.createForContext(ast, context);
 
-        if (exp.isOfKind(Kinds.FLOAT4) || exp.isOfKind(Kinds.COLOR_CLOSURE))
+        if (exp.isOfKind("Vec4") || exp.isOfKind(Kinds.COLOR_CLOSURE))
             return ast;
 
-        if (exp.isOfKind(Kinds.FLOAT3)) {
+        if (exp.isOfKind("Vec3")) {
             return {
                 type: Syntax.CallExpression,
                 callee: {

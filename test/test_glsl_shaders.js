@@ -32,7 +32,7 @@ function createTest(dir, file) {
     });
 }
 
-describe('GLSL Shader Code:', function () {
+xdescribe('GLSL Shader Code:', function () {
     var dir = __dirname + '/data/shaders/glsl/';
     var files = fs.readdirSync(dir);
     files.filter(function(filename) { return filename.split('.').pop() == "js" }).forEach(function (file) {

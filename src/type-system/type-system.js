@@ -10,7 +10,7 @@ var TypeSystem = (function () {
 
         getPredefinedObject: function (name) {
             var obj = registry.get(name);
-            assert(obj, "Can't find object " + name + " in TypeSystem.");
+            assert(obj, "Can't find object '" + name + "' in TypeSystem.");
             return obj;
         }
     };
@@ -18,6 +18,7 @@ var TypeSystem = (function () {
 	result.registerPredefinedObject(require("../analyze/typeinference/registry/vec2.js"));
 	result.registerPredefinedObject(require("../analyze/typeinference/registry/vec3.js"));
 	result.registerPredefinedObject(require("../analyze/typeinference/registry/vec4.js"));
+    result.registerPredefinedObject(require("../analyze/typeinference/registry/system.js"));
     return result;
 }());
 

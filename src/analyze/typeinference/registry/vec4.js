@@ -6,7 +6,7 @@ var Vec4 = function Vec4(node, arguments) {
 };
 
 Vec4.prototype = {
-	length: Tools.Vec.optionalZeroEvaluate.bind(null, "Vec4", "length", 3, 1, 1)
+	length: Tools.Vec.optionalZeroEvaluate.bind(null, "Vec4", "length", 4, 1, 1)
 };
 
 Tools.Vec.attachSwizzles(Vec4.prototype, "Vec4", 4);

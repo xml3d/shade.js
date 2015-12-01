@@ -10,6 +10,7 @@ var Base = require("../../base/index.js"),
 
 
 var Context = require("./registry/").GLTransformContext;
+var GLObjects = require("./registry/").GLObjects;
 
 
 var walk = require('estraverse');
@@ -118,13 +119,11 @@ Base.extend(GLASTTransformer.prototype, {
     transform: function () {
         var context = this.context,
             program = context.root,
-            scope = context.createScope(this.context.root, null, "global"),
+            scope = context.createScope(program, null, "global"),
             name, declaration;
 
         scope.registerGlobals();
         context.pushScope(scope);
-
-        this.registerThisObject(scope);
 
         // TODO: We should also block systemParameters here. We can block all system names, even if not used.
         for (name in context.globalParameters) {
@@ -206,7 +205,7 @@ Base.extend(GLASTTransformer.prototype, {
 var createTopDeclaration = function (name, typeInfo) {
     var propertyLiteral = {type: Syntax.Identifier, name: name};
     var propertyAnnotation = ANNO(propertyLiteral);
-    propertyAnnotation.setFromExtra(typeInfo);
+    propertyAnnotation.copyFrom(typeInfo);
 
     if (propertyAnnotation.isNullOrUndefined() || propertyAnnotation.isDerived() || propertyAnnotation.isFunction())
         return;
@@ -226,7 +225,7 @@ var createTopDeclaration = function (name, typeInfo) {
         kind: "var"
     };
     var declAnnotation = ANNO(decl.declarations[0]);
-    declAnnotation.copy(propertyAnnotation);
+    declAnnotation.copyFrom(propertyAnnotation);
     return decl;
 };
 
@@ -323,7 +322,7 @@ var leaveReturnStatement = function (node, context) {
  * @param node
  */
 var leaveMainFunction = function (node) {
-    var anno = new FunctionAnnotation(node);
+    var anno = new FunctionAnnotation(node.extra);
     anno.setReturnInfo({type: Types.UNDEFINED});
 
     // Main has no parameters
@@ -387,28 +386,15 @@ var leaveCallExpression = function (node, parent, context) {
     // Is this a call on an object?
     if (node.callee.type == Syntax.MemberExpression) {
         var calleeReference = common.getTypeInfo(node.callee, scope);
-        if (!(calleeReference && calleeReference.isFunction()))
-            Shade.throwError(node, "Something went wrong in type inference, " + node.callee.object.name);
+        assert(calleeReference && calleeReference.isFunction(), "Expected function but found: "  + calleeReference );
 
         var object = node.callee.object,
             propertyName = node.callee.property.name;
 
         var objectReference = common.getTypeInfo(object, scope);
-        if (!objectReference) {
-            Shade.throwError(node, "Internal: No type info for: " + object);
-        }
-
-        var objectInfo = scope.getObjectInfoFor(objectReference);
-        if (!objectInfo) { // Every object needs an info, otherwise we did something wrong
-            Shade.throwError(node, "Internal Error: No object registered for: " + objectReference.getTypeString() + ", " + getNameOfNode(node.callee.object) + ", " + node.callee.object.type);
-        }
-        if (objectInfo.hasOwnProperty(propertyName)) {
-            var propertyHandler = objectInfo[propertyName];
-            if (typeof propertyHandler.callExp == "function") {
-                var args = common.createTypeInfo(node.arguments, scope);
-                return propertyHandler.callExp(node, args, parent, context);
-            }
-        }
+        assert(objectReference && objectReference.isObject(), "Expected object to call but found: "  + objectReference );
+        assert(objectReference.hasProperty(propertyName), "Expected object to have a property: " + propertyName);
+        return handleMethodCall(node, objectReference, propertyName);
     }
 };
 
@@ -429,9 +415,7 @@ var leaveNewExpression = function (newExpression, context) {
  */
 var leaveMemberExpression = function (node, parent, context) {
     var propertyName = node.property.name,
-        scope = context.getScope(),
-        parameterName,
-        propertyLiteral;
+        scope = context.getScope();
 
     if (node.computed) {
         return handleComputedMemberExpression(node, parent, context);
@@ -444,36 +428,19 @@ var leaveMemberExpression = function (node, parent, context) {
     }
 
     var objectReference = common.getTypeInfo(node.object, scope);
-
-    if (!objectReference || !objectReference.isObject()) {
-        Shade.throwError(node, "Internal Error: Object of Member expression is no object.");
-    }
-
-
-    var objectInfo = scope.getObjectInfoFor(objectReference);
-    if (!objectInfo) {// Every object needs an info, otherwise we did something wrong
-        Shade.throwError(node, "Internal Error: No object registered for: " + objectReference.getTypeString() + JSON.stringify(node.object));
-    }
+    assert(objectReference && objectReference.isObject(), "Object of Member expression is not an object.");
+    assert(objectReference.hasProperty(propertyName), "Object of Member expression has no property '" + propertyName + "'");
+    return handleStaticMemberExpression(node, objectReference, propertyName, context);
 
     // There is a specual handling defined for the object
-    if (objectInfo.hasOwnProperty(propertyName)) {
+    /*if (objectInfo.hasOwnProperty(propertyName)) {
         var propertyHandler = objectInfo[propertyName];
         if (typeof propertyHandler.property == "function") {
             return propertyHandler.property(node, parent, scope, context);
         }
     }
 
-    var usedParameters = context.usedParameters;
-    if (objectReference.isGlobal()) {
-        parameterName = Tools.getNameForGlobal(propertyName);
-        if (!usedParameters.shader.hasOwnProperty(parameterName)) {
-            usedParameters.shader[parameterName] = context.globalParameters[propertyName];
-        }
 
-        propertyLiteral = {type: Syntax.Identifier, name: parameterName};
-        ANNO(propertyLiteral).copy(ANNO(node));
-        return propertyLiteral;
-    }
     if (node.object.type == Syntax.ThisExpression) {
         parameterName = Tools.getNameForSystem(propertyName);
         if (!usedParameters.system.hasOwnProperty(parameterName)) {
@@ -483,8 +450,42 @@ var leaveMemberExpression = function (node, parent, context) {
         propertyLiteral = {type: Syntax.Identifier, name: parameterName};
         ANNO(propertyLiteral).copy(ANNO(node));
         return propertyLiteral;
-    }
+    } */
 
+};
+
+var handleStaticMemberExpression = function(node, object, propertyName, context) {
+     if(object.isPredefinedObject()) {
+        if(GLObjects.has(object.getKind())) {
+            var objectHandler = GLObjects.get(object.getKind());
+            return objectHandler.property(node, propertyName);
+        }
+        console.log("Unhandled property", object.getKind(), propertyName);
+    }
+    if(object.isGlobal()) {
+        var usedParameters = context.usedParameters;
+        var parameterName = Tools.getNameForGlobal(propertyName);
+
+        if (!usedParameters.environment.hasOwnProperty(parameterName)) {
+            usedParameters.environment[parameterName] = ANNO(node);
+        }
+
+        var propertyLiteral = {type: Syntax.Identifier, name: parameterName};
+        ANNO(propertyLiteral).copyFrom(ANNO(node));
+        return propertyLiteral;
+    }
+    return node;
+};
+
+var handleMethodCall = function(node, object, methodName) {
+    if(object.isPredefinedObject()) {
+        if(GLObjects.has(object.getKind())) {
+            var objectHandler = GLObjects.get(object.getKind());
+            return objectHandler.call(node, methodName);
+        }
+        console.log("Unhandled call", object.getKind(), methodName);
+    }
+    return node;
 };
 
 /**
@@ -591,7 +592,7 @@ var leaveFunctionDeclaration = function (node, context) {
 var enterIfStatement = function (node) {
     var test = ANNO(node.test);
 
-    assert(!test.hasStaticValue(), "Static value in IfStatement test");
+    assert(!test.hasConstantValue(), "Static value in IfStatement test");
     assert(!test.isObject(), "Object in IfStatement test");
 
     //noinspection FallthroughInSwitchStatementJS

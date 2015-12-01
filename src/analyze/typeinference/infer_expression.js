@@ -360,7 +360,7 @@
 			//console.error("Member OOI", objectOfInterest, objectOfInterest.hasProperty(propertyName))
 
 
-			if (!objectOfInterest.hasProperty(propertyName)) {
+            if (!objectOfInterest.hasProperty(propertyName)) {
 				resultType.setType(TYPES.UNDEFINED);
 				propertyAnnotation.setType(TYPES.UNDEFINED);
 				return;
@@ -371,6 +371,14 @@
 			resultType.copyFrom(propertyAnnotation);
 
 
+        },
+
+        ThisExpression: function (node, parent, context) {
+            var result = ANNO(node),
+                scope = context.getScope(),
+                thisType = scope.get("this");
+            assert(thisType);
+            result.copyFrom(thisType);
         },
 
         CallExpression: function (node, parent, context) {

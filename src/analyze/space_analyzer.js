@@ -16,8 +16,7 @@
     // shortcuts
     var Syntax = common.Syntax;
     var Set = worklist.Set,
-        Types = Shade.TYPES,
-        Kinds = Shade.OBJECT_KINDS;
+        Types = Shade.TYPES;
 
     // defines
 
@@ -209,7 +208,7 @@
         if(defCount == 1)
             result.def = defs.values()[0];
         // TODO: Properly determine FLOAT3 statements
-        var isFloat3Statement = (ast.extra && ast.extra.kind == Kinds.FLOAT3);
+        var isFloat3Statement = (ast.extra && ast.extra.kind == "Vec3");
 
         if(isFloat3Statement){
             gatherSpaceDependencies(ast, result.dependencies);
@@ -268,13 +267,13 @@
         walker(ast, {
             VariableDeclaration: function(){},
             Identifier: function(){
-                if(this.extra.kind == Kinds.FLOAT3){
+                if(this.extra.kind == "Vec3"){
                     result.toObjectSet.add(this.name);
                 }
 
             },
             MemberExpression: function (recurse) {
-                if(this.extra.kind == Kinds.FLOAT3){
+                if(this.extra.kind == "Vec3"){
                     if (this.object.type == Syntax.Identifier && this.property.type == Syntax.Identifier) {
                         if(this.object.extra.global)
                             result.propagateSet.add("env." + this.property.name);
@@ -304,7 +303,7 @@
                 recurse(this.right);
             },
             Identifier: function () {
-                if(this.extra.kind == Kinds.FLOAT3){
+                if(this.extra.kind == "Vec3"){
                     result.propagateSet.add(this.name);
                     setSpaceInfo(this, "propagate", true);
                 }
@@ -315,7 +314,7 @@
                 }
             },
             MemberExpression: function (recurse) {
-                if(this.extra.kind == Kinds.FLOAT3){
+                if(this.extra.kind == "Vec3"){
                     if (this.object.type == Syntax.Identifier && this.property.type == Syntax.Identifier) {
                         if(this.object.extra.global)
                             result.propagateSet.add("env." + this.property.name);
@@ -387,7 +386,7 @@
             return;
         }
         if(args.length == 1){
-            if(args[0].extra.kind == Kinds.FLOAT3){
+            if(args[0].extra.kind == "Vec3"){
                 recurse(args[0]);
             }
             else if(scaling && typeIsScalar(args[0].extra.type)){

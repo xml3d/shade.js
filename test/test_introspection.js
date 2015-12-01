@@ -33,7 +33,7 @@ var generateFunctionWithExecutionEnvironment = function(exp, params, thisParams)
 }
 
 
-describe('Introspection:', function () {
+xdescribe('Introspection:', function () {
 
     describe('typeof:', function () {
         it("typeof 'undefined'", function () {

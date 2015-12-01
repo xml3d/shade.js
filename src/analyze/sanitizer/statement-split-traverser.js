@@ -7,8 +7,7 @@
         Shade = require("../../interfaces.js"),
         TypeInfo = require("../../type-system/typeinfo.js").TypeInfo,
         ANNO = require("../../type-system/annotation.js").ANNO,
-        Types = Shade.TYPES,
-        Kinds = Shade.OBJECT_KINDS;
+        Types = Shade.TYPES;
 
     var Syntax = walk.Syntax;
 
@@ -229,11 +228,11 @@
                 case Types.INT: return "_intTmp";
                 case Types.STRING: return "_stringTmp";
                 case Types.OBJECT: switch(kind){
-                    case Kinds.FLOAT2: return "_vec2Tmp";
-                    case Kinds.FLOAT3: return "_vec3Tmp";
-                    case Kinds.FLOAT4: return "_vec4Tmp";
-                    case Kinds.MATRIX3: return "_mat3Tmp";
-                    case Kinds.MATRIX4: return "_mat4Tmp";
+                    case "Vec2": return "_vec2Tmp";
+                    case "Vec3": return "_vec3Tmp";
+                    case "Vec4": return "_vec4Tmp";
+                    case "Mat3": return "_mat3Tmp";
+                    case "Mat4": return "_mat4Tmp";
                 }
             }
         },

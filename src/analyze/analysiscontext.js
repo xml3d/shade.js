@@ -283,9 +283,9 @@
     };
 
     function registerSystemInformation(scope, opt) {
-        var thisInfo = (opt.inject && opt.inject.this) || null;
+        /*var thisInfo = (opt.inject && opt.inject.this) || null;
         scope.declare("this");
-        scope.updateTypeInfo("this", System.getThisTypeInfo(thisInfo));
+        scope.updateTypeInfo("this", System.getThisTypeInfo(thisInfo));*/
     }
 
     module.exports = AnalysisContext;

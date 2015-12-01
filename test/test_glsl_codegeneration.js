@@ -30,9 +30,8 @@ var generateExpression = function(exp, params, thisParams) {
             {
                 "extra": {
                     "type": "object",
-                    "kind": "any",
                     "global": true,
-                    "info": params
+                    "properties": params
                 }
             }
         ]
@@ -151,7 +150,7 @@ describe('GLSL Code generation,', function () {
             var code = generateExpression("var a = new Vec2().x(5);");
             code.should.equal("vec2 a = vec2(5, vec2(0.0).y);");
         });
-        it("yx(5,2)", function() {
+        it(".yx(5,2)", function() {
             var code = generateExpression("var a = new Vec2().yx(5, 2);");
             code.should.equal("vec2 a = vec2(vec2(5, 2).y, vec2(5, 2).x);");
         });
@@ -386,15 +385,15 @@ describe('GLSL Code generation,', function () {
             code.should.equal("floor(mod(2.0, 20.0)) > float(0);");
         });
         it("this.normalizedCoords", function() {
-            var code = generateExpression("this.normalizedCoords", undefined, { coords: { type: Shade.TYPES.OBJECT, kind: Shade.OBJECT_KINDS.FLOAT3 }});
+            var code = generateExpression("this.normalizedCoords", undefined, { coords: { type: Shade.TYPES.OBJECT, kind: "Vec3" }});
             code.should.match(/gl_FragCoord.xyz \/ coords/);
         });
         it("this.normalizedCoords.xy()", function() {
-            var code = generateExpression("this.normalizedCoords.xy()", undefined, { coords: { type: Shade.TYPES.OBJECT, kind: Shade.OBJECT_KINDS.FLOAT3 }});
+            var code = generateExpression("this.normalizedCoords.xy()", undefined, { coords: { type: Shade.TYPES.OBJECT, kind: "Vec3" }});
             code.should.match(/vec3\(gl_FragCoord.xyz \/ coords\).xy;/);
         });
         it("this.normalizedCoords.xy().mul(2)", function() {
-            var code = generateExpression("this.normalizedCoords.xy().mul(2);", undefined, { coords: { type: Shade.TYPES.OBJECT, kind: Shade.OBJECT_KINDS.FLOAT3 }});
+            var code = generateExpression("this.normalizedCoords.xy().mul(2);", undefined, { coords: { type: Shade.TYPES.OBJECT, kind: "Vec3" }});
             code.should.match(/vec3\(gl_FragCoord.xyz \/ coords\).xy \* vec2\(2\);/);
         });
 
@@ -421,11 +420,14 @@ describe('GLSL Code generation,', function () {
             lines[1].should.match(/\s*float c = 10.0;/);
         });
 
-        it("test object existence in ConditionalExpression", function() {
-            var code = generateExpression("function shade(env) { var x = env.texcoord ? env.texcoord.x() : this.coords.x(); }", { "texcoord": { "type": "object", kind: "float2" }}, {"coords": { type: "object", kind: "float3"}});
+        it("object exists in ConditionalExpression", function() {
+            var code = generateExpression("function shade(env) { var x = env.texcoord ? env.texcoord.x() : this.coords.x(); }", { "texcoord": { "type": "object", kind: "Vec2" }}, {"coords": { type: "object", kind: "Vec3"}});
             var lines = code.split(/\r\n|\r|\n/g);
             lines[2].should.match(/\s*float x = _env_texcoord.x;/);
-            var code = generateExpression("function shade(env) { var x = env.unknown ? env.texcoord.x() : this.coords.x(); }", { "texcoord": { "type": "object", kind: "float2" }}, {"coords": { type: "object", kind: "float3"}});
+        });
+
+        it("object does not exists in ConditionalExpression", function() {
+            var code = generateExpression("function shade(env) { var x = env.unknown ? env.texcoord.x() : this.coords.x(); }", { "texcoord": { "type": "object", kind: "Vec2" }}, {"coords": { type: "object", kind: "Vec3"}});
             var lines = code.split(/\r\n|\r|\n/g);
             lines[1].should.match(/\s*float x = gl_FragCoord.x;/);
         });
@@ -466,7 +468,7 @@ describe('GLSL Code generation,', function () {
             code.should.not.match(/gl_FragColor = vec4\(vec3\(1\)/);
         });
         it("static test using a static variable", function(){
-            var code = generateExpression("function shade(env) { if(env.a < 5.0) { return new Vec3(1) }}", { "a": { "type": "number", "source": "constant", "staticValue": 6 }});
+            var code = generateExpression("function shade(env) { if(env.a < 5.0) { return new Vec3(1) }}", { "a": { "type": "number", "source": "constant", "constantValue": 6 }});
             code.should.not.match(/if/);
             code.should.not.match(/else/);
             code.should.not.match(/vec3/);
@@ -531,6 +533,7 @@ describe('GLSL Code generation,', function () {
 
     it("should generate simple shader", function() {
         var code = loadAndGenerate("data/js/shader/red.js");
+        code.should.match(/void main/);
         code.should.match(/vec3\(1/);
     });
     it("handle return 'undefined' in main", function() {

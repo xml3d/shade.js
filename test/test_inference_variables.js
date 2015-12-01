@@ -115,7 +115,11 @@ describe('Inference:', function () {
 
         it("of uninitialized variable is okay", function () {
             var program = parseAndInferenceExpression("var a; a = 3;");
-            program.body[0].should.have.property("type", "EmptyStatement");
+            //program.body[0].should.have.property("type", "EmptyStatement");
+            var exp = program.body[0].declarations[0];
+            exp.should.have.property("extra");
+            exp.extra.should.have.property("type", TYPES.INT);
+            exp.extra.should.not.have.property("constantValue", 3);
 
             var exp = program.body[1].expression;
             exp.should.have.property("extra");

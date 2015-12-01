@@ -1,3 +1,11 @@
+var GLObjects = new Map();
+
+GLObjects.set("Math", require("./math.js"));
+GLObjects.set("Vec2", require("./vec2.js"));
+GLObjects.set("Vec3", require("./vec3.js"));
+GLObjects.set("Vec4", require("./vec4.js"));
+GLObjects.set("System", require("./system.js"));
+
 var TypeSystem = require("../../../type-system/type-system.js");
 
     var Scope = require("../../../type-system/scope.js"),
@@ -50,7 +58,7 @@ var TypeSystem = require("../../../type-system/type-system.js");
         opt.mainFunction = entry;
         Context.call(this, root, opt);
         this.usedParameters = {
-            shader: {},
+            environment: {},
             system: {},
             uexp: {}
         };
@@ -119,7 +127,7 @@ var TypeSystem = require("../../../type-system/type-system.js");
             this.updateTypeInfo("gl_FragCoord", new TypeInfo({
                 extra: {
                     type: Types.OBJECT,
-                    kind: Kinds.FLOAT3
+                    kind: "Vec3"
                 }
             }));*/
         }
@@ -127,6 +135,9 @@ var TypeSystem = require("../../../type-system/type-system.js");
 
 
 
-    module.exports = {GLTransformScope : GLTransformScope,
-    GLTransformContext : GLTransformContext}
+    module.exports = {
+        GLTransformScope : GLTransformScope,
+        GLTransformContext : GLTransformContext,
+        GLObjects: GLObjects
+    };
 

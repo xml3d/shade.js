@@ -221,9 +221,9 @@
     function generateConstructorFromTypeInfo(typeInfo) {
         var value = typeInfo.getConstantValue(), size, name, arguments = [];
         switch(typeInfo.getKind()) {
-            case Shade.OBJECT_KINDS.FLOAT2: size = 2; name = "Vec2"; break;
-            case Shade.OBJECT_KINDS.FLOAT3: size = 3; name = "Vec3"; break;
-            case Shade.OBJECT_KINDS.FLOAT4: size = 4; name = "Vec4"; break;
+            case "Vec2": size = 2; name = "Vec2"; break;
+            case "Vec3": size = 3; name = "Vec3"; break;
+            case "Vec4": size = 4; name = "Vec4"; break;
             default:
                 throw new Error("Internal error in static transformation. Unknown kind: " + typeInfo.getKind());
         }
@@ -248,7 +248,7 @@
             },
             arguments: arguments
         }
-        ANNO(result).copy(typeInfo);
+        ANNO(result).copyFrom(typeInfo);
         return result;
     }
 

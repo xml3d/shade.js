@@ -5,7 +5,7 @@ var parseAndInferenceExpression = function (str) {
     return aast.body;
 };
 
-describe('Error:', function () {
+xdescribe('Error:', function () {
 
     describe('TypeError should be thrown', function () {
 

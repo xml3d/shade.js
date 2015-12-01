@@ -236,7 +236,7 @@
                 while(i--){
                     var name = addDeclarations[i];
                     var decl = {type: Syntax.VariableDeclarator, id: {type: Syntax.Identifier, name: name}, init: null};
-                    ANNO(decl).setType(Types.OBJECT, Kinds.FLOAT3);
+                    ANNO(decl).setType(Types.OBJECT, "Vec3");
                     declarations.declarations.push(decl);
                 }
                 functionAast.body.body.unshift(declarations);
