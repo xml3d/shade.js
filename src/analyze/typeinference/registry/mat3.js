@@ -1,43 +1,12 @@
-(function(ns){
+var Tools = require("./tools.js");
 
-    var Shade = require("../../../interfaces.js"),
-        TYPES = Shade.TYPES,
-        KINDS = Shade.OBJECT_KINDS,
-        Tools = require("./tools.js");
+var Mat3 = function Mat3(node, arguments) {
+    return Tools.Vec.matConstructorEvaluate("Mat3", 3)(node, arguments);
+};
 
-    var Matrix3Constructor =  {
-        type: TYPES.OBJECT,
-        kind: KINDS.MATRIX3,
-        /**
-         * @param {Annotation} result
-         * @param {Array.<Annotation>} args
-         * @param {Context} ctx
-         */
-        evaluate: Tools.Mat.matConstructorEvaluate.bind(null, "Mat3")
-    };
+Tools.Mat.attachMatMethods( Mat3.prototype, "Mat3", ['add', 'sub', 'mul', 'div']);
+Tools.Vec.attachVecMethods( Mat3.prototype, "Mat3", 3, 3, ['mulVec']);
 
-    var Matrix3StaticObject = {
-    };
+Mat3.prototype.col = Tools.Mat.colEvaluate.bind(null, "Mat3");
 
-    var Matrix3Instance = {
-        col: {
-            type: TYPES.FUNCTION,
-            evaluate: Tools.Mat.colEvaluate.bind(null, "Mat3")
-        }
-    };
-    Tools.Mat.attachMatMethods(Matrix3Instance, "Mat3", ['add', 'sub', 'mul', 'div']);
-    Tools.Vec.attachVecMethods(Matrix3Instance, "Mat3", 3, 3, ['mulVec']);
-
-
-    Tools.extend(ns, {
-        id: "Mat3",
-        kind: KINDS.MATRIX3,
-        object: {
-            constructor: Matrix3Constructor,
-            static: Matrix3StaticObject
-        },
-        instance: Matrix3Instance
-    });
-
-
-}(exports));
+module.exports = Mat3;

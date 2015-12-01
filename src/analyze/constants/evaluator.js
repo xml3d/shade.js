@@ -84,7 +84,7 @@
             return true;
         // In all other cases, it depends on the value,
         // thus we can only evaluate this for static objects
-        if (aNode.hasStaticValue()) {
+        if (aNode.hasConstantValue()) {
             return !!aNode.getConstantValue();
         }
         return undefined;

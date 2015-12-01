@@ -151,7 +151,7 @@
 
         for(var i = 0; i < args.length && allUniformOrStatic; i++) {
             var thisUniform = args[i].isUniformExpression();
-            allUniformOrStatic = allUniformOrStatic && (thisUniform || args[i].hasStaticValue());
+            allUniformOrStatic = allUniformOrStatic && (thisUniform || args[i].hasConstantValue());
             oneUniform = oneUniform || thisUniform;
         }
         return allUniformOrStatic && oneUniform;

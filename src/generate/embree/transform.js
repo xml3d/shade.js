@@ -649,7 +649,7 @@
         var test = ANNO(node.test);
         var consequent = ANNO(node.consequent);
         var alternate = node.alternate ? ANNO(node.alternate) : null;
-        if (test.hasStaticValue()) {
+        if (test.hasConstantValue()) {
             var staticValue = test.getStaticValue();
             if (staticValue === true) {
                 cb(VisitorOption.Skip);

@@ -232,7 +232,7 @@ TypeInfo.prototype = {
         extra.constantValue = v;
     },
     canUniformExpression: function () {
-        return this.hasStaticValue() || this.isUniformExpression();
+        return this.hasConstantValue() || this.isUniformExpression();
     },
 
     isUniformExpression: function () {

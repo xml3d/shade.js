@@ -18,6 +18,8 @@ var TypeSystem = (function () {
 	result.registerPredefinedObject(require("../analyze/typeinference/registry/vec2.js"));
 	result.registerPredefinedObject(require("../analyze/typeinference/registry/vec3.js"));
 	result.registerPredefinedObject(require("../analyze/typeinference/registry/vec4.js"));
+    result.registerPredefinedObject(require("../analyze/typeinference/registry/mat3.js"));
+    result.registerPredefinedObject(require("../analyze/typeinference/registry/mat4.js"));
     result.registerPredefinedObject(require("../analyze/typeinference/registry/system.js"));
     return result;
 }());

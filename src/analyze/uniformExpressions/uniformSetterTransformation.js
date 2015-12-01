@@ -4,17 +4,13 @@
     var Syntax = walk.Syntax;
     var ANNO = require("../../type-system/annotation.js").ANNO;
 
-    var interfaces = require("../../interfaces.js");
-    var TYPES = interfaces.TYPES,
-        KINDS = interfaces.OBJECT_KINDS;
-
     function getConstructor(kind){
         switch(kind){
-            case KINDS.FLOAT2: return "Shade.Vec2"; break;
-            case KINDS.FLOAT3: return "Shade.Vec3"; break;
-            case KINDS.FLOAT4: return "Shade.Vec4"; break;
-            case KINDS.MATRIX3: return "Shade.Mat3"; break;
-            case KINDS.MATRIX4: return "Shade.Mat4"; break;
+            case "Vec2": return "Shade.Vec2"; break;
+            case "Vec3": return "Shade.Vec3"; break;
+            case "Vec4": return "Shade.Vec4"; break;
+            case "Mat3": return "Shade.Mat3"; break;
+            case "Mat4": return "Shade.Mat4"; break;
             default: throw "Unsupported object kind in uniform expression argument: " + kind;
         }
     }

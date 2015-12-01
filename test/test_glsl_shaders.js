@@ -35,7 +35,8 @@ function createTest(dir, file) {
 xdescribe('GLSL Shader Code:', function () {
     var dir = __dirname + '/data/shaders/glsl/';
     var files = fs.readdirSync(dir);
-    files.filter(function(filename) { return filename.split('.').pop() == "js" }).forEach(function (file) {
+    /*files.filter(function(filename) { return filename.split('.').pop() == "js" }).forEach(function (file) {
         createTest(dir, file);
-    });
+    });*/
+    createTest(dir, files[0]);
 });
