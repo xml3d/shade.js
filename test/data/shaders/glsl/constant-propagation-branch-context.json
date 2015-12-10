@@ -12,9 +12,8 @@
         {
             "extra": {
                 "type": "object",
-                "kind": "any",
                 "global": "true",
-                "info": {
+                "properties": {
                     "ubool": {
                         "type": "boolean",
                         "source": "uniform"

@@ -1,8 +1,7 @@
 {
     "this": {
         "type": "object",
-        "kind": "any",
-        "info": {
+        "properties": {
             "fwidth": {
                 "type": "function"
             }
@@ -12,12 +11,11 @@
         {
             "extra": {
                 "type": "object",
-                "kind": "any",
                 "global": "true",
-                "info": {
+                "properties": {
                     "texcoord": {
                         "type": "object",
-                        "kind": "float2",
+                        "kind": "Vec2",
                         "source": "vertex"
                     }
                 }

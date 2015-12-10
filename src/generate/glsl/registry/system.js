@@ -24,7 +24,7 @@ var SystemProperties = {
             node.property.name = "gl_FragCoord";
             return node.property;
     },
-    normalizedCoords:  function (node) {
+    normalizedCoords:  function () {
             return {
                 type: Syntax.NewExpression,
                 callee: {
@@ -62,32 +62,32 @@ var SystemProperties = {
                 }
             }
     },
-    height:  function (node, parent, context, state) {
+    height:  function (node) {
             var parameterName = Tools.getNameForSystem(SystemDefines.CANVAS_DIMENSIONS);
             state.usedParameters.system[parameterName] = state.systemParameters[SystemDefines.CANVAS_DIMENSIONS];
 
             node.property.name = parameterName + ".y";
             return node.property;
     },
-    width:  function (node, parent, context, state) {
+    width:  function (node) {
             var parameterName = Tools.getNameForSystem(SystemDefines.CANVAS_DIMENSIONS);
             state.usedParameters.system[parameterName] = state.systemParameters[SystemDefines.CANVAS_DIMENSIONS];
 
             node.property.name = parameterName + ".x";
             return node.property;
     },
-    fwidth: function (node, parent, context, state) {
-            state.addHeader(SystemDefines.DERIVATE_EXTENSION);
+    fwidth: function (node, context) {
+            context.addHeader(SystemDefines.DERIVATE_EXTENSION);
             return Tools.removeMemberFromExpression(node);
     },
-    dx: function (node, parent, context, state) {
-            state.addHeader(SystemDefines.DERIVATE_EXTENSION);
+    dx: function (node, context) {
+            context.addHeader(SystemDefines.DERIVATE_EXTENSION);
             var result = Tools.removeMemberFromExpression(node);
             result.name = "dFdx";
             return result;
     },
-    dy:  function (node, parent, context, state) {
-            state.addHeader(SystemDefines.DERIVATE_EXTENSION);
+    dy:  function (node, context) {
+            context.addHeader(SystemDefines.DERIVATE_EXTENSION);
             var s = Tools.removeMemberFromExpression(node);
             var result = Tools.removeMemberFromExpression(node);
             result.name = "dFdy";
@@ -98,9 +98,9 @@ var SystemProperties = {
 
 module.exports = {
     call: function (node, name) {},
-    property: function (node, name) {
+    property: function (node, name, context) {
         if(SystemProperties.hasOwnProperty(name)) {
-            return SystemProperties[name](node);
+            return SystemProperties[name](node, context);
         }
 
     }

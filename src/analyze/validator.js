@@ -14,6 +14,7 @@
 		var annotation = ANNO(node), right;
 		if(!annotation.isValid()) {
             var errorInfo = annotation.getError();
+            console.log(errorInfo)
             var error = new Error(errorInfo.message);
             error.loc = errorInfo.loc;
             throw error;

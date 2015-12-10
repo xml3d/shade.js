@@ -11,8 +11,8 @@ var TYPES = Shade.TYPES,
 
 
 function allowNumberOrVector(name) {
-    return function (result, args) {
-        Tools.checkParamCount(result.node, name, [1], args.length);
+    return function (node, args) {
+        Tools.checkParamCount(node, name, [1], args.length);
         var arg = args[0];
         if (arg.canNumber()) {
             return {
@@ -25,12 +25,12 @@ function allowNumberOrVector(name) {
                 kind: arg.getKind()
             }
         }
-        Shade.throwError(result.node, "IllegalArgumentError: first argument of this." + name + " is of type: " + arg.getTypeString());
+        Shade.throwError(node, "IllegalArgumentError: first argument of this." + name + " is of type: " + arg.getTypeString());
     }
 }
 
 
-var OptionalMethods = {
+var DerivativesMethods = {
     fwidth: {
         type: TYPES.FUNCTION,
         evaluate: allowNumberOrVector("fwidth")
@@ -45,7 +45,7 @@ var OptionalMethods = {
     }
 };
 
-module.exports = {
+var System = {
     name: "System",
     properties: {
         normalizedCoords: {
@@ -66,5 +66,16 @@ module.exports = {
             type: TYPES.INT,
             derived: true
         }
+    },
+    setDerivatives: function (available) {
+        if (available) {
+            Base.extend(System.properties, DerivativesMethods);
+        } else {
+            for (var methodName in DerivativesMethods) {
+                delete System.properties[methodName];
+            }
+        }
     }
 };
+
+module.exports = System;

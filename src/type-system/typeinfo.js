@@ -26,7 +26,7 @@ var TypeInfo = function (info) {
     Object.defineProperties(this, {
         type: {get: function() { return info.type }, set: function(e) { info.type = e; }},
         error: {get: function() { return info.error }, set: function(e) { info.error = e; }},
-        constructor: {get: function() {
+        ctor: {get: function() {
             if(!self.isFunction() || !self.getKind()) {
                 throw new Error("Has no constructor:" + self);
             }
@@ -359,9 +359,9 @@ TypeInfo.prototype = {
         return this.isFunction() && typeof this.info.evaluate == "function";
     },
 
-    evaluate: function (typeInfo, args, scope, objectReference) {
+    evaluate: function (node, args, scope, objectReference) {
         assert(this.canEvaluate());
-        return this.info.evaluate(typeInfo, args, scope, objectReference);
+        return this.info.evaluate(node, args, scope, objectReference);
     },
 
     canComputeStaticValue: function () {

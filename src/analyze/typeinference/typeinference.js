@@ -8,7 +8,7 @@
     var Context = require("../../base/context.js");
     var Base = require("../../base/index.js");
     var codegen = require('escodegen');
-    var annotateRight = require("./infer_expression.js").annotateRight;
+    var annotateRight = require("./infer_expression.js");
     var InferenceScope = require("./registry/").InferenceScope;
     var System = require("./registry/system.js");
     var Annotations = require("./../../type-system/annotation.js");

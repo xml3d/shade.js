@@ -6,7 +6,8 @@ var Base = require("../../base/index.js"),
     analyses = require('analyses'),
     Tools = require('../tools.js'),
     System = require('./registry/system.js'),
-    assert = require('assert');
+    assert = require('assert'),
+    TypeInfo = require("../../type-system/typeinfo.js").TypeInfo;
 
 
 var Context = require("./registry/").GLTransformContext;
@@ -31,7 +32,7 @@ var GLASTTransformer = function (root, mainId, vertexShader, opt) {
 function createUniformDependencyMap(uniformExpressions) {
     var name, uexpSet, dependencies, dependency, dl, dependencyMap = new Map();
     for (name in uniformExpressions) {
-        dependencies = uniformExpressions[name].dependencies;
+        dependencies = uniformExpressions[name].getUniformDependencies();
         dl = dependencies.length;
         while (dl--) {
             dependency = dependencies[dl];
@@ -135,7 +136,9 @@ Base.extend(GLASTTransformer.prototype, {
         var usedParameters = context.usedParameters;
         for (var container in usedParameters) {
             for (name in usedParameters[container]) {
-                declaration = createTopDeclaration(name, usedParameters[container][name]);
+                var typeInfo = usedParameters[container][name];
+                assert(typeInfo instanceof TypeInfo);
+                declaration = createTopDeclaration(name, typeInfo);
                 declaration && program.body.unshift(declaration);
             }
         }
@@ -386,13 +389,13 @@ var leaveCallExpression = function (node, parent, context) {
     // Is this a call on an object?
     if (node.callee.type == Syntax.MemberExpression) {
         var calleeReference = common.getTypeInfo(node.callee, scope);
-        assert(calleeReference && calleeReference.isFunction(), "Expected function but found: "  + calleeReference );
+        assert(calleeReference && calleeReference.isFunction(), "Expected function but found: " + calleeReference);
 
         var object = node.callee.object,
             propertyName = node.callee.property.name;
 
         var objectReference = common.getTypeInfo(object, scope);
-        assert(objectReference && objectReference.isObject(), "Expected object to call but found: "  + objectReference );
+        assert(objectReference && objectReference.isObject(), "Expected object to call but found: " + objectReference);
         assert(objectReference.hasProperty(propertyName), "Expected object to have a property: " + propertyName);
         return handleMethodCall(node, objectReference, propertyName);
     }
@@ -400,7 +403,7 @@ var leaveCallExpression = function (node, parent, context) {
 
 var leaveNewExpression = function (newExpression, context) {
     var scope = context.getScope();
-    if(!newExpression.arguments.length) {
+    if (!newExpression.arguments.length) {
         return Tools.Vec.generateConstructor(newExpression);
     }
 };
@@ -434,35 +437,35 @@ var leaveMemberExpression = function (node, parent, context) {
 
     // There is a specual handling defined for the object
     /*if (objectInfo.hasOwnProperty(propertyName)) {
-        var propertyHandler = objectInfo[propertyName];
-        if (typeof propertyHandler.property == "function") {
-            return propertyHandler.property(node, parent, scope, context);
-        }
-    }
+     var propertyHandler = objectInfo[propertyName];
+     if (typeof propertyHandler.property == "function") {
+     return propertyHandler.property(node, parent, scope, context);
+     }
+     }
 
 
-    if (node.object.type == Syntax.ThisExpression) {
-        parameterName = Tools.getNameForSystem(propertyName);
-        if (!usedParameters.system.hasOwnProperty(parameterName)) {
-            usedParameters.system[parameterName] = context.systemParameters[propertyName];
-        }
+     if (node.object.type == Syntax.ThisExpression) {
+     parameterName = Tools.getNameForSystem(propertyName);
+     if (!usedParameters.system.hasOwnProperty(parameterName)) {
+     usedParameters.system[parameterName] = context.systemParameters[propertyName];
+     }
 
-        propertyLiteral = {type: Syntax.Identifier, name: parameterName};
-        ANNO(propertyLiteral).copy(ANNO(node));
-        return propertyLiteral;
-    } */
+     propertyLiteral = {type: Syntax.Identifier, name: parameterName};
+     ANNO(propertyLiteral).copy(ANNO(node));
+     return propertyLiteral;
+     } */
 
 };
 
-var handleStaticMemberExpression = function(node, object, propertyName, context) {
-     if(object.isPredefinedObject()) {
-        if(GLObjects.has(object.getKind())) {
+var handleStaticMemberExpression = function (node, object, propertyName, context) {
+    if (object.isPredefinedObject()) {
+        if (GLObjects.has(object.getKind())) {
             var objectHandler = GLObjects.get(object.getKind());
-            return objectHandler.property(node, propertyName);
+            return objectHandler.property(node, propertyName, context);
         }
         console.log("Unhandled property", object.getKind(), propertyName);
     }
-    if(object.isGlobal()) {
+    if (object.isGlobal()) {
         var usedParameters = context.usedParameters;
         var parameterName = Tools.getNameForGlobal(propertyName);
 
@@ -477,9 +480,9 @@ var handleStaticMemberExpression = function(node, object, propertyName, context)
     return node;
 };
 
-var handleMethodCall = function(node, object, methodName) {
-    if(object.isPredefinedObject()) {
-        if(GLObjects.has(object.getKind())) {
+var handleMethodCall = function (node, object, methodName) {
+    if (object.isPredefinedObject()) {
+        if (GLObjects.has(object.getKind())) {
             var objectHandler = GLObjects.get(object.getKind());
             return objectHandler.call(node, methodName);
         }
@@ -566,10 +569,11 @@ var enterFunctionDeclaration = function (node, context) {
         if (!ANNO(a).isUndefined()) {
             newParameterList.push(a);
         } else {
-            var binding = scope.getBindingByName(a.name);
-            if (!binding.isUndefined()) {
-                addDeclaration(a.name, binding, node.body);
-            }
+            // TODO: Do we need this? When is this the case?
+            /*var binding = scope.get(a.name);
+             if (!binding.isUndefined()) {
+             addDeclaration(a.name, binding, node.body);
+             } */
         }
     });
     node.params = newParameterList;
@@ -659,45 +663,39 @@ var leaveLogicalExpression = function (node) {
 
 
 function handleUniformExpression(node, context) {
-    var exp = ANNO(node),
-        extra;
+    var exp = ANNO(node);
+
+    assert.equal(node.type, Syntax.MemberExpression);
 
     if (exp.isUniformExpression() && !(exp.getSource() == Shade.SOURCES.UNIFORM)) {
         var uniformName = node.property.name;
+        var result = {
+            type: Syntax.Identifier,
+            name: uniformName
+        };
 
         if (context.usedParameters.uexp.hasOwnProperty(uniformName)) { // Reuse
-            extra = context.usedParameters.uexp[uniformName];
-            return {
-                type: Syntax.Identifier,
-                name: uniformName,
-                extra: extra
-            }
+            var typeInfo = context.usedParameters.uexp[uniformName];
+            ANNO(result).copyFrom(typeInfo);
+            return result;
         }
 
         // Generate new uniform expression
-        extra = {};
+        assert(context.uniformExpressions.hasOwnProperty(uniformName), "Internal: No information about uniform expression available: " + Shade.toJavaScript(node));
+        // Use typeinfo from node as basis
+        var typeInfo = ANNO(result);
+        typeInfo.copyFrom(exp);
 
-        if (!context.uniformExpressions.hasOwnProperty(uniformName)) {
-            throw new Error("Internal: No information about uniform expression available: " + Shade.toJavaScript(node));
-        }
-        extra.setter = generateUniformSetter(exp, context.uniformExpressions[uniformName]);
+        typeInfo.setter = generateUniformSetter(exp, context.uniformExpressions[uniformName]);
 
         //console.log(uniformName, extra.setter);
 
-        extra.type = exp.getType();
-        if (exp.isObject()) {
-            extra.kind = exp.getKind();
-        }
-        extra.source = Shade.SOURCES.UNIFORM;
-        extra.dependencies = exp.getUniformDependencies();
+        typeInfo.setSource(Shade.SOURCES.UNIFORM);
+        typeInfo.setUniformDependencies(exp.getUniformDependencies());
 
-        context.usedParameters.uexp[uniformName] = extra;
+        context.usedParameters.uexp[uniformName] = typeInfo;
 
-        return {
-            type: Syntax.Identifier,
-            name: uniformName,
-            extra: extra
-        }
+        return result;
     }
 }
 
@@ -740,8 +738,6 @@ function addDeclaration(name, typeInfo, target) {
     ANNO(declarator).copy(typeInfo);
     declaration.declarations.push(declarator);
 }
-
-
 
 
 // Exports
