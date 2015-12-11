@@ -26,10 +26,9 @@
         VEC2: "Vec2", // virtual kinds
         VEC3: "Vec3", // virtual kinds
         VEC4: "Vec4", // virtual kinds
-        NORMAL: "normal",
-        MATRIX3: "matrix3",
-        MATRIX4: "matrix4",
-        TEXTURE: "texture",
+        MATRIX3: "Mat3",
+        MATRIX4: "Mat4",
+        TEXTURE: "Texture",
         COLOR_CLOSURE: "color_closure"
     }
 

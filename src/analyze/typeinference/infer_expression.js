@@ -148,8 +148,9 @@ var handlers = {
                 break;
             case "typeof":
                 result.setType(TYPES.STRING);
-                if (argument.isValid())
+                if (argument.isValid()) {
                     result.setConstantValue(argument.getJavaScriptTypeString());
+                }
                 return;
 
             case "~":

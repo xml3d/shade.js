@@ -14,16 +14,14 @@ var generateFunctionWithExecutionEnvironment = function(exp, params, thisParams)
     var contextData = {
         "this": {
             "type": "object",
-            "kind": "any",
             "info": thisParams || {}
         },
         "global.shade": [
             {
                 "extra": {
                     "type": "object",
-                    "kind": "any",
                     "global": true,
-                    "info": params
+                    "properties": params
                 }
             }
         ]
@@ -33,39 +31,39 @@ var generateFunctionWithExecutionEnvironment = function(exp, params, thisParams)
 }
 
 
-xdescribe('Introspection:', function () {
+describe('Introspection:', function () {
 
-    describe('typeof:', function () {
-        it("typeof 'undefined'", function () {
+    describe('typeof', function () {
+        it("'undefined'", function () {
             var exp = parseAndInferenceExpression("typeof undefined");
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.STRING);
-            exp.extra.should.have.property("staticValue", 'undefined');
+            exp.extra.should.have.property("constantValue", 'undefined');
         });
-        it("typeof undefined variable", function () {
+        it("undefined variable", function () {
             var exp = parseAndInferenceExpression.bind(null, "typeof b");
             exp.should.throw(/ReferenceError: b is not defined/);
         });
-        it("typeof undefined parameter", function () {
+        it("undefined parameter", function () {
           var func = generateFunctionWithExecutionEnvironment("function shade(env) { typeof env.a }");
           var exp = func.body[0].expression;
           exp.should.have.property("extra");
           exp.extra.should.have.property("type", TYPES.STRING);
-          exp.extra.should.have.property("staticValue", TYPES.UNDEFINED);
+          exp.extra.should.have.property("constantValue", TYPES.UNDEFINED);
         });
-        it("typeof defined number parameter", function () {
+        it("defined number parameter", function () {
           var func = generateFunctionWithExecutionEnvironment("function shade(env) { typeof env.myfloat }", { "myfloat": { "type": "number" }});
           var exp = func.body[0].expression;
           exp.should.have.property("extra");
           exp.extra.should.have.property("type", TYPES.STRING);
-          exp.extra.should.have.property("staticValue", TYPES.NUMBER);
+          exp.extra.should.have.property("constantValue", TYPES.NUMBER);
         });
-        it("typeof defined object parameter", function () {
-          var func = generateFunctionWithExecutionEnvironment("function shade(env) { typeof env.myvec2 }", { "myvec2": { "type": TYPES.OBJECT, kind: KINDS.FLOAT2 }});
+        it("defined object parameter", function () {
+          var func = generateFunctionWithExecutionEnvironment("function shade(env) { typeof env.myvec2 }", { "myvec2": { "type": TYPES.OBJECT, kind: "Vec2" }});
           var exp = func.body[0].expression;
           exp.should.have.property("extra");
           exp.extra.should.have.property("type", TYPES.STRING);
-          exp.extra.should.have.property("staticValue", TYPES.OBJECT);
+          exp.extra.should.have.property("constantValue", TYPES.OBJECT);
         });
 
     });
