@@ -22,6 +22,7 @@ Base.createClass(InferenceScope, Scope, {
 		this.declarePredefined("Mat3", TypeSystem.getPredefinedObject("Mat3"));
 		this.declarePredefined("Mat4", TypeSystem.getPredefinedObject("Mat4"));
 		this.declarePredefined("this", TypeSystem.getPredefinedObject("System"));
+		this.declarePredefined("Space", TypeSystem.getPredefinedObject("Space"));
 		/*this.registerObject("Math", objects.Math);
 		 this.registerObject("Color",  objects.Color);
 		 this.registerObject("Texture", objects.Texture);

@@ -4,11 +4,10 @@
     {
         "extra": {
             "type": "object",
-            "kind": "any",
             "global": true,
-            "info": {
-                "color" : { "type": "object", "kind": "float3" },
-                "normal": { "type": "object", "kind": "float3" }
+            "properties": {
+                "color" : { "type": "object", "kind": "Vec3" },
+                "normal": { "type": "object", "kind": "Vec3" }
             }
         }
     }

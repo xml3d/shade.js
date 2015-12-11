@@ -21,6 +21,7 @@ var TypeSystem = (function () {
     result.registerPredefinedObject(require("../analyze/typeinference/registry/mat3.js"));
     result.registerPredefinedObject(require("../analyze/typeinference/registry/mat4.js"));
     result.registerPredefinedObject(require("../analyze/typeinference/registry/system.js"));
+    result.registerPredefinedObject(require("../analyze/typeinference/registry/space.js"));
     return result;
 }());
 

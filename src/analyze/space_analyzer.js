@@ -18,6 +18,7 @@
     var Set = worklist.Set,
         Types = Shade.TYPES;
 
+    var ANNO = common.ANNO;
     // defines
 
 
@@ -208,7 +209,7 @@
         if(defCount == 1)
             result.def = defs.values()[0];
         // TODO: Properly determine FLOAT3 statements
-        var isFloat3Statement = (ast.extra && ast.extra.kind == "Vec3");
+        var isFloat3Statement = ANNO(ast).getKind() == "Vec3";
 
         if(isFloat3Statement){
             gatherSpaceDependencies(ast, result.dependencies);

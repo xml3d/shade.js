@@ -28,6 +28,6 @@ xdescribe('Resolve Closure:', function () {
 
         ast = Shade.resolveClosures(ast, "test");
         var actual = Shade.toJavaScript(ast).trim();
-        expected.should.eql(actual);
+        actual.should.eql(expected);
     });
 });
