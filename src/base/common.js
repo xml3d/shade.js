@@ -24,7 +24,7 @@
             var name = node.type == Syntax.Identifier ? node.name : 'this';
             var binding = scope.getBindingByName(name);
             if (binding) {
-                result.copy(binding);
+                result.copyFrom(binding);
                 return binding;
             }
         }

@@ -1,9 +1,9 @@
 // Env Space Propagation
 /*
 {
-    "color" : { "type": "object", "kind": "float3" },
-    "normal1": { "type": "object", "kind": "float3" },
-    "normal2": { "type": "object", "kind": "float3" },
+    "color" : { "type": "object", "kind": "Vec3" },
+    "normal1": { "type": "object", "kind": "Vec3" },
+    "normal2": { "type": "object", "kind": "Vec3" },
     "weight": { "type": "number" }
 }
  */

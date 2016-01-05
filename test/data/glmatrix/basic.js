@@ -1,8 +1,8 @@
 // Basic glMatrix functionality
 /*
 [
-    { "type": "object", "kind": "float3" },
-    { "type": "object", "kind": "float3" }
+    { "type": "object", "kind": "Vec3" },
+    { "type": "object", "kind": "Vec3" }
 ]
  */
 {

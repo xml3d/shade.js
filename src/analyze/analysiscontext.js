@@ -186,7 +186,8 @@
                 var envObject = entryParams[0];
                 if (envObject && envObject.extra) {
                     var envAnnotation = new TypeInfo(envObject.extra);
-                    this.getScope().declare("_env", envAnnotation);
+                    this.getScope().declare("_env");
+                    this.getScope().updateTypeInfo("_env", envAnnotation);
                 }
 
                 var overrideName = name.substr(name.indexOf(".")+1);

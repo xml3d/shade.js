@@ -155,7 +155,7 @@
                                 type: Syntax.Identifier,
                                 name: nameMap[paramName][space]
                             };
-                            ANNO(newParam).copy(ANNO(param));
+                            ANNO(newParam).copyFrom(ANNO(param));
                             newParams.push(newParam);
                             paramTransitions.push({idx: i, space: space});
                         }

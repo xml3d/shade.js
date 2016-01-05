@@ -119,7 +119,7 @@
                 arguments.push.apply(arguments, node.arguments);
                 result = getCallExpression(glObject, glMethodName, arguments);
             }
-            ANNO(result).copy(ANNO(node));
+            ANNO(result).copyFrom(ANNO(node));
             return result;
         }
     }
@@ -176,7 +176,7 @@
         }
 
         var result = getCallExpression(glObject, "set", arguments);
-        ANNO(result).copy(ANNO(node));
+        ANNO(result).copyFrom(ANNO(node));
         return result;
     }
 

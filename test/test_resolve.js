@@ -6,7 +6,7 @@ var resolver = require("../src/resolve/resolve");
 var replacer = require("../src/resolve/colorclosure-replacer.js");
 var Syntax = require('estraverse').Syntax;
 
-xdescribe('Resolve Closure:', function () {
+describe('Resolve Closure:', function () {
     addTestDirectory(__dirname + '/data/resolve/', function (ast, contextData, expected) {
         resolver.registerLightingImplementation("test", {
             resolvePreTypeInference: function () {

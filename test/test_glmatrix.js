@@ -45,7 +45,7 @@ function createTest(dir, file) {
     });
 }
 
-xdescribe('GLMatrix Compilation:', function () {
+describe('GLMatrix Compilation:', function () {
 
     var dir = __dirname + '/data/glmatrix/';
 
