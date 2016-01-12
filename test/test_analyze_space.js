@@ -36,7 +36,7 @@ function createTest(dir, file) {
     });
 }
 
-xdescribe('Space analysis:', function () {
+describe('Space analysis:', function () {
     var dir = __dirname + '/data/space/';
     //createTest(dir, "multifunction.js");
 
