@@ -1,16 +1,15 @@
 {
     "this": {
         "type": "object",
-        "kind": "any",
         "info": {
             "modelViewMatrixN": {
                 "type": "object",
-                "kind" : "matrix3",
+                "kind" : "Mat3",
                 "source" : "uniform"
             },
             "modelViewMatrix": {
                 "type": "object",
-                "kind" : "matrix3",
+                "kind" : "Mat3",
                 "source" : "uniform"
             }
         }
@@ -19,10 +18,9 @@
         {
             "extra": {
                 "type": "object",
-                "kind": "any",
                 "global": "true",
-                "info": {
-                    "position": {"type" : "object", "kind" : "float3", "source" : "vertex"},
+                "properties": {
+                    "position": {"type" : "object", "kind" : "Vec3", "source" : "vertex"},
                     "ambientIntensity" : {
                         "type" : "number",
                         "source" : "uniform"
