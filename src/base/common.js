@@ -24,7 +24,7 @@
             var name = node.type == Syntax.Identifier ? node.name : 'this';
             var binding = scope.getBindingByName(name);
             if (binding) {
-                result.copy(binding);
+                result.copyFrom(binding);
                 return binding;
             }
         }
@@ -57,13 +57,14 @@
             if(name == 'undefined')
                 return ANNO(node);
 
-            binding = scope.getBindingByName(name);
+            binding = scope.get(name);
             if(binding == undefined && check) {
                 ANNO(node).setInvalid(ErrorHandler.generateErrorInformation(node, ErrorHandler.ERROR_TYPES.REFERENCE_ERROR, name, "is not defined"));
                 return ANNO(node);
             }
             if(binding) {
-                var result = ANNO(node, binding.getExtra());
+                var result = ANNO(node);
+                result.copyFrom(binding);
                 // A variable is dynamic per default. Only if it's listed in constant
                 // we can assume a static value
                 result.setDynamicValue();
@@ -74,15 +75,15 @@
                     });
 
                     if (propagatedConstant.length) {
-                        binding.setStaticValue(propagatedConstant[0].constant);
-                        result.setStaticValue(propagatedConstant[0].constant);
+                        binding.setConstantValue(propagatedConstant[0].constant);
+                        result.setConstantValue(propagatedConstant[0].constant);
                     }
                 }
                 return binding;
 
             }
         } else if (node.type == Syntax.ThisExpression) {
-            binding = scope.getBindingByName('this');
+            binding = scope.get("this");
         }
         return binding || ANNO(node);
     };

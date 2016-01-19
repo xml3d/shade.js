@@ -1,8 +1,8 @@
 // Space propagation with scalar multiplation
 /*
 [
-    { "extra": { "type": "object", "kind": "float3" } },
-    { "extra": { "type": "object", "kind": "float3" } }
+    { "extra": { "type": "object", "kind": "Vec3" } },
+    { "extra": { "type": "object", "kind": "Vec3" } }
 ]
  */
 /*

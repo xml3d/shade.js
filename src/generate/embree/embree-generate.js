@@ -8,7 +8,6 @@
         ANNO = require("../../type-system/annotation.js").ANNO;
 
     var Types = Shade.TYPES,
-        Kinds = Shade.OBJECT_KINDS,
         Sources = Shade.SOURCES;
 
     var InternalFunctions = {
@@ -385,13 +384,11 @@
         switch (info.type) {
             case Types.OBJECT:
                 switch (info.kind) {
-                    case Kinds.COLOR:
-                        return "getColor";
-                    case Kinds.FLOAT3:
+                    case "Vec3":
                         return "getVector3f";
-                    case Kinds.FLOAT2:
+                    case "Vec2":
                         return "getVec2f";
-                    case Kinds.TEXTURE:
+                    case "Texture":
                         return "getTexture";
                     default:
                         return "<undefined>";
@@ -419,9 +416,9 @@
         switch (info.type) {
             case Types.OBJECT:
                 switch (info.kind) {
-                    case Kinds.FLOAT2:
-                    case Kinds.FLOAT3:
-                    case Kinds.FLOAT4:
+                    case "Vec2":
+                    case "Vec3":
+                    case "Vec4":
                     case Kinds.COLOR_CLOSURE:
                         return true;
                     default:
@@ -449,13 +446,13 @@
         switch (info.type) {
             case Types.OBJECT:
                 switch (info.kind) {
-                    case Kinds.FLOAT4:
+                    case "Vec4":
                         return "Vec4f";
-                    case Kinds.FLOAT3:
+                    case "Vec3":
                         return "Vector3f";
-                    case Kinds.FLOAT2:
+                    case "Vec2":
                         return "Vec2f";
-                    case Kinds.TEXTURE:
+                    case "Texture":
                         return "Ref<Texture>";
                     case Kinds.COLOR_CLOSURE:
                         return "Vec4f";
@@ -832,13 +829,13 @@
             case Types.OBJECT:
                 var staticValue = node.extra.staticValue;
                 switch(node.extra.kind) {
-                    case Kinds.FLOAT2:
+                    case "Vec2":
                         result = "vec2(" + staticValue.r() + ", " + staticValue.g() + ")";
                         break;
-                    case Kinds.FLOAT3:
+                    case "Vec3":
                         result = "vec3(" + staticValue.r() + ", " + staticValue.g() + ", " + staticValue.b() + ")";
                         break;
-                    case Kinds.FLOAT4:
+                    case "Vec4":
                         result = "vec4(" + staticValue.r() + ", " + staticValue.g() + ", " + staticValue.b() + ", " + staticValue.a() + ")";
                         break;
                     default:

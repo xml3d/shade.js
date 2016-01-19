@@ -3,9 +3,8 @@
         {
             "extra": {
                 "type": "object",
-                "kind": "any",
                 "global": "true",
-                "info": {
+                "properties": {
                 }
             }
         }

@@ -22,6 +22,18 @@ ErrorHandler.generateErrorInformation = function (node, type, message) {
     return {message: type + ": " + message + codeInfo, loc: loc};
 };
 
+ErrorHandler.throwError = function(node, msg) {
+    var loc = node && node.loc;
+    if (loc && loc.start.line) {
+        msg = "Line " + loc.start.line + ": " + msg;
+    }
+    msg += ": " + codegen.generate(node);
+
+    var error = new Error(msg);
+    error.loc = loc;
+    throw error;
+};
+
 ErrorHandler.ERROR_TYPES = {
     TYPE_ERROR: "TypeError",
     REFERENCE_ERROR: "ReferenceError",

@@ -32,7 +32,6 @@
         try {
             // Resolve BRDF closures
             ast = opt.implementation ? resolver.resolveClosuresPreTypeInference(ast, opt.implementation, processingData, opt) : ast;
-
             // Sanitize strange expressions into something
             // that is better analysable
             ast = opt.sanitize ? sanitizer.sanitize(ast, opt) : ast;
@@ -59,6 +58,7 @@
                 context.injectCall(opt.entry, (opt.inject &&  opt.inject[opt.entry]) || []);
             }
             ast = context.getResult();
+
 
             ast = opt.implementation ? resolver.resolveClosuresPostTypeInference(ast, opt.implementation, processingData, opt) : ast;
 

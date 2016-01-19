@@ -11,9 +11,8 @@
         ANNO = common.ANNO;
 
     var leaveNode = function(node) {
-        var annotation = ANNO(node), right;
-
-        if(!annotation.isValid()) {
+		var annotation = ANNO(node), right;
+		if(!annotation.isValid()) {
             var errorInfo = annotation.getError();
             var error = new Error(errorInfo.message);
             error.loc = errorInfo.loc;
@@ -23,7 +22,7 @@
         if(node.type == Syntax.VariableDeclarator) {
             if(node.init) {
                 right = ANNO(node.init);
-                annotation.copy(right);
+                annotation.copyFrom(right);
             }
 
             if (annotation.getType() == TYPES.ANY || annotation.isNullOrUndefined()) {
@@ -32,7 +31,7 @@
         }
         if(node.type == Syntax.AssignmentExpression) {
             right = ANNO(node.right);
-            annotation.copy(right);
+            annotation.copyFrom(right);
             annotation.clearUniformDependencies();
 
             if (annotation.getType() == TYPES.ANY || annotation.isNullOrUndefined()) {
@@ -40,7 +39,7 @@
             }
         } else if(node.type == Syntax.ExpressionStatement) {
             var exp = ANNO(node.expression);
-            annotation.copy(exp);
+            annotation.copyFrom(exp);
         }
 
 

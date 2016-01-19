@@ -76,7 +76,7 @@
                 }
             }
 
-            ANNO(result).copy(anno);
+            ANNO(result).copyFrom(anno);
             return result;
         }
     };

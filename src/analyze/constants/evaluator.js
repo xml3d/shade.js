@@ -37,7 +37,7 @@
      *
      * @param node
      */
-    function getStaticValue(node) {
+    function getConstantValue(node) {
         if (node.type === Syntax.Literal) {
             var value = node.raw !== undefined ? node.raw : node.value;
             var number = parseFloat(value);
@@ -52,20 +52,20 @@
             }
         }
         if (node.type == Syntax.MemberExpression || node.type == Syntax.CallExpression  || node.type == Syntax.Identifier || node.type == Syntax.NewExpression || node.type == Syntax.LogicalExpression) {
-            return ANNO(node).getStaticValue();
+            return ANNO(node).getConstantValue();
         }
         if (node.type === Syntax.UnaryExpression) {
             if (node.operator == "typeof") {
-                return ANNO(node).getStaticValue();
+                return ANNO(node).getTypeString();
             }
             if(UnaryFunctions.hasOwnProperty(node.operator)) {
-                return UnaryFunctions[node.operator](getStaticValue(node.argument));
+                return UnaryFunctions[node.operator](getConstantValue(node.argument));
             }
             Shade.throwError(node, "Unknown unary operator: " + node.operator);
         }
         if (node.type === Syntax.BinaryExpression) {
             if(BinaryFunctions.hasOwnProperty(node.operator)) {
-                return BinaryFunctions[node.operator](getStaticValue(node.left), getStaticValue(node.right));
+                return BinaryFunctions[node.operator](getConstantValue(node.left), getConstantValue(node.right));
             }
             Shade.throwError(node, "Unknown binary operator: " + node.operator);
         }
@@ -73,7 +73,7 @@
     };
 
 
-    function getStaticTruthValue(node) {
+    function getConstantTruthValue(node) {
         var aNode = ANNO(node);
 
         // !!undefined == false;
@@ -84,14 +84,14 @@
             return true;
         // In all other cases, it depends on the value,
         // thus we can only evaluate this for static objects
-        if (aNode.hasStaticValue()) {
-            return !!aNode.getStaticValue();
+        if (aNode.hasConstantValue()) {
+            return !!aNode.getConstantValue();
         }
         return undefined;
     }
 
-    exports.getStaticValue = getStaticValue;
-    exports.getStaticTruthValue = getStaticTruthValue;
+    exports.getConstantValue = getConstantValue;
+    exports.getConstantTruthValue = getConstantTruthValue;
 
 
 

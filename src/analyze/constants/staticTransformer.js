@@ -71,7 +71,7 @@
         handleIfStatement: function (node) {
             var test = ANNO(node.test);
 
-            if (test.hasStaticValue() || test.canObject()) {
+            if (test.hasConstantValue() || test.canObject()) {
                 this.controller.skip();
                 var staticValue = test.getStaticTruthValue();
                 if (staticValue === true) {
@@ -92,7 +92,7 @@
         handleConditionalExpression: function (node) {
             var test = ANNO(node.test);
 
-            if (test.hasStaticValue() || test.canObject()) {
+            if (test.hasConstantValue() || test.canObject()) {
                 this.controller.skip();
                 var staticValue = test.getStaticTruthValue();
                 if (staticValue === true) {
@@ -169,6 +169,11 @@
                     newDeclarations.push(declaration);
                 }
             });
+            if (!newDeclarations.length) {
+                return {
+                    type: Syntax.EmptyStatement
+                }
+            }
             node.declarations = newDeclarations;
             return node;
         },
@@ -194,11 +199,11 @@
     };
 
     function isSimpleStatic(typeInfo) {
-        return typeInfo.hasStaticValue() && !(typeInfo.isObject() || typeInfo.isNullOrUndefined());
+        return typeInfo.hasConstantValue() && !(typeInfo.isObject() || typeInfo.isNullOrUndefined());
     }
 
      function isStaticObject(typeInfo) {
-        return typeInfo.hasStaticValue() && typeInfo.isVector();
+        return typeInfo.hasConstantValue() && typeInfo.isVector();
     }
 
     var c_expressions = [Syntax.BinaryExpression, Syntax.UnaryExpression, Syntax.MemberExpression];
@@ -214,11 +219,11 @@
 
 
     function generateConstructorFromTypeInfo(typeInfo) {
-        var value = typeInfo.getStaticValue(), size, name, arguments = [];
+        var value = typeInfo.getConstantValue(), size, name, arguments = [];
         switch(typeInfo.getKind()) {
-            case Shade.OBJECT_KINDS.FLOAT2: size = 2; name = "Vec2"; break;
-            case Shade.OBJECT_KINDS.FLOAT3: size = 3; name = "Vec3"; break;
-            case Shade.OBJECT_KINDS.FLOAT4: size = 4; name = "Vec4"; break;
+            case "Vec2": size = 2; name = "Vec2"; break;
+            case "Vec3": size = 3; name = "Vec3"; break;
+            case "Vec4": size = 4; name = "Vec4"; break;
             default:
                 throw new Error("Internal error in static transformation. Unknown kind: " + typeInfo.getKind());
         }
@@ -243,7 +248,7 @@
             },
             arguments: arguments
         }
-        ANNO(result).copy(typeInfo);
+        ANNO(result).copyFrom(typeInfo);
         return result;
     }
 
@@ -266,25 +271,25 @@
     }
 
     function generateLiteralFromTypeInfo(typeInfo) {
-        var value = typeInfo.getStaticValue();
+        var value = typeInfo.getConstantValue();
         var isNegative = value < 0;
 
         var result = {
             type: Syntax.Literal,
-            value: isNegative ? -value : value,
-            extra: {}
-        }
-        Base.extend(result.extra, typeInfo.getExtra());
+            value: isNegative ? -value : value
+        };
+		var ti = ANNO(result);
+		ti.copyFrom(typeInfo);
 
         if(isNegative) {
-            result.extra.staticValue = -value;
+            result.extra.constantValue = -value;
             result = {
                 type: Syntax.UnaryExpression,
                 operator: "-",
-                argument: result,
-                extra: {}
+                argument: result
             }
-            Base.extend(result.extra, typeInfo.getExtra());
+            ti = ANNO(result);
+			ti.copyFrom(typeInfo);
         }
         return result;
     }

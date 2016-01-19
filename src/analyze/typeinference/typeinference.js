@@ -8,7 +8,7 @@
     var Context = require("../../base/context.js");
     var Base = require("../../base/index.js");
     var codegen = require('escodegen');
-    var annotateRight = require("./infer_expression.js").annotateRight;
+    var annotateRight = require("./infer_expression.js");
     var InferenceScope = require("./registry/").InferenceScope;
     var System = require("./registry/system.js");
     var Annotations = require("./../../type-system/annotation.js");
@@ -46,7 +46,7 @@
                 name = this.left.name;
                 if(names.has(name)) {
                     annotation = ANNO(this.right);
-                    if(annotation.hasStaticValue()) {
+                    if(annotation.hasConstantValue()) {
                         switch(this.operator) {
                             case "=":
                                 result.add({ name: name, constant: TypeInfo.copyStaticValue(annotation)});
@@ -88,7 +88,7 @@
                 name = this.id.name;
                 if (this.init && names.has(name)) {
                     annotation = ANNO(this.init);
-                    if(annotation.hasStaticValue()) {
+                    if(annotation.hasConstantValue()) {
                         result.add({ name: name, constant: TypeInfo.copyStaticValue(annotation)});
                     }
                 }
@@ -99,7 +99,7 @@
                 if(this.argument.type == Syntax.Identifier) {
                     name = this.argument.name;
                     annotation = ANNO(this);
-                    if(annotation.hasStaticValue()) {
+                    if(annotation.hasConstantValue()) {
                         var value = TypeInfo.copyStaticValue(annotation);
                         if (!this.prefix) {
                             value = this.operator == "--" ? --value : ++value;

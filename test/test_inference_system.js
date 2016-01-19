@@ -15,62 +15,70 @@ describe('Inference:', function () {
             var exp = parseAndInferenceExpression("Math.clamp(1.5, 0.0, 1.0);");
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.NUMBER);
-            exp.extra.should.have.property("staticValue", 1.0);
+            exp.extra.should.have.property("constantValue", 1.0);
 
             exp = parseAndInferenceExpression("Math.clamp(-1.5, 0.0, -1.0);");
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.NUMBER);
-            exp.extra.should.have.property("staticValue", -1);
+            exp.extra.should.have.property("constantValue", -1);
         });
         it("Math.smoothstep", function () {
             var exp = parseAndInferenceExpression("Math.smoothstep(1,0,0.75);");
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.NUMBER);
-            exp.extra.should.have.property("staticValue", 0.15625);
+            exp.extra.should.have.property("constantValue", 0.15625);
         });
         it("Math.step", function () {
             var exp = parseAndInferenceExpression("Math.step(0.5, 0.4);");
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.NUMBER);
-            exp.extra.should.have.property("staticValue", 0);
+            exp.extra.should.have.property("constantValue", 0);
 
             exp = parseAndInferenceExpression("Math.step(0.5, 0.6);");
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.NUMBER);
-            exp.extra.should.have.property("staticValue", 1);
+            exp.extra.should.have.property("constantValue", 1);
         });
         it("Math.fract", function () {
             var exp = parseAndInferenceExpression("Math.fract(3.5);");
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.NUMBER);
-            exp.extra.should.have.property("staticValue", 0.5);
+            exp.extra.should.have.property("constantValue", 0.5);
         });
     });
 
-    xdescribe('system variables', function () {
+    describe('system variables', function () {
 
         it("this.coords", function () {
             var exp = parseAndInferenceExpression("this.coords");
-            exp = exp[0];
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.OBJECT);
-            exp.extra.should.have.property("kind", TYPES.FLOAT3);
+            exp.extra.should.have.property("kind", "Vec3");
 
             var exp = parseAndInferenceExpression("this.coords.x()");
-            exp = exp[0];
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.NUMBER);
         });
 
+        it("this.height", function () {
+            var exp = parseAndInferenceExpression("this.height");
+            exp.should.have.property("extra");
+            exp.extra.should.have.property("type", TYPES.INT);
+        });
+
+        it("this.width", function () {
+            var exp = parseAndInferenceExpression("this.width");
+            exp.should.have.property("extra");
+            exp.extra.should.have.property("type", TYPES.INT);
+        });
+
         it("this.normalizedCoords", function () {
             var exp = parseAndInferenceExpression("this.normalizedCoords");
-            exp = exp[0];
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.OBJECT);
-            exp.extra.should.have.property("kind", TYPES.FLOAT3);
+            exp.extra.should.have.property("kind", "Vec3");
 
             var exp = parseAndInferenceExpression("this.normalizedCoords.x()");
-            exp = exp[0];
             exp.should.have.property("extra");
             exp.extra.should.have.property("type", TYPES.NUMBER);
         });

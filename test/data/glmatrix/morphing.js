@@ -1,9 +1,9 @@
 // Morphing with glMatrix
 /*
 [
-    { "type": "array", "elements" : { "type" : "object", "kind": "float3" } },
-    { "type": "array", "elements" : { "type" : "object", "kind": "float3" } },
-    { "type": "array", "elements" : { "type" : "object", "kind": "float3" } },
+    { "type": "array", "elements" : { "type" : "object", "kind": "Vec3" } },
+    { "type": "array", "elements" : { "type" : "object", "kind": "Vec3" } },
+    { "type": "array", "elements" : { "type" : "object", "kind": "Vec3" } },
     { "type": "array", "elements" : { "type" : "number" } },
     { "type": "int" }
 ]

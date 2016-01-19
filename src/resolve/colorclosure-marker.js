@@ -10,7 +10,7 @@
         var callee = ANNO(node.callee);
         // console.log("Call", node.callee.property, callee.getTypeString(), node.callee.object)
         if(callee.isOfKind(Shade.OBJECT_KINDS.COLOR_CLOSURE)) {
-            ANNO(node).copy(callee);
+            ANNO(node).copyFrom(callee);
         }
     }
 

@@ -21,6 +21,11 @@ function createTest(dir, file) {
 
 
     it(comments[0].value.trim() + ' (' + file + ')', function () {
+        if(contextData.this && contextData.this.properties && contextData.this.properties.hasOwnProperty("fwidth")) {
+            Shade.getSystem().setDerivatives(true);
+        } else {
+            Shade.getSystem().setDerivatives(false);
+        }
         var options = {inject: contextData, entry: "global.shade", propagateConstants: true, validate: true, sanitize: false, extractUniformExpressions: true};
         var aast = Shade.parseAndInferenceExpression(ast, options);
         var result = new GLSLCompiler().compileFragmentShader(aast, {useStatic: true, omitHeader: true, uniformExpressions: options.uniformExpressions});
@@ -35,7 +40,9 @@ function createTest(dir, file) {
 describe('GLSL Shader Code:', function () {
     var dir = __dirname + '/data/shaders/glsl/';
     var files = fs.readdirSync(dir);
-    files.filter(function(filename) { return filename.split('.').pop() == "js" }).forEach(function (file) {
+    files = files.filter(function(filename) { return filename.split('.').pop() == "js" });
+    files.forEach(function (file) {
         createTest(dir, file);
     });
+    //createTest(dir, files[10]);
 });

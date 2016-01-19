@@ -34,7 +34,7 @@ function createTest(dir, file) {
     });
 }
 
-xdescribe('Semantic analysis:', function () {
+describe('Semantic analysis:', function () {
     var dir = __dirname + '/data/semantics/';
     var files = fs.readdirSync(dir);
     files.forEach(function (file) {

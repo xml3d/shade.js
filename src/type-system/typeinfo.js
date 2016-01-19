@@ -2,30 +2,43 @@
 var Syntax = require('estraverse').Syntax;
 var Set = require('analyses').Set;
 var extend = require("lodash.assign");
+var clone = require("lodash.clone");
+var assert = require('assert');
+var TypeSystem = require('./type-system.js');
 
 // Internal dependencies
 var Shade = require("../interfaces.js"); // TODO(ksons): Eliminate this dependency
 var TYPES = require("./constants.js").TYPES;
-var Annotation = require("./annotation.js").Annotation;
 
 // TODO(ksons): New mechanism for predefined types
 var KINDS = Shade.OBJECT_KINDS;
 
 /**
- * @param {*} node Carrier object for the type info, only node.extra gets polluted
- * @param {Object?} extra
+ * @param {*} info Carrier object for the type info, only node.extra gets polluted
  * @constructor
  */
-var TypeInfo = function (node, extra) {
-    this.node = node;
-    this.node.extra = this.node.extra || {};
-    if (extra) {
-        extend(this.node.extra, extra);
-    }
+var TypeInfo = function (info) {
+    this.info = info;
+    var self = this;
+
+    assert(info.type);
+
+    Object.defineProperties(this, {
+        type: {get: function() { return info.type }, set: function(e) { info.type = e; }},
+        error: {get: function() { return info.error }, set: function(e) { info.error = e; }},
+        ctor: {get: function() {
+            if(!self.isFunction() || !self.getKind()) {
+                throw new Error("Has no constructor:" + self);
+            }
+			var predefinedType = TypeSystem.getPredefinedObject(this.getKind());
+			return predefinedType;
+            }
+        }
+    });
 };
 
 TypeInfo.createForContext = function (node, ctx) {
-    var result = new TypeInfo(node);
+    var result = new TypeInfo(node.extra);
     if (result.getType() !== TYPES.ANY) {
         return result;
     }
@@ -45,20 +58,20 @@ TypeInfo.createForContext = function (node, ctx) {
  * @param {Object?} value
  */
 TypeInfo.copyStaticValue = function (typeInfo, value) {
-    value = value || typeInfo.getStaticValue();
+    value = value || typeInfo.getConstantValue();
     // We don't have to copy primitive types
     if (!typeInfo.isObject())
         return value;
     switch (typeInfo.getKind()) {
-        case KINDS.FLOAT2:
+        case "Vec2":
             return new Shade.Vec2(value);
-        case KINDS.FLOAT3:
+        case "Vec3":
             return new Shade.Vec3(value);
-        case KINDS.FLOAT4:
+        case "Vec4":
             return new Shade.Vec4(value);
-        case KINDS.MATRIX3:
+        case "Mat3":
             return new Shade.Mat3(value);
-        case KINDS.MATRIX4:
+        case "Mat4":
             return new Shade.Mat4(value);
         default:
             throw new Error("Can't copy static value of kind: " + typeInfo.getKind());
@@ -66,29 +79,22 @@ TypeInfo.copyStaticValue = function (typeInfo, value) {
 };
 
 TypeInfo.prototype = {
-    getExtra: function () {
-        return this.node.extra;
-    },
     getType: function () {
-        var extra = this.getExtra();
-        if (extra.type != undefined)
-            return extra.type;
-        return TYPES.ANY;
+        return this.type;
     },
 
     setKind: function (kind) {
-        var extra = this.getExtra();
-        extra.kind = kind;
+        this.info.kind = kind;
     },
 
     getKind: function () {
-        if (!this.isObject())
+        if (!(this.isObject() || this.isFunction()))
             return null;
-        return this.getExtra().kind || KINDS.ANY;
+        return this.info.kind || null;
     },
 
     getUserData: function () {
-        var extra = this.getExtra();
+        var extra = this.info;
         if (!extra.userData) extra.userData = {};
         return extra.userData;
     },
@@ -96,7 +102,7 @@ TypeInfo.prototype = {
     getArrayElementType: function () {
         if (!this.isArray())
             throw new Error("Called getArrayElementType on " + this.getType());
-        return this.getExtra().elements;
+        return this.info.elements;
     },
 
     isOfKind: function (kind) {
@@ -111,7 +117,7 @@ TypeInfo.prototype = {
      * @param {string?} kind
      */
     setType: function (type, kind) {
-        var extra = this.getExtra();
+        var extra = this.info;
         extra.type = type;
         if (kind)
             this.setKind(kind);
@@ -167,20 +173,20 @@ TypeInfo.prototype = {
         return this.isOfType(TYPES.OBJECT);
     },
     isVector: function () {
-        return this.isObject() && this.isOfKind(KINDS.FLOAT2) || this.isOfKind(KINDS.FLOAT3) || this.isOfKind(KINDS.FLOAT4);
+        return this.isObject() && this.isOfKind("Vec2") || this.isOfKind("Vec3") || this.isOfKind("Vec4");
     },
     isGlobal: function () {
-        return !!this.getExtra().global;
+        return !!this.info.global;
     },
     setGlobal: function (global) {
-        var extra = this.getExtra();
+        var extra = this.info;
         extra.global = global;
     },
     isOutput: function () {
-        return !!this.getExtra().output;
+        return !!this.info.output;
     },
     setOutput: function (output) {
-        var extra = this.getExtra();
+        var extra = this.info;
         extra.output = output;
     },
     canNumber: function () {
@@ -194,7 +200,7 @@ TypeInfo.prototype = {
     },
     setCommonType: function (a, b) {
         if (a.equals(b)) {
-            this.copy(a);
+            this.copyFrom(a);
             return true;
         }
         if (a.canNumber() && b.canNumber()) {
@@ -203,28 +209,38 @@ TypeInfo.prototype = {
         }
         return false;
     },
-    hasStaticValue: function () {
-        var extra = this.getExtra();
+    hasConstantValue: function () {
+        var extra = this.info;
         if (this.isNullOrUndefined())
             return true;
-        return extra.hasOwnProperty("staticValue");
+        return extra.hasOwnProperty("constantValue");
     },
-    setStaticValue: function (v) {
-        var extra = this.getExtra();
+	getConstantValue: function () {
+        if (!this.hasConstantValue()) {
+            throw new Error("Node has no static value: " + this.node);
+        }
+        if (this.isNull())
+            return null;
+        if (this.isUndefined())
+            return undefined;
+        return this.info.constantValue;
+    },
+    setConstantValue: function (v) {
+        var extra = this.info;
         if (this.isNullOrUndefined())
             throw new Error("Null and undefined have predefined values.");
-        extra.staticValue = v;
+        extra.constantValue = v;
     },
     canUniformExpression: function () {
-        return this.hasStaticValue() || this.isUniformExpression();
+        return this.hasConstantValue() || this.isUniformExpression();
     },
 
     isUniformExpression: function () {
-        var extra = this.getExtra();
+        var extra = this.info;
         return extra.hasOwnProperty("uniformDependencies")
     },
     setUniformDependencies: function () {
-        var extra = this.getExtra();
+        var extra = this.info;
         var dependencies = new Set();
         var args = Array.prototype.slice.call(arguments);
         args.forEach(function (arg) {
@@ -236,50 +252,42 @@ TypeInfo.prototype = {
         extra.uniformDependencies = dependencies.values();
     },
     getUniformDependencies: function () {
-        var extra = this.getExtra();
+        var extra = this.info;
         return extra.uniformDependencies || [];
     },
     getUniformCosts: function () {
-        var extra = this.getExtra();
+        var extra = this.info;
         return extra.uniformCosts | 0;
     },
     setUniformCosts: function (costs) {
-        var extra = this.getExtra();
+        var extra = this.info;
         extra.uniformCosts = costs;
     },
     clearUniformDependencies: function () {
-        var extra = this.getExtra();
+        var extra = this.info;
         delete extra.uniformDependencies;
     },
-    getStaticValue: function () {
-        if (!this.hasStaticValue()) {
-            throw new Error("Node has no static value: " + this.node);
-        }
-        if (this.isNull())
-            return null;
-        if (this.isUndefined())
-            return undefined;
-        return this.getExtra().staticValue;
-    },
+
     setDynamicValue: function () {
-        delete this.getExtra().staticValue;
+        delete this.info.constantValue;
     },
     setCall: function (call) {
-        var extra = this.getExtra();
+        var extra = this.info;
         extra.evaluate = call;
     },
     getCall: function () {
-        return this.getExtra().evaluate;
+        return this.info.evaluate;
     },
     clearCall: function () {
-        var extra = this.getExtra();
+        var extra = this.info;
         delete extra.evaluate;
     },
-    copy: function (other) {
-        this.setFromExtra(other.getExtra());
+    copyFrom: function (other) {
+		assert(other instanceof TypeInfo);
+        extend(this.info, other.info);
     },
     str: function () {
-        var extra = this.getExtra();
+        var extra = this.info;
         return JSON.stringify(extra, null, 1);
     },
     canNormal: function () {
@@ -292,32 +300,87 @@ TypeInfo.prototype = {
         return this.getError() != null;
     },
     getError: function () {
-        var extra = this.getExtra();
+        var extra = this.info;
         return extra.error;
     },
     setError: function (err) {
-        var extra = this.getExtra();
+        var extra = this.info;
         extra.error = err;
     },
     clearError: function () {
-        var extra = this.getExtra();
+        var extra = this.info;
         extra.error = null;
     },
     setFromExtra: function (extra) {
-        extend(this.node.extra, extra);
+        extend(this.info, extra);
         // Set static object extra: This might be an object
-        if (extra.staticValue != undefined) {
-            this.setStaticValue(TypeInfo.copyStaticValue(this, extra.staticValue));
+        if (extra.constantValue != undefined) {
+            this.setConstantValue(TypeInfo.copyStaticValue(this, extra.constantValue));
         }
     },
+
+	hasProperty: function (name) {
+        if (this.isObject() || this.isFunction) {
+             var obj;
+             if(this.getKind()) {
+                 obj = TypeSystem.getPredefinedObject(this.getKind());
+             } else {
+                obj = this.info;
+             }
+            return (obj.properties && obj.properties.hasOwnProperty(name)) || (obj.prototype && obj.prototype.hasOwnProperty(name));
+        }
+        return false;
+    },
+
+
+    isPredefinedObject: function() {
+        return this.isObject && this.getKind();
+    },
+
+    getPropertyInfo: function (name) {
+        assert(this.hasProperty(name));
+        if (this.getKind()) { // Predefined object
+            var predefinedType = TypeSystem.getPredefinedObject(this.getKind());
+            var property = predefinedType.properties ? predefinedType.properties[name] : (predefinedType.prototype ? predefinedType.prototype[name] : null);
+            if (property) {
+                if (typeof property == "function") {
+                    return new TypeInfo({type: "function", evaluate: property});
+                }
+                return new TypeInfo(property);
+            }
+        } else {
+            return new TypeInfo(this.info.properties[name]);
+        }
+        return null;
+
+    },
+
+    canEvaluate: function () {
+        return this.isFunction() && typeof this.info.evaluate == "function";
+    },
+
+    evaluate: function (node, args, scope, objectReference) {
+        assert(this.canEvaluate());
+        return this.info.evaluate(node, args, scope, objectReference);
+    },
+
+    canComputeStaticValue: function () {
+        return this.isFunction() && typeof this.info.computeStaticValue == "function";
+    },
+
+    computeStaticValue: function (typeInfo, args, scope, objectReference) {
+        assert(this.canComputeStaticValue());
+        return this.info.computeStaticValue(typeInfo, args, scope, objectReference);
+    },
+
     getNodeInfo: function () {
         if (this.isObject())
-            return this.getExtra().info;
+            return this.info.info;
     },
     setNodeInfo: function (info) {
         if (!this.isObject())
             throw new Error("Only objects may have a node info");
-        this.getExtra().info = info;
+        this.info.info = info;
     },
     getTypeString: function () {
         if (this.isObject()) {
@@ -343,24 +406,23 @@ TypeInfo.prototype = {
                 return "string";
             case TYPES.UNDEFINED:
                 return "undefined";
+            case TYPES.FUNCTION:
+                return "function";
             default:
                 // TODO: For debug we use this now, should throw an exception
                 return "?" + this.getType();
         }
     },
     setSource: function (source) {
-        var extra = this.getExtra();
+        var extra = this.info;
         extra.source = source;
     },
     getSource: function () {
-        return this.getExtra().source;
+        return this.info.source;
     },
-    getStaticProperties: function () {
-        // Only bound object have static properties (Math, Shade etc)
-        return null;
-    },
-    isDerived: function () {
-        return this.getExtra().derived == true;
+
+	isDerived: function () {
+        return this.info.derived == true;
     },
     getStaticTruthValue: function () {
         // !!undefined == false;
@@ -371,16 +433,22 @@ TypeInfo.prototype = {
             return true;
         // In all other cases, it depends on the value,
         // thus we can only evaluate this for static objects
-        if (this.hasStaticValue()) {
-            return !!this.getStaticValue();
+        if (this.hasConstantValue()) {
+            return !!this.getConstantValue();
         }
         return undefined;
     },
     setSemantic: function (sem) {
-        this.getExtra().semantic = sem;
+        this.info.semantic = sem;
     },
     getSemantic: function () {
-        return this.getExtra().semantic;
+        return this.info.semantic;
+    },
+	getReturnInfo: function () {
+        return this.info.returnInfo;
+    },
+    setReturnInfo: function (info) {
+        this.info.returnInfo = info;
     }
 
 };

@@ -41,17 +41,17 @@
         switch (typeInfo.type) {
             case Types.OBJECT:
                 switch (typeInfo.kind) {
-                    case Kinds.FLOAT4:
+                    case "Vec4":
                         return "0";
-                    case Kinds.FLOAT3:
+                    case "Vec3":
                         return "0";
-                    case Kinds.FLOAT2:
+                    case "Vec2":
                         return "0";
-                    case Kinds.TEXTURE:
+                    case "Texture":
                         return "\"\"";
-                    case Kinds.MATRIX3:
+                    case "Mat3":
                         return "?";
-                    case Kinds.MATRIX4:
+                    case "Mat4":
                         return "?";
                     case Kinds.COLOR_CLOSURE:
                         return "background";
@@ -83,17 +83,17 @@
         switch (info.type) {
             case Types.OBJECT:
                 switch (info.kind) {
-                    case Kinds.FLOAT4:
+                    case "Vec4":
                         return "vector";
-                    case Kinds.FLOAT3:
+                    case "Vec3":
                         return "vector";
-                    case Kinds.FLOAT2:
+                    case "Vec2":
                         return "vector";
-                    case Kinds.TEXTURE:
+                    case "Texture":
                         return "string";
-                    case Kinds.MATRIX3:
+                    case "Mat3":
                         return "mat3";
-                    case Kinds.MATRIX4:
+                    case "Mat4":
                         return "mat4";
                     case Kinds.COLOR_CLOSURE:
                         return "vec4";

@@ -23,13 +23,12 @@
 
     var Kinds = ns.OBJECT_KINDS = {
         ANY: "any",
-        FLOAT2: "float2", // virtual kinds
-        FLOAT3: "float3", // virtual kinds
-        FLOAT4: "float4", // virtual kinds
-        NORMAL: "normal",
-        MATRIX3: "matrix3",
-        MATRIX4: "matrix4",
-        TEXTURE: "texture",
+        VEC2: "Vec2", // virtual kinds
+        VEC3: "Vec3", // virtual kinds
+        VEC4: "Vec4", // virtual kinds
+        MATRIX3: "Mat3",
+        MATRIX4: "Mat4",
+        TEXTURE: "Texture",
         COLOR_CLOSURE: "color_closure"
     }
 
@@ -80,57 +79,57 @@
     ns.ColorClosures = {
         "emissive" : {
             input: [
-                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR}
+                { type: Types.OBJECT, kind: "Vec3", semantic: Semantics.COLOR}
             ]
         },
         "diffuse" : {
             input: [
-                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR},
-                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.OBJECT, kind: "Vec3", semantic: Semantics.COLOR},
+                { type: Types.OBJECT, kind: "Vec3", semantic: Semantics.NORMAL},
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0 }
             ]
         },
         "phong" : {
             input: [
-                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR},
-                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.OBJECT, kind: "Vec3", semantic: Semantics.COLOR},
+                { type: Types.OBJECT, kind: "Vec3", semantic: Semantics.NORMAL},
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0}
             ]
         },
         cookTorrance: {
             input: [
-                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR},
-                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.OBJECT, kind: "Vec3", semantic: Semantics.COLOR},
+                { type: Types.OBJECT, kind: "Vec3", semantic: Semantics.NORMAL},
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0.0},
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0.0}
             ]
         },
         ward: {
             input: [
-                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR},
-                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
-                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.OBJECT, kind: "Vec3", semantic: Semantics.COLOR},
+                { type: Types.OBJECT, kind: "Vec3", semantic: Semantics.NORMAL},
+                { type: Types.OBJECT, kind: "Vec3", semantic: Semantics.NORMAL},
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0.0},
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0.0}
             ]
         },
         scatter: {
             input: [
-                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.COLOR},
-                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.OBJECT, kind: "Vec3", semantic: Semantics.COLOR},
+                { type: Types.OBJECT, kind: "Vec3", semantic: Semantics.NORMAL},
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0},
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 0}
             ]
         },
         "reflect" : {
             input: [
-                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.OBJECT, kind: "Vec3", semantic: Semantics.NORMAL},
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 1 },
             ]
         },
         "refract" : {
             input: [
-                { type: Types.OBJECT, kind: Kinds.FLOAT3, semantic: Semantics.NORMAL},
+                { type: Types.OBJECT, kind: "Vec3", semantic: Semantics.NORMAL},
                 { type: Types.NUMBER, semantic: Semantics.SCALAR_0_TO_1, defaultValue: 1 },
                 { type: Types.NUMBER, semantic: Semantics.UNKNOWN, defaultValue: 1 },
             ]

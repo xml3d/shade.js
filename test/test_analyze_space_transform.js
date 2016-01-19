@@ -48,8 +48,8 @@ function createTest(dir, file) {
     var ctx = {
         "global.shade": [{
             "extra": {
-                "type": "object", "kind": "any", "global": true,
-                "info": attributes
+                "type": "object", "global": true,
+                "properties": attributes
             }
         }]
     }

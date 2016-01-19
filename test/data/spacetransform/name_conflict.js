@@ -1,9 +1,9 @@
 // Name Conflict Handling
 /*
 {
-    "color" : { "type": "object", "kind": "float3" },
-    "normal": { "type": "object", "kind": "float3" },
-    "normal_vns": { "type": "object", "kind": "float3" },
+    "color" : { "type": "object", "kind": "Vec3" },
+    "normal": { "type": "object", "kind": "Vec3" },
+    "normal_vns": { "type": "object", "kind": "Vec3" },
     "weight": { "type": "number" }
 }
  */

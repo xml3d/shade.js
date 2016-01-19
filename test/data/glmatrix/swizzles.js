@@ -1,8 +1,8 @@
 // Swizzles with glMatrix
 /*
 [
-    { "type": "object", "kind": "float3" },
-    { "type": "object", "kind": "float2" }
+    { "type": "object", "kind": "Vec3" },
+    { "type": "object", "kind": "Vec2" }
 ]
  */
 {

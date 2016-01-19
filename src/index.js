@@ -21,6 +21,7 @@
         SnippetList = require("./generate/snippets/snippet-list.js").SnippetList,
         SnippetEntry = require("./generate/snippets/snippet-list.js").SnippetEntry,
         SnippetConnector = require("./generate/snippets/snippet-connector"),
+        TypeSystem = require("./type-system/type-system.js"),
         GlMatrix = require("./contrib/gl-matrix.js");
 
 
@@ -140,6 +141,10 @@
                 fullAst = this.getSanitizedAst(Base.deepExtend({}, code), {});
             }
             return fullAst;
+        },
+
+        getSystem: function() {
+            return TypeSystem.getPredefinedObject("System");
         },
 
         compileJsProgram: function(snippetList, systemParams, defaultIteration){

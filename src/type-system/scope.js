@@ -11,6 +11,7 @@ var ErrorHandler = require("./errors.js");
 var Annotation = require("./annotation.js").Annotation;
 var TypeInfo = require("./typeinfo.js").TypeInfo;
 var TYPES = require("./constants.js").TYPES;
+var ANNO = require("../base/common.js").ANNO;
 
 /**
  * @param {Object} node AST node that defines the scope
@@ -28,23 +29,23 @@ var Scope = function (node, parent, opt) {
     /** @type (Scope|null) */
     this.parent = parent || null;
 
-    this.registry = opt.registry || (parent ? parent.registry : {});
-
     this.scope = node.scope = node.scope || {};
 
-    /** @type {Object.<string, {initialized: boolean, annotation: Annotation}>} */
-    this.scope.bindings = this.scope.bindings || {};
+    /** @type {Map} */
+    this.scope.bindings = {};
 
     this.scope.name = opt.name || node.name || "|anonymous|";
 };
 
 extend(Scope.prototype, {
-    setRegistry: function (registry) {
-        this.registry = registry;
+    declares: function (identifier) {
+        return this.getBindings().hasOwnProperty(identifier);
     },
+
     getName: function () {
         return this.scope.name;
     },
+
     getRootContext: function () {
         if (this.parent)
             return this.parent.getRootContext();
@@ -56,7 +57,7 @@ extend(Scope.prototype, {
     },
 
     updateReturnInfo: function (annotation) {
-        this.scope.returnInfo = annotation.getExtra();
+        this.scope.returnInfo = annotation.info;
     },
     getReturnInfo: function () {
         return this.scope.returnInfo || {type: TYPES.UNDEFINED};
@@ -66,14 +67,34 @@ extend(Scope.prototype, {
      * @param {string} name
      * @returns {*}
      */
-    getBindingByName: function (name) {
-        var bindings = this.getBindings();
-        var binding = bindings[name];
-        if (binding !== undefined)
-            return new Binding(binding, this.registry);
+    get: function (name) {
+        if(this.declares(name)) {
+			var binding = this.getBindings()[name];
+            return new TypeInfo(binding.extra);
+        }
         if (this.parent)
-            return this.parent.getBindingByName(name);
+            return this.parent.get(name);
         return undefined;
+    },
+
+	type: function (node) {
+        if (isVariable(node)) {
+            assert(node.name);
+            var definition = this.get(node.name);
+			if(!definition) {
+                ErrorHandler.throwError(node, ErrorHandler.ERROR_TYPES.REFERENCE_ERROR + ": " + node.name + " is not defined")
+            }
+			assert(definition instanceof TypeInfo);
+            return definition;
+        }
+        if (node.type == Syntax.ThisExpression) {
+            var definition = this.get("this");
+			assert(definition instanceof TypeInfo);
+            //console.log("def", definition)
+            return definition;
+        }
+        //console.log("type no varable", node)
+        return ANNO(node);
     },
 
     /**
@@ -81,8 +102,7 @@ extend(Scope.prototype, {
      * @returns {Scope|null}
      */
     getContextForName: function (name) {
-        var bindings = this.getBindings();
-        if (bindings[name] !== undefined)
+        if (this.declares(name))
             return this;
         if (this.parent)
             return this.parent.getContextForName(name);
@@ -99,7 +119,7 @@ extend(Scope.prototype, {
     declare: function (name, fail, position) {
         var bindings = this.getBindings();
         fail = (fail == undefined) ? true : fail;
-        if (bindings[name]) {
+        if (bindings.hasOwnProperty(name)) {
             if (fail) {
                 throw new Error(name + " was already declared in this scope.")
             } else {
@@ -107,7 +127,7 @@ extend(Scope.prototype, {
             }
         }
 
-        bindings[name] = {
+        bindings[name] =  {
             initialized: false,
             initPosition: position,
             extra: {
@@ -117,40 +137,48 @@ extend(Scope.prototype, {
         return true;
     },
 
+	declarePredefined:function(name, descriptor) {
+        assert(descriptor && descriptor.name);
+		this.declare(name, false);
+		this.updateTypeInfo(name, new TypeInfo({type: typeof descriptor, kind: descriptor.name }) );
+    },
+
     /**
      *
      * @param {string} name
-     * @param {TypeInfo} typeInfo
-     * @param {Object} node AST node the new type info originates from
+     * @param {TypeInfo} newTypeInfo
+     * @param {Object?} node AST node the new type info originates from
      */
-    updateTypeInfo: function (name, typeInfo, node) {
-        var v = this.getBindingByName(name);
-        if (!v) {
+    updateTypeInfo: function (name, newTypeInfo, node) {
+        if (!this.declares(name)) {
             if (node) {
-                typeInfo.setInvalid(ErrorHandler.generateErrorInformation(node, ErrorHandler.ERROR_TYPES.REFERENCE_ERROR, name, "is not defined"));
+                newTypeInfo.setInvalid(ErrorHandler.generateErrorInformation(node, ErrorHandler.ERROR_TYPES.REFERENCE_ERROR, name, "is not defined"));
                 return;
             }
             throw new Error("Reference error: " + name + " is not defined.")
         }
-        if (v.isInitialized() && v.getType() !== typeInfo.getType()) {
+        var v = this.getBindings()[name];
+        var type = new TypeInfo(v.extra);
+
+        if (v.initialized && type.getType() !== newTypeInfo.getType()) {
             if (node) {
-                typeInfo.setInvalid(ErrorHandler.generateErrorInformation(node, ErrorHandler.ERROR_TYPES.SHADEJS_ERROR, name, "may not change it's type"));
+                newTypeInfo.setInvalid(ErrorHandler.generateErrorInformation(node, ErrorHandler.ERROR_TYPES.SHADEJS_ERROR, name, "may not change it's type"));
                 return;
             }
             throw new Error("Variable may not change it's type: " + name);
         }
-        if (!v.isInitialized()) {
+        if (!v.initialized && v.initPosition) {
             // Annotate the declaration, if one is given
-            if (v.node.initPosition)
-                v.node.initPosition.copy(typeInfo);
+            ANNO(v.initPosition).copyFrom(newTypeInfo);
+            ANNO(v.initPosition).setDynamicValue();
         }
 
-        v.copy(typeInfo);
-        v.setDynamicValue();
-        v.setInitialized(!typeInfo.isUndefined());
+        type.copyFrom(newTypeInfo);
+        type.setDynamicValue();
+        v.initialized = !type.isUndefined();
     },
 
-    registerObject: function (name, obj) {
+    /*registerObject: function (name, obj) {
         this.registry[obj.id] = obj;
         var bindings = this.getBindings();
         bindings[name] = {
@@ -159,18 +187,14 @@ extend(Scope.prototype, {
             },
             ref: obj.id
         };
-    },
+    },*/
 
     declareParameters: function (params) {
         var bindings = this.getBindings();
         for (var i = 0; i < params.length; i++) {
             var parameter = params[i];
-            var annotation = new Annotation(parameter);
-
-            var node = {extra: {type: TYPES.UNDEFINED}};
-            var binding = new TypeInfo(node);
-            binding.copy(annotation);
-            bindings[parameter.name] = node;
+            this.declare(parameter.name);
+            this.updateTypeInfo(parameter.name, new TypeInfo(parameter.extra));
         }
     },
 
@@ -213,31 +237,16 @@ extend(Scope.prototype, {
             }
         }
         return result;
-    },
-
-    getObjectInfoFor: function (obj) {
-        if (!obj.isObject())
-            return null;
-
-        // There are three ways to get the properties of an object
-
-        // 1. Object is static and has registered it's properties via reference
-        var staticProperties = obj.getStaticProperties();
-        if (staticProperties)
-            return staticProperties;
-
-        // 1: Object is generic (any), then it carries it's information itself
-        if (obj.isOfKind(Shade.OBJECT_KINDS.ANY)) {
-            return obj.getNodeInfo();
-        }
-
-
-        // 3. Last chance: The object is an instance of a registered type,
-        // then we get the information from it's kind
-        return this.registry && this.registry.getInstanceForKind(obj.getKind()) || null;
     }
 
+
+
 });
+
+function isVariable(node) {
+    return node.type == Syntax.Identifier && node.name != "undefined";
+}
+
 
 /**
  * TODO(ksons): Eliminate this class
@@ -246,8 +255,8 @@ extend(Scope.prototype, {
  * @extends TypeInfo
  * @constructor
  */
-var Binding = function (binding, registry) {
-    TypeInfo.call(this, binding);
+/*var Binding = function (obj) {
+    this.typeinfo = TypeInfo.call(this, binding.extra);
     if (this.node.ref) {
         if (!registry[this.node.ref])
             throw Error("No object has been registered for: " + this.node.ref);
@@ -257,8 +266,6 @@ var Binding = function (binding, registry) {
         }
     }
 };
-
-util.inherits(Binding, TypeInfo);
 
 extend(Binding.prototype, {
     hasConstructor: function () {
@@ -307,7 +314,7 @@ extend(Binding.prototype, {
     }
 
 
-});
+});     */
 
 
 module.exports = Scope;

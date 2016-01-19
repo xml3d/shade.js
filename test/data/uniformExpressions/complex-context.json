@@ -3,12 +3,11 @@
         {
             "extra": {
                 "type": "object",
-                "kind": "any",
                 "global": "true",
-                "info": {
+                "properties": {
                      "texcoord": {
                         "type": "object",
-                        "kind": "float2",
+                        "kind": "Vec2",
                         "source": "vertex"
                     },
                     "time": {
@@ -18,32 +17,32 @@
                     "ucolorA": {
                         "source": "uniform",
                         "type": "object",
-                        "kind": "float3"
+                        "kind": "Vec3"
                     },
                     "ucolorB": {
                         "source": "uniform",
                         "type": "object",
-                        "kind": "float3"
+                        "kind": "Vec3"
                     },
                     "ucolorC": {
                         "source": "uniform",
                         "type": "object",
-                        "kind": "float3"
+                        "kind": "Vec3"
                     },
                     "ucolorD": {
                         "source": "uniform",
                         "type": "object",
-                        "kind": "float3"
+                        "kind": "Vec3"
                     },
                     "ucolorTransform1": {
                         "source": "uniform",
                         "type": "object",
-                        "kind": "matrix4"
+                        "kind": "Mat4"
                     },
                     "ucolorTransform2": {
                         "source": "uniform",
                         "type": "object",
-                        "kind": "matrix4"
+                        "kind": "Mat4"
                     }
                 }
             }

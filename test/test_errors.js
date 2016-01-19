@@ -12,7 +12,7 @@ describe('Error:', function () {
         it("calling unknown method on object", function () {
             var exp = "var x = new Vec3(128); x.something();";
             var analyze = parseAndInferenceExpression.bind(null, exp);
-            analyze.should.throw(/TypeError: .* has no method 'something'/);
+            analyze.should.throw(/TypeError: x.something is not a function/);
         });
 
         it("accessing property of undefined", function () {
@@ -24,7 +24,7 @@ describe('Error:', function () {
         it("when trying to call a property", function () {
             var exp = "Math.PI();";
             var analyze = parseAndInferenceExpression.bind(null, exp);
-            analyze.should.throw(/TypeError: Property 'PI' of object #<Object> is not a function/);
+            analyze.should.throw(/TypeError: Math.PI is not a function/);
         });
 
         it("call a reference that is not a function", function () {

@@ -4,12 +4,13 @@
     var Context = require("../base/context.js");
     var common = require("../base/common.js");
     var Base = require("../base/index.js");
+    var TypeInfo = require("./../type-system/typeinfo.js").TypeInfo;
     var Annotations = require("./../type-system/annotation.js");
     var assert = require('assert');
     var walk = require('estraverse');
     var InferenceScope = require("./typeinference/registry/").InferenceScope;
     var System = require("./typeinference/registry/system.js");
-    var Shade = require("../interfaces.js");
+	var Shade = require("../interfaces.js");
         var codegen = require("escodegen");
 
 
@@ -117,7 +118,7 @@
         },
         analyseFunction: function(funcDecl, params) {
             var functionScope = new InferenceScope(funcDecl, this.getScope(), {name: funcDecl.id.name });
-            var functionAnnotation = new FunctionAnnotation(funcDecl);
+            var functionAnnotation = ANNO(funcDecl);
 
             //console.error("analyseFunction:", functionScope.str());
 
@@ -148,7 +149,7 @@
                         throw new Error("Dynamic variable names are not yet supported");
                     }
                     var variableName = declaration.id.name;
-                    scope.declare(variableName, true, result);
+                    scope.declare(variableName, true, declaration);
 
                     if (declaration.init) {
                         var init = ANNO(declaration.init);
@@ -184,7 +185,8 @@
                 // This is a big hack, need better injection mechanism
                 var envObject = entryParams[0];
                 if (envObject && envObject.extra) {
-                    var envAnnotation = new Annotations.Annotation({}, envObject.extra);
+                    var envAnnotation = new TypeInfo(envObject.extra);
+                    this.getScope().declare("_env");
                     this.getScope().updateTypeInfo("_env", envAnnotation);
                 }
 
@@ -192,7 +194,7 @@
 
                 this.root.globalParameters[name] = entryParams;
                 this.callFunction(name, entryParams.map(function (param) {
-                    return ANNO(param);
+                    return new TypeInfo(param.extra);
                 }), { name: overrideName});
 
         }
@@ -213,14 +215,16 @@
 
         walk.replace(prg, {
             enter: function (node) {
+
                 if (node.type == Syntax.FunctionDeclaration) {
                     var localName = node.id.name;
                     var parentScope = context.getScope();
-                    var anno = new FunctionAnnotation(node);
+                    var anno = ANNO(node);
+                    anno.setType(Shade.TYPES.FUNCTION);
                     parentScope.declare(localName);
                     parentScope.updateTypeInfo(localName, anno);
 
-                    var newScope = new InferenceScope(node, parentScope, {name: localName });
+                    var newScope = new InferenceScope(node, parentScope, {name: localName});
                     result.set(newScope.str(), node);
                     context.pushScope(newScope);
                 }
@@ -229,9 +233,8 @@
                 var replace;
                 if (node.type == Syntax.FunctionDeclaration) {
                     context.popScope();
-                    replace = { type: Syntax.EmptyStatement };
+                    return {type: Syntax.EmptyStatement};
                 }
-                return replace;
             }
         });
         prg.body = prg.body.filter(function (a) {
@@ -266,7 +269,7 @@
         for (var i = 0; i < params.length; i++) {
             var funcParam = ANNO(params[i]);
             if (i < types.length) {
-                funcParam.setFromExtra(types[i].getExtra());
+                funcParam.copyFrom(types[i]);
                 funcParam.setDynamicValue();
             } else {
                 funcParam.setType(Shade.TYPES.UNDEFINED);
@@ -281,9 +284,9 @@
     };
 
     function registerSystemInformation(scope, opt) {
-        var thisInfo = (opt.inject && opt.inject.this) || null;
+        /*var thisInfo = (opt.inject && opt.inject.this) || null;
         scope.declare("this");
-        scope.updateTypeInfo("this", System.getThisTypeInfo(thisInfo));
+        scope.updateTypeInfo("this", System.getThisTypeInfo(thisInfo));*/
     }
 
     module.exports = AnalysisContext;

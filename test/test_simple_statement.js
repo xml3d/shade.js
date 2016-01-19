@@ -8,7 +8,7 @@ var wrapFunction = function(str, argsString){
 }
 
 var getSimplifiedCode = function (str, args) {
-    args = args || { a : "float3", "b" : "float3", "c": "float3", "d" : "float3"};
+    args = args || { a : "Vec3", "b" : "Vec3", "c": "Vec3", "d" : "Vec3"};
     var argNames = [], argTypes = [];
     for(var name in args){
         argNames.push(name);
@@ -124,40 +124,40 @@ describe('Statement Simplifier:', function () {
     it("should correctly handle scalars for vec2", function() {
         checkSimplified("var res = a.mul(4).div(4)",
             "var res,_vec2Tmp0,_vec2Tmp1;_vec2Tmp0=new Vec2(4);_vec2Tmp0=a.mul(_vec2Tmp0);_vec2Tmp1=new Vec2(4);res=_vec2Tmp0.div(_vec2Tmp1);",
-            {"a" : "float2"});
+            {"a" : "Vec2"});
     });
     it("should correctly handle scalars for vec4", function() {
         checkSimplified("var res = a.mul(4).div(4)",
             "var res,_vec4Tmp0,_vec4Tmp1;_vec4Tmp0=new Vec4(4);_vec4Tmp0=a.mul(_vec4Tmp0);_vec4Tmp1=new Vec4(4);res=_vec4Tmp0.div(_vec4Tmp1);",
-            {"a" : "float4"});
+            {"a" : "Vec4"});
     });
     it("should correctly handle scalars for Mat3", function() {
         checkSimplified("var res = a.mul(4).div(4)",
             "var res,_mat3Tmp0,_mat3Tmp1;_mat3Tmp0=new Mat3(4);_mat3Tmp0=a.mul(_mat3Tmp0);_mat3Tmp1=new Mat3(4);res=_mat3Tmp0.div(_mat3Tmp1);",
-            {"a" : "matrix3"});
+            {"a" : "Mat3"});
     });
     it("should correctly handle scalars for Mat4", function() {
         checkSimplified("var res = a.mul(4).div(4)",
             "var res,_mat4Tmp0,_mat4Tmp1;_mat4Tmp0=new Mat4(4);_mat4Tmp0=a.mul(_mat4Tmp0);_mat4Tmp1=new Mat4(4);res=_mat4Tmp0.div(_mat4Tmp1);",
-            {"a" : "matrix4"});
+            {"a" : "Mat4"});
     });
 
     it("should correctly handle strange inputs for Vec4 methods", function() {
         checkSimplified("var res = a.mul(4, b).div(c, c).add(1, c, 2)",
             "var res,_vec4Tmp0,_vec4Tmp1;_vec4Tmp0=new Vec4(4,b);_vec4Tmp0=a.mul(_vec4Tmp0);_vec4Tmp1=new Vec4(c,c);_vec4Tmp0=_vec4Tmp0.div(_vec4Tmp1);_vec4Tmp1=new Vec4(1,c,2);res=_vec4Tmp0.add(_vec4Tmp1);",
-            {"a" : "float4", "b" : "float3", "c" : "float2"});
+            {"a" : "Vec4", "b" : "Vec3", "c" : "Vec2"});
     });
 
     it("should correctly handle the col method of mat3", function() {
         checkSimplified("var res = a.col(0,b).col(1,2).col(2, c, 4)",
             "var res,_mat3Tmp0,_vec3Tmp0;_mat3Tmp0=a.col(0,b);_vec3Tmp0=new Vec3(2);_mat3Tmp0=_mat3Tmp0.col(1,_vec3Tmp0);_vec3Tmp0=new Vec3(c,4);res=_mat3Tmp0.col(2,_vec3Tmp0);",
-            {"a" : "matrix3", "b" : "float3", "c" : "float2" });
+            {"a" : "Mat3", "b" : "Vec3", "c" : "Vec2" });
 
     });
     it("should correctly handle the col method of mat4", function() {
         checkSimplified("var res = a.col(0,b).col(1,2).col(2, c, c)",
             "var res,_mat4Tmp0,_vec4Tmp0;_mat4Tmp0=a.col(0,b);_vec4Tmp0=new Vec4(2);_mat4Tmp0=_mat4Tmp0.col(1,_vec4Tmp0);_vec4Tmp0=new Vec4(c,c);res=_mat4Tmp0.col(2,_vec4Tmp0);",
-            {"a" : "matrix4", "b" : "float4", "c" : "float2" });
+            {"a" : "Mat4", "b" : "Vec4", "c" : "Vec2" });
 
     });
 
@@ -174,17 +174,17 @@ describe('Statement Simplifier:', function () {
     it("should correctly handle array access", function() {
         checkSimplified("var res = a[0];",
             "var res;res=a[0];",
-            {"a" : {type: "array", elements: {type : "object", kind: "float3"}}});
+            {"a" : {type: "array", elements: {type : "object", kind: "Vec3"}}});
     });
     it("should correctly handle nested array access", function() {
         checkSimplified("var res = a[0].mul(a[1]);",
             "var res,_vec3Tmp0,_vec3Tmp1;_vec3Tmp0=a[0];_vec3Tmp1=a[1];res=_vec3Tmp0.mul(_vec3Tmp1);",
-            {"a" : {type: "array", elements: {type : "object", kind: "float3"}}});
+            {"a" : {type: "array", elements: {type : "object", kind: "Vec3"}}});
     });
     it("should correctly handle array write", function() {
         checkSimplified("a[0] = b.mul(2);",
             "var _vec3Tmp0;_vec3Tmp0=new Vec3(2);_vec3Tmp0=b.mul(_vec3Tmp0);a[0]=_vec3Tmp0;",
-            {"a" : {type: "array", elements: {type : "object", kind: "float3"}}, "b" : "float3"});
+            {"a" : {type: "array", elements: {type : "object", kind: "Vec3"}}, "b" : "Vec3"});
     });
 
     it("should correctly convert reading swizzles", function() {
