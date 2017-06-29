@@ -215,7 +215,7 @@ Accessing the components of the vectors is very similar to GLSL:
 
 ## Tests
 
-We use the [mocha](http://visionmedia.github.io/mocha/) test framework for testing.
+We use the [mocha](http://mochajs.org/) test framework for testing.
 
 ### Installation
 ```
